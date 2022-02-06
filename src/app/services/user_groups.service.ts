@@ -21,7 +21,7 @@ import {
   UserGroupPrivilegeEntity,
 } from '../entities/user_groups';
 import { UserEntity } from '../entities/user.entity';
-import { AuthProviderEnum } from '../helpers/enums/auth_provider.enum';
+import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
 import { convertToMySQLDateTime, formatDate } from '../../utils/helper';
 import { IUserGroupLink } from '../interfaces/user_groups.interface';
 import {
@@ -30,9 +30,9 @@ import {
 } from '../dto/usergroups/update-usergroups.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import {
-  StatusEnum,
+  UserGroupStatusEnum,
   UserGroupTypeEnum,
-} from '../helpers/enums/user_groups.enum';
+} from '../../database/enums/tableFieldEnum/user_groups.enum';
 
 @Injectable()
 export class UserGroupsService {
@@ -75,7 +75,7 @@ export class UserGroupsService {
       );
     }
     const newUserGroup = await this.userGroupRepo.create({
-      status: createUserGroupsDto.status || StatusEnum.Active,
+      status: createUserGroupsDto.status || UserGroupStatusEnum.Active,
       type: createUserGroupsDto?.type || UserGroupTypeEnum.Wholesale,
       company_id: createUserGroupsDto?.company_id || 0,
     });

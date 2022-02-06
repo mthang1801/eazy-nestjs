@@ -23,6 +23,7 @@ import { UserRepository } from '../repositories/user.repository';
     UserGroupLinksRepository,
     UserGroupDescriptionsRepository,
     UserGroupPrivilegesRepository,
+    UserGroupsRepository,
   ],
   controllers: [UsergroupsController],
 })

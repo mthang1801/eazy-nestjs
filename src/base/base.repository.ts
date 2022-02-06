@@ -43,7 +43,7 @@ export class BaseRepositorty<T> {
       'SELECT LAST_INSERT_ID();',
     );
 
-    console.log(res[0][0]['LAST_INSERT_ID()']);
+    console.log(46, res[0][0]['LAST_INSERT_ID()']);
     if (res[0][0]['LAST_INSERT_ID()'] === 0) {
       return this.findOne({ where: params });
     }
@@ -84,13 +84,22 @@ export class BaseRepositorty<T> {
     console.log('=============== FIND ONE ================');
     if (typeof options !== 'object') {
       throw new HttpException(
-        'Trường đưa vào phải là Object',
+        'Tham số đưa vào phải là Object',
         HttpStatus.BAD_REQUEST,
       );
     }
+    console.log(options);
     let results;
-
-    results = await this.find({ ...options, limit: 1 });
+    if (
+      Object.keys(options).some(
+        (val) =>
+          val.toLowerCase() === 'where' || /(select|from|join)/gi.test(val),
+      )
+    ) {
+      results = await this.find({ ...options, limit: 1 });
+    } else {
+      results = await this.find({ where: options, limit: 1 });
+    }
 
     return preprocessDatabaseBeforeResponse(results[0]);
   }

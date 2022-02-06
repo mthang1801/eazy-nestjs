@@ -1,4 +1,4 @@
-import { AuthProviderEnum } from '../helpers/enums/auth_provider.enum';
+import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
 
 export class AuthProviderEntity {
   user_id: number;

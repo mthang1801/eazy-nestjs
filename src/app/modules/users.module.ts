@@ -8,16 +8,10 @@ import {
   UserRepository,
   UserProfileRepository,
 } from '../repositories/user.repository';
-import { UserProfilesService } from '../services/user_profiles.service';
 @Module({
   imports: [MailModule],
   exports: [UsersService],
-  providers: [
-    UsersService,
-    UserProfilesService,
-    UserRepository,
-    UserProfileRepository,
-  ],
+  providers: [UsersService, UserRepository, UserProfileRepository],
   controllers: [UsersControllerBe, UsersControllerFe],
 })
 export class UsersModule {}

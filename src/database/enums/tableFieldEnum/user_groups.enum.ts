@@ -4,13 +4,14 @@ export enum UserGroupIdEnum {
   'Vendor' = 5,
 }
 
-export enum StatusEnum {
+export enum UserGroupStatusEnum {
   'Active' = 'A',
   'Deactive' = 'D',
 }
 
 export enum UserGroupTypeEnum {
-  'Wholesale' = 'C',
+  'Wholesale' = 'W',
   'Vendor' = 'V',
   'Administrator' = 'A',
+  'Customer' = 'C',
 }

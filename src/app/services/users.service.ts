@@ -22,7 +22,6 @@ import { ObjectLiteral } from '../../common/ObjectLiteral';
 import { UserProfileEntity } from '../entities/user.entity';
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
-import { UserProfilesService } from './user_profiles.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserProfileDto } from '../dto/user/update-user-profile.dto';
@@ -31,14 +30,13 @@ import {
   ImagesRepository,
 } from '../repositories/image.repository';
 import { ImagesLinksEntity, ImagesEntity } from '../entities/image.entity';
-import { ImageObjectType } from '../helpers/enums/image_types.enum';
+import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import { AuthProviderEntity } from '../entities/auth-provider.entity';
 @Injectable()
 export class UsersService {
   private table: Table = Table.USERS;
   constructor(
     private readonly mailService: MailService,
-    private readonly userProfileService: UserProfilesService,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
@@ -57,7 +55,6 @@ export class UsersService {
       );
     }
     let user = await this.userRepository.create(registerData);
-    await this.userProfileService.createUserProfile(user);
     return user;
   }
 
@@ -67,7 +64,7 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<UserEntity> {
-    const user: UserEntity = await this.userRepository.findById(id);
+    const user: UserEntity = await this.userRepository.findOne({ user_id: id });
     if (!user) {
       throw new HttpException(
         'Người dùng không tồn tại.',
@@ -88,16 +85,14 @@ export class UsersService {
   }
 
   async findOne(dataObj: ObjectLiteral | ObjectLiteral[]): Promise<UserEntity> {
-    const user = await this.userRepository.findOne({ where: dataObj });
+    const user = await this.userRepository.findOne({ ...dataObj });
     return user;
   }
 
   async getUserImage(user_id: number): Promise<ImagesEntity> {
     const imageLinks = await this.imageLinksRepository.findOne({
-      where: {
-        object_id: user_id,
-        object_type: ImageObjectType.USER,
-      },
+      object_id: user_id,
+      object_type: ImageObjectType.USER,
     });
     if (imageLinks) {
       const image = await this.imagesRepository.findById(imageLinks.image_id);
@@ -143,7 +138,7 @@ export class UsersService {
 
   async getMyInfo(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
-      select: ['*'],
+      select: ['*', `${this.table}.*`],
       join: {
         [JoinTable.leftJoin]: {
           [Table.USER_PROFILES]: {

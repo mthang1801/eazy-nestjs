@@ -39,7 +39,7 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token không hợp lệ hoặc đã hết hạn.', 408);
     }
     const user = decoded?.sub;
-    console.log(user);
+
     if (!user) {
       throw new HttpException('Token không hợp lệ.', HttpStatus.UNAUTHORIZED);
     }
