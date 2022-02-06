@@ -313,6 +313,18 @@ export class UsergroupsController extends BaseController {
     return this.respondCreated(res, newUserGroupPrivilege);
   }
 
+  @Get('/privilege/usergroup/:usergroup_id')
+  async getUserGroupPrivilegeByUserGroupId(
+    @Param('usergroup_id') usergroup_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const userGroupPrivilegeList =
+      await this.usersGroupService.getUserGroupPrivilegeByUserGroupId(
+        usergroup_id,
+      );
+    return this.responseSuccess(res, userGroupPrivilegeList);
+  }
+
   /**
    * Update a record by privilege_id at ddv_usergroup_privileges
    * @param data

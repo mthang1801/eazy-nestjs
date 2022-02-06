@@ -6,6 +6,7 @@ export class UserGroupEntity {
 }
 
 export class UserGroupPrivilegeEntity {
+  privilege_id: number;
   usergroup_id: number;
   privilege: string;
   description: string;

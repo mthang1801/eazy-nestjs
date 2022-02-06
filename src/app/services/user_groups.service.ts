@@ -1,5 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { BaseService } from '../../base/base.service';
+import * as _ from 'lodash';
 import {
   UserGroupsRepository,
   UserGroupDescriptionsRepository,
@@ -350,6 +350,59 @@ export class UserGroupsService {
       data,
     );
     return newUserGroupPrivilege;
+  }
+
+  async getUserGroupPrivilegeByUserGroupId(usergroup_id): Promise<any> {
+    const userGroupPrivilegeRawList: UserGroupPrivilegeEntity[] =
+      await this.userGroupPrivilegeRepo.find({
+        where: { usergroup_id },
+      });
+
+    const userGroupPrivilegeRawListSortByLevel = _.sortBy(
+      userGroupPrivilegeRawList,
+      [
+        function (item) {
+          return item.level;
+        },
+      ],
+    );
+
+    let userGroupPrivilegeFormatList = { children: [] };
+    for (let userGroupPrivilegeRawItem of userGroupPrivilegeRawListSortByLevel) {
+      if (userGroupPrivilegeRawItem.level === 1) {
+        userGroupPrivilegeFormatList = {
+          ...userGroupPrivilegeFormatList,
+          ...userGroupPrivilegeRawItem,
+        };
+        continue;
+      }
+      if (userGroupPrivilegeRawItem.level === 2) {
+        userGroupPrivilegeFormatList.children.push({
+          ...userGroupPrivilegeRawItem,
+          children: [],
+        });
+        continue;
+      }
+      if (userGroupPrivilegeRawItem.level === 3) {
+        // find parent in userGroupPrivilegeFormatList's children
+        userGroupPrivilegeFormatList.children =
+          userGroupPrivilegeFormatList.children.map(
+            (userGroupPrivilegeChild) => {
+              if (
+                userGroupPrivilegeChild.privilege_id ===
+                userGroupPrivilegeRawItem.parent_id
+              ) {
+                userGroupPrivilegeChild.children.push({
+                  ...userGroupPrivilegeRawItem,
+                  children: [],
+                });
+              }
+              return userGroupPrivilegeChild;
+            },
+          );
+      }
+    }
+    return userGroupPrivilegeFormatList;
   }
 
   async updateUserGroupPrivilege(
