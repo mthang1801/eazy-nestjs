@@ -5,7 +5,7 @@ export enum PrimaryKeys {
   ddv_user_data = 'user_id',
   ddv_usergroup_descriptions = 'usergroup_id',
   ddv_usergroup_links = 'link_id',
-  ddv_usergroup_privileges = 'usergroup_id',
+  ddv_usergroup_privileges = 'privilege_id',
   ddv_usergroups = 'usergroup_id',
   ddv_banners = 'banner_id',
   ddv_banner_images = 'banner_id',

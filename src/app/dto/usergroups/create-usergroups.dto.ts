@@ -35,12 +35,38 @@ export class CreateUserGroupDescriptionDto {
 }
 
 export class CreateUserGroupLinkDto {
-  @IsNotEmpty({ message : "user_id là bắt buộc."})
-  user_id : number; 
+  @IsNotEmpty({ message: 'user_id là bắt buộc.' })
+  user_id: number;
 
-  @IsNotEmpty({ message : "usergroup_id là bắt buộc."})
-  usergroup_id : number; 
+  @IsNotEmpty({ message: 'usergroup_id là bắt buộc.' })
+  usergroup_id: number;
 
   @IsOptional()
-  status : string; 
+  status: string;
+}
+
+export class CreateUserGroupPrivilegeDto {
+  @IsNotEmpty({ message: 'usergroup_id là bắt buộc.' })
+  usergroup_id: number;
+
+  @IsNotEmpty({ message: 'privilege là bắt buộc.' })
+  privilege: string;
+
+  @IsOptional()
+  description: string;
+
+  @IsOptional()
+  parent_id: number;
+
+  @IsNotEmpty()
+  level: number;
+
+  @IsOptional()
+  route: string;
+
+  @IsNotEmpty()
+  method: string;
+
+  @IsOptional()
+  icon: string;
 }
