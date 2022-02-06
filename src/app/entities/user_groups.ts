@@ -9,6 +9,11 @@ export class UserGroupPrivilegeEntity {
   usergroup_id: number;
   privilege: string;
   description: string;
+  parent_id: number;
+  level: number;
+  route: string;
+  method: string;
+  icon: string;
 }
 
 export class UserGroupLinkEntity {

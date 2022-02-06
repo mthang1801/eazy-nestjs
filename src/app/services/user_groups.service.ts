@@ -30,6 +30,11 @@ import {
 } from '../dto/usergroups/update-usergroups.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import {
+  UpdateUserGroupLinkDto,
+  UpdateUserGroupPrivilegeDto,
+} from '../dto/usergroups/update-usergroups.dto';
+import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroups.dto';
+import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from '../../database/enums/tableFieldEnum/user_groups.enum';
@@ -244,22 +249,56 @@ export class UserGroupsService {
 
   async getUserInUserGroupLink(user_id: number): Promise<any> {
     const user = await this.userGroupLinksRepo.findOne({
-      select: ['*', `${Table.USER_GROUP_LINKS}.*`],
+      select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
           [Table.USERS]: {
             fieldJoin: `${Table.USERS}.user_id`,
-            rootJoin: `user_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+          },
+          [Table.USER_PROFILES]: {
+            fieldJoin: `${Table.USER_PROFILES}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_DATA]: {
+            fieldJoin: `${Table.USER_DATA}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
           },
           [Table.USER_GROUP_PRIVILEGES]: {
             fieldJoin: `${Table.USER_GROUP_PRIVILEGES}.usergroup_id`,
-            rootJoin: `usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
           },
         },
       },
       where: { [`${this.userGroupLinksTable}.user_id`]: user_id },
     });
     return user;
+  }
+
+  async updateUserGroupLink(
+    data: UpdateUserGroupLinkDto,
+  ): Promise<UserGroupLinkEntity> {
+    const userGroupLink: UserGroupLinkEntity =
+      await this.userGroupLinksRepo.findOne({ user_id: data.user_id });
+    if (!userGroupLink) {
+      throw new HttpException(
+        'Không tìm thấy người dùng.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const updatedUserGroupLink = await this.userGroupLinksRepo.update(
+      userGroupLink.link_id,
+      data,
+    );
+    return updatedUserGroupLink;
   }
 
   async getUsersByUserGroupInUserGroupLink(
@@ -273,11 +312,27 @@ export class UserGroupsService {
         [JoinTable.leftJoin]: {
           [Table.USERS]: {
             fieldJoin: `${Table.USERS}.user_id`,
-            rootJoin: `user_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+          },
+          [Table.USER_PROFILES]: {
+            fieldJoin: `${Table.USER_PROFILES}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_DATA]: {
+            fieldJoin: `${Table.USER_DATA}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
           },
           [Table.USER_GROUP_PRIVILEGES]: {
             fieldJoin: `${Table.USER_GROUP_PRIVILEGES}.usergroup_id`,
-            rootJoin: `usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
           },
         },
       },
@@ -286,5 +341,28 @@ export class UserGroupsService {
       limit,
     });
     return users;
+  }
+
+  async createUserGroupPrivilege(
+    data: CreateUserGroupPrivilegeDto,
+  ): Promise<UserGroupPrivilegeEntity> {
+    const newUserGroupPrivilege = await this.userGroupPrivilegeRepo.create(
+      data,
+    );
+    return newUserGroupPrivilege;
+  }
+
+  async updateUserGroupPrivilege(
+    data: UpdateUserGroupPrivilegeDto,
+  ): Promise<UserGroupPrivilegeEntity> {
+    const updatedGroupPrivilege = await this.userGroupPrivilegeRepo.update(
+      data.privilege_id,
+      data,
+    );
+    return updatedGroupPrivilege;
+  }
+
+  async deleteUserGroupPrivilege(privilege_id: number): Promise<boolean> {
+    return this.userGroupPrivilegeRepo.delete({ privilege_id });
   }
 }

@@ -16,8 +16,8 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 
 @Injectable()
 export class BannerService extends BaseService<
-Banner,
-BannerRepository<Banner>
+  Banner,
+  BannerRepository<Banner>
 > {
   constructor(
     repository: BannerRepository<Banner>,
@@ -198,8 +198,10 @@ BannerRepository<Banner>
     );
 
     //===============|Get the image id then update the url|===============
-    const imagebyBanner = await this.imageLinkService.findOne({where:{object_id:parseInt(id)}});
-    console.log(imagebyBanner)
+    const imagebyBanner = await this.imageLinkService.findOne({
+      where: { object_id: parseInt(id) },
+    });
+    console.log(imagebyBanner);
     //===========================|Add to ddve_images |=============================
     const imageTableData = {
       image_path: image,
@@ -235,18 +237,11 @@ BannerRepository<Banner>
     if (count.length <= 0) return `Khong ton tai`;
     let _image = this.imageService.delete(images_id);
     let _image_link = this.imageLinkService.delete(images_id);
-    Promise.all([ _image, _image_link]);
+    Promise.all([_image, _image_link]);
   }
   async createBannerImage(data: createBannerImageDTO, id) {
     try {
-      const {
-
-        position,
-        image_url,
-        image_x,
-        image_y,
-        is_high_res,
-      } = data;
+      const { position, image_url, image_x, image_y, is_high_res } = data;
       const imageTableData = {
         image_path: image_url,
         image_x: image_x,
@@ -289,7 +284,6 @@ BannerRepository<Banner>
     }
   }
 
-
   async getAllIamgesByBannerId(id) {
     const string = `ddv_banner_images.banner_id`;
 
@@ -297,7 +291,10 @@ BannerRepository<Banner>
       select: ['*'],
       join: {
         [JoinTable.join]: {
-          ddv_images_links: { fieldJoin: 'ddv_images_links.object_id', rootJoin: 'ddv_banner_images.banner_id' },
+          ddv_images_links: {
+            fieldJoin: 'ddv_images_links.object_id',
+            rootJoin: 'ddv_banner_images.banner_id',
+          },
 
           ddv_images: {
             fieldJoin: ' ddv_images.image_id',
@@ -310,7 +307,6 @@ BannerRepository<Banner>
       skip: 0,
       limit: 30,
     });
-    return image
-
+    return image;
   }
 }
