@@ -5,12 +5,13 @@ import {
   NotFoundException,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { UserEntity } from '../entities/user.entity';
+import { UserDataEntity, UserEntity } from '../entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from './mail.service';
 import {
   UserRepository,
   UserProfileRepository,
+  UserDataRepository,
 } from '../repositories/user.repository';
 import { Table } from '../../database/enums/index';
 import {
@@ -22,6 +23,7 @@ import { ObjectLiteral } from '../../common/ObjectLiteral';
 import { UserProfileEntity } from '../entities/user.entity';
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
+
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserProfileDto } from '../dto/user/update-user-profile.dto';
@@ -31,12 +33,24 @@ import {
 } from '../repositories/image.repository';
 import { ImagesLinksEntity, ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
-import { AuthProviderEntity } from '../entities/auth-provider.entity';
+import {
+  UserGroupStatusEnum,
+  UserGroupTypeEnum,
+} from 'src/database/enums/tableFieldEnum/user_groups.enum';
+import { UserGroupEntity, UserGroupLinkEntity } from '../entities/user_groups';
+import {
+  UserGroupLinksRepository,
+  UserGroupsRepository,
+} from '../repositories/user_groups.repository';
+
 @Injectable()
 export class UsersService {
   private table: Table = Table.USERS;
   constructor(
     private readonly mailService: MailService,
+    private userGroupLinkRepository: UserGroupLinksRepository<UserGroupLinkEntity>,
+    private userGroupRepository: UserGroupsRepository<UserGroupEntity>,
+    private userDataRepository: UserDataRepository<UserDataEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
@@ -75,6 +89,14 @@ export class UsersService {
     return preprocessUserResult(user);
   }
 
+  async createUserProfile(data: any): Promise<UserProfileEntity> {
+    return this.userProfileRepository.create(data);
+  }
+
+  async createUserData(data: UserDataEntity): Promise<UserDataEntity> {
+    return this.userDataRepository.create(data);
+  }
+
   async updateUser(
     user_id: number,
     dataObj: ObjectLiteral,
@@ -87,6 +109,37 @@ export class UsersService {
   async findOne(dataObj: ObjectLiteral | ObjectLiteral[]): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ ...dataObj });
     return user;
+  }
+
+  async findUserAllInfo(condition: any): Promise<any> {
+    return this.findOne({
+      select: ['*', `${Table.USERS}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_LINKS]: {
+            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+          },
+          [Table.USER_PROFILES]: {
+            fieldJoin: `${Table.USER_PROFILES}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_DATA]: {
+            fieldJoin: `${Table.USER_DATA}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+        },
+      },
+      where: { ...condition },
+    });
   }
 
   async getUserImage(user_id: number): Promise<ImagesEntity> {

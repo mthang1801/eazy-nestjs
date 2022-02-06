@@ -60,3 +60,9 @@ export class UserProfileEntity {
   s_address_type: string;
   profile_name: string;
 }
+
+export class UserDataEntity {
+  user_id: number;
+  type: string;
+  data: string;
+}

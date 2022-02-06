@@ -31,7 +31,7 @@ export interface IUser {
   otp_incorrect_times: number;
 }
 
-export interface UserProfileEntity {
+export interface IUserProfile {
   profile_id: number; //primary key
   user_id: number; //primary key
   profile_type: string;
@@ -59,13 +59,13 @@ export interface UserProfileEntity {
   profile_name: string;
 }
 
-export interface UserDataEntity {
+export interface IUserData {
   user_id: number;
   type: string;
   data: string;
 }
 
-export interface UserMailingListsEntity {
+export interface IUserMailingLists {
   subscriber_id: number;
   list_id: number;
   activation_key: string;
@@ -73,3 +73,5 @@ export interface UserMailingListsEntity {
   confirmed: number;
   timestamp: Date;
 }
+
+export interface IUserInfo extends IUser, IUserProfile, IUserData {}

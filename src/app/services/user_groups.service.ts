@@ -49,6 +49,35 @@ export class UserGroupsService {
     private userRepo: UserRepository<UserEntity>,
   ) {}
 
+  async createUserGroupLinkPosition(
+    user_id: number,
+    position: string = UserGroupTypeEnum.Customer,
+  ): Promise<any> {
+    const userGroupForCustomer: UserGroupEntity =
+      await this.userGroupRepo.findOne({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.USER_GROUP_DESCRIPTIONS]: {
+              fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+              rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            },
+          },
+        },
+        where: {
+          status: UserGroupStatusEnum.Active,
+          type: position,
+          company_id: 0,
+        },
+      });
+    const newUserGroupLink: UserGroupLinkEntity =
+      await this.userGroupLinksRepo.create({
+        user_id: user_id,
+        usergroup_id: userGroupForCustomer.usergroup_id,
+      });
+    return { ...userGroupForCustomer, ...newUserGroupLink };
+  }
+
   async createUserGroup(
     createUserGroupsDto: CreateUserGroupsDto,
   ): Promise<any> {

@@ -23,3 +23,8 @@ export interface IUserGroupDescription {
   langcode: string;
   usergroup: string;
 }
+
+export interface IUserGroupInfo
+  extends IUserGroup,
+    IUserGroupLink,
+    IUserGroupDescription {}

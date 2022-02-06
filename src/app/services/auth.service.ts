@@ -2,7 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthCredentialsDto } from '../dto/auth/auth-credential.dto';
 import { UsersService } from './users.service';
 import { JwtService } from '@nestjs/jwt';
-import { UserEntity, UserProfileEntity } from '../entities/user.entity';
+import {
+  UserEntity,
+  UserProfileEntity,
+  UserDataEntity,
+} from '../entities/user.entity';
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
 import {
@@ -10,8 +14,7 @@ import {
   preprocessUserResult,
 } from '../../utils/helper';
 import { AuthProviderRepository } from '../repositories/auth.repository';
-import { BaseService } from '../../base/base.service';
-import { AuthProviderEntity } from '../entities/auth-provider.entity';
+import { AuthProviderEntity } from '../entities/auth_provider.entity';
 import { Table } from '../../database/enums/tables.enum';
 import { IResponseUserToken } from '../interfaces/response.interface';
 import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
@@ -19,17 +22,7 @@ import { generateOTPDigits } from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
 import * as twilio from 'twilio';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import {
-  UserGroupLinksRepository,
-  UserGroupsRepository,
-} from '../repositories/user_groups.repository';
-import { UserGroupLinkEntity, UserGroupEntity } from '../entities/user_groups';
-import {
-  UserGroupIdEnum,
-  UserGroupTypeEnum,
-  UserGroupStatusEnum,
-} from '../../database/enums/tableFieldEnum/user_groups.enum';
-import { ImagesService } from './image.service';
+import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/user_groups.enum';
 import {
   ImagesLinksRepository,
   ImagesRepository,
@@ -37,15 +30,15 @@ import {
 import { ImagesEntity, ImagesLinksEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import { JoinTable } from '../../database/enums/joinTable.enum';
+import { UserGroupsService } from './user_groups.service';
 import { UserProfileRepository } from '../repositories/user.repository';
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
+    private userGroupService: UserGroupsService,
     private jwtService: JwtService,
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
-    private userGroupLinkRepository: UserGroupLinksRepository<UserGroupLinkEntity>,
-    private userGroupRepository: UserGroupsRepository<UserGroupEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
@@ -75,18 +68,31 @@ export class AuthService {
       created_at: convertToMySQLDateTime(),
     });
     //create a new record as customer position at ddv_usergroup_links
-    const userGroupForCustomer = await this.createUserGroupLink(
-      user.user_id,
-      UserGroupTypeEnum.Customer,
-    );
+    const userGroupForCustomer =
+      await this.userGroupService.createUserGroupLinkPosition(
+        user.user_id,
+        UserGroupTypeEnum.Customer,
+      );
     //create a new record at ddv_user_profiles
-    const newUserProfile = await this.createUserProfile({
+    const newUserProfile = await this.userService.createUserProfile({
       user_id: user.user_id,
       b_firstname: firstname,
       b_lastname: lastname,
       b_phone: phone,
     });
-    user = { ...user, ...userGroupForCustomer, ...newUserProfile };
+    // Create a new record at ddv_user_data
+    const newUserData = await this.userService.createUserData({
+      user_id: user.user_id,
+      type: '',
+      data: '',
+    });
+
+    user = {
+      ...user,
+      ...userGroupForCustomer,
+      ...newUserProfile,
+      ...newUserData,
+    };
 
     return {
       token: this.generateToken(user),
@@ -94,102 +100,14 @@ export class AuthService {
     };
   }
 
-  /**
-   * Get all fields from ddv_usergroup_links and ddv_usergroups
-   * @param user_id
-   * @param position
-   * @returns
-   */
-  async createUserGroupLink(
-    user_id: number,
-    position: string = UserGroupTypeEnum.Customer,
-  ): Promise<any> {
-    const userGroupForCustomer: UserGroupEntity =
-      await this.userGroupRepository.findOne({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.USER_GROUP_DESCRIPTIONS]: {
-              fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-              rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            },
-          },
-        },
-        where: {
-          status: UserGroupStatusEnum.Active,
-          type: position,
-          company_id: 0,
-        },
-      });
-    const newUserGroupLink: UserGroupLinkEntity =
-      await this.userGroupLinkRepository.create({
-        user_id: user_id,
-        usergroup_id: userGroupForCustomer.usergroup_id,
-      });
-    return { ...userGroupForCustomer, ...newUserGroupLink };
-  }
-
-  async createUserProfile(data: any): Promise<UserProfileEntity> {
-    return this.userProfileRepository.create(data);
-  }
-
   async login(data: any): Promise<IResponseUserToken> {
     const phone = data['phone'];
     const email = data['email'];
     const password = data['password'];
-    const findByEmail = {
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-        },
-      },
-      where: { email },
-    };
-
-    const findByPhone = {
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-        },
-      },
-      where: { phone },
-    };
 
     let user: UserEntity = phone
-      ? await this.userService.findOne(findByPhone)
-      : await this.userService.findOne(findByEmail);
+      ? await this.userService.findUserAllInfo({ phone })
+      : await this.userService.findUserAllInfo({ email });
 
     if (!user) {
       throw new NotFoundException('Người dùng không tồn tại.');
@@ -237,29 +155,8 @@ export class AuthService {
   ): Promise<IResponseUserToken> {
     // Check if user has been existings or not
 
-    let userExists: UserEntity = await this.userService.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-        },
-      },
-      where: { email: providerData.email },
+    let userExists: UserEntity = await this.userService.findUserAllInfo({
+      email: providerData.email,
     });
 
     if (!userExists) {
@@ -276,11 +173,23 @@ export class AuthService {
         b_lastname: userExists.lastname,
       });
       //create a new record as customer position at ddv_usergroup_links
-      const userGroupForCustomer = await this.createUserGroupLink(
-        userExists.user_id,
-        UserGroupTypeEnum.Customer,
-      );
-      userExists = { ...userExists, ...userProfile, ...userGroupForCustomer };
+      const userGroupForCustomer =
+        await this.userGroupService.createUserGroupLinkPosition(
+          userExists.user_id,
+          UserGroupTypeEnum.Customer,
+        );
+      // Create a new record at ddv_user_data
+      const newUserData = await this.userService.createUserData({
+        user_id: userExists.user_id,
+        type: '',
+        data: '',
+      });
+      userExists = {
+        ...userExists,
+        ...userProfile,
+        ...userGroupForCustomer,
+        ...newUserData,
+      };
     }
     // Create image at ddv_images and ddv_image_links
     let userImageLink = await this.imageLinksRepository.findOne({

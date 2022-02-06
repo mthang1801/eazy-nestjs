@@ -10,7 +10,7 @@ export enum StatusEnum {
 }
 
 export enum UserGroupTypeEnum {
-  'Wholesale' = 'C',
+  'Wholesale' = 'W',
   'Vendor' = 'V',
   'Administrator' = 'A',
 }

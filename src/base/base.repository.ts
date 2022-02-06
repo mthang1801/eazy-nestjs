@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
@@ -15,6 +15,7 @@ const orderCmds = [
 ];
 @Injectable()
 export class BaseRepositorty<T> {
+  private logger = new Logger(BaseRepositorty.name);
   constructor(
     protected readonly databaseService: DatabaseService,
     protected table: Table,
@@ -28,7 +29,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async create(params: any): Promise<any> {
-    console.log('=============== create ================');
+    this.logger.log('=============== create ================');
 
     if (Array.isArray(params) || typeof params !== 'object') {
       throw new HttpException(
@@ -56,7 +57,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async findById(id: number | any): Promise<T> {
-    console.log('=============== Find By Id ================');
+    this.logger.log('=============== Find By Id ================');
 
     const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
 
@@ -64,7 +65,6 @@ export class BaseRepositorty<T> {
     if (typeof id === 'object') {
       rows = await this.databaseService.executeQuery(stringQuery, [id]);
     } else {
-      console.log({ [PrimaryKeys[this.table]]: id });
       rows = await this.databaseService.executeQuery(stringQuery, [
         { [PrimaryKeys[this.table]]: id },
       ]);
@@ -81,14 +81,13 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async findOne(options: any): Promise<any> {
-    console.log('=============== FIND ONE ================');
+    this.logger.log('=============== FIND ONE ================');
     if (typeof options !== 'object') {
       throw new HttpException(
         'Tham số đưa vào phải là Object',
         HttpStatus.BAD_REQUEST,
       );
     }
-    console.log(options);
     let results;
     if (
       Object.keys(options).some(
@@ -110,7 +109,7 @@ export class BaseRepositorty<T> {
    * @returns array
    */
   async find(options: any): Promise<any[]> {
-    console.log('=============== FIND ================');
+    this.logger.log('=============== FIND ================');
     const optionKeys = Object.keys(options);
 
     const collection = new DatabaseCollection(this.table);
@@ -144,7 +143,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async update(id: number | any, params: any): Promise<T> {
-    console.log('=============== UPDATE ================');
+    this.logger.log('=============== UPDATE ================');
 
     if (typeof params !== 'object') {
       throw new HttpException(
@@ -188,7 +187,7 @@ export class BaseRepositorty<T> {
   }
 
   async delete(option: number | any): Promise<boolean> {
-    console.log('=============== DELETE BY option ================');
+    this.logger.log('=============== DELETE BY option ================');
 
     let queryString = `DELETE FROM ${this.table} WHERE `;
     let res;
