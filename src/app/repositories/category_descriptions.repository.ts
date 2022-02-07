@@ -12,4 +12,22 @@ export class CategoryDescriptionRepository<
     super(databaseService, table);
     this.table = Table.CATEGORY_DESCRIPTIONS;
   }
+  categoryDescriptionProps = [
+    'lang_code',
+    'category',
+    'description',
+    'meta_keywords',
+    'meta_description',
+    'page_title',
+    'age_warning_message',
+  ];
+  setData(data) {
+    const categoryDescriptionObject = {};
+    for (let [key, val] of Object.entries(data)) {
+      if (this.categoryDescriptionProps.includes(key)) {
+        categoryDescriptionObject[key] = val;
+      }
+    }
+    return categoryDescriptionObject;
+  }
 }

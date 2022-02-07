@@ -14,19 +14,10 @@ import {
 import { BaseController } from '../../../base/base.controllers';
 import { CategoryService } from '../../services/category.service';
 import { AuthGuard } from '../../../middlewares/be.auth';
-import {
-  CategoryDescriptionDto,
-  CreateCategoryDto,
-  CreateCategoryVendorProductCountDto,
-} from '../../dto/category/create-category.dto';
+import { CreateCategoryDto } from '../../dto/category/create-category.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
-import { ValidationPipe } from '@nestjs/common';
-import {
-  UpdateCategoryDescriptionDto,
-  UpdateCategoryVendorProductCountDto,
-} from '../../dto/category/update-category.dto';
 
 /**
  * Controller for Category
@@ -62,10 +53,10 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get()
-  async fetchList(@Query() query, @Res() res: Response): Promise<IResponse> {
-    const categoriesList = await this.categoryService.fetchList(query);
-
-    return this.responseSuccess(res, categoriesList);
+  async fetchListCategoryMenu(@Res() res: Response): Promise<IResponse> {
+    const categoriesMenuList =
+      await this.categoryService.fetchListCategoryMenu();
+    return this.responseSuccess(res, categoriesMenuList);
   }
 
   /**
@@ -95,6 +86,9 @@ export class CategoryController extends BaseController {
     const boolRes = await this.categoryService.Delete(id);
     return boolRes
       ? this.respondNoContent(res)
-      : this.respondNotFound(res, 'Xoá không thành công.');
+      : this.respondNotFound(
+          res,
+          `Xoá không thành công, không tìm thấy id ${id}.`,
+        );
   }
 }
