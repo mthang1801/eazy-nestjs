@@ -1,5 +1,3 @@
-
-
 export class Payment {
     payment_id : number;
     company_id: number;

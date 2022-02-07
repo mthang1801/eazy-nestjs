@@ -28,7 +28,8 @@ import {
   ImagesLinksRepository,
   ImagesRepository,
 } from '../repositories/image.repository';
-import { ImagesEntity, ImagesLinksEntity } from '../entities/image.entity';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsService } from './user_groups.service';
