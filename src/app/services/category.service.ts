@@ -173,6 +173,7 @@ export class CategoryService {
     const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
     });
+
     const updatedCategoryDescription =
       await this.categoryDescriptionRepo.update(
         oldCategoryDescription.category_description_id,
@@ -290,7 +291,6 @@ export class CategoryService {
   }
 
   async Delete(id: number): Promise<boolean> {
-    const category = await this.categoryRepository.findById(id);
     const deleteStatus = await this.categoryRepository.delete({
       category_id: id,
     });

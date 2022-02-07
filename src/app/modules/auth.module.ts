@@ -9,12 +9,14 @@ import { AuthProviderRepository } from '../repositories/auth.repository';
 
 import { UserGroupsModule } from './user_groups.module';
 import { ImageModule } from './image.module';
+import { MailModule } from './mail.module';
 
 @Module({
   imports: [
     UsersModule,
     UserGroupsModule,
     ImageModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

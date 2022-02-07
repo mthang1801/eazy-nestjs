@@ -55,24 +55,6 @@ export class CategoryController extends BaseController {
   }
 
   /**
-   * create new record in ddv_category_descriptions table
-   * @param categoryDescriptionDto
-   * @param res
-   * @returns
-   */
-  @Post('description/:category_id')
-  @UseGuards(AuthGuard)
-  async createDescription(
-    @Body() data: CategoryDescriptionDto,
-    @Param('category_id') category_id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const createdCategoryDescription =
-      await this.categoryService.CreateDescription(category_id, data);
-    return this.responseSuccess(res, createdCategoryDescription);
-  }
-
-  /**
    * Fetch list categories in ddv_categories table
    * @param skip number
    * @param limit number

@@ -8,6 +8,7 @@ import { UserGroupsModule } from './user_groups.module';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
 import { UserDataRepository } from '../repositories/user-data.repository';
+import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
 @Module({
   imports: [MailModule, UserGroupsModule],
   exports: [
@@ -15,12 +16,14 @@ import { UserDataRepository } from '../repositories/user-data.repository';
     UserRepository,
     UserProfileRepository,
     UserDataRepository,
+    UserMailingListRepository,
   ],
   providers: [
     UsersService,
     UserRepository,
     UserProfileRepository,
     UserDataRepository,
+    UserMailingListRepository,
   ],
   controllers: [UsersControllerBe, UsersControllerFe],
 })

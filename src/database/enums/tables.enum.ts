@@ -6,6 +6,7 @@ export enum Table {
   USER_GROUP_PRIVILEGES = 'ddv_usergroup_privileges',
   USER_GROUP_DESCRIPTIONS = 'ddv_usergroup_descriptions',
   USER_GROUP_LINKS = 'ddv_usergroup_links',
+  USER_MAILING_LISTS = 'ddv_user_mailing_lists',
   USER_DATA = 'ddv_user_data',
   CATEGORIES = 'ddv_categories',
   CATEGORY_DESCRIPTIONS = 'ddv_category_descriptions',

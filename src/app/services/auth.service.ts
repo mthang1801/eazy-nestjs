@@ -9,17 +9,17 @@ import {
   UserGeneralInfoEntity,
 } from '../entities/user.entity';
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
-import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
-import {
-  convertToMySQLDateTime,
-  preprocessUserResult,
-} from '../../utils/helper';
+
 import { AuthProviderRepository } from '../repositories/auth.repository';
 import { AuthProviderEntity } from '../entities/auth_provider.entity';
 import { Table } from '../../database/enums/tables.enum';
 import { IResponseUserToken } from '../interfaces/response.interface';
 import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
-import { generateOTPDigits } from '../../utils/helper';
+import {
+  generateOTPDigits,
+  convertToMySQLDateTime,
+  preprocessUserResult,
+} from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
 import * as twilio from 'twilio';
 import { HttpException, HttpStatus } from '@nestjs/common';
@@ -36,15 +36,25 @@ import { UserGroupsService } from './user_groups.service';
 
 import { UserGroupEntity } from '../entities/user_groups';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
+import { MailService } from './mail.service';
+import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
+import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
+import { UserMailingListsEntity } from '../entities/user-mailing-lists';
+import { v4 as uuid } from 'uuid';
+import { UserMailingListsEnum } from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
+import { UserRepository } from '../repositories/user.repository';
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private userGroupService: UserGroupsService,
     private jwtService: JwtService,
+    private mailService: MailService,
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
+    private userRepository: UserRepository<UserEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
+    private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
   ) {}
 
@@ -69,6 +79,7 @@ export class AuthService {
       password: passwordHash,
       phone,
       salt,
+      status: UserStatusEnum.Deactive,
       created_at: convertToMySQLDateTime(),
     });
     //create a new record as customer position at ddv_usergroup_links
@@ -93,6 +104,24 @@ export class AuthService {
 
     const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
       userGroupForCustomer.usergroup_id,
+    );
+
+    // Create token to activate account through email
+    const newMailingList: UserMailingListsEntity =
+      await this.userMailingListRepository.create({
+        subscriber_id: user.user_id,
+        activation_key: uuid(),
+        confirmed: 0,
+        mail_type: UserMailingListsEnum.ActivateSignUpAccount,
+        expired_at: convertToMySQLDateTime(
+          new Date(Date.now() + 3 * 3600 * 1000),
+        ),
+        created_at: convertToMySQLDateTime(),
+      });
+
+    await this.mailService.sendUserActivateSignUpAccount(
+      user,
+      newMailingList.activation_key,
     );
 
     user = {
@@ -121,6 +150,14 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('Người dùng không tồn tại.');
     }
+
+    if (user.status !== UserStatusEnum.Deactive) {
+      throw new HttpException(
+        'Tài khoản chưa được kích hoạt, vui lòng truy cập vào email để kích hoạt tài khoản.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     if (desaltHashPassword(password, user.salt) !== user.password) {
       throw new HttpException(
         phone
@@ -343,5 +380,39 @@ export class AuthService {
 
   async restorePasswordByOTP(user_id: number, otp: number): Promise<boolean> {
     return await this.userService.restorePasswordByOTP(user_id, otp);
+  }
+
+  async activeSignUpAccount(user_id: number, token: string): Promise<void> {
+    const checkMail: UserMailingListsEntity =
+      await this.userMailingListRepository.findOne({
+        subscriber_id: user_id,
+        activation_key: token,
+      });
+    if (!checkMail) {
+      throw new HttpException(
+        'Không tìm thấy email mail phù hợp .',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (checkMail.confirmed !== 0) {
+      throw new HttpException('Token đã được sử dụng.', HttpStatus.NOT_FOUND);
+    }
+    if (new Date(checkMail.expired_at).getTime() < new Date().getTime()) {
+      await this.userMailingListRepository.delete({
+        list_id: checkMail.list_id,
+      });
+      throw new HttpException(
+        'Mã xác thực đã hết hạn, vui lòng kích hoạt lại.',
+        408,
+      );
+    }
+    // Update user
+    await this.userRepository.update(user_id, {
+      status: UserStatusEnum.Active,
+    });
+    // Update email
+    await this.userMailingListRepository.update(checkMail.list_id, {
+      confirmed: 1,
+    });
   }
 }
