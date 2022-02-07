@@ -16,8 +16,8 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 
 @Injectable()
 export class BannerService extends BaseService<
-Banner,
-BannerRepository<Banner>
+  Banner,
+  BannerRepository<Banner>
 > {
   constructor(
     repository: BannerRepository<Banner>,
@@ -39,7 +39,6 @@ BannerRepository<Banner>
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-
         },
       },
 
@@ -61,36 +60,38 @@ BannerRepository<Banner>
     });
 
     const result = await Promise.all([images, banner]);
-    let _banner=[];
-    result[1].forEach(ele=>{
-  
-      console.log({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
-      _banner.push({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
-     
-    })
+    let _banner = [];
+    result[1].forEach((ele) => {
+      console.log({
+        ...ele,
+        images: result[0].filter((img) => img.object_id == ele.banner_id),
+      });
+      _banner.push({
+        ...ele,
+        images: result[0].filter((img) => img.object_id == ele.banner_id),
+      });
+    });
     return _banner;
   }
   async getById(id) {
     const string = `${this.table}.banner_id`;
-    const string1 =`${Table.IMAGE_LINK}.object_id`
-    const banner =  this.repository.findOne({
+    const string1 = `${Table.IMAGE_LINK}.object_id`;
+    const banner = this.repository.findOne({
       select: ['*'],
       where: { [string]: id },
       join: {
         [JoinTable.join]: {
-          
           ddv_banner_descriptions: {
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-         
         },
       },
 
       skip: 0,
       limit: 30,
     });
-   
+
     const images = this.imageLinkService.find({
       select: ['*'],
       where: { [string1]: id },
@@ -108,8 +109,8 @@ BannerRepository<Banner>
     });
 
     const result = await Promise.all([images, banner]);
-   
-    return {...result[1],images:result[0]};
+
+    return { ...result[1], images: result[0] };
   }
   async Create(data: BannerCreateDTO) {
     ////=====================| Flow|====================
@@ -198,12 +199,6 @@ BannerRepository<Banner>
       // let _banner_image = await this.bannerImagesService.Create(
       //   bannerImageTableData,
       // );
-
-<<<<<<< HEAD
-      return 'Banner Added';
-=======
-      return _banner;
->>>>>>> 11b8db9ea894b527e1bffbaceefbfb7a802f617f
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -267,7 +262,12 @@ BannerRepository<Banner>
     );
 
     //=====
-    const result = await Promise.all([_banner, _banner_description, _images, _images_link]);
+    const result = await Promise.all([
+      _banner,
+      _banner_description,
+      _images,
+      _images_link,
+    ]);
     return result[0];
   }
   async Delete(banner_id, images_id) {
