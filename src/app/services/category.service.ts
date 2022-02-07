@@ -289,7 +289,14 @@ export class CategoryService {
     return list;
   }
 
-  async Delete(id: number): Promise<any> {}
+  async Delete(id: number): Promise<boolean> {
+    const category = await this.categoryRepository.findById(id);
+    const deleteStatus = await this.categoryRepository.delete({
+      category_id: id,
+    });
+    await this.categoryDescriptionRepo.delete({ category_id: id });
+    return deleteStatus;
+  }
 
   // async updateCategoryVendorProductCount(
   //   data: UpdateCategoryVendorProductCountDto,
