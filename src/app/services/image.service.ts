@@ -16,4 +16,5 @@ export class ImagesService extends BaseService<
   async Create(data) {
     return this.repository.create(data);
   }
+  
 }

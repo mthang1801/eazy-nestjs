@@ -16,8 +16,8 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 
 @Injectable()
 export class BannerService extends BaseService<
-  Banner,
-  BannerRepository<Banner>
+Banner,
+BannerRepository<Banner>
 > {
   constructor(
     repository: BannerRepository<Banner>,
@@ -30,53 +30,88 @@ export class BannerService extends BaseService<
     super(repository, table);
     this.table = Table.BANNER;
   }
-  async getAllBanner() {
-    const banner = await this.repository.find({
+  async getAll() {
+    const banner = this.repository.find({
       select: ['*'],
       join: {
         [JoinTable.join]: {
-          ddv_images_links: { fieldJoin: 'object_id', rootJoin: 'banner_id' },
           ddv_banner_descriptions: {
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-          ddv_images: {
-            fieldJoin: 'image_id',
-            rootJoin: 'ddv_images_links.image_id',
-          },
+
         },
       },
 
       skip: 0,
       limit: 30,
     });
-    return banner;
+    const images = this.imageLinkService.find({
+      select: ['*'],
+      join: {
+        [JoinTable.join]: {
+          ddv_images: {
+            fieldJoin: 'image_id',
+            rootJoin: `${Table.IMAGE_LINK}.image_id`,
+          },
+        },
+      },
+      skip: 0,
+      limit: 30,
+    });
+
+    const result = await Promise.all([images, banner]);
+    let _banner=[];
+    result[1].forEach(ele=>{
+  
+      console.log({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
+      _banner.push({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
+     
+    })
+    return _banner;
   }
-  async getBannerById(id) {
+  async getById(id) {
     const string = `${this.table}.banner_id`;
-    const banner = await this.repository.findOne({
+    const string1 =`${Table.IMAGE_LINK}.object_id`
+    const banner =  this.repository.findOne({
       select: ['*'],
       where: { [string]: id },
       join: {
         [JoinTable.join]: {
-          ddv_images_links: { fieldJoin: 'object_id', rootJoin: 'banner_id' },
+          
           ddv_banner_descriptions: {
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-          ddv_images: {
-            fieldJoin: 'image_id',
-            rootJoin: 'ddv_images_links.image_id',
-          },
+         
         },
       },
 
       skip: 0,
       limit: 30,
     });
-    return banner;
+   
+    const images = this.imageLinkService.find({
+      select: ['*'],
+      where: { [string1]: id },
+
+      join: {
+        [JoinTable.join]: {
+          ddv_images: {
+            fieldJoin: 'image_id',
+            rootJoin: `${Table.IMAGE_LINK}.image_id`,
+          },
+        },
+      },
+      skip: 0,
+      limit: 30,
+    });
+
+    const result = await Promise.all([images, banner]);
+   
+    return {...result[1],images:result[0]};
   }
-  async CreateBanner(data: BannerCreateDTO) {
+  async Create(data: BannerCreateDTO) {
     ////=====================| Flow|====================
     ///=== admin hoặc client sẽ truyền vào 2 thuộc tính quan trọng là tên banner, hinh cua banner
     //== optional description
@@ -164,12 +199,16 @@ export class BannerService extends BaseService<
       //   bannerImageTableData,
       // );
 
+<<<<<<< HEAD
       return 'Banner Added';
+=======
+      return _banner;
+>>>>>>> 11b8db9ea894b527e1bffbaceefbfb7a802f617f
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
-  async UpdateBanner(data: UpdateBannerDTO, id: string) {
+  async Update(data: UpdateBannerDTO, id: string) {
     const { url, image, banner, description, position, status, type } = data;
     //===================|Update ddve_banner table|===================
     const bannerTableData = {
@@ -228,9 +267,10 @@ export class BannerService extends BaseService<
     );
 
     //=====
-    Promise.all([_banner, _banner_description, _images, _images_link]);
+    const result = await Promise.all([_banner, _banner_description, _images, _images_link]);
+    return result[0];
   }
-  async DeleteBanner(banner_id, images_id) {
+  async Delete(banner_id, images_id) {
     //Check if banner_id match with images_id
     let count = await this.bannerImagesService.find({
       where: { banner_id: banner_id, banner_image_id: images_id },

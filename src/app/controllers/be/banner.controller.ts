@@ -31,13 +31,13 @@ export class BannerController extends BaseController {
   @Get()
   async getAllBanners(@Res() res,
   ): Promise<IResponse> {
-    const banners = await this.bannerService.getAllBanner();
+    const banners = await this.bannerService.getAll();
     return this.responseSuccess(res, banners);
   }
 
   @Get('/:id')
   async getAllBannersById(@Res() res,@Param('id') id): Promise<IResponse> {
-    const banners = await this.bannerService.getBannerById(id);
+    const banners = await this.bannerService.getById(id);
     return this.responseSuccess(res, banners);
   }
 
@@ -51,7 +51,7 @@ export class BannerController extends BaseController {
   @UsePipes(ValidationPipe)
   @UseGuards(AuthGuard)
   async createBanner(@Res() res,@Body() body: BannerCreateDTO): Promise<IResponse> {
-    const banner = await this.bannerService.CreateBanner(body);
+    const banner = await this.bannerService.Create(body);
     return this.respondCreated(res, banner);
   }
 
@@ -59,8 +59,8 @@ export class BannerController extends BaseController {
   @UsePipes(ValidationPipe)
   @UseGuards(AuthGuard)
   async updateBannerbyId(@Res() res,@Body() body: UpdateBannerDTO, @Param('id') id): Promise<IResponse> {
-    const banner = await this.bannerService.UpdateBanner(body, id);
-    return this.respondCreated(res, banner);
+    const banner = await this.bannerService.Update(body, id);
+    return this.responseSuccess(res, banner);
   }
 
   @Delete('/:banner_id/images/:images_id')
@@ -69,7 +69,7 @@ export class BannerController extends BaseController {
     @Param('banner_id') banner_id,
     @Param('images_id') images_id,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.DeleteBanner(banner_id, images_id);
+    const banner = await this.bannerService.Delete(banner_id, images_id);
 
     return this.respondCreated(res, banner);
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { ImagesLinksEntity } from '../entities/image.entity';
+import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImagesLinksRepository } from '../repositories/image.repository';
 import { Table } from '../../database/enums/index';
 import { LoggerService } from '../../logger/custom.logger';

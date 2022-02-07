@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { BannerImages } from '../entities/banner.entity';
+import { BannerImages } from '../entities/banner_images.entity';
 import { BannerImageRepository } from '../repositories/banner.repository';
 import { Table } from '../../database/enums/index';
 

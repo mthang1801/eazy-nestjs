@@ -27,7 +27,8 @@ import {
   ImagesLinksRepository,
   ImagesRepository,
 } from '../repositories/image.repository';
-import { ImagesLinksEntity, ImagesEntity } from '../entities/image.entity';
+import {  ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import {
   UserGroupStatusEnum,
