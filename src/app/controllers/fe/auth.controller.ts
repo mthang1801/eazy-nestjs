@@ -43,7 +43,7 @@ export class AuthController extends BaseController {
     @Res() res,
   ): Promise<IResponse> {
     const userResponse = await this.authService.signUp(authCredentialsDto);
-    return this.respondCreated(res, userResponse);
+    return this.responseSuccess(res, userResponse);
   }
 
   /**
@@ -162,7 +162,7 @@ export class AuthController extends BaseController {
     @Res() res,
   ): Promise<IResponse> {
     const otp = await this.authService.resetPasswordByPhone(phone);
-    return this.respondCreated(res, { otp });
+    return this.responseSuccess(res, { otp });
   }
 
   /**

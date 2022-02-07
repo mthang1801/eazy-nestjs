@@ -34,7 +34,7 @@ export class AuthController extends BaseController {
     @Res() res,
   ): Promise<IResponse> {
     const userResponse = await this.authService.signUp(authCredentialsDto);
-    return this.respondCreated(res, userResponse);
+    return this.responseSuccess(res, userResponse);
   }
 
   /**

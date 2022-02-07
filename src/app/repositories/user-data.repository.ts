@@ -3,10 +3,13 @@ import { DatabaseService } from '../../database/database.service';
 import { BaseRepositorty } from '../../base/base.repository';
 import { UserEntity, UserDataEntity } from '../entities/user.entity';
 import { Table } from '../../database/enums/index';
+
 @Injectable()
-export class UserRepository<UserEntity> extends BaseRepositorty<UserEntity> {
+export class UserDataRepository<
+  UserDataEntity,
+> extends BaseRepositorty<UserDataEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USERS;
+    this.table = Table.USER_DATA;
   }
 }

@@ -8,11 +8,7 @@ import {
 import { UserDataEntity, UserEntity } from '../entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from './mail.service';
-import {
-  UserRepository,
-  UserProfileRepository,
-  UserDataRepository,
-} from '../repositories/user.repository';
+import { UserRepository } from '../repositories/user.repository';
 import { Table } from '../../database/enums/index';
 import {
   convertToMySQLDateTime,
@@ -42,6 +38,8 @@ import {
   UserGroupLinksRepository,
   UserGroupsRepository,
 } from '../repositories/user_groups.repository';
+import { UserDataRepository } from '../repositories/user-data.repository';
+import { UserProfileRepository } from '../repositories/user-profile.repository';
 
 @Injectable()
 export class UsersService {

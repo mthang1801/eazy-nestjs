@@ -32,8 +32,9 @@ import { ImagesEntity, ImagesLinksEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsService } from './user_groups.service';
-import { UserProfileRepository } from '../repositories/user.repository';
+
 import { UserGroupEntity } from '../entities/user_groups';
+import { UserProfileRepository } from '../repositories/user-profile.repository';
 @Injectable()
 export class AuthService {
   constructor(
@@ -149,7 +150,7 @@ export class AuthService {
     return dataResult;
   }
 
-  async getUserImage(user_id: number): Promise<ImagesEntity> {
+  async getUserImage(user_id: number): Promise<any> {
     const imageLinks = await this.imageLinksRepository.findOne({
       where: {
         object_id: user_id,

@@ -5,87 +5,105 @@ export class CreateCategoryDto {
   parent_id: number;
 
   @IsOptional()
-  id_path: string;
+  id_path: string = '';
 
   @IsOptional()
-  level: number;
+  level: number = 1;
 
   @IsOptional()
-  company_id: number;
+  company_id: number = 0;
 
   @IsOptional()
-  usergroup_ids: string;
+  usergroup_ids: string = '0';
 
   @IsOptional()
-  status: string;
+  status: string = 'A';
 
   @IsOptional()
-  product_count: number;
+  product_count: number = 0;
 
   @IsOptional()
-  position: number;
+  position: number = 0;
 
   @IsOptional()
-  is_op: string;
+  is_op: string = 'N';
 
   @IsOptional()
-  localization: string;
+  localization: string = '';
 
   @IsOptional()
-  age_verification: string;
+  age_verification: string = 'N';
 
   @IsOptional()
-  age_limit: number;
+  age_limit: number = 0;
 
   @IsOptional()
-  parent_age_verification: string;
+  parent_age_verification: string = 'N';
 
   @IsOptional()
-  parent_age_limit: number;
+  parent_age_limit: number = 0;
 
   @IsOptional()
-  selected_views: string;
+  selected_views: string = '';
 
   @IsOptional()
-  default_view: string;
+  default_view: string = '';
 
   @IsOptional()
-  product_details_view: string;
+  product_details_view: string = '';
 
   @IsOptional()
-  product_columns: string;
+  product_columns: number = 0;
 
   @IsOptional()
-  is_trash: string;
+  is_trash: string = 'N';
 
   @IsOptional()
-  category_type: string;
+  category_type: string = 'C';
+
+  @IsOptional()
+  lang_code: string = 'vn';
+
+  @IsOptional()
+  category: string = '';
+
+  @IsOptional()
+  description: string = '';
+
+  @IsOptional()
+  meta_keywords: string = '';
+
+  @IsOptional()
+  meta_description: string = '';
+
+  @IsOptional()
+  page_title: string = '';
+
+  @IsOptional()
+  age_warning_message: string = '';
 }
 
 export class CategoryDescriptionDto {
-  @IsNotEmpty()
-  category_id: number;
+  @IsOptional()
+  lang_code: string = 'vn';
 
   @IsOptional()
-  lang_code: string;
+  category: string = '';
 
   @IsOptional()
-  category: string;
+  description: string = '';
 
   @IsOptional()
-  description: string;
+  meta_keywords: string = '';
 
   @IsOptional()
-  meta_keywords: string;
+  meta_description: string = '';
 
   @IsOptional()
-  meta_description: string;
+  page_title: string = '';
 
   @IsOptional()
-  page_title: string;
-
-  @IsOptional()
-  age_warning_message: string;
+  age_warning_message: string = '';
 }
 
 export class CreateCategoryVendorProductCountDto {

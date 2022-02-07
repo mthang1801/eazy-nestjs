@@ -163,6 +163,7 @@ export class BannerService extends BaseService<
       // let _banner_image = await this.bannerImagesService.Create(
       //   bannerImageTableData,
       // );
+
       return 'Banner Added';
     } catch (error) {
       throw new InternalServerErrorException(error.message);

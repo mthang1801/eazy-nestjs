@@ -13,7 +13,7 @@ export enum PrimaryKeys {
   ddv_images = 'image_id',
   ddv_images_links = 'image_id',
   ddv_categories = 'category_id',
-  ddv_category_descriptions = 'category_id',
+  ddv_category_descriptions = 'category_description_id',
   ddv_category_vendor_product_count = 'category_id',
   ddv_statuses = 'status_id',
   ddv_status_descriptions = 'status_id',
