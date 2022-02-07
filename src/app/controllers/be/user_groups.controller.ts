@@ -313,6 +313,12 @@ export class UsergroupsController extends BaseController {
     return this.respondCreated(res, newUserGroupPrivilege);
   }
 
+  /**
+   * Get list user groups privilege by usergroup_id
+   * @param usergroup_id
+   * @param res
+   * @returns
+   */
   @Get('/privilege/usergroup/:usergroup_id')
   async getUserGroupPrivilegeByUserGroupId(
     @Param('usergroup_id') usergroup_id: number,

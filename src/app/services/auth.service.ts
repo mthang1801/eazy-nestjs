@@ -6,6 +6,7 @@ import {
   UserEntity,
   UserProfileEntity,
   UserDataEntity,
+  UserGeneralInfoEntity,
 } from '../entities/user.entity';
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
@@ -32,6 +33,7 @@ import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsService } from './user_groups.service';
 import { UserProfileRepository } from '../repositories/user.repository';
+import { UserGroupEntity } from '../entities/user_groups';
 @Injectable()
 export class AuthService {
   constructor(
@@ -68,7 +70,7 @@ export class AuthService {
       created_at: convertToMySQLDateTime(),
     });
     //create a new record as customer position at ddv_usergroup_links
-    const userGroupForCustomer =
+    const userGroupForCustomer: UserGroupEntity =
       await this.userGroupService.createUserGroupLinkPosition(
         user.user_id,
         UserGroupTypeEnum.Customer,
@@ -87,12 +89,17 @@ export class AuthService {
       data: '',
     });
 
+    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+      userGroupForCustomer.usergroup_id,
+    );
+
     user = {
       ...user,
       ...userGroupForCustomer,
       ...newUserProfile,
       ...newUserData,
     };
+    user['menu'] = menu;
 
     return {
       token: this.generateToken(user),
@@ -105,7 +112,7 @@ export class AuthService {
     const email = data['email'];
     const password = data['password'];
 
-    let user: UserEntity = phone
+    let user: UserGeneralInfoEntity = phone
       ? await this.userService.findUserAllInfo({ phone })
       : await this.userService.findUserAllInfo({ email });
 
@@ -126,6 +133,13 @@ export class AuthService {
     });
 
     user['image'] = await this.getUserImage(user.user_id);
+
+    // get menu at ddv_usergroup_privileges
+    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+      user.usergroup_id,
+    );
+
+    user['menu'] = menu;
 
     const dataResult = {
       token: this.generateToken(user),
@@ -155,7 +169,7 @@ export class AuthService {
   ): Promise<IResponseUserToken> {
     // Check if user has been existings or not
 
-    let userExists: UserEntity = await this.userService.findUserAllInfo({
+    let userExists = await this.userService.findUserAllInfo({
       email: providerData.email,
     });
 
@@ -240,6 +254,12 @@ export class AuthService {
       );
     }
 
+    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+      userExists.usergroup_id,
+    );
+
+    userExists['menu'] = menu;
+
     //Update current provider at ddv_users
     await this.userService.updateUser(userExists.user_id, {
       user_login: providerName,
@@ -249,8 +269,9 @@ export class AuthService {
     const userData = {
       ...preprocessUserResult(userExists),
     };
+
     return {
-      token: this.generateToken(userExists),
+      token: this.generateToken(userData),
       userData,
     };
   }
