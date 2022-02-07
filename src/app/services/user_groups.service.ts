@@ -1,43 +1,43 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as _ from 'lodash';
-import {
-  UserGroupsRepository,
-  UserGroupDescriptionsRepository,
-  UserGroupLinksRepository,
-  UserGroupPrivilegesRepository,
-} from '../repositories/user_groups.repository';
 
 import { Table } from '../../database/enums/tables.enum';
-import {
-  CreateUserGroupsDto,
-  CreateUserGroupDescriptionDto,
-  CreateUserGroupLinkDto,
-} from '../dto/usergroups/create-usergroups.dto';
+
 import { UserRepository } from '../repositories/user.repository';
 import {
   UserGroupDescriptionEntity,
   UserGroupEntity,
   UserGroupLinkEntity,
   UserGroupPrivilegeEntity,
-} from '../entities/user_groups';
+} from '../entities/usergroups.entity';
 import { UserEntity } from '../entities/user.entity';
-import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
-import { convertToMySQLDateTime, formatDate } from '../../utils/helper';
-import { IUserGroupLink } from '../interfaces/user_groups.interface';
-import {
-  UpdateUserGroupsDto,
-  UpdateUserGroupDescriptionDto,
-} from '../dto/usergroups/update-usergroups.dto';
+
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import {
-  UpdateUserGroupLinkDto,
-  UpdateUserGroupPrivilegeDto,
-} from '../dto/usergroups/update-usergroups.dto';
-import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroups.dto';
+
 import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from '../../database/enums/tableFieldEnum/user_groups.enum';
+import { UserGroupsRepository } from '../repositories/user_groups.repository';
+import { UserGroupPrivilegesRepository } from '../repositories/usergroup_privileges.repository';
+import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
+import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
+import {
+  CreateUserGroupsDto,
+  UpdateUserGroupsDto,
+} from '../dto/usergroups/usergroups.dto';
+import {
+  CreateUserGroupPrivilegeDto,
+  UpdateUserGroupPrivilegeDto,
+} from '../dto/usergroups/usergroup_privilege.dto';
+import {
+  UpdateUserGroupLinkDto,
+  CreateUserGroupLinkDto,
+} from '../dto/usergroups/usergroup_link.dto';
+import {
+  CreateUserGroupDescriptionDto,
+  UpdateUserGroupDescriptionDto,
+} from '../dto/usergroups/usergroup_description.dto';
 
 @Injectable()
 export class UserGroupsService {

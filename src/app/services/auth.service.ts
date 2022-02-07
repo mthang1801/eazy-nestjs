@@ -2,12 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthCredentialsDto } from '../dto/auth/auth-credential.dto';
 import { UsersService } from './users.service';
 import { JwtService } from '@nestjs/jwt';
-import {
-  UserEntity,
-  UserProfileEntity,
-  UserDataEntity,
-  UserGeneralInfoEntity,
-} from '../entities/user.entity';
+
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
 
 import { AuthProviderRepository } from '../repositories/auth.repository';
@@ -34,15 +29,17 @@ import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsService } from './user_groups.service';
 
-import { UserGroupEntity } from '../entities/user_groups';
+import { UserGroupEntity } from '../entities/usergroups.entity';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
 import { MailService } from './mail.service';
 import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
-import { UserMailingListsEntity } from '../entities/user-mailing-lists';
+import { UserMailingListsEntity } from '../entities/user-mailing-lists.entity';
 import { v4 as uuid } from 'uuid';
 import { UserMailingListsEnum } from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
 import { UserRepository } from '../repositories/user.repository';
+import { UserProfileEntity } from '../entities/user_profile.entity';
+import { UserEntity, UserGeneralInfoEntity } from '../entities/user.entity';
 @Injectable()
 export class AuthService {
   constructor(
@@ -151,7 +148,7 @@ export class AuthService {
       throw new NotFoundException('Người dùng không tồn tại.');
     }
 
-    if (user.status !== UserStatusEnum.Deactive) {
+    if (user.status === UserStatusEnum.Deactive) {
       throw new HttpException(
         'Tài khoản chưa được kích hoạt, vui lòng truy cập vào email để kích hoạt tài khoản.',
         HttpStatus.UNAUTHORIZED,

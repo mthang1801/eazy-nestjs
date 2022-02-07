@@ -47,10 +47,8 @@ export class MailService {
   ): Promise<void> {
     const url = join(
       'https://ddvwsdev.ntlogistics.vn',
-
       `active?user_id=${user.user_id}&token=${token}`,
     );
-    console.log(user);
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Di Động Việt [Kích hoạt tài khoản]',

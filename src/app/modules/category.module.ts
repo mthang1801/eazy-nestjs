@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { CategoryService } from '../services/category.service';
 import { CategoryController } from '../controllers/be/category.controller';
-import {
-  CategoryDescriptionRepository,
-  CategoryRepository,
-  CategoryVendorProductCountRepository,
-} from '../repositories/category.repository';
+import { CategoryRepository } from '../repositories/category.repository';
+import { CategoryDescriptionRepository } from '../repositories/category_descriptions.repository';
+import { CategoryVendorProductCountRepository } from '../repositories/category_vendor_product_count.repository';
 
 @Module({
   providers: [

@@ -22,25 +22,3 @@ export interface ICategory {
   is_trash: string;
   category_type: string;
 }
-
-export interface ICategoryDescription {
-  category_id: number;
-  lang_code: string;
-  category: string;
-  description: string;
-  meta_keywords: string;
-  meta_description: string;
-  page_title: string;
-  age_warning_message: string;
-}
-
-export interface ICategoryVendorProductCount {
-  company_id: number;
-  category_id: number;
-  product_count: number;
-}
-
-export interface IJoinedCategory
-  extends ICategory,
-    ICategoryDescription,
-    ICategoryVendorProductCount {}

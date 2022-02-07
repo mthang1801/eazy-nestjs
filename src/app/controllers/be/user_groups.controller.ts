@@ -11,27 +11,28 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import {
-  CreateUserGroupsDto,
-  CreateUserGroupDescriptionDto,
-  CreateUserGroupLinkDto,
-} from '../../dto/usergroups/create-usergroups.dto';
+
 import { UserGroupsService } from '../../services/user_groups.service';
 import { BaseController } from '../../../base/base.controllers';
-import { IUser } from '../../interfaces/users.interface';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
-import { Roles } from 'src/app/helpers/decorators/roles.decorator';
 import { Response } from 'express';
 import {
-  UpdateUserGroupLinkDto,
-  UpdateUserGroupPrivilegeDto,
-} from '../../dto/usergroups/update-usergroups.dto';
-import { CreateUserGroupPrivilegeDto } from '../../dto/usergroups/create-usergroups.dto';
-import {
+  CreateUserGroupsDto,
   UpdateUserGroupsDto,
+} from 'src/app/dto/usergroups/usergroups.dto';
+import {
+  CreateUserGroupDescriptionDto,
   UpdateUserGroupDescriptionDto,
-} from '../../dto/usergroups/update-usergroups.dto';
+} from 'src/app/dto/usergroups/usergroup_description.dto';
+import {
+  CreateUserGroupLinkDto,
+  UpdateUserGroupLinkDto,
+} from 'src/app/dto/usergroups/usergroup_link.dto';
+import {
+  CreateUserGroupPrivilegeDto,
+  UpdateUserGroupPrivilegeDto,
+} from 'src/app/dto/usergroups/usergroup_privilege.dto';
 
 /**
  * User groups controllers
@@ -57,7 +58,7 @@ export class UsergroupsController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const newUserGroup = await this.usersGroupService.createUserGroup(data);
-    return this.respondCreated(res, newUserGroup);
+    return this.responseSuccess(res, newUserGroup);
   }
 
   /**
@@ -159,7 +160,7 @@ export class UsergroupsController extends BaseController {
   ): Promise<IResponse> {
     const newUserGroupDesc =
       await this.usersGroupService.createUserGroupDescription(data);
-    return this.respondCreated(res, newUserGroupDesc);
+    return this.responseSuccess(res, newUserGroupDesc);
   }
 
   /**
@@ -238,7 +239,7 @@ export class UsergroupsController extends BaseController {
     const newUserGroupLink = await this.usersGroupService.createUserGroupLink(
       data,
     );
-    return this.respondCreated(res, newUserGroupLink);
+    return this.responseSuccess(res, newUserGroupLink);
   }
 
   /**
@@ -310,7 +311,7 @@ export class UsergroupsController extends BaseController {
   ): Promise<IResponse> {
     const newUserGroupPrivilege =
       await this.usersGroupService.createUserGroupPrivilege(data);
-    return this.respondCreated(res, newUserGroupPrivilege);
+    return this.responseSuccess(res, newUserGroupPrivilege);
   }
 
   /**
@@ -344,7 +345,7 @@ export class UsergroupsController extends BaseController {
   ): Promise<IResponse> {
     const newUserGroupPrivilege =
       await this.usersGroupService.updateUserGroupPrivilege(data);
-    return this.respondCreated(res, newUserGroupPrivilege);
+    return this.responseSuccess(res, newUserGroupPrivilege);
   }
 
   /**

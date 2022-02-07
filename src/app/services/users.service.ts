@@ -5,7 +5,7 @@ import {
   NotFoundException,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { UserDataEntity, UserEntity } from '../entities/user.entity';
+import { UserEntity } from '../entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from './mail.service';
 import { UserRepository } from '../repositories/user.repository';
@@ -16,7 +16,7 @@ import {
 } from '../../utils/helper';
 import { BaseService } from '../../base/base.service';
 import { ObjectLiteral } from '../../common/ObjectLiteral';
-import { UserProfileEntity } from '../entities/user.entity';
+
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
 
@@ -34,13 +34,16 @@ import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from 'src/database/enums/tableFieldEnum/user_groups.enum';
-import { UserGroupEntity, UserGroupLinkEntity } from '../entities/user_groups';
 import {
-  UserGroupLinksRepository,
-  UserGroupsRepository,
-} from '../repositories/user_groups.repository';
+  UserGroupEntity,
+  UserGroupLinkEntity,
+} from '../entities/usergroups.entity';
+import { UserGroupsRepository } from '../repositories/user_groups.repository';
 import { UserDataRepository } from '../repositories/user-data.repository';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
+import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
+import { UserDataEntity } from '../entities/user_data.entity';
+import { UserProfileEntity } from '../entities/user_profile.entity';
 
 @Injectable()
 export class UsersService {

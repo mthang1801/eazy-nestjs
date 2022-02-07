@@ -10,12 +10,13 @@ import {
   UserGroupLinkEntity,
   UserGroupDescriptionEntity,
 } from '../entities/usergroups.entity';
+
 @Injectable()
-export class UserGroupsRepository<
-  UserGroupEntity,
-> extends BaseRepositorty<UserGroupEntity> {
+export class UserGroupLinksRepository<
+  UserGroupLinkEntity,
+> extends BaseRepositorty<UserGroupLinkEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USER_GROUPS;
+    this.table = Table.USER_GROUP_LINKS;
   }
 }
