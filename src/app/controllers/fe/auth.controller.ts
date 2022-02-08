@@ -191,7 +191,14 @@ export class AuthController extends BaseController {
     @Query('token') token: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.authService.activeSignUpAccount(user_id, token);
-    return this.responseSuccess(res, null, 'Kích hoạt tài khoản thành công.');
+    const userDataRes = await this.authService.activeSignUpAccount(
+      user_id,
+      token,
+    );
+    return this.responseSuccess(
+      res,
+      userDataRes,
+      'Kích hoạt tài khoản thành công.',
+    );
   }
 }

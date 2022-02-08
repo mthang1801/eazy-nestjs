@@ -7,13 +7,17 @@ export class BannerRepository<Banner> extends BaseRepositorty<Banner> {
     this.table = Table.BANNER;
   }
 }
-export class BannerImageRepository<BannerImages> extends BaseRepositorty<BannerImages> {
+export class BannerImageRepository<
+  BannerImages,
+> extends BaseRepositorty<BannerImages> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.BANNER_IMAGE;
   }
 }
-export class BannerDescriptionsRepository<BannerDescriptions> extends BaseRepositorty<BannerDescriptions> {
+export class BannerDescriptionsRepository<
+  BannerDescriptions,
+> extends BaseRepositorty<BannerDescriptions> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.BANNER_DESCRIPTIONS;

@@ -63,9 +63,21 @@ export class UsergroupsController extends BaseController {
 
   @Put(':id')
   @UseGuards(AuthGuard)
-  async update(@Param('id') id, @Res() res: Response): Promise<void> {
-    // const updatedUserGroup = await this.usersGroupService.Update(id);
+  async update(
+    @Param('id') id,
+    @Body() data: UpdateUserGroupsDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const updatedUserGroup = await this.usersGroupService.Update(id, data);
+    return this.responseSuccess(res, updatedUserGroup);
   }
+
+  // Get(":id")
+  // @UseGuards(AuthGuard)
+  // async get( @Param("id") id : number, @Res() res : Response) : Promise<void>{
+  //   const usergroup = await this.usersGroupService.Get(id);
+  //   return this.responseSuccess(res, usergroup)
+  // }
 
   // /**
   //  * find a record by usergroup_id in ddv_usergroups join ddv_usergroup_descriptions join ddv_usergroup_privilege

@@ -18,7 +18,7 @@ import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from '../../database/enums/tableFieldEnum/user_groups.enum';
-import { UserGroupsRepository } from '../repositories/user_groups.repository';
+import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroup_privileges.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
@@ -59,6 +59,7 @@ export class UserGroupsService {
       data,
       this.userGroupRepo.userGroupDataProps,
     );
+
     const userGroup = await this.userGroupRepo.create(userGroupData);
 
     const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
@@ -70,6 +71,41 @@ export class UserGroupsService {
       usergroup_id: userGroup.usergroup_id,
       ...userGroupDescriptionData,
     });
+
+    return { ...userGroup, ...userGroupDescription };
+  }
+
+  async Update(id: number, data: UpdateUserGroupsDto): Promise<any> {
+    let userGroup = await this.userGroupRepo.findById(id);
+    if (!userGroup) {
+      throw new HttpException(
+        'Không tìm thấy usergroup phù hợp',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    const userGroupData = this.userGroupRepo.setData(
+      data,
+      this.userGroupRepo.userGroupDataProps,
+    );
+
+    if (Object.entries(userGroupData).length) {
+      userGroup = await this.userGroupRepo.update(id, userGroupData);
+    }
+
+    const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
+      data,
+      this.userGroupDescriptionRepo.userGroupDataDescriptionProps,
+    );
+
+    let userGroupDescription = await this.userGroupDescriptionRepo.findOne({
+      usergroup_id: id,
+    });
+    if (userGroupDescription) {
+      userGroupDescription = await this.userGroupDescriptionRepo.update(
+        userGroupDescription.list_id,
+        userGroupDescriptionData,
+      );
+    }
 
     return { ...userGroup, ...userGroupDescription };
   }

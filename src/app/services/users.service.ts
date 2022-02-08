@@ -38,7 +38,7 @@ import {
   UserGroupEntity,
   UserGroupLinkEntity,
 } from '../entities/usergroups.entity';
-import { UserGroupsRepository } from '../repositories/user_groups.repository';
+import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserDataRepository } from '../repositories/user-data.repository';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';

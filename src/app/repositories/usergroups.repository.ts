@@ -14,5 +14,5 @@ export class UserGroupsRepository<
     this.table = Table.USER_GROUPS;
   }
 
-  userGroupDataProps = ['usergroup_id', 'status', 'type', 'company_id'];
+  userGroupDataProps = Object.getOwnPropertyNames(new UserGroupEntity());
 }

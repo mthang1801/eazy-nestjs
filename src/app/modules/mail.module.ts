@@ -25,7 +25,7 @@ import { join } from 'path';
         dir: join(__dirname, '..', '..', '..', 'views', 'mail'),
         adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
         options: {
-          strict: true,
+          strict: false,
         },
       },
     }),

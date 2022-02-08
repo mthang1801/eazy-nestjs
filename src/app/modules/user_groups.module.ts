@@ -3,7 +3,7 @@ import { UserGroupsService } from '../services/usergroups.service';
 
 import { UsergroupsController } from '../controllers/be/usergroups.controller';
 import { UserRepository } from '../repositories/user.repository';
-import { UserGroupsRepository } from '../repositories/user_groups.repository';
+import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroup_privileges.repository';

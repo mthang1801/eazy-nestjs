@@ -107,19 +107,17 @@ export class AuthService {
       data: '',
     });
 
-    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
-      userGroupForCustomer.usergroup_id,
-    );
+    const token = uuid();
 
     // Create token to activate account through email
     const newMailingList: UserMailingListsEntity =
       await this.userMailingListRepository.create({
         subscriber_id: user.user_id,
-        activation_key: uuid(),
+        activation_key: uuid().replace(/-/g, ''),
         confirmed: 0,
         mail_type: UserMailingListsEnum.ActivateSignUpAccount,
         expired_at: convertToMySQLDateTime(
-          new Date(Date.now() + 3 * 3600 * 1000),
+          new Date(Date.now() + 24 * 3600 * 1000),
         ),
         created_at: convertToMySQLDateTime(),
       });
@@ -128,14 +126,6 @@ export class AuthService {
       user,
       newMailingList.activation_key,
     );
-
-    user = {
-      ...user,
-      ...userGroupForCustomer,
-      ...newUserProfile,
-      ...newUserData,
-    };
-    user['menu'] = menu;
   }
 
   async login(data: any): Promise<IResponseUserToken> {
@@ -382,7 +372,7 @@ export class AuthService {
     return await this.userService.restorePasswordByOTP(user_id, otp);
   }
 
-  async activeSignUpAccount(user_id: number, token: string): Promise<void> {
+  async activeSignUpAccount(user_id: number, token: string): Promise<any> {
     const checkMail: UserMailingListsEntity =
       await this.userMailingListRepository.findOne({
         subscriber_id: user_id,
@@ -414,5 +404,21 @@ export class AuthService {
     await this.userMailingListRepository.update(checkMail.list_id, {
       confirmed: 1,
     });
+
+    const user = await this.userService.findUserAllInfo({
+      [`${Table.USERS}.user_id`]: user_id,
+    });
+
+    if (user.usergroup_id) {
+      const menu =
+        await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+          user.usergroup_id,
+        );
+      user['menu'] = menu;
+    }
+    return {
+      token: this.generateToken(user),
+      userData: preprocessUserResult(user),
+    };
   }
 }
