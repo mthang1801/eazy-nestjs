@@ -29,6 +29,7 @@ BannerRepository<Banner>
     this.table = Table.BANNER;
   }
   async getAll() {
+
     const banner = this.repository.find({
       select: ['*'],
       join: {
@@ -62,7 +63,6 @@ BannerRepository<Banner>
     let _banner=[];
     result[1].forEach(ele=>{
   
-      console.log({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
       _banner.push({...ele,images:result[0].filter(img=>img.object_id==ele.banner_id)})
      
     })
