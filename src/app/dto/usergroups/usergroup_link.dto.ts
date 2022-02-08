@@ -12,10 +12,7 @@ export class CreateUserGroupLinkDto {
 }
 
 export class UpdateUserGroupLinkDto {
-  @IsNotEmpty({ message: 'user_id là bắt buộc.' })
-  user_id: number;
-
-  @IsNotEmpty({ message: 'usergroup_id là bắt buộc.' })
+  @IsOptional()
   usergroup_id: number;
 
   @IsOptional()

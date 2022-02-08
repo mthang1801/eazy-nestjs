@@ -8,22 +8,22 @@ export class CreateUserGroupPrivilegeDto {
   privilege: string;
 
   @IsOptional()
-  description: string;
+  description: string = '';
 
   @IsOptional()
-  parent_id: number;
+  parent_id: number = 0;
 
   @IsNotEmpty()
-  level: number;
+  level: number = 1;
 
   @IsOptional()
-  route: string;
-
-  @IsNotEmpty()
-  method: string;
+  route: string = '';
 
   @IsOptional()
-  icon: string;
+  method: string = '';
+
+  @IsOptional()
+  icon: string = '';
 }
 
 export class UpdateUserGroupPrivilegeDto {
