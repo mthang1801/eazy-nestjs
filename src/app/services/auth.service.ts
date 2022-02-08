@@ -107,8 +107,6 @@ export class AuthService {
       data: '',
     });
 
-    const token = uuid();
-
     // Create token to activate account through email
     const newMailingList: UserMailingListsEntity =
       await this.userMailingListRepository.create({
@@ -132,7 +130,7 @@ export class AuthService {
     const phone = data['phone'];
     const email = data['email'];
     const password = data['password'];
-
+    console.log(phone, email.password);
     let user: UserGeneralInfoEntity = phone
       ? await this.userService.findUserAllInfo({ phone })
       : await this.userService.findUserAllInfo({ email });

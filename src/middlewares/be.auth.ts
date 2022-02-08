@@ -42,10 +42,48 @@ export class AuthGuard implements CanActivate {
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
       throw new HttpException('Token đã hết hạn.', 408);
     }
+    let {
+      method,
+      route: { path },
+    } = req;
+
     req.user = user;
+    const menu = user['menu'];
 
-    const roles = this.reflector.get<string>('roles', context.getHandler());
-
+    // let isAllowed = false;
+    // if (menu?.length) {
+    //   for (let menuItem of menu) {
+    //     if (
+    //       menuItem.privilege === path &&
+    //       menuItem.method.toUpperCase() === method.toUpperCase()
+    //     ) {
+    //       isAllowed = true;
+    //       break;
+    //     }
+    //     if (menuItem.children && menuItem.children.length) {
+    //       for (let childMenuItem of menuItem.children) {
+    //         if (
+    //           childMenuItem.privilege === path &&
+    //           childMenuItem.method.toUpperCase() === method.toUpperCase()
+    //         ) {
+    //           isAllowed = true;
+    //           break;
+    //         }
+    //       }
+    //     }
+    //     if (isAllowed) {
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!isAllowed) {
+    //   throw new HttpException(
+    //     'Bạn không đủ quyền để truy cập vào đường link này.',
+    //     HttpStatus.FORBIDDEN,
+    //   );
+    // }
+    // const roles = this.reflector.get<string>('roles', context.switchToHttp.);
+    // console.log(48, roles);
     // const roles = this.reflector.getAllAndMerge<string[]>('roles', [
     //   context.getHandler(),
     //   context.getClass(),
