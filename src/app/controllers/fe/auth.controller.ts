@@ -10,6 +10,7 @@ import {
   BadRequestException,
   Patch,
   Put,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from '../../services/auth.service';
 import { AuthCredentialsDto } from '../../dto/auth/auth-credential.dto';
@@ -19,6 +20,7 @@ import { AuthLoginProviderDto } from '../../dto/auth/auth-login-provider.dto';
 import { LoginDto } from '../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../base/base.controllers';
 import { RestorePasswordOTPDto } from '../../dto/auth/auth-restore-pwd-otp.dto';
+import { Response } from 'express';
 /**
  * Authentication controller
  * @Describe Using 3 authenticate types : Local, Google, Facebook
@@ -42,8 +44,12 @@ export class AuthController extends BaseController {
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.authService.signUp(authCredentialsDto);
-    return this.respondCreated(res, userResponse);
+    await this.authService.signUp(authCredentialsDto);
+    return this.responseSuccess(
+      res,
+      null,
+      'Đăng ký tài khoản thành công, vui lòng truy cập vào email để kích hoạt tài khoản',
+    );
   }
 
   /**
@@ -162,7 +168,7 @@ export class AuthController extends BaseController {
     @Res() res,
   ): Promise<IResponse> {
     const otp = await this.authService.resetPasswordByPhone(phone);
-    return this.respondCreated(res, { otp });
+    return this.responseSuccess(res, { otp });
   }
 
   /**
@@ -177,5 +183,15 @@ export class AuthController extends BaseController {
     const { user_id, otp } = restorePwdDto;
     await this.authService.restorePasswordByOTP(user_id, otp);
     res.render('otp-auth');
+  }
+
+  @Get('active')
+  async activeSignUpAccount(
+    @Query('user_id') user_id: number,
+    @Query('token') token: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.authService.activeSignUpAccount(user_id, token);
+    return this.responseSuccess(res, null, 'Kích hoạt tài khoản thành công.');
   }
 }

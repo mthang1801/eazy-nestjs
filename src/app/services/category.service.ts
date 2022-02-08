@@ -1,337 +1,141 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { BaseService } from '../../base/base.service';
-import {
-  CategoryDescriptionEntity,
-  CategoryEntity,
-} from '../entities/category.entity';
-import {
-  CategoryRepository,
-  CategoryDescriptionRepository,
-} from '../repositories/category.repository';
+
+import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
 
 import { convertToMySQLDateTime } from '../../utils/helper';
-import {
-  CreateCategoryDto,
-  CreateCategoryVendorProductCountDto,
-  CategoryDescriptionDto,
-} from '../dto/category/create-category.dto';
-import { CategoryVendorProductCountEntity } from '../entities/category.entity';
-import { CategoryVendorProductCountRepository } from '../repositories/category.repository';
-import { SortBy } from '../../database/enums/sortBy.enum';
-import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
+import { CreateCategoryDto } from '../dto/category/create-category.dto';
+
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
-import {
-  UpdateCategoryDescriptionDto,
-  UpdateCategoryVendorProductCountDto,
-} from '../dto/category/update-category.dto';
+import { CategoryDescriptionEntity } from '../entities/category-description.entity';
+import { CategoryEntity } from '../entities/category.entity';
+import { CategoryVendorProductCountEntity } from '../entities/category-vendor-product-count.entity';
+import { Like } from '../../database/find-options/operators';
+import { CategoryDescriptionRepository } from '../repositories/category_descriptions.repository';
+import { CategoryVendorProductCountRepository } from '../repositories/category_vendor_product_count.repository';
+import * as _ from 'lodash';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class CategoryService {
-  private categoriesTable: Table = Table.CATEGORIES;
   constructor(
     private categoryDescriptionRepo: CategoryDescriptionRepository<CategoryDescriptionEntity>,
     private categoryRepository: CategoryRepository<CategoryEntity>,
-    private categoryVendorProductCountRepo: CategoryVendorProductCountRepository<CategoryVendorProductCountEntity>,
   ) {}
 
-  async createCategory(
-    categoryDto: CreateCategoryDto,
-  ): Promise<CategoryEntity> {
-    const newCategory = await this.categoryRepository.create({
-      ...categoryDto,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
-    });
-    return newCategory;
+  async Create(data: CreateCategoryDto): Promise<any> {
+    const categoryData = this.categoryRepository.setData(data);
+    const createdCategory: CategoryEntity =
+      await this.categoryRepository.create({
+        ...categoryData,
+        created_at: convertToMySQLDateTime(),
+        updated_at: convertToMySQLDateTime(),
+      });
+    const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
+    const createdCategoryDescription: CategoryDescriptionEntity =
+      await this.categoryDescriptionRepo.create({
+        category_id: createdCategory.category_id,
+        ...categoryDescriptionData,
+        created_at: convertToMySQLDateTime(),
+        updated_at: convertToMySQLDateTime(),
+      });
+
+    return { ...createdCategory, ...createdCategoryDescription };
   }
 
-  async updateCategory(
-    categoryDto: UpdateCategoryDto,
-  ): Promise<CategoryEntity> {
-    const checkCategoryExist = await this.findCategoryById(
-      categoryDto.category_id,
-    );
-    if (!checkCategoryExist) {
-      throw new HttpException('Không tìm thấy category.', HttpStatus.NOT_FOUND);
+  async Update(id: number, data: UpdateCategoryDto): Promise<any> {
+    const oldCategoryData = await this.categoryRepository.findOne({
+      category_id: id,
+    });
+
+    if (!oldCategoryData) {
+      throw new HttpException(
+        `Không tìm thấy category với id là ${id}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    let updatedCategoryDataObject = {};
+    for (let [key, val] of Object.entries(data)) {
+      if (this.categoryRepository.categoryDataProps.includes(key)) {
+        updatedCategoryDataObject[key] = val;
+      }
     }
 
-    await this.categoryRepository.update(categoryDto.category_id, {
-      ...categoryDto,
-      updated_at: convertToMySQLDateTime(),
-    });
-    const updatedCategory = await this.findCategoryById(
-      categoryDto.category_id,
-    );
-    return updatedCategory;
-  }
-
-  async updateCategoryVendorProductCount(
-    data: UpdateCategoryVendorProductCountDto,
-  ): Promise<CategoryVendorProductCountEntity> {
-    const checkCategoryVPC = await this.categoryVendorProductCountRepo.findOne({
-      where: { category_id: data.category_id, company_id: data.company_id },
-    });
-    if (!checkCategoryVPC) {
-      throw new HttpException('Không tìm thấy thông tin', HttpStatus.NOT_FOUND);
-    }
-
-    await this.categoryVendorProductCountRepo.update(
-      { category_id: data.category_id, company_id: data.company_id },
+    const updatedCategoryData = await this.categoryRepository.update(
+      oldCategoryData.category_id,
       {
-        ...data,
+        ...updatedCategoryDataObject,
         updated_at: convertToMySQLDateTime(),
       },
     );
-    // const updatedCategoryVendor =
-    //   this.findCategoryVendorProductCountByCategoryId(id);
-    return this.categoryVendorProductCountRepo.findOne({
-      where: { category_id: data.category_id, company_id: data.company_id },
+
+    const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
+      category_id: id,
     });
-  }
-
-  async fetchCategoryList(
-    skip: number,
-    limit: number,
-  ): Promise<CategoryEntity[]> {
-    const categoriesList = await this.categoryRepository.find({
-      select: [
-        '*',
-        `${Table.CATEGORIES}.category_id`,
-        `${Table.CATEGORIES}.created_at`,
-        `${Table.CATEGORIES}.updated_at`,
-      ],
-      join: {
-        [JoinTable.leftJoin]: {
-          ddv_category_descriptions: {
-            fieldJoin: 'category_id',
-            rootJoin: 'category_id',
-          },
-          ddv_category_vendor_product_count: {
-            fieldJoin: 'ddv_category_vendor_product_count.category_id',
-            rootJoin: 'category_id',
-          },
-        },
-      },
-      orderBy: [
-        { field: `${Table.CATEGORIES}.created_at`, sort_by: SortBy.DESC },
-      ],
-      skip,
-      limit,
-    });
-    return categoriesList;
-  }
-
-  async fetchVendorProductCount(
-    skip: number,
-    limit: number,
-  ): Promise<CategoryVendorProductCountEntity[]> {
-    const categoriesVendorList = await this.categoryVendorProductCountRepo.find(
-      {
-        select: [
-          '*',
-          `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.product_count`,
-          `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.created_at`,
-          `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.updated_at`,
-        ],
-        join: {
-          [JoinTable.innerJoin]: {
-            ddv_categories: {
-              fieldJoin: 'category_id',
-              rootJoin: 'category_id',
-            },
-          },
-        },
-        orderBy: [
-          {
-            field: `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.created_at`,
-            sort_by: SortBy.DESC,
-          },
-        ],
-        skip,
-        limit,
-      },
-    );
-    return categoriesVendorList;
-  }
-
-  async createCategoryDescription(
-    createCategoryDescriptionDto: CategoryDescriptionDto,
-  ): Promise<CategoryDescriptionEntity> {
-    const newCategoryDescription = await this.categoryDescriptionRepo.create({
-      ...createCategoryDescriptionDto,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
-    });
-    return newCategoryDescription;
-  }
-
-  async fetchCategoryDescriptionList(
-    skip: number,
-    limit: number,
-  ): Promise<CategoryDescriptionEntity[]> {
-    const categoriesDescription = await this.categoryDescriptionRepo.find({
-      select: [
-        '*',
-        `${Table.CATEGORY_DESCRIPTIONS}.created_at`,
-        `${Table.CATEGORY_DESCRIPTIONS}.updated_at`,
-      ],
-      join: {
-        [JoinTable.innerJoin]: {
-          ddv_categories: {
-            fieldJoin: 'category_id',
-            rootJoin: 'category_id',
-          },
-        },
-      },
-      orderBy: [
-        {
-          field: `${Table.CATEGORY_DESCRIPTIONS}.updated_at`,
-          sort_by: SortBy.DESC,
-        },
-      ],
-      skip,
-      limit,
-    });
-    return categoriesDescription;
-  }
-
-  async updateCategoryDescription(
-    data: UpdateCategoryDescriptionDto,
-  ): Promise<CategoryDescriptionEntity> {
-    await this.categoryDescriptionRepo.update(data.category_id, data);
+    if (!oldCategoryDescription) {
+      throw new HttpException(
+        `Không tìm thấy category description với id là ${id}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    let updatedCategoryDescriptionDataObject = {};
+    for (let [key, val] of Object.entries(data)) {
+      if (this.categoryDescriptionRepo.categoryDescriptionProps.includes(key)) {
+        updatedCategoryDescriptionDataObject[key] = val;
+      }
+    }
     const updatedCategoryDescription =
-      await this.findCategoryDescriptionByCategoryId(data.category_id);
-
-    return updatedCategoryDescription;
+      await this.categoryDescriptionRepo.update(
+        oldCategoryDescription.category_description_id,
+        {
+          ...updatedCategoryDescriptionDataObject,
+          updated_at: convertToMySQLDateTime(),
+        },
+      );
+    return { ...updatedCategoryData, ...updatedCategoryDescription };
   }
 
-  async createCategoryVendorProductCount(
-    data: CreateCategoryVendorProductCountDto,
-  ): Promise<CategoryVendorProductCountEntity> {
-    const newCategoryVendor = await this.categoryVendorProductCountRepo.create({
-      ...data,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
-    });
-
-    return newCategoryVendor;
-  }
-
-  async findCategoryById(category_id: number): Promise<CategoryEntity> {
-    const category = await this.categoryRepository.findOne({
+  async fetchListCategoryMenu(): Promise<any> {
+    const categoryMenuRawList = await this.categoryRepository.find({
       select: ['*', `${Table.CATEGORIES}.*`],
       join: {
         [JoinTable.leftJoin]: {
-          ddv_category_descriptions: {
-            fieldJoin: 'category_id',
-            rootJoin: 'category_id',
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+            rootJoin: `${Table.CATEGORIES}.category_id`,
           },
         },
       },
-      where: { [`${Table.CATEGORIES}.category_id`]: category_id },
+      orderBy: [{ field: `${Table.CATEGORIES}.level`, sort_by: SortBy.ASC }],
     });
-
-    return category;
+    let categoryMenuList = [];
+    for (let categoryMenuItem of categoryMenuRawList) {
+      if (categoryMenuItem.level === 1) {
+        categoryMenuList.push({ ...categoryMenuItem, children: [] });
+        continue;
+      }
+      if (categoryMenuItem.level === 2) {
+        categoryMenuList = categoryMenuList.map((_categoryMenuItem) => {
+          if (
+            _categoryMenuItem.level === 1 &&
+            _categoryMenuItem.category_id === categoryMenuItem.parent_id
+          ) {
+            _categoryMenuItem['children'].push(categoryMenuItem);
+          }
+          return _categoryMenuItem;
+        });
+        continue;
+      }
+    }
+    return categoryMenuList;
   }
 
-  async findCategoryByCompanyId(company_id: number): Promise<CategoryEntity[]> {
-    const category = await this.categoryRepository.find({
-      select: ['*', `${Table.CATEGORIES}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          ddv_category_descriptions: {
-            fieldJoin: 'category_id',
-            rootJoin: 'category_id',
-          },
-        },
-      },
-      where: { [`${Table.CATEGORIES}.company_id`]: company_id },
+  async Delete(id: number): Promise<boolean> {
+    const deleteStatus = await this.categoryRepository.delete({
+      category_id: id,
     });
-    return category;
-  }
-
-  async findCategoryDescriptionByCategoryId(
-    category_id: number,
-  ): Promise<CategoryDescriptionEntity> {
-    const categoryDescription = await this.categoryDescriptionRepo.findOne({
-      select: ['*', `${Table.CATEGORY_DESCRIPTIONS}.*`],
-      join: {
-        [JoinTable.innerJoin]: {
-          ddv_categories: { fieldJoin: 'category_id', rootJoin: 'category_id' },
-        },
-      },
-      where: { [`${Table.CATEGORY_DESCRIPTIONS}.category_id`]: category_id },
-    });
-
-    return categoryDescription;
-  }
-
-  async findCategoryVendorProductCountByCategoryId(
-    category_id: number,
-  ): Promise<CategoryVendorProductCountEntity[]> {
-    const categoryVendor = await this.categoryVendorProductCountRepo.find({
-      select: ['*', `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.*`],
-      join: {
-        [JoinTable.innerJoin]: {
-          ddv_categories: { fieldJoin: 'category_id', rootJoin: 'category_id' },
-          ddv_category_descriptions: {
-            fieldJoin: 'ddv_category_descriptions.category_id',
-            rootJoin: 'ddv_categories.category_id',
-          },
-        },
-      },
-      where: {
-        [`${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.category_id`]: category_id,
-      },
-    });
-    return categoryVendor;
-  }
-
-  async findCategoryVendorProductCountByCompanyId(
-    company_id: number,
-  ): Promise<CategoryVendorProductCountEntity[]> {
-    const categoryVendor = await this.categoryVendorProductCountRepo.find({
-      select: ['*', `${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.*`],
-      join: {
-        [JoinTable.innerJoin]: {
-          ddv_categories: { fieldJoin: 'category_id', rootJoin: 'category_id' },
-          ddv_category_descriptions: {
-            fieldJoin: 'ddv_category_descriptions.category_id',
-            rootJoin: 'ddv_categories.category_id',
-          },
-        },
-      },
-      where: {
-        [`${Table.CATEGORY_VENDOR_PRODUCT_COUNT}.company_id`]: company_id,
-      },
-    });
-
-    return categoryVendor;
-  }
-
-  async deleteCategory(category_id: number): Promise<boolean> {
-    let res = true;
-    res = (await this.categoryRepository.delete(category_id)) && res;
-    await this.categoryDescriptionRepo.delete(category_id);
-
-    await this.categoryVendorProductCountRepo.delete({ category_id });
-
-    return res;
-  }
-
-  async deleteCategoryDescription(category_id: number): Promise<boolean> {
-    return this.categoryDescriptionRepo.delete(category_id);
-  }
-
-  async deleteCategoryVendorProductCount(
-    category_id: number,
-    company_id: number,
-  ): Promise<boolean> {
-    return this.categoryVendorProductCountRepo.delete({
-      category_id,
-      company_id,
-    });
+    await this.categoryDescriptionRepo.delete({ category_id: id });
+    return deleteStatus;
   }
 }

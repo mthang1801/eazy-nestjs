@@ -4,9 +4,11 @@ import { BaseRepositorty } from '../../base/base.repository';
 
 import { Table } from '../../database/enums/index';
 @Injectable()
-export class UserRepository<UserEntity> extends BaseRepositorty<UserEntity> {
+export class UserProfileRepository<
+  UserProfileEntity,
+> extends BaseRepositorty<UserProfileEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USERS;
+    this.table = Table.USER_PROFILES;
   }
 }

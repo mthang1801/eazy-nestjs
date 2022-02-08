@@ -1,9 +1,6 @@
 import { IsOptional, IsNotEmpty } from 'class-validator';
 
 export class UpdateCategoryDto {
-  @IsNotEmpty()
-  category_id: number;
-
   @IsOptional()
   parent_id: number;
 
@@ -56,13 +53,34 @@ export class UpdateCategoryDto {
   product_details_view: string;
 
   @IsOptional()
-  product_columns: string;
+  product_columns: number;
 
   @IsOptional()
   is_trash: string;
 
   @IsOptional()
   category_type: string;
+
+  @IsOptional()
+  lang_code: string;
+
+  @IsOptional()
+  category: string;
+
+  @IsOptional()
+  description: string;
+
+  @IsOptional()
+  meta_keywords: string;
+
+  @IsOptional()
+  meta_description: string;
+
+  @IsOptional()
+  page_title: string;
+
+  @IsOptional()
+  age_warning_message: string;
 }
 
 export class UpdateCategoryDescriptionDto {

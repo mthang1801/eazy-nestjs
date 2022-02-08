@@ -6,15 +6,17 @@ import { UsersModule } from './users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthProviderRepository } from '../repositories/auth.repository';
-import { UserProfileRepository } from '../repositories/user.repository';
+
 import { UserGroupsModule } from './user_groups.module';
 import { ImageModule } from './image.module';
+import { MailModule } from './mail.module';
 
 @Module({
   imports: [
     UsersModule,
     UserGroupsModule,
     ImageModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -24,7 +26,7 @@ import { ImageModule } from './image.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, AuthProviderRepository, UserProfileRepository],
+  providers: [AuthService, AuthProviderRepository],
   exports: [AuthService],
   controllers: [AuthControllerBe, AuthControllerFe],
 })

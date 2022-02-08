@@ -1,6 +1,7 @@
 export enum PrimaryKeys {
   ddv_users = 'user_id',
   ddv_users_auth_external = 'auth_external_id',
+  ddv_user_mailing_lists = 'list_id',
   ddv_user_profiles = 'user_id',
   ddv_user_data = 'user_id',
   ddv_usergroup_descriptions = 'usergroup_id',
@@ -13,7 +14,7 @@ export enum PrimaryKeys {
   ddv_images = 'image_id',
   ddv_images_links = 'image_id',
   ddv_categories = 'category_id',
-  ddv_category_descriptions = 'category_id',
+  ddv_category_descriptions = 'category_description_id',
   ddv_category_vendor_product_count = 'category_id',
   ddv_statuses = 'status_id',
   ddv_status_descriptions = 'status_id',

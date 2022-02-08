@@ -40,4 +40,23 @@ export class MailService {
     });
     return true;
   }
+
+  async sendUserActivateSignUpAccount(
+    user: UserEntity,
+    token: string,
+  ): Promise<void> {
+    const url = join(
+      'https://ddvwsdev.ntlogistics.vn',
+      `active?user_id=${user.user_id}&token=${token}`,
+    );
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Di Động Việt [Kích hoạt tài khoản]',
+      template: 'activateSignUpAccount',
+      context: {
+        name: user.firstname + ' ' + user.lastname,
+        url,
+      },
+    });
+  }
 }

@@ -23,6 +23,16 @@ export class BaseRepositorty<T> {
     this.table = table;
   }
 
+  setData(data, props) {
+    let userGroupDataObject = {};
+    for (let [key, val] of Object.entries(data)) {
+      if (props.includes(key)) {
+        userGroupDataObject[key] = val;
+      }
+    }
+    return userGroupDataObject;
+  }
+
   /**
    * Create new record
    * @param params

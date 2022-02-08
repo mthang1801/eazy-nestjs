@@ -1,43 +1,43 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import * as _ from 'lodash';
-import {
-  UserGroupsRepository,
-  UserGroupDescriptionsRepository,
-  UserGroupLinksRepository,
-  UserGroupPrivilegesRepository,
-} from '../repositories/user_groups.repository';
 
 import { Table } from '../../database/enums/tables.enum';
-import {
-  CreateUserGroupsDto,
-  CreateUserGroupDescriptionDto,
-  CreateUserGroupLinkDto,
-} from '../dto/usergroups/create-usergroups.dto';
+
 import { UserRepository } from '../repositories/user.repository';
 import {
   UserGroupDescriptionEntity,
   UserGroupEntity,
   UserGroupLinkEntity,
   UserGroupPrivilegeEntity,
-} from '../entities/user_groups';
+} from '../entities/usergroups.entity';
 import { UserEntity } from '../entities/user.entity';
-import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
-import { convertToMySQLDateTime, formatDate } from '../../utils/helper';
-import { IUserGroupLink } from '../interfaces/user_groups.interface';
-import {
-  UpdateUserGroupsDto,
-  UpdateUserGroupDescriptionDto,
-} from '../dto/usergroups/update-usergroups.dto';
+
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import {
-  UpdateUserGroupLinkDto,
-  UpdateUserGroupPrivilegeDto,
-} from '../dto/usergroups/update-usergroups.dto';
-import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroups.dto';
+
 import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from '../../database/enums/tableFieldEnum/user_groups.enum';
+import { UserGroupsRepository } from '../repositories/user_groups.repository';
+import { UserGroupPrivilegesRepository } from '../repositories/usergroup_privileges.repository';
+import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
+import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
+import {
+  CreateUserGroupsDto,
+  UpdateUserGroupsDto,
+} from '../dto/usergroups/usergroups.dto';
+import {
+  CreateUserGroupPrivilegeDto,
+  UpdateUserGroupPrivilegeDto,
+} from '../dto/usergroups/usergroup_privilege.dto';
+import {
+  UpdateUserGroupLinkDto,
+  CreateUserGroupLinkDto,
+} from '../dto/usergroups/usergroup_link.dto';
+import {
+  CreateUserGroupDescriptionDto,
+  UpdateUserGroupDescriptionDto,
+} from '../dto/usergroups/usergroup_description.dto';
 
 @Injectable()
 export class UserGroupsService {
@@ -53,6 +53,26 @@ export class UserGroupsService {
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
     private userRepo: UserRepository<UserEntity>,
   ) {}
+
+  async Create(data: CreateUserGroupsDto): Promise<any> {
+    const userGroupData = this.userGroupRepo.setData(
+      data,
+      this.userGroupRepo.userGroupDataProps,
+    );
+    const userGroup = await this.userGroupRepo.create(userGroupData);
+
+    const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
+      data,
+      this.userGroupDescriptionRepo.userGroupDataDescriptionProps,
+    );
+
+    const userGroupDescription = await this.userGroupDescriptionRepo.create({
+      usergroup_id: userGroup.usergroup_id,
+      ...userGroupDescriptionData,
+    });
+
+    return { ...userGroup, ...userGroupDescription };
+  }
 
   async createUserGroupLinkPosition(
     user_id: number,
@@ -83,48 +103,48 @@ export class UserGroupsService {
     return { ...userGroupForCustomer, ...newUserGroupLink };
   }
 
-  async createUserGroup(
-    createUserGroupsDto: CreateUserGroupsDto,
-  ): Promise<any> {
-    if (
-      !createUserGroupsDto.status &&
-      !createUserGroupsDto.company_id &&
-      !createUserGroupsDto.type
-    ) {
-      throw new HttpException(
-        'Tạo mới không thành công do tất cả các trường đều bỏ trống',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const checkUserGroupExist = await this.userGroupRepo.findOne({
-      where: {
-        type: createUserGroupsDto?.type,
-        company_id: createUserGroupsDto?.company_id,
-      },
-    });
-    if (checkUserGroupExist) {
-      throw new HttpException(
-        'UserGroup đã tồn tại.',
-        HttpStatus.NOT_IMPLEMENTED,
-      );
-    }
-    const newUserGroup = await this.userGroupRepo.create({
-      status: createUserGroupsDto.status || UserGroupStatusEnum.Active,
-      type: createUserGroupsDto?.type || UserGroupTypeEnum.Wholesale,
-      company_id: createUserGroupsDto?.company_id || 0,
-    });
+  // async createUserGroup(
+  //   createUserGroupsDto: CreateUserGroupsDto,
+  // ): Promise<any> {
+  //   if (
+  //     !createUserGroupsDto.status &&
+  //     !createUserGroupsDto.company_id &&
+  //     !createUserGroupsDto.type
+  //   ) {
+  //     throw new HttpException(
+  //       'Tạo mới không thành công do tất cả các trường đều bỏ trống',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  //   const checkUserGroupExist = await this.userGroupRepo.findOne({
+  //     where: {
+  //       type: createUserGroupsDto?.type,
+  //       company_id: createUserGroupsDto?.company_id,
+  //     },
+  //   });
+  //   if (checkUserGroupExist) {
+  //     throw new HttpException(
+  //       'UserGroup đã tồn tại.',
+  //       HttpStatus.NOT_IMPLEMENTED,
+  //     );
+  //   }
+  //   const newUserGroup = await this.userGroupRepo.create({
+  //     status: createUserGroupsDto.status || UserGroupStatusEnum.Active,
+  //     type: createUserGroupsDto?.type || UserGroupTypeEnum.Wholesale,
+  //     company_id: createUserGroupsDto?.company_id || 0,
+  //   });
 
-    if (createUserGroupsDto.description && createUserGroupsDto.lang_code) {
-      const newUserGroupDescription =
-        await this.userGroupDescriptionRepo.create({
-          usergroup_id: newUserGroup.usergroup_id,
-          lang_code: createUserGroupsDto.lang_code,
-          usergroup: createUserGroupsDto.description,
-        });
-      return { userGroup: newUserGroup, description: newUserGroupDescription };
-    }
-    return { userGroup: newUserGroup };
-  }
+  //   if (createUserGroupsDto.description && createUserGroupsDto.lang_code) {
+  //     const newUserGroupDescription =
+  //       await this.userGroupDescriptionRepo.create({
+  //         usergroup_id: newUserGroup.usergroup_id,
+  //         lang_code: createUserGroupsDto.lang_code,
+  //         usergroup: createUserGroupsDto.description,
+  //       });
+  //     return { userGroup: newUserGroup, description: newUserGroupDescription };
+  //   }
+  //   return { userGroup: newUserGroup };
+  // }
 
   async getUserGroup(usergroup_id: number): Promise<UserGroupEntity> {
     const userGroup = await this.userGroupRepo.findOne({
