@@ -9,9 +9,9 @@ import { join } from 'path';
       // transport: 'smtps://user@example.com:topsecret@smtp.example.com',
       // or
       transport: {
-        host: 'smtp.gmail.com',
+        host: process.env.EMAIL_HOST,
         secure: true,
-        port: 465,
+        port: +process.env.EMAIL_PORT,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS,

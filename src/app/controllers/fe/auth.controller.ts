@@ -44,8 +44,12 @@ export class AuthController extends BaseController {
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.authService.signUp(authCredentialsDto);
-    return this.responseSuccess(res, userResponse);
+    await this.authService.signUp(authCredentialsDto);
+    return this.responseSuccess(
+      res,
+      null,
+      'Đăng ký tài khoản thành công, vui lòng truy cập vào email để kích hoạt tài khoản',
+    );
   }
 
   /**

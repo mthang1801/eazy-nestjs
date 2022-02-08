@@ -62,9 +62,7 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  async signUp(
-    authCredentialsDto: AuthCredentialsDto,
-  ): Promise<IResponseUserToken> {
+  async signUp(authCredentialsDto: AuthCredentialsDto): Promise<void> {
     const { firstname, lastname, email, password, phone } = authCredentialsDto;
     const { passwordHash, salt } = saltHashPassword(password);
     const checkEmailExist = await this.userRepository.findOne({ email });
@@ -138,11 +136,6 @@ export class AuthService {
       ...newUserData,
     };
     user['menu'] = menu;
-
-    return {
-      token: this.generateToken(user),
-      userData: preprocessUserResult(user),
-    };
   }
 
   async login(data: any): Promise<IResponseUserToken> {
