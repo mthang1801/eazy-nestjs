@@ -24,6 +24,7 @@ export class BaseRepositorty<T> {
   }
 
   setData(data, props) {
+
     let userGroupDataObject = {};
     for (let [key, val] of Object.entries(data)) {
       if (props.includes(key)) {

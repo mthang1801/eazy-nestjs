@@ -19,6 +19,8 @@ import {
   BannerCreateDTO,
   createBannerImageDTO,
   UpdateBannerDTO,
+  updateBannerImageDTO,
+  
 } from '../../dto/banner/banner.dto';
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
@@ -83,6 +85,18 @@ export class BannerController extends BaseController {
 
     return this.responseSuccess(res, banner);
   }
+  @Put('/:banner_id/images/:images_id')
+  @UseGuards(AuthGuard)
+  async updateBannerById(
+    @Res() res,
+    @Param('banner_id') banner_id,
+    @Param('images_id') images_id,
+    @Body() body: updateBannerImageDTO
+  ): Promise<IResponse> {
+    const banner = await this.bannerService.updateBannerById(banner_id, images_id,body);
+
+    return this.responseSuccess(res, banner);
+  }
 
   @Post('/:id/createimages')
   @UsePipes(ValidationPipe)
@@ -92,7 +106,8 @@ export class BannerController extends BaseController {
     @Body() body: createBannerImageDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.createBannerImage(body, id);
+    // const banner = await this.bannerService.createBannerImage(body, id);
+    const banner = {}
     return this.responseSuccess(res, banner);
   }
 }

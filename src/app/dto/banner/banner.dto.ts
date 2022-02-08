@@ -12,7 +12,7 @@ export class BannerCreateDTO {
     @IsOptional()
     position: number;
     @IsNotEmpty()
-    image_url: string;
+    image_path: string;
     @IsNotEmpty()
     banner: string;
     @IsOptional()
@@ -30,8 +30,6 @@ export class UpdateBannerDTO {
     @IsOptional()
     url : string;
     @IsOptional()
-    image: string
-    @IsOptional()
     banner :string
     @IsOptional()
     description:string
@@ -48,7 +46,22 @@ export class createBannerImageDTO{
     @IsOptional()
     position: number;
     @IsNotEmpty()
-    image_url: string;
+    image_path: string;
+   
+    @IsOptional()
+    image_x: number
+    @IsOptional()
+    image_y: number
+    @IsOptional()
+    is_high_res: string
+}
+export class updateBannerImageDTO{
+   
+    
+    @IsOptional()
+    position: number;
+    @IsNotEmpty()
+    image_path: string;
    
     @IsOptional()
     image_x: number

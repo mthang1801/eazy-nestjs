@@ -4,18 +4,15 @@ import {
   ImagesRepository,
 } from '../repositories/image.repository';
 import { ImagesService } from '../services/image.service';
-import { ImagesLinksService } from '../services/image_link.service';
 @Global()
 @Module({
   providers: [
     ImagesService,
     ImagesRepository,
-    ImagesLinksService,
     ImagesLinksRepository,
   ],
   exports: [
     ImagesService,
-    ImagesLinksService,
     ImagesRepository,
     ImagesLinksRepository,
   ],
