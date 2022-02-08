@@ -27,9 +27,6 @@ export class CreateUserGroupPrivilegeDto {
 }
 
 export class UpdateUserGroupPrivilegeDto {
-  @IsNotEmpty({ message: 'privilege_id là bắt buộc' })
-  privilege_id: number;
-
   @IsOptional()
   usergroup_id: number;
 

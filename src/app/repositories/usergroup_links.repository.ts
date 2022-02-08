@@ -19,4 +19,6 @@ export class UserGroupLinksRepository<
     super(databaseService, table);
     this.table = Table.USER_GROUP_LINKS;
   }
+
+  userGroupLinkProps = Object.getOwnPropertyNames(new UserGroupLinkEntity());
 }
