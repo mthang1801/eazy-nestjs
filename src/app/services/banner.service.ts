@@ -7,7 +7,6 @@ import {
   UpdateBannerDTO,
   createBannerImageDTO,
 } from '../dto/banner/banner.dto';
-import { BannerImagesService } from './banner_images.service';
 import { BannerDescriptionsService } from './banner_description.service';
 import { ImagesService } from './image.service';
 import { ImagesLinksService } from './image_link.service';
@@ -22,7 +21,6 @@ BannerRepository<Banner>
   constructor(
     repository: BannerRepository<Banner>,
     table: Table,
-    private bannerImagesService: BannerImagesService,
     private imageService: ImagesService,
     private imageLinkService: ImagesLinksService,
     private bannerDescriptionsService: BannerDescriptionsService,
@@ -268,8 +266,8 @@ BannerRepository<Banner>
   }
   async Delete(banner_id, images_id) {
     //Check if banner_id match with images_id
-    let count = await this.bannerImagesService.find({
-      where: { banner_id: banner_id, banner_image_id: images_id },
+    let count = await this.imageLinkService.find({
+      where: { object_id: banner_id, images_id: images_id },
     });
     if (count.length <= 0) return `Khong ton tai`;
     let _image = this.imageService.delete(images_id);
@@ -302,40 +300,24 @@ BannerRepository<Banner>
           delete imageLinkTableData[key],
       );
       let _images_link = await this.imageLinkService.Create(imageLinkTableData);
-      //===========================|Add to ddve_banner_images|=============================
-      // const bannerImageTableData = {
-      //   banner_id: id,
-      //   banner_image_id: _images.image_id,
-      // };
-      // Object.keys(bannerImageTableData).forEach(
-      //   (key) =>
-      //     bannerImageTableData[key] === undefined &&
-      //     delete bannerImageTableData[key],
-      // );
-      // let _banner_image = await this.bannerImagesService.Create(
-      //   bannerImageTableData,
-      // );
-      return 'Banner Added';
+
+      return _images;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
 
   async getAllIamgesByBannerId(id) {
-    const string = `ddv_banner_images.banner_id`;
+    const string = `${Table.IMAGE_LINK}.object_id`;
 
-    const image = await this.bannerImagesService.find({
+    const image = await this.imageLinkService.find({
       select: ['*'],
       join: {
         [JoinTable.join]: {
-          ddv_images_links: {
-            fieldJoin: 'ddv_images_links.object_id',
-            rootJoin: 'ddv_banner_images.banner_id',
-          },
 
           ddv_images: {
-            fieldJoin: ' ddv_images.image_id',
-            rootJoin: 'ddv_banner_images.banner_image_id',
+            fieldJoin: `${Table.IMAGE}.image_id`,
+            rootJoin: `${Table.IMAGE_LINK}.image_id`,
           },
         },
       },

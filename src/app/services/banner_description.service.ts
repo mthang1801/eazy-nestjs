@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
 import { BannerDescriptions } from '../entities/banner_descriptions.entity';
-import { BannerDescriptionsRepository } from '../repositories/banner.repository';
+import { BannerDescriptionsRepository } from '../repositories/banner_description.respository';
 import { Table } from '../../database/enums/index';
 
 @Injectable()
