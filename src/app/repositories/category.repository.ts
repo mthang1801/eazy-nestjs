@@ -12,7 +12,6 @@ export class CategoryRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.CATEGORIES;
+    this.tableProps = Object.getOwnPropertyNames(new CategoryEntity());
   }
-
-  categoryDataProps = Object.getOwnPropertyNames(new CategoryEntity());
 }

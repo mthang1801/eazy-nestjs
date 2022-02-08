@@ -11,6 +11,7 @@ import {
   appConfig,
   databaseConfig,
   authConfig,
+  mailConfig,
 } from '../../config/index.config';
 import { LoggerModule } from '../../logger/logger.module';
 import { StringModule } from './string.module';
@@ -21,12 +22,13 @@ import { UserGroupsModule } from './user_groups.module';
 import { CategoryModule } from './category.module';
 import { ImageModule } from './image.module';
 import { ShippingModule } from './shippings.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfig, databaseConfig, authConfig],
+      load: [appConfig, databaseConfig, authConfig, mailConfig],
     }),
     AuthModule,
     UsersModule,
@@ -47,7 +49,6 @@ import { ShippingModule } from './shippings.module';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
-      
     },
   ],
 })

@@ -10,10 +10,7 @@ import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
 import { CategoryDescriptionEntity } from '../entities/category-description.entity';
 import { CategoryEntity } from '../entities/category.entity';
-import { CategoryVendorProductCountEntity } from '../entities/category-vendor-product-count.entity';
-import { Like } from '../../database/find-options/operators';
 import { CategoryDescriptionRepository } from '../repositories/category_descriptions.repository';
-import { CategoryVendorProductCountRepository } from '../repositories/category_vendor_product_count.repository';
 import * as _ from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 
@@ -25,10 +22,7 @@ export class CategoryService {
   ) {}
 
   async Create(data: CreateCategoryDto): Promise<any> {
-    const categoryData = this.categoryRepository.setData(
-      data,
-      this.categoryRepository.categoryDataProps,
-    );
+    const categoryData = this.categoryRepository.setDataTest(data);
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
@@ -63,7 +57,7 @@ export class CategoryService {
     }
     let updatedCategoryDataObject = {};
     for (let [key, val] of Object.entries(data)) {
-      if (this.categoryRepository.categoryDataProps.includes(key)) {
+      if (this.categoryRepository.tableProps.includes(key)) {
         updatedCategoryDataObject[key] = val;
       }
     }
