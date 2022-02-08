@@ -19,4 +19,8 @@ export class UserGroupPrivilegesRepository<
     super(databaseService, table);
     this.table = Table.USER_GROUP_PRIVILEGES;
   }
+
+  userGroupPrivilegeProps = Object.getOwnPropertyNames(
+    new UserGroupPrivilegeEntity(),
+  );
 }

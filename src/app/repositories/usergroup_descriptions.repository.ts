@@ -20,7 +20,7 @@ export class UserGroupDescriptionsRepository<
     this.table = Table.USER_GROUP_DESCRIPTIONS;
   }
 
-  userGroupDataDescriptionProps = Object.getOwnPropertyNames(
+  userGroupDescriptionProps = Object.getOwnPropertyNames(
     new UserGroupDescriptionEntity(),
   );
 }

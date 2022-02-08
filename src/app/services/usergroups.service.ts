@@ -38,6 +38,7 @@ import {
   CreateUserGroupDescriptionDto,
   UpdateUserGroupDescriptionDto,
 } from '../dto/usergroups/usergroup_description.dto';
+import { Like } from 'src/database/find-options/operators';
 
 @Injectable()
 export class UserGroupsService {
@@ -57,14 +58,14 @@ export class UserGroupsService {
   async Create(data: CreateUserGroupsDto): Promise<any> {
     const userGroupData = this.userGroupRepo.setData(
       data,
-      this.userGroupRepo.userGroupDataProps,
+      this.userGroupRepo.userGroupProps,
     );
 
     const userGroup = await this.userGroupRepo.create(userGroupData);
 
     const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
       data,
-      this.userGroupDescriptionRepo.userGroupDataDescriptionProps,
+      this.userGroupDescriptionRepo.userGroupDescriptionProps,
     );
 
     const userGroupDescription = await this.userGroupDescriptionRepo.create({
@@ -73,6 +74,37 @@ export class UserGroupsService {
     });
 
     return { ...userGroup, ...userGroupDescription };
+  }
+
+  async Get(id: number): Promise<UserGroupEntity> {
+    const userGroup = await this.userGroupRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          },
+        },
+      },
+      where: { [`${Table.USER_GROUPS}.usergroup_id`]: id },
+    });
+    return userGroup;
+  }
+
+  async GetAll(): Promise<UserGroupEntity[]> {
+    const userGroups = await this.userGroupRepo.find({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          },
+        },
+      },
+    });
+    return userGroups;
   }
 
   async Update(id: number, data: UpdateUserGroupsDto): Promise<any> {
@@ -85,7 +117,7 @@ export class UserGroupsService {
     }
     const userGroupData = this.userGroupRepo.setData(
       data,
-      this.userGroupRepo.userGroupDataProps,
+      this.userGroupRepo.userGroupProps,
     );
 
     if (Object.entries(userGroupData).length) {
@@ -94,7 +126,7 @@ export class UserGroupsService {
 
     const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
       data,
-      this.userGroupDescriptionRepo.userGroupDataDescriptionProps,
+      this.userGroupDescriptionRepo.userGroupDescriptionProps,
     );
 
     let userGroupDescription = await this.userGroupDescriptionRepo.findOne({
@@ -108,6 +140,102 @@ export class UserGroupsService {
     }
 
     return { ...userGroup, ...userGroupDescription };
+  }
+
+  async Delete(id: number): Promise<boolean> {
+    const findUserExistInGroup = await this.userGroupLinksRepo.findOne({
+      usergroup_id: id,
+    });
+    if (findUserExistInGroup) {
+      throw new HttpException(
+        'Không thể xoá usergroup này vì còn user trong đó.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const deletedUserGroup = await this.userGroupRepo.delete({
+      usergroup_id: id,
+    });
+    await this.userGroupDescriptionRepo.delete({ usergroup_id: id });
+    await this.userGroupLinksRepo.delete({ usergroup_id: id });
+    return deletedUserGroup;
+  }
+
+  async GetLinks(params: any): Promise<UserGroupLinkEntity[]> {
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    const skip = (page - 1) * limit;
+    let filterCondition = {};
+    for (let [key, val] of Object.entries(others)) {
+      if (this.userGroupLinksRepo.userGroupLinkProps.includes(key)) {
+        filterCondition[`${Table.USER_GROUP_LINKS}.${key}`] = Like(val);
+        continue;
+      }
+      if (this.userGroupRepo.userGroupProps.includes(key)) {
+        filterCondition[`${Table.USER_GROUPS}.${key}`] = Like(val);
+        continue;
+      }
+      if (
+        this.userGroupDescriptionRepo.userGroupDescriptionProps.includes(key)
+      ) {
+        filterCondition[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] = Like(val);
+        continue;
+      }
+    }
+    const userGroupLinks = await this.userRepo.find({
+      select: ['*', `${Table.USERS}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_LINKS]: {
+            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          },
+        },
+      },
+      where: { ...filterCondition },
+      skip,
+      limit,
+    });
+
+    return userGroupLinks;
+  }
+
+  async GetLinksByUserGroupId(
+    usergroup_id: number,
+    query: any,
+  ): Promise<UserGroupLinkEntity[]> {
+    let { page, limit } = query;
+    page = +page || 1;
+    limit = +limit || 5;
+    const skip = (page - 1) * limit;
+    console.log(skip, limit);
+    const userGroupLink = await this.userGroupLinksRepo.find({
+      select: ['*', `${Table.USER_GROUP_LINKS}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          },
+        },
+      },
+      where: { [`${Table.USER_GROUPS}.usergroup_id`]: usergroup_id },
+      skip,
+      limit,
+    });
+    return userGroupLink;
   }
 
   async createUserGroupLinkPosition(
@@ -462,16 +590,17 @@ export class UserGroupsService {
   }
 
   async updateUserGroupPrivilege(
+    id: number,
     data: UpdateUserGroupPrivilegeDto,
   ): Promise<UserGroupPrivilegeEntity> {
     const updatedGroupPrivilege = await this.userGroupPrivilegeRepo.update(
-      data.privilege_id,
+      id,
       data,
     );
     return updatedGroupPrivilege;
   }
 
   async deleteUserGroupPrivilege(privilege_id: number): Promise<boolean> {
-    return this.userGroupPrivilegeRepo.delete({ privilege_id });
+    return this.userGroupPrivilegeRepo.delete(privilege_id);
   }
 }
