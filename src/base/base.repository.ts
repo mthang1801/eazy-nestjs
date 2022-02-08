@@ -173,6 +173,7 @@ export class BaseRepositorty<T> {
       }
     });
     sql += ' WHERE ';
+
     if (typeof id === 'object') {
       Object.entries(id).forEach(([key, val], i) => {
         if (i === 0) {

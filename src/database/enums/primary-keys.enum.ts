@@ -25,5 +25,4 @@ export enum PrimaryKeys {
   ddv_shipping_descriptions = 'shipping_id',
   ddv_shipping_services = 'service_id',
   ddv_shipping_service_descriptions = 'service_id',
-
 }
