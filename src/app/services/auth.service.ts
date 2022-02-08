@@ -27,7 +27,7 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import { UserGroupsService } from './user_groups.service';
+import { UserGroupsService } from './usergroups.service';
 
 import { UserGroupEntity } from '../entities/usergroups.entity';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
@@ -67,6 +67,16 @@ export class AuthService {
   ): Promise<IResponseUserToken> {
     const { firstname, lastname, email, password, phone } = authCredentialsDto;
     const { passwordHash, salt } = saltHashPassword(password);
+    const checkEmailExist = await this.userRepository.findOne({ email });
+    if (checkEmailExist) {
+      throw new HttpException('Địa chỉ email đã tồn tại.', 409);
+    }
+
+    const checkPhoneExist = await this.userRepository.findOne({ phone });
+
+    if (checkPhoneExist) {
+      throw new HttpException('Số điện thoại đã tồn tại.', 409);
+    }
 
     let user = await this.userService.createUser({
       firstname,

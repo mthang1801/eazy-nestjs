@@ -19,4 +19,6 @@ export class UserGroupDescriptionsRepository<
     super(databaseService, table);
     this.table = Table.USER_GROUP_DESCRIPTIONS;
   }
+
+  userGroupDataDescriptionProps = ['usergroup_id', 'lang_code', 'usergroup'];
 }

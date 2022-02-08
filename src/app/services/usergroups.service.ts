@@ -54,6 +54,26 @@ export class UserGroupsService {
     private userRepo: UserRepository<UserEntity>,
   ) {}
 
+  async Create(data: CreateUserGroupsDto): Promise<any> {
+    const userGroupData = this.userGroupRepo.setData(
+      data,
+      this.userGroupRepo.userGroupDataProps,
+    );
+    const userGroup = await this.userGroupRepo.create(userGroupData);
+
+    const userGroupDescriptionData = this.userGroupDescriptionRepo.setData(
+      data,
+      this.userGroupDescriptionRepo.userGroupDataDescriptionProps,
+    );
+
+    const userGroupDescription = await this.userGroupDescriptionRepo.create({
+      usergroup_id: userGroup.usergroup_id,
+      ...userGroupDescriptionData,
+    });
+
+    return { ...userGroup, ...userGroupDescription };
+  }
+
   async createUserGroupLinkPosition(
     user_id: number,
     position: string = UserGroupTypeEnum.Customer,
@@ -83,48 +103,48 @@ export class UserGroupsService {
     return { ...userGroupForCustomer, ...newUserGroupLink };
   }
 
-  async createUserGroup(
-    createUserGroupsDto: CreateUserGroupsDto,
-  ): Promise<any> {
-    if (
-      !createUserGroupsDto.status &&
-      !createUserGroupsDto.company_id &&
-      !createUserGroupsDto.type
-    ) {
-      throw new HttpException(
-        'Tạo mới không thành công do tất cả các trường đều bỏ trống',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const checkUserGroupExist = await this.userGroupRepo.findOne({
-      where: {
-        type: createUserGroupsDto?.type,
-        company_id: createUserGroupsDto?.company_id,
-      },
-    });
-    if (checkUserGroupExist) {
-      throw new HttpException(
-        'UserGroup đã tồn tại.',
-        HttpStatus.NOT_IMPLEMENTED,
-      );
-    }
-    const newUserGroup = await this.userGroupRepo.create({
-      status: createUserGroupsDto.status || UserGroupStatusEnum.Active,
-      type: createUserGroupsDto?.type || UserGroupTypeEnum.Wholesale,
-      company_id: createUserGroupsDto?.company_id || 0,
-    });
+  // async createUserGroup(
+  //   createUserGroupsDto: CreateUserGroupsDto,
+  // ): Promise<any> {
+  //   if (
+  //     !createUserGroupsDto.status &&
+  //     !createUserGroupsDto.company_id &&
+  //     !createUserGroupsDto.type
+  //   ) {
+  //     throw new HttpException(
+  //       'Tạo mới không thành công do tất cả các trường đều bỏ trống',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  //   const checkUserGroupExist = await this.userGroupRepo.findOne({
+  //     where: {
+  //       type: createUserGroupsDto?.type,
+  //       company_id: createUserGroupsDto?.company_id,
+  //     },
+  //   });
+  //   if (checkUserGroupExist) {
+  //     throw new HttpException(
+  //       'UserGroup đã tồn tại.',
+  //       HttpStatus.NOT_IMPLEMENTED,
+  //     );
+  //   }
+  //   const newUserGroup = await this.userGroupRepo.create({
+  //     status: createUserGroupsDto.status || UserGroupStatusEnum.Active,
+  //     type: createUserGroupsDto?.type || UserGroupTypeEnum.Wholesale,
+  //     company_id: createUserGroupsDto?.company_id || 0,
+  //   });
 
-    if (createUserGroupsDto.description && createUserGroupsDto.lang_code) {
-      const newUserGroupDescription =
-        await this.userGroupDescriptionRepo.create({
-          usergroup_id: newUserGroup.usergroup_id,
-          lang_code: createUserGroupsDto.lang_code,
-          usergroup: createUserGroupsDto.description,
-        });
-      return { userGroup: newUserGroup, description: newUserGroupDescription };
-    }
-    return { userGroup: newUserGroup };
-  }
+  //   if (createUserGroupsDto.description && createUserGroupsDto.lang_code) {
+  //     const newUserGroupDescription =
+  //       await this.userGroupDescriptionRepo.create({
+  //         usergroup_id: newUserGroup.usergroup_id,
+  //         lang_code: createUserGroupsDto.lang_code,
+  //         usergroup: createUserGroupsDto.description,
+  //       });
+  //     return { userGroup: newUserGroup, description: newUserGroupDescription };
+  //   }
+  //   return { userGroup: newUserGroup };
+  // }
 
   async getUserGroup(usergroup_id: number): Promise<UserGroupEntity> {
     const userGroup = await this.userGroupRepo.findOne({

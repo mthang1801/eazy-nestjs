@@ -2,19 +2,19 @@ import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateUserGroupsDto {
   @IsOptional()
-  status: string;
+  status: string = 'A';
 
   @IsOptional()
   type: string;
 
   @IsOptional()
-  company_id: number;
+  company_id: number = 0;
 
   @IsOptional()
-  description: string;
+  usergroup: string = '';
 
   @IsOptional()
-  lang_code: string;
+  lang_code: string = 'vn';
 }
 
 export class UpdateUserGroupsDto {
