@@ -85,7 +85,7 @@ export class CategoryController extends BaseController {
   ): Promise<IResponse> {
     const boolRes = await this.categoryService.Delete(id);
     return boolRes
-      ? this.respondNoContent(res)
+      ? this.responseSuccess(res, 'Xoá thành công')
       : this.respondNotFound(
           res,
           `Xoá không thành công, không tìm thấy id ${id}.`,
