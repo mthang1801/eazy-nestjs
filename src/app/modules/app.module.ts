@@ -20,6 +20,7 @@ import { AllExceptionsFilter } from '../helpers/exeptions/allExeptionsFilter';
 import { UserGroupsModule } from './user_groups.module';
 import { CategoryModule } from './category.module';
 import { ImageModule } from './image.module';
+import { ShippingModule } from './shippings.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,11 +41,13 @@ import { ImageModule } from './image.module';
     OrderStatusModule,
     PaymentModule,
     ImageModule,
+    ShippingModule,
   ],
   providers: [
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+      
     },
   ],
 })

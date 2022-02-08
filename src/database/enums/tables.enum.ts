@@ -21,4 +21,8 @@ export enum Table {
   ORDER_STATUS_DATA = 'ddv_status_data',
   PAYMENT_DESCRIPTION = 'ddv_payment_descriptions',
   PAYMENT = 'ddv_payments',
+  SHIPPINGS = 'ddv_shippings',
+  SHIPPINGS_DESCRIPTION = 'ddv_shipping_descriptions',
+  SHIPPING_SERVICE = 'ddv_shipping_services',
+  SHIPPING_SERVICE_DESCRIPTION = 'ddv_shipping_service_descriptions',
 }
