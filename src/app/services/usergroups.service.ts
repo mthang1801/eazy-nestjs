@@ -238,6 +238,21 @@ export class UserGroupsService {
     return userGroupLink;
   }
 
+  async updateUserGroupLinkByUserId(
+    user_id: number,
+    data: UpdateUserGroupLinkDto,
+  ): Promise<UserGroupLinkEntity> {
+    const userGroupLink = await this.userGroupLinksRepo.findOne({ user_id });
+    if (!userGroupLink) {
+      throw new HttpException('Người dùng không tồn tại.', 404);
+    }
+    const updatedUserGroupLink = await this.userGroupLinksRepo.update(
+      userGroupLink.link_id,
+      data,
+    );
+    return updatedUserGroupLink;
+  }
+
   async createUserGroupLinkPosition(
     user_id: number,
     position: string = UserGroupTypeEnum.Customer,
@@ -467,66 +482,6 @@ export class UserGroupsService {
     return user;
   }
 
-  async updateUserGroupLink(
-    data: UpdateUserGroupLinkDto,
-  ): Promise<UserGroupLinkEntity> {
-    const userGroupLink: UserGroupLinkEntity =
-      await this.userGroupLinksRepo.findOne({ user_id: data.user_id });
-    if (!userGroupLink) {
-      throw new HttpException(
-        'Không tìm thấy người dùng.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const updatedUserGroupLink = await this.userGroupLinksRepo.update(
-      userGroupLink.link_id,
-      data,
-    );
-    return updatedUserGroupLink;
-  }
-
-  async getUsersByUserGroupInUserGroupLink(
-    usergroup_id: number,
-    skip: number = 0,
-    limit: number = 5,
-  ): Promise<any[]> {
-    const users = await this.userGroupLinksRepo.find({
-      select: ['*', `${Table.USER_GROUP_LINKS}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USERS]: {
-            fieldJoin: `${Table.USERS}.user_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_DATA]: {
-            fieldJoin: `${Table.USER_DATA}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_PRIVILEGES]: {
-            fieldJoin: `${Table.USER_GROUP_PRIVILEGES}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-        },
-      },
-      where: { [`${this.userGroupLinksTable}.usergroup_id`]: usergroup_id },
-      skip,
-      limit,
-    });
-    return users;
-  }
-
   async createUserGroupPrivilege(
     data: CreateUserGroupPrivilegeDto,
   ): Promise<UserGroupPrivilegeEntity> {
@@ -551,42 +506,26 @@ export class UserGroupsService {
       ],
     );
 
-    let userGroupPrivilegeFormatList = { children: [] };
-    for (let userGroupPrivilegeRawItem of userGroupPrivilegeRawListSortByLevel) {
-      if (userGroupPrivilegeRawItem.level === 1) {
-        userGroupPrivilegeFormatList = {
-          ...userGroupPrivilegeFormatList,
-          ...userGroupPrivilegeRawItem,
-        };
+    let menu = [];
+    for (let userGroupPrivilegeItem of userGroupPrivilegeRawListSortByLevel) {
+      if (userGroupPrivilegeItem.level === 1) {
+        menu.push({ ...userGroupPrivilegeItem, children: [] });
         continue;
       }
-      if (userGroupPrivilegeRawItem.level === 2) {
-        userGroupPrivilegeFormatList.children.push({
-          ...userGroupPrivilegeRawItem,
-          children: [],
+      if (userGroupPrivilegeItem.level === 2) {
+        menu = menu.map((menuItem) => {
+          if (
+            menuItem.level === 1 &&
+            menuItem.privilege_id === userGroupPrivilegeItem.parent_id
+          ) {
+            menuItem.children.push(userGroupPrivilegeItem);
+          }
+          return menuItem;
         });
-        continue;
-      }
-      if (userGroupPrivilegeRawItem.level === 3) {
-        // find parent in userGroupPrivilegeFormatList's children
-        userGroupPrivilegeFormatList.children =
-          userGroupPrivilegeFormatList.children.map(
-            (userGroupPrivilegeChild) => {
-              if (
-                userGroupPrivilegeChild.privilege_id ===
-                userGroupPrivilegeRawItem.parent_id
-              ) {
-                userGroupPrivilegeChild.children.push({
-                  ...userGroupPrivilegeRawItem,
-                  children: [],
-                });
-              }
-              return userGroupPrivilegeChild;
-            },
-          );
       }
     }
-    return userGroupPrivilegeFormatList;
+
+    return menu;
   }
 
   async updateUserGroupPrivilege(

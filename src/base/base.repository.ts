@@ -16,6 +16,7 @@ const orderCmds = [
 @Injectable()
 export class BaseRepositorty<T> {
   private logger = new Logger(BaseRepositorty.name);
+  private _tableProps: string[];
   constructor(
     protected readonly databaseService: DatabaseService,
     protected table: Table,
@@ -23,11 +24,28 @@ export class BaseRepositorty<T> {
     this.table = table;
   }
 
-  setData(data, props) {
+  set tableProps(tableProps) {
+    this._tableProps = tableProps;
+  }
 
+  get tableProps() {
+    return this._tableProps;
+  }
+
+  setDataTest(data) {
     let userGroupDataObject = {};
     for (let [key, val] of Object.entries(data)) {
-      if (props.includes(key)) {
+      if (this._tableProps.includes(key)) {
+        userGroupDataObject[key] = val;
+      }
+    }
+    return userGroupDataObject;
+  }
+
+  setData(data, tableProps) {
+    let userGroupDataObject = {};
+    for (let [key, val] of Object.entries(data)) {
+      if (tableProps.includes(key)) {
         userGroupDataObject[key] = val;
       }
     }

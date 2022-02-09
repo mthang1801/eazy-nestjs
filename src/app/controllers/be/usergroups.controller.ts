@@ -17,6 +17,7 @@ import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { Response } from 'express';
+import { UpdateUserGroupLinkDto } from '../../dto/usergroups/usergroup_link.dto';
 import {
   CreateUserGroupPrivilegeDto,
   UpdateUserGroupPrivilegeDto,
@@ -100,6 +101,17 @@ export class UsergroupsController extends BaseController {
       query,
     );
     return this.responseSuccess(res, userGroupLink);
+  }
+
+  @Put('links/:id')
+  async updateUserGroupLinkByUserId(
+    @Param('id') id,
+    @Body() data: UpdateUserGroupLinkDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const updatedLink =
+      await this.usersGroupService.updateUserGroupLinkByUserId(id, data);
+    return this.responseSuccess(res, updatedLink);
   }
 
   /**
