@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { Payment } from '../entities/payment.entity';
+import { PaymentEntity } from '../entities/payment.entity';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { Table, JoinTable } from '../../database/enums/index';
 import { LoggerService } from '../../logger/custom.logger';
@@ -8,10 +8,10 @@ import { PaymentDescriptionService } from './payment_description.service';
 
 @Injectable()
 export class PaymentService extends BaseService<
-Payment,
-PaymentRepository<Payment>
+PaymentEntity,
+PaymentRepository<PaymentEntity>
 > {
-    constructor(repository: PaymentRepository<Payment>, table: Table, private paymentDescriptionService: PaymentDescriptionService) {
+    constructor(repository: PaymentRepository<PaymentEntity>, table: Table, private paymentDescriptionService: PaymentDescriptionService) {
         super(repository, table);
         this.table = Table.PAYMENT;
     }
