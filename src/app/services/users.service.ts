@@ -14,7 +14,6 @@ import {
   convertToMySQLDateTime,
   preprocessUserResult,
 } from '../../utils/helper';
-import { BaseService } from '../../base/base.service';
 import { ObjectLiteral } from '../../common/ObjectLiteral';
 
 import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
@@ -30,18 +29,8 @@ import {
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
-import {
-  UserGroupStatusEnum,
-  UserGroupTypeEnum,
-} from 'src/database/enums/tableFieldEnum/user_groups.enum';
-import {
-  UserGroupEntity,
-  UserGroupLinkEntity,
-} from '../entities/usergroups.entity';
-import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserDataRepository } from '../repositories/user-data.repository';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
-import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
 import { UserDataEntity } from '../entities/user_data.entity';
 import { UserProfileEntity } from '../entities/user_profile.entity';
 
@@ -50,8 +39,6 @@ export class UsersService {
   private table: Table = Table.USERS;
   constructor(
     private readonly mailService: MailService,
-    private userGroupLinkRepository: UserGroupLinksRepository<UserGroupLinkEntity>,
-    private userGroupRepository: UserGroupsRepository<UserGroupEntity>,
     private userDataRepository: UserDataRepository<UserDataEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,

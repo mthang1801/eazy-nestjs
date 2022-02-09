@@ -18,10 +18,12 @@ import { StringModule } from './string.module';
 import { ObjectModule } from './object.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from '../helpers/exeptions/allExeptionsFilter';
-import { UserGroupsModule } from './user_groups.module';
+import { UserGroupsModule } from './usergroups.module';
 import { CategoryModule } from './category.module';
 import { ImageModule } from './image.module';
 import { ShippingModule } from './shippings.module';
+import { UserGroupLinksModule } from './usergroup_links.module';
+import { UserGroupPrivilegeModule } from './usergroup_privilege.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { ShippingModule } from './shippings.module';
     StringModule,
     ObjectModule,
     UserGroupsModule,
+    UserGroupLinksModule,
+    UserGroupPrivilegeModule,
     CategoryModule,
     OrderStatusModule,
     PaymentModule,

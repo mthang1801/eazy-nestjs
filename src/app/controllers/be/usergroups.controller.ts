@@ -50,68 +50,15 @@ export class UsergroupsController extends BaseController {
     @Body() data: CreateUserGroupsDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const newUserGroup = await this.usersGroupService.Create(data);
+    const newUserGroup = await this.usersGroupService.create(data);
     return this.responseSuccess(res, newUserGroup);
   }
 
   @Get()
   @UseGuards(AuthGuard)
   async getAll(@Res() res: Response): Promise<IResponse> {
-    const listUserGroup = await this.usersGroupService.GetAll();
+    const listUserGroup = await this.usersGroupService.getAll();
     return this.responseSuccess(res, listUserGroup);
-  }
-
-  @Put(':id')
-  @UseGuards(AuthGuard)
-  async update(
-    @Param('id') id: number,
-    @Body() data: UpdateUserGroupsDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const updatedUserGroup = await this.usersGroupService.Update(id, data);
-    return this.responseSuccess(res, updatedUserGroup);
-  }
-
-  @Delete(':id')
-  @UseGuards(AuthGuard)
-  async delete(
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const boolRes = await this.usersGroupService.Delete(id);
-    return boolRes
-      ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công')
-      : this.responseNotFound(res, 'Xoá dữ liệu không thành công.');
-  }
-
-  @Get('links')
-  async getLinks(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const userGroupLinksRes = await this.usersGroupService.GetLinks(params);
-    return this.responseSuccess(res, userGroupLinksRes);
-  }
-
-  @Get('links/:id')
-  async getLinksByUserGroupId(
-    @Param('id') id: number,
-    @Query() query,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const userGroupLink = await this.usersGroupService.GetLinksByUserGroupId(
-      id,
-      query,
-    );
-    return this.responseSuccess(res, userGroupLink);
-  }
-
-  @Put('links/:id')
-  async updateUserGroupLinkByUserId(
-    @Param('id') id,
-    @Body() data: UpdateUserGroupLinkDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const updatedLink =
-      await this.usersGroupService.updateUserGroupLinkByUserId(id, data);
-    return this.responseSuccess(res, updatedLink);
   }
 
   /**
@@ -123,73 +70,30 @@ export class UsergroupsController extends BaseController {
   @Get(':id')
   @UseGuards(AuthGuard)
   async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
-    const userGroupRes = await this.usersGroupService.Get(id);
+    const userGroupRes = await this.usersGroupService.get(id);
     return this.responseSuccess(res, userGroupRes);
   }
 
-  /**
-   * Create a new record at ddv_usergroup_privileges
-   * @param data
-   * @param res
-   * @returns
-   */
-  @Post('/privilege')
-  async createUserGroupPrivilege(
-    @Body() data: CreateUserGroupPrivilegeDto,
+  @Put(':id')
+  @UseGuards(AuthGuard)
+  async update(
+    @Param('id') id: number,
+    @Body() data: UpdateUserGroupsDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const newUserGroupPrivilege =
-      await this.usersGroupService.createUserGroupPrivilege(data);
-    return this.responseSuccess(res, newUserGroupPrivilege);
+    const updatedUserGroup = await this.usersGroupService.update(id, data);
+    return this.responseSuccess(res, updatedUserGroup);
   }
 
-  /**
-   * Get list user groups privilege by usergroup_id
-   * @param usergroup_id
-   * @param res
-   * @returns
-   */
-  @Get('/privilege/usergroup/:id')
-  async getUserGroupPrivilegeByUserGroupId(
+  @Delete(':id')
+  @UseGuards(AuthGuard)
+  async delete(
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const userGroupPrivilegeList =
-      await this.usersGroupService.getUserGroupPrivilegeByUserGroupId(id);
-    return this.responseSuccess(res, userGroupPrivilegeList);
-  }
-
-  /**
-   * Update a record by privilege_id at ddv_usergroup_privileges
-   * @param data
-   * @param res
-   * @returns
-   */
-  @Put('/privilege/:id')
-  async updateUserGroupPrivilege(
-    @Body() data: UpdateUserGroupPrivilegeDto,
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const newUserGroupPrivilege =
-      await this.usersGroupService.updateUserGroupPrivilege(id, data);
-    return this.responseSuccess(res, newUserGroupPrivilege);
-  }
-
-  /**
-   * Delete a record at ddv_usergroup_privileges with param privilege_id
-   * @param privilege_id
-   * @param res
-   * @returns
-   */
-  @Delete('/privilege/:id')
-  async deleteUserGroupPrivilege(
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const boolRes = await this.usersGroupService.deleteUserGroupPrivilege(id);
+    const boolRes = await this.usersGroupService.delete(id);
     return boolRes
-      ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công.')
-      : this.responseNotFound(res, `Xoá không thành công.`);
+      ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công')
+      : this.responseNotFound(res, 'Xoá dữ liệu không thành công.');
   }
 }

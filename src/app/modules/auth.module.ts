@@ -7,9 +7,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthProviderRepository } from '../repositories/auth.repository';
 
-import { UserGroupsModule } from './user_groups.module';
+import { UserGroupsModule } from './usergroups.module';
 import { ImageModule } from './image.module';
 import { MailModule } from './mail.module';
+import { UserGroupLinksModule } from './usergroup_links.module';
+import { UserGroupPrivilegeModule } from './usergroup_privilege.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { MailModule } from './mail.module';
     UserGroupsModule,
     ImageModule,
     MailModule,
+    UserGroupLinksModule,
+    UserGroupPrivilegeModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

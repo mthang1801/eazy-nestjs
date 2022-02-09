@@ -38,8 +38,7 @@ export class CategoryController extends BaseController {
    */
   @Get()
   async fetchListCategoryMenu(@Res() res: Response): Promise<IResponse> {
-    const categoriesMenuList =
-      await this.categoryService.fetchListCategoryMenu();
+    const categoriesMenuList = await this.categoryService.getList();
     return this.responseSuccess(res, categoriesMenuList);
   }
 }

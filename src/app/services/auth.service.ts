@@ -39,16 +39,20 @@ import { v4 as uuid } from 'uuid';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileEntity } from '../entities/user_profile.entity';
 import { UserEntity, UserGeneralInfoEntity } from '../entities/user.entity';
+import { UserGroupLinkService } from './usergroup_links.service';
 
 import {
   UserMailingListsStatusEnum,
   UserMailingListsTypeEnum,
 } from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
+import { UserGroupsPrivilegeService } from './usergroup_privilege.service';
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UsersService,
     private userGroupService: UserGroupsService,
+    private userGroupLinksService: UserGroupLinkService,
+    private userGroupsPrivilegeService: UserGroupsPrivilegeService,
     private jwtService: JwtService,
     private mailService: MailService,
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
@@ -93,7 +97,7 @@ export class AuthService {
     });
     //create a new record as customer position at ddv_usergroup_links
     const userGroupForCustomer: UserGroupEntity =
-      await this.userGroupService.createUserGroupLinkPosition(
+      await this.userGroupLinksService.createUserGroupLinkPosition(
         user.user_id,
         UserGroupTypeEnum.Customer,
       );
@@ -151,7 +155,7 @@ export class AuthService {
     user['image'] = await this.getUserImage(user.user_id);
 
     // get menu at ddv_usergroup_privileges
-    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+    const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
       user.usergroup_id,
     );
 
@@ -204,7 +208,7 @@ export class AuthService {
       });
       //create a new record as customer position at ddv_usergroup_links
       const userGroupForCustomer =
-        await this.userGroupService.createUserGroupLinkPosition(
+        await this.userGroupLinksService.createUserGroupLinkPosition(
           userExists.user_id,
           UserGroupTypeEnum.Customer,
         );
@@ -270,7 +274,7 @@ export class AuthService {
       );
     }
 
-    const menu = await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
+    const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
       userExists.usergroup_id,
     );
 
@@ -369,10 +373,9 @@ export class AuthService {
     });
 
     if (user.usergroup_id) {
-      const menu =
-        await this.userGroupService.getUserGroupPrivilegeByUserGroupId(
-          user.usergroup_id,
-        );
+      const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
+        user.usergroup_id,
+      );
       user['menu'] = menu;
     }
     return {

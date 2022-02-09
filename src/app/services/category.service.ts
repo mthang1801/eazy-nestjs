@@ -21,7 +21,7 @@ export class CategoryService {
     private categoryRepository: CategoryRepository<CategoryEntity>,
   ) {}
 
-  async Create(data: CreateCategoryDto): Promise<any> {
+  async create(data: CreateCategoryDto): Promise<any> {
     const categoryData = this.categoryRepository.setData(data);
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
@@ -41,7 +41,7 @@ export class CategoryService {
     return { ...createdCategory, ...createdCategoryDescription };
   }
 
-  async Update(id: number, data: UpdateCategoryDto): Promise<any> {
+  async update(id: number, data: UpdateCategoryDto): Promise<any> {
     const oldCategoryData = await this.categoryRepository.findOne({
       category_id: id,
     });
@@ -93,7 +93,7 @@ export class CategoryService {
     return { ...updatedCategoryData, ...updatedCategoryDescription };
   }
 
-  async fetchListCategoryMenu(): Promise<any> {
+  async getList(): Promise<any> {
     const categoryMenuRawList = await this.categoryRepository.find({
       select: ['*', `${Table.CATEGORIES}.*`],
       join: {
@@ -128,7 +128,39 @@ export class CategoryService {
     return categoryMenuList;
   }
 
-  async Delete(id: number): Promise<boolean> {
+  async get(id: number): Promise<CategoryEntity> {
+    let category = await this.categoryRepository.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+            rootJoin: `${Table.CATEGORIES}.category_id`,
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.category_id`]: id },
+    });
+    // If level 1, find all its children
+    if (category.level === 1) {
+      const children = await this.categoryRepository.find({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.CATEGORY_DESCRIPTIONS]: {
+              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
+            },
+          },
+        },
+        where: { [`${Table.CATEGORIES}.parent_id`]: id },
+      });
+      category['children'] = children;
+    }
+    return category;
+  }
+
+  async delete(id: number): Promise<boolean> {
     const deleteStatus = await this.categoryRepository.delete({
       category_id: id,
     });

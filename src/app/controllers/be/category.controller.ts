@@ -41,7 +41,7 @@ export class CategoryController extends BaseController {
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const createdCategory = await this.categoryService.Create(categoryDto);
+    const createdCategory = await this.categoryService.create(categoryDto);
     return this.responseSuccess(res, createdCategory);
   }
 
@@ -53,10 +53,21 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get()
-  async fetchListCategoryMenu(@Res() res: Response): Promise<IResponse> {
-    const categoriesMenuList =
-      await this.categoryService.fetchListCategoryMenu();
+  async getList(@Res() res: Response): Promise<IResponse> {
+    const categoriesMenuList = await this.categoryService.getList();
     return this.responseSuccess(res, categoriesMenuList);
+  }
+
+  /**
+   * Get category item by category_id, if it is level 1, find all its children
+   * @param id
+   * @param res
+   * @returns
+   */
+  @Get(':id')
+  async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
+    const categoryRes = await this.categoryService.get(id);
+    return this.responseSuccess(res, categoryRes);
   }
 
   /**
@@ -73,7 +84,7 @@ export class CategoryController extends BaseController {
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const updatedCategory = await this.categoryService.Update(id, categoryDto);
+    const updatedCategory = await this.categoryService.update(id, categoryDto);
     return this.responseSuccess(res, updatedCategory);
   }
 
@@ -83,7 +94,7 @@ export class CategoryController extends BaseController {
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const boolRes = await this.categoryService.Delete(id);
+    const boolRes = await this.categoryService.delete(id);
     return boolRes
       ? this.responseSuccess(res, 'Xoá thành công')
       : this.responseNotFound(

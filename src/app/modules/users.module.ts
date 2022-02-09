@@ -4,7 +4,7 @@ import { UsersController as UsersControllerBe } from '../controllers/be/users.co
 import { UsersController as UsersControllerFe } from '../controllers/fe/users.controller';
 import { MailModule } from './mail.module';
 import { ConfigService, ConfigModule } from '@nestjs/config';
-import { UserGroupsModule } from './user_groups.module';
+import { UserGroupsModule } from './usergroups.module';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileRepository } from '../repositories/user-profile.repository';
 import { UserDataRepository } from '../repositories/user-data.repository';
