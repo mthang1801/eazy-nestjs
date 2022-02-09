@@ -12,7 +12,6 @@ export class UserGroupsRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.USER_GROUPS;
+    this.tableProps = Object.getOwnPropertyNames(new UserGroupEntity());
   }
-
-  userGroupProps = Object.getOwnPropertyNames(new UserGroupEntity());
 }

@@ -18,9 +18,8 @@ export class UserGroupDescriptionsRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.USER_GROUP_DESCRIPTIONS;
+    this.tableProps = Object.getOwnPropertyNames(
+      new UserGroupDescriptionEntity(),
+    );
   }
-
-  userGroupDescriptionProps = Object.getOwnPropertyNames(
-    new UserGroupDescriptionEntity(),
-  );
 }

@@ -32,20 +32,10 @@ export class BaseRepositorty<T> {
     return this._tableProps;
   }
 
-  setDataTest(data) {
+  setData(data) {
     let userGroupDataObject = {};
     for (let [key, val] of Object.entries(data)) {
       if (this._tableProps.includes(key)) {
-        userGroupDataObject[key] = val;
-      }
-    }
-    return userGroupDataObject;
-  }
-
-  setData(data, tableProps) {
-    let userGroupDataObject = {};
-    for (let [key, val] of Object.entries(data)) {
-      if (tableProps.includes(key)) {
         userGroupDataObject[key] = val;
       }
     }

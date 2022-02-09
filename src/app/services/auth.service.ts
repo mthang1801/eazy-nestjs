@@ -36,10 +36,14 @@ import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
 import { UserMailingListsEntity } from '../entities/user-mailing-lists.entity';
 import { v4 as uuid } from 'uuid';
-import { UserMailingListsEnum } from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileEntity } from '../entities/user_profile.entity';
 import { UserEntity, UserGeneralInfoEntity } from '../entities/user.entity';
+
+import {
+  UserMailingListsStatusEnum,
+  UserMailingListsTypeEnum,
+} from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
 @Injectable()
 export class AuthService {
   constructor(
@@ -107,23 +111,8 @@ export class AuthService {
       data: '',
     });
 
-    // Create token to activate account through email
-    const newMailingList: UserMailingListsEntity =
-      await this.userMailingListRepository.create({
-        subscriber_id: user.user_id,
-        activation_key: uuid().replace(/-/g, ''),
-        confirmed: 0,
-        mail_type: UserMailingListsEnum.ActivateSignUpAccount,
-        expired_at: convertToMySQLDateTime(
-          new Date(Date.now() + 24 * 3600 * 1000),
-        ),
-        created_at: convertToMySQLDateTime(),
-      });
-
-    await this.mailService.sendUserActivateSignUpAccount(
-      user,
-      newMailingList.activation_key,
-    );
+    // Create a new record to user mailing list db and send email
+    this.sendMailActivateSignUpAccount(user);
   }
 
   async login(data: any): Promise<IResponseUserToken> {
@@ -340,41 +329,12 @@ export class AuthService {
     return true;
   }
 
-  async resetPasswordByPhone(phone: string): Promise<number> {
-    const user = await this.userService.findOne({ phone });
-    if (!user) {
-      throw new HttpException(
-        'Số điện thoại chưa được đăng ký.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const newOTP = generateOTPDigits();
-
-    await this.userService.updateUserOTP(user.user_id, newOTP);
-
-    const client = twilio(
-      'ACf45884c1ecedeb6821c81156065d8610',
-      '08fa4d62968cbff2e9c017ccb3a16219',
-    );
-
-    await client.messages.create({
-      body: `Mã OTP để xác nhận khôi phục mật khẩu là ${newOTP}, mã có hiệu lực trong vòng 90 giây, nhằm đảm bảo tài khoản được an toàn, quý khách vui lòng không chia sẽ mã này cho bất kỳ ai.`,
-      from: '+16075368673',
-      to: '+84939323700',
-    });
-
-    return newOTP;
-  }
-
-  async restorePasswordByOTP(user_id: number, otp: number): Promise<boolean> {
-    return await this.userService.restorePasswordByOTP(user_id, otp);
-  }
-
   async activeSignUpAccount(user_id: number, token: string): Promise<any> {
     const checkMail: UserMailingListsEntity =
       await this.userMailingListRepository.findOne({
         subscriber_id: user_id,
         activation_key: token,
+        status: UserMailingListsStatusEnum.Active,
       });
     if (!checkMail) {
       throw new HttpException(
@@ -401,6 +361,7 @@ export class AuthService {
     // Update email
     await this.userMailingListRepository.update(checkMail.list_id, {
       confirmed: 1,
+      status: UserMailingListsStatusEnum.Disabled,
     });
 
     const user = await this.userService.findUserAllInfo({
@@ -418,5 +379,47 @@ export class AuthService {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
     };
+  }
+
+  async sendMailActivateSignUpAccount(user: UserEntity): Promise<void> {
+    // Create a record at ddv_user_mailings_list
+    const newMailingList: UserMailingListsEntity =
+      await this.userMailingListRepository.create({
+        subscriber_id: user.user_id,
+        activation_key: uuid().replace(/-/g, ''),
+        confirmed: 0,
+        type: UserMailingListsTypeEnum.ActivateSignUpAccount,
+        expired_at: convertToMySQLDateTime(
+          new Date(Date.now() + 24 * 3600 * 1000),
+        ),
+        created_at: convertToMySQLDateTime(),
+      });
+    // Send email
+    await this.mailService.sendUserActivateSignUpAccount(
+      user,
+      newMailingList.activation_key,
+    );
+  }
+
+  async reactivateSignUpAccount(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new HttpException('Email không tồn tại.', HttpStatus.NOT_FOUND);
+    }
+    // find
+    const oldSignUpMailsList = await this.userMailingListRepository.find({
+      email,
+      type: UserMailingListsTypeEnum.ActivateSignUpAccount,
+    });
+    // Disabled all old mail status
+    if (oldSignUpMailsList.length) {
+      for (let mailItem of oldSignUpMailsList) {
+        await this.userMailingListRepository.update(mailItem.list_id, {
+          status: UserMailingListsStatusEnum.Disabled,
+        });
+      }
+    }
+    // create new mail
+    await this.sendMailActivateSignUpAccount(user);
   }
 }

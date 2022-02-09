@@ -7,18 +7,20 @@ import { ImagesLinksRepository } from '../repositories/image.repository';
 import { ImagesLinksEntity } from '../entities/image_link_entity';
 @Injectable()
 export class ImagesService extends BaseService<
-ImagesEntity,
-ImagesRepository<ImagesEntity>
+  ImagesEntity,
+  ImagesRepository<ImagesEntity>
 > {
-  constructor(repository: ImagesRepository<ImagesEntity>, table: Table,
-    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>) {
+  constructor(
+    repository: ImagesRepository<ImagesEntity>,
+    table: Table,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+  ) {
     super(repository, table);
     this.table = Table.IMAGE;
   }
   async Create(data, object_id) {
     const imageTableData = {
-      ...this.repository.setData(data, this.repository.ImageDataProps),
-
+      ...this.repository.setData(data),
     };
     let _images = await this.repository.create(imageTableData);
     // ===========================|Add to ddve_images_links|=============================
@@ -26,15 +28,14 @@ ImagesRepository<ImagesEntity>
       object_id: object_id,
       object_type: 'banners',
       image_id: _images.image_id,
-      ...this.imageLinkRepo.setData(data, this.imageLinkRepo.ImageLinkDataProps),
+      ...this.imageLinkRepo.setData(data),
     };
 
     let _images_link = await this.imageLinkRepo.create(imageLinkTableData);
   }
   async Update(data, banner_id, images_id) {
     const imageTableData = {
-      ...this.repository.setData(data, this.repository.ImageDataProps),
-
+      ...this.repository.setData(data),
     };
     let _images = await this.repository.update(images_id, imageTableData);
     // ===========================|Add to ddve_images_links|=============================
@@ -42,10 +43,13 @@ ImagesRepository<ImagesEntity>
       object_id: banner_id,
       object_type: 'banners',
       image_id: images_id,
-      ...this.imageLinkRepo.setData(data, this.imageLinkRepo.ImageLinkDataProps),
+      ...this.imageLinkRepo.setData(data),
     };
 
-    let _images_link = await this.imageLinkRepo.update(images_id, imageLinkTableData);
+    let _images_link = await this.imageLinkRepo.update(
+      images_id,
+      imageLinkTableData,
+    );
   }
   async Delete(banner_id, images_id) {
     let count = await this.imageLinkRepo.find({
@@ -63,7 +67,6 @@ ImagesRepository<ImagesEntity>
       select: ['*'],
       join: {
         [JoinTable.join]: {
-
           ddv_images: {
             fieldJoin: `${Table.IMAGE}.image_id`,
             rootJoin: `${Table.IMAGE_LINK}.image_id`,
@@ -93,7 +96,7 @@ ImagesRepository<ImagesEntity>
     });
   }
   async GetImageById(id) {
-    const string1 = `${Table.IMAGE_LINK}.object_id`
+    const string1 = `${Table.IMAGE_LINK}.object_id`;
 
     return this.imageLinkRepo.find({
       select: ['*'],
@@ -111,5 +114,4 @@ ImagesRepository<ImagesEntity>
       limit: 30,
     });
   }
-
 }

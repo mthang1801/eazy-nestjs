@@ -15,8 +15,8 @@ import { BannerDescriptionsEntity } from '../entities/banner_descriptions.entity
 
 @Injectable()
 export class BannerService extends BaseService<
-BannerEntity,
-BannerRepository<BannerEntity>
+  BannerEntity,
+  BannerRepository<BannerEntity>
 > {
   constructor(
     repository: BannerRepository<BannerEntity>,
@@ -36,7 +36,6 @@ BannerRepository<BannerEntity>
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-
         },
       },
 
@@ -47,11 +46,12 @@ BannerRepository<BannerEntity>
 
     const result = await Promise.all([images, banner]);
     let _banner = [];
-    result[1].forEach(ele => {
-
-      _banner.push({ ...ele, images: result[0].filter(img => img.object_id == ele.banner_id) })
-
-    })
+    result[1].forEach((ele) => {
+      _banner.push({
+        ...ele,
+        images: result[0].filter((img) => img.object_id == ele.banner_id),
+      });
+    });
     return _banner;
   }
   async getById(id) {
@@ -61,12 +61,10 @@ BannerRepository<BannerEntity>
       where: { [string]: id },
       join: {
         [JoinTable.join]: {
-
           ddv_banner_descriptions: {
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
-
         },
       },
 
@@ -82,19 +80,18 @@ BannerRepository<BannerEntity>
   }
   async Create(data: BannerCreateDTO) {
     try {
-
       ///==========================|Add to ddve_banner table|==============
       const bannerTableData = {
-        ...this.repository.setData(data, this.repository.BannerDataProps),
-        created_at: convertToMySQLDateTime()
-      }
+        ...this.repository.setData(data),
+        created_at: convertToMySQLDateTime(),
+      };
       let _banner = await this.repository.create(bannerTableData);
 
       //===========================|Add to ddve_banner description|======
 
       const bannerDescriptionTableData = {
         banner_id: _banner.banner_id,
-        ...this.bannerDescriptionRepo.setData(data, this.bannerDescriptionRepo.BannerDataProps)
+        ...this.bannerDescriptionRepo.setData(data),
       };
       let _banner_description = await this.bannerDescriptionRepo.create(
         bannerDescriptionTableData,
@@ -112,15 +109,14 @@ BannerRepository<BannerEntity>
   async Update(data: UpdateBannerDTO, id: string) {
     //===================|Update ddve_banner table|===================
     const bannerTableData = {
-      ...this.repository.setData(data, this.repository.BannerDataProps),
-    }
+      ...this.repository.setData(data),
+    };
 
     let _banner = this.repository.update(+id, bannerTableData);
     //===========================|Add to ddve_banner description|======
 
     const bannerDescriptionTableData = {
-
-      ...this.bannerDescriptionRepo.setData(data, this.bannerDescriptionRepo.BannerDataProps)
+      ...this.bannerDescriptionRepo.setData(data),
     };
 
     let _banner_description = this.bannerDescriptionRepo.update(
@@ -132,19 +128,16 @@ BannerRepository<BannerEntity>
     return result[0];
   }
   async Delete(banner_id, images_id) {
-    await this.imageService.Delete(banner_id, images_id)
-   
+    await this.imageService.Delete(banner_id, images_id);
   }
   async createBannerImage(data: createBannerImageDTO, id) {
-    return this.imageService.Create(data,id);
-    
+    return this.imageService.Create(data, id);
   }
 
   async getAllIamgesByBannerId(id) {
-    return this.imageService.getAllIamgesByBannerId(id)
-   
+    return this.imageService.getAllIamgesByBannerId(id);
   }
-  async updateBannerById(banner_id, images_id,body){
-    return this.imageService.Update(body,banner_id, images_id,)
+  async updateBannerById(banner_id, images_id, body) {
+    return this.imageService.Update(body, banner_id, images_id);
   }
 }

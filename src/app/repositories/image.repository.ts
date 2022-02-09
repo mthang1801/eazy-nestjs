@@ -9,9 +9,8 @@ export class ImagesRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.IMAGE;
+    this.tableProps = Object.getOwnPropertyNames(new ImagesEntity());
   }
-  ImageDataProps = Object.getOwnPropertyNames(new ImagesEntity());
-
 }
 export class ImagesLinksRepository<
   ImagesLinksEntity,
@@ -19,7 +18,6 @@ export class ImagesLinksRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.IMAGE_LINK;
+    this.tableProps = Object.getOwnPropertyNames(new ImagesLinksEntity());
   }
-  ImageLinkDataProps = Object.getOwnPropertyNames(new ImagesLinksEntity());
-
 }

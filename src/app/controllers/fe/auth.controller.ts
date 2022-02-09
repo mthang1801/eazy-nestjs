@@ -158,33 +158,6 @@ export class AuthController extends BaseController {
     return this.responseSuccess(res, null, `updated`);
   }
 
-  /**
-   * Reset password by phone, using OTP sending method
-   * @param phone string
-   */
-  @Post('reset-password-by-otp')
-  async resetPasswordByPhone(
-    @Body('phone') phone: string,
-    @Res() res,
-  ): Promise<IResponse> {
-    const otp = await this.authService.resetPasswordByPhone(phone);
-    return this.responseSuccess(res, { otp });
-  }
-
-  /**
-   *
-   * @param restorePwd RestorePasswordOTPDto
-   */
-  @Post('restore-password-by-otp')
-  async restorePasswordByOTP(
-    @Body() restorePwdDto: RestorePasswordOTPDto,
-    @Res() res,
-  ): Promise<void> {
-    const { user_id, otp } = restorePwdDto;
-    await this.authService.restorePasswordByOTP(user_id, otp);
-    res.render('otp-auth');
-  }
-
   @Get('active')
   async activeSignUpAccount(
     @Query('user_id') user_id: number,
@@ -199,6 +172,18 @@ export class AuthController extends BaseController {
       res,
       userDataRes,
       'Kích hoạt tài khoản thành công.',
+    );
+  }
+
+  @Post('reactivate')
+  async reactivateSignUpAccount(
+    @Body('email') email: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.authService.reactivateSignUpAccount(email);
+    return this.responseSuccess(
+      res,
+      'Yêu cầu kích hoạt lại tài khoản thành công, vui lòng kiểm tra email.',
     );
   }
 }

@@ -65,14 +65,14 @@ export class BaseController {
    * @param message string
    * @returns
    */
-  public respondNotFound(res, message: string = 'Not Found'): IResponse {
+  public responseNotFound(res, message: string = 'Not Found'): IResponse {
     this.setStatusCode(404);
     this.message = message;
     this.res = res;
     return this.responseWithError();
   }
 
-  public respondInternalError(res, message: string = 'Internal Server Error') {
+  public responseInternalError(res, message: string = 'Internal Server Error') {
     this.setStatusCode(500);
     this.message = message;
     this.res = res;
@@ -83,7 +83,7 @@ export class BaseController {
    * @param res Response
    * @param data any
    */
-  public respondCreated(res, data = null): IResponse {
+  public responseCreated(res, data = null): IResponse {
     this.setStatusCode(201);
     this.data = data;
     this.res = res;
@@ -94,7 +94,7 @@ export class BaseController {
    * @param res
    * @returns void
    */
-  public respondNoContent(res): IResponse {
+  public responseNoContent(res): IResponse {
     this.setStatusCode(204);
     this.message = '';
     this.data = {};

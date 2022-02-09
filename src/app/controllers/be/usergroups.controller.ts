@@ -81,7 +81,7 @@ export class UsergroupsController extends BaseController {
     const boolRes = await this.usersGroupService.Delete(id);
     return boolRes
       ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công')
-      : this.respondNotFound(res, 'Xoá dữ liệu không thành công.');
+      : this.responseNotFound(res, 'Xoá dữ liệu không thành công.');
   }
 
   @Get('links')
@@ -190,6 +190,6 @@ export class UsergroupsController extends BaseController {
     const boolRes = await this.usersGroupService.deleteUserGroupPrivilege(id);
     return boolRes
       ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công.')
-      : this.respondNotFound(res, `Xoá không thành công.`);
+      : this.responseNotFound(res, `Xoá không thành công.`);
   }
 }

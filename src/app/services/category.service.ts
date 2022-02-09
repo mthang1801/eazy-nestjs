@@ -22,17 +22,14 @@ export class CategoryService {
   ) {}
 
   async Create(data: CreateCategoryDto): Promise<any> {
-    const categoryData = this.categoryRepository.setDataTest(data);
+    const categoryData = this.categoryRepository.setData(data);
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
         created_at: convertToMySQLDateTime(),
         updated_at: convertToMySQLDateTime(),
       });
-    const categoryDescriptionData = this.categoryDescriptionRepo.setData(
-      data,
-      this.categoryDescriptionRepo.categoryDescriptionProps,
-    );
+    const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
     const createdCategoryDescription: CategoryDescriptionEntity =
       await this.categoryDescriptionRepo.create({
         category_id: createdCategory.category_id,

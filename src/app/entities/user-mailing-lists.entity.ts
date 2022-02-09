@@ -1,8 +1,10 @@
 export class UserMailingListsEntity {
-  subscriber_id: number;
-  list_id: number;
-  activation_key: string;
-  unsubscribe_key: string;
-  confirmed: number;
+  list_id: number = 0;
+  subscriber_id: number = 0;
+  activation_key: string = '';
+  unsubscribe_key: string = '';
+  type: string = '';
+  status: string = 'A';
+  confirmed: number = 0;
   expired_at: Date;
 }
