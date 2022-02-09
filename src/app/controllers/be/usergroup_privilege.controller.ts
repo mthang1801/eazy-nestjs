@@ -8,6 +8,7 @@ import {
   Put,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { UserGroupsPrivilegeService } from '../../services/usergroup_privilege.service';
@@ -17,6 +18,7 @@ import {
 } from '../../dto/usergroups/usergroup_privilege.dto';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { Response } from 'express';
+import { AuthGuard } from '../../../middlewares/be.auth';
 @Controller('be/v1/usergroup_privilege')
 export class UserGroupPrivilegeController extends BaseController {
   constructor(private readonly userGroupPrivilege: UserGroupsPrivilegeService) {
@@ -29,6 +31,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserGroupPrivilegeDto,
     @Res() res: Response,
@@ -43,6 +46,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Get(':id')
+  @UseGuards(AuthGuard)
   async getListByUserGroupId(
     @Param('id') id: number,
     @Res() res: Response,
@@ -52,11 +56,19 @@ export class UserGroupPrivilegeController extends BaseController {
     return this.responseSuccess(res, userGroupPrivilegeList);
   }
 
+  /**
+   * Get all usergroup privilege
+   * @param params should be page, limit, level, route, description, usergroup_id, method
+   * @param res
+   * @returns
+   */
   @Get()
+  @UseGuards(AuthGuard)
   async getAll(@Query() params, @Res() res: Response): Promise<IResponse> {
     const listDataRes = await this.userGroupPrivilege.getAll(params);
     return this.responseSuccess(res, listDataRes);
   }
+
   /**
    * Update record by privilege_id
    * @param data
@@ -65,6 +77,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(
     @Body() data: UpdateUserGroupPrivilegeDto,
     @Param('id') id: number,
@@ -76,6 +89,7 @@ export class UserGroupPrivilegeController extends BaseController {
     );
     return this.responseSuccess(res, newUserGroupPrivilege);
   }
+
   /**
    * Delete a record at ddv_usergroup_privileges with param privilege_id
    * @param id privilege_id
@@ -83,6 +97,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Delete(':id')
+  @UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,

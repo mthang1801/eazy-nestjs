@@ -13,6 +13,7 @@ import { CategoryEntity } from '../entities/category.entity';
 import { CategoryDescriptionRepository } from '../repositories/category_descriptions.repository';
 import * as _ from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { Like } from '../../database/find-options/operators';
 
 @Injectable()
 export class CategoryService {
@@ -53,6 +54,7 @@ export class CategoryService {
       );
     }
     let updatedCategoryDataObject = {};
+
     for (let [key, val] of Object.entries(data)) {
       if (this.categoryRepository.tableProps.includes(key)) {
         updatedCategoryDataObject[key] = val;
@@ -78,7 +80,7 @@ export class CategoryService {
     }
     let updatedCategoryDescriptionDataObject = {};
     for (let [key, val] of Object.entries(data)) {
-      if (this.categoryDescriptionRepo.categoryDescriptionProps.includes(key)) {
+      if (this.categoryDescriptionRepo.tableProps.includes(key)) {
         updatedCategoryDescriptionDataObject[key] = val;
       }
     }
@@ -93,7 +95,18 @@ export class CategoryService {
     return { ...updatedCategoryData, ...updatedCategoryDescription };
   }
 
-  async getList(): Promise<any> {
+  async getList(params): Promise<any> {
+    // ignore page and limit
+    let { page, limit, ...others } = params;
+    let filterCondition = {};
+    for (let [key, val] of Object.entries(others)) {
+      if (this.categoryRepository.tableProps.includes(key)) {
+        filterCondition[`${Table.CATEGORIES}.${key}`] = Like(val);
+      } else {
+        filterCondition[`${Table.CATEGORY_DESCRIPTIONS}.${key}`] = Like(val);
+      }
+    }
+
     const categoryMenuRawList = await this.categoryRepository.find({
       select: ['*', `${Table.CATEGORIES}.*`],
       join: {
@@ -104,6 +117,7 @@ export class CategoryService {
           },
         },
       },
+      where: filterCondition,
       orderBy: [{ field: `${Table.CATEGORIES}.level`, sort_by: SortBy.ASC }],
     });
     let categoryMenuList = [];

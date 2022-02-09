@@ -12,8 +12,8 @@ export class CategoryDescriptionRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.CATEGORY_DESCRIPTIONS;
+    this.tableProps = Object.getOwnPropertyNames(
+      new CategoryDescriptionEntity(),
+    );
   }
-  categoryDescriptionProps = Object.getOwnPropertyNames(
-    new CategoryDescriptionEntity(),
-  );
 }

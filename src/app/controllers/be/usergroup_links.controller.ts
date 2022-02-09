@@ -1,9 +1,19 @@
-import { Controller, Get, Query, Res, Body, Param, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Res,
+  Body,
+  Param,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { UserGroupLinkService } from 'src/app/services/usergroup_links.service';
 import { BaseController } from '../../../base/base.controllers';
 import { UpdateUserGroupLinkDto } from '../../dto/usergroups/usergroup_link.dto';
 import { Response } from 'express';
+import { AuthGuard } from '../../../middlewares/be.auth';
 @Controller('be/v1/usergroup_links')
 export class UserGroupLinksController extends BaseController {
   constructor(private readonly userGroupLinksService: UserGroupLinkService) {
@@ -16,6 +26,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Get()
+  @UseGuards(AuthGuard)
   async getAll(@Query() params, @Res() res: Response): Promise<IResponse> {
     const userGroupLinksRes = await this.userGroupLinksService.getAll(params);
     return this.responseSuccess(res, userGroupLinksRes);
@@ -29,6 +40,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Get(':id')
+  @UseGuards(AuthGuard)
   async getListUsersByUserGroupId(
     @Param('id') id: number,
     @Query() query,
@@ -47,6 +59,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Put(':id')
+  @UseGuards(AuthGuard)
   async updateByUserId(
     @Param('id') id,
     @Body() data: UpdateUserGroupLinkDto,

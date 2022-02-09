@@ -16,7 +16,7 @@ import { CategoryService } from '../../services/category.service';
 import { AuthGuard } from '../../../middlewares/fe.auth';
 import { CreateCategoryDto } from '../../dto/category/create-category.dto';
 import { IResponse } from '../../interfaces/response.interface';
-import { Response } from 'express';
+import { query, Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 
 /**
@@ -37,8 +37,11 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get()
-  async fetchListCategoryMenu(@Res() res: Response): Promise<IResponse> {
-    const categoriesMenuList = await this.categoryService.getList();
+  async fetchListCategoryMenu(
+    @Query() params,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const categoriesMenuList = await this.categoryService.getList(params);
     return this.responseSuccess(res, categoriesMenuList);
   }
 }

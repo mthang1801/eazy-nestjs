@@ -6,9 +6,11 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private logger = new Logger(AllExceptionsFilter.name);
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
   catch(exception: any, host: ArgumentsHost) {
     const { httpAdapter } = this.httpAdapterHost;
@@ -23,9 +25,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception.response?.message ||
       exception?.response ||
       exception?.sqlMessage;
-    console.log(exception, exception.name, exception.code);
+    this.logger.error(exception, exception.name, exception.code);
     if (httpStatus === 500) {
-      message = 'Hệ thống đang xảy ra lỗi, vui lòng quay lại sau.';
+      message = `Hệ thống đang xảy ra lỗi, vui lòng quay lại sau. [${message}] `;
     }
     switch (exception.name) {
       case 'TokenExpiredError':

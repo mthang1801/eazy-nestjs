@@ -376,6 +376,7 @@ export class AuthService {
       const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
         user.usergroup_id,
       );
+
       user['menu'] = menu;
     }
     return {

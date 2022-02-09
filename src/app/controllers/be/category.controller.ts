@@ -53,8 +53,8 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get()
-  async getList(@Res() res: Response): Promise<IResponse> {
-    const categoriesMenuList = await this.categoryService.getList();
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const categoriesMenuList = await this.categoryService.getList(params);
     return this.responseSuccess(res, categoriesMenuList);
   }
 
@@ -96,7 +96,7 @@ export class CategoryController extends BaseController {
   ): Promise<IResponse> {
     const boolRes = await this.categoryService.delete(id);
     return boolRes
-      ? this.responseSuccess(res, 'Xoá thành công')
+      ? this.responseSuccess(res, null, 'Xoá thành công')
       : this.responseNotFound(
           res,
           `Xoá không thành công, không tìm thấy id ${id}.`,

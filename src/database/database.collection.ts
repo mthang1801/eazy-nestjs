@@ -27,7 +27,7 @@ export class DatabaseCollection {
     this.arrayCondition = [];
     this.stringCondition = ' ';
     this.sortString = '';
-    this.limit = 20;
+    this.limit = 9999;
     this.offset = 0;
   }
 

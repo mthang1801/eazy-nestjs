@@ -30,7 +30,7 @@ export class UserGroupsPrivilegeService {
       await this.userGroupPrivilegeRepo.find({
         where: { usergroup_id },
       });
-
+    console.log(userGroupPrivilegeRawList);
     const userGroupPrivilegeRawListSortByLevel = _.sortBy(
       userGroupPrivilegeRawList,
       [
