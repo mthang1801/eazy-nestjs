@@ -5,7 +5,6 @@ import {
   Put,
   Post,
   UseGuards,
-  Req,
   Res,
   Param,
   Delete,
@@ -17,11 +16,6 @@ import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { Response } from 'express';
-import { UpdateUserGroupLinkDto } from '../../dto/usergroups/usergroup_link.dto';
-import {
-  CreateUserGroupPrivilegeDto,
-  UpdateUserGroupPrivilegeDto,
-} from '../../dto/usergroups/usergroup_privilege.dto';
 import {
   CreateUserGroupsDto,
   UpdateUserGroupsDto,
@@ -38,9 +32,8 @@ export class UsergroupsController extends BaseController {
   }
 
   /**
-   * Create new record in ddv_usergroups
-   * @param createUserGroupsDto
-   * @param req
+   * Create a record in ddv_usergroups and ddv_usergroup_description
+   * @param data type : string, usergroup : string, company_id : number, lang_code : string
    * @param res
    * @returns
    */
@@ -56,8 +49,8 @@ export class UsergroupsController extends BaseController {
 
   @Get()
   @UseGuards(AuthGuard)
-  async getAll(@Res() res: Response): Promise<IResponse> {
-    const listUserGroup = await this.usersGroupService.getAll();
+  async getAll(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const listUserGroup = await this.usersGroupService.getAll(params);
     return this.responseSuccess(res, listUserGroup);
   }
 
@@ -74,6 +67,13 @@ export class UsergroupsController extends BaseController {
     return this.responseSuccess(res, userGroupRes);
   }
 
+  /**
+   * Update record by usergroup_id
+   * @param id
+   * @param data  type : string, usergroup : string, company_id : number, lang_code : string
+   * @param res
+   * @returns
+   */
   @Put(':id')
   @UseGuards(AuthGuard)
   async update(

@@ -71,7 +71,7 @@ export class UserGroupPrivilegeController extends BaseController {
 
   /**
    * Update record by privilege_id
-   * @param data
+   * @param data  usergroup_id , privilege, description, parent_id, level, route, method, icon
    * @param id privilege_id
    * @param res
    * @returns

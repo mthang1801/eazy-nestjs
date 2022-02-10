@@ -24,10 +24,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let message =
       exception.response?.message ||
       exception?.response ||
-      exception?.sqlMessage;
+      exception?.sqlMessage ||
+      exception?.name;
+
     this.logger.error(exception, exception.name, exception.code);
     if (httpStatus === 500) {
-      message = `Hệ thống đang xảy ra lỗi, vui lòng quay lại sau. [${message}] `;
+      message = `Có lỗi xảy ra: ${message} `;
     }
     switch (exception.name) {
       case 'TokenExpiredError':

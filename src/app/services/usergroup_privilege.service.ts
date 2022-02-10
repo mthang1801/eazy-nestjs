@@ -65,7 +65,7 @@ export class UserGroupsPrivilegeService {
   async getAll(params): Promise<UserGroupPrivilegeEntity[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 20;
+    limit = +limit || 9999;
     let skip = (page - 1) * limit;
     let filterCondition = {};
 

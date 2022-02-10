@@ -7,8 +7,6 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
-  BadRequestException,
-  Patch,
   Put,
   Query,
 } from '@nestjs/common';
@@ -19,7 +17,6 @@ import { IResponse } from '../../interfaces/response.interface';
 import { AuthLoginProviderDto } from '../../dto/auth/auth-login-provider.dto';
 import { LoginDto } from '../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../base/base.controllers';
-import { RestorePasswordOTPDto } from '../../dto/auth/auth-restore-pwd-otp.dto';
 import { Response } from 'express';
 /**
  * Authentication controller

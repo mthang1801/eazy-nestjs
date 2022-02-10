@@ -13,6 +13,7 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
 import { UserGroupLinkEntity } from '../entities/usergroup_links.entity';
+import { Like } from '../../database/find-options/operators';
 import {
   CreateUserGroupsDto,
   UpdateUserGroupsDto,
@@ -58,7 +59,24 @@ export class UserGroupsService {
     return userGroup;
   }
 
-  async getAll(): Promise<UserGroupEntity[]> {
+  async getAll(params): Promise<UserGroupEntity[]> {
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    if (typeof others === 'object' && Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.userGroupRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.USER_GROUPS}.${key}`] = Like(val);
+        } else {
+          filterCondition[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] =
+            Like(val);
+        }
+      }
+    }
+
     const userGroups = await this.userGroupRepo.find({
       select: ['*'],
       join: {
@@ -69,6 +87,9 @@ export class UserGroupsService {
           },
         },
       },
+      where: filterCondition,
+      skip,
+      limit,
     });
     return userGroups;
   }

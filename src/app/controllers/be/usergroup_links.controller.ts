@@ -14,6 +14,7 @@ import { BaseController } from '../../../base/base.controllers';
 import { UpdateUserGroupLinkDto } from '../../dto/usergroups/usergroup_link.dto';
 import { Response } from 'express';
 import { AuthGuard } from '../../../middlewares/be.auth';
+
 @Controller('be/v1/usergroup_links')
 export class UserGroupLinksController extends BaseController {
   constructor(private readonly userGroupLinksService: UserGroupLinkService) {
