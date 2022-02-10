@@ -6,46 +6,46 @@ import { JwtService } from '@nestjs/jwt';
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
 
 import { AuthProviderRepository } from '../repositories/auth.repository';
-import { AuthProviderEntity } from '../entities/auth_provider.entity';
+import { AuthProviderEntity } from '../entities/authProvider.entity';
 import { Table } from '../../database/enums/tables.enum';
 import { IResponseUserToken } from '../interfaces/response.interface';
-import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/auth_provider.enum';
+import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/authProvider.enum';
 import {
-  generateOTPDigits,
   convertToMySQLDateTime,
   preprocessUserResult,
 } from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
-import * as twilio from 'twilio';
+
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/user_groups.enum';
+import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
 import {
   ImagesLinksRepository,
   ImagesRepository,
 } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
-import { ImagesLinksEntity } from '../entities/image_link_entity';
-import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
-import { JoinTable } from '../../database/enums/joinTable.enum';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+
 import { UserGroupsService } from './usergroups.service';
 
 import { UserGroupEntity } from '../entities/usergroups.entity';
-import { UserProfileRepository } from '../repositories/user_profile.repository';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { MailService } from './mail.service';
 import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
-import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
-import { UserMailingListsEntity } from '../entities/user_mailing_lists.entity';
+import { UserMailingListRepository } from '../repositories/userMailingLists.repository';
+import { UserMailingListsEntity } from '../entities/userMailingLists.entity';
 import { v4 as uuid } from 'uuid';
 import { UserRepository } from '../repositories/user.repository';
-import { UserProfileEntity } from '../entities/user_profile.entity';
-import { UserEntity, UserGeneralInfoEntity } from '../entities/user.entity';
-import { UserGroupLinkService } from './usergroup_links.service';
+import { UserProfileEntity } from '../entities/userProfile.entity';
+import { UserEntity } from '../entities/user.entity';
+import { UserGroupLinkService } from './usergroupLinks.service';
 
 import {
   UserMailingListsStatusEnum,
   UserMailingListsTypeEnum,
-} from 'src/database/enums/tableFieldEnum/user_mailing_lists.enum';
-import { UserGroupsPrivilegeService } from './usergroup_privilege.service';
+} from 'src/database/enums/tableFieldEnum/userMailingLists.enum';
+import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
+import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
 @Injectable()
 export class AuthService {
   constructor(
@@ -123,7 +123,7 @@ export class AuthService {
     const phone = data['phone'];
     const email = data['email'];
     const password = data['password'];
-    console.log(phone, email.password);
+
     let user: UserGeneralInfoEntity = phone
       ? await this.userService.findUserAllInfo({ phone })
       : await this.userService.findUserAllInfo({ email });
@@ -148,7 +148,7 @@ export class AuthService {
       );
     }
 
-    await this.userService.updateUser(user.user_id, {
+    await this.userService.update(user.user_id, {
       user_login: AuthProviderEnum.SYSTEM,
     });
 
@@ -281,7 +281,7 @@ export class AuthService {
     userExists['menu'] = menu;
 
     //Update current provider at ddv_users
-    await this.userService.updateUser(userExists.user_id, {
+    await this.userService.update(userExists.user_id, {
       user_login: providerName,
     });
 

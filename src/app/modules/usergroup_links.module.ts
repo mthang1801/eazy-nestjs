@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { UserGroupLinksController } from '../controllers/be/usergroup_links.controller';
+import { UserGroupLinksController } from '../controllers/be/usergroupLinks.controller';
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
-import { UserGroupLinkService } from '../services/usergroup_links.service';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
+import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
+import { UserGroupLinkService } from '../services/usergroupLinks.service';
+import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserRepository } from '../repositories/user.repository';
 @Module({
   controllers: [UserGroupLinksController],

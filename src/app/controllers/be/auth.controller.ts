@@ -18,7 +18,7 @@ import { BaseController } from '../../../base/base.controllers';
  */
 @Controller('/be/v1/auth')
 export class AuthController extends BaseController {
-  constructor(private authService: AuthService) {
+  constructor(private service: AuthService) {
     super();
   }
   /**
@@ -33,7 +33,7 @@ export class AuthController extends BaseController {
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Res() res,
   ): Promise<IResponse> {
-    await this.authService.signUp(authCredentialsDto);
+    await this.service.signUp(authCredentialsDto);
     return this.responseSuccess(
       res,
       null,
@@ -49,7 +49,7 @@ export class AuthController extends BaseController {
    */
   @Post('login')
   async login(@Body() data: LoginDto, @Res() res): Promise<IResponse> {
-    const userResponse = await this.authService.login(data);
+    const userResponse = await this.service.login(data);
     return this.responseSuccess(res, userResponse);
   }
 }

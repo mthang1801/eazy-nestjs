@@ -15,31 +15,27 @@ import { BannerService } from '../../services/banner.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 
-import {
-  BannerCreateDTO,
-  createBannerImageDTO,
-  UpdateBannerDTO,
-  updateBannerImageDTO,
-  
-} from '../../dto/banner/banner.dto';
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
-import { PrimaryKeys, Table } from 'src/database/enums';
+import { BannerCreateDTO } from 'src/app/dto/banner/create-banner.dto';
+import { UpdateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
+import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
+import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto';
 @Controller('/be/v1/banner')
 export class BannerController extends BaseController {
-  constructor(private bannerService: BannerService) {
+  constructor(private service: BannerService) {
     super();
   }
 
   @Get()
-  async getAllBanners(@Res() res,@Param() param): Promise<IResponse> {
-    const banners = await this.bannerService.getAll(param);
+  async getAllBanners(@Res() res, @Param() param): Promise<IResponse> {
+    const banners = await this.service.getAll(param);
     return this.responseSuccess(res, banners);
   }
 
   @Get('/:id')
   async getAllBannersById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const banners = await this.bannerService.getById(id);
+    const banners = await this.service.getById(id);
     return this.responseSuccess(res, banners);
   }
 
@@ -48,7 +44,7 @@ export class BannerController extends BaseController {
     @Res() res,
     @Param('id') id,
   ): Promise<IResponse> {
-    const banners = await this.bannerService.getAllIamgesByBannerId(id);
+    const banners = await this.service.getAllIamgesByBannerId(id);
     return this.responseSuccess(res, banners);
   }
 
@@ -59,7 +55,7 @@ export class BannerController extends BaseController {
     @Res() res,
     @Body() body: BannerCreateDTO,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.Create(body);
+    const banner = await this.service.Create(body);
     return this.responseSuccess(res, banner);
   }
 
@@ -71,7 +67,7 @@ export class BannerController extends BaseController {
     @Body() body: UpdateBannerDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.Update(body, id);
+    const banner = await this.service.Update(body, id);
     return this.responseSuccess(res, banner);
   }
 
@@ -82,7 +78,7 @@ export class BannerController extends BaseController {
     @Param('banner_id') banner_id,
     @Param('images_id') images_id,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.Delete(banner_id, images_id);
+    const banner = await this.service.Delete(banner_id, images_id);
 
     return this.responseSuccess(res, banner);
   }
@@ -92,9 +88,13 @@ export class BannerController extends BaseController {
     @Res() res,
     @Param('banner_id') banner_id,
     @Param('images_id') images_id,
-    @Body() body: updateBannerImageDTO
+    @Body() body: updateBannerImageDTO,
   ): Promise<IResponse> {
-    const banner = await this.bannerService.updateBannerById(banner_id, images_id,body);
+    const banner = await this.service.updateBannerById(
+      banner_id,
+      images_id,
+      body,
+    );
 
     return this.responseSuccess(res, banner);
   }
@@ -107,8 +107,8 @@ export class BannerController extends BaseController {
     @Body() body: createBannerImageDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    // const banner = await this.bannerService.createBannerImage(body, id);
-    const banner = {}
+    // const banner = await this.service.createBannerImage(body, id);
+    const banner = {};
     return this.responseSuccess(res, banner);
   }
 }

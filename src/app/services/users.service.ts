@@ -16,23 +16,23 @@ import {
 } from '../../utils/helper';
 import { ObjectLiteral } from '../../common/ObjectLiteral';
 
-import { PrimaryKeys } from '../../database/enums/primary-keys.enum';
+import { PrimaryKeys } from '../../database/enums/primaryKeys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import { UserProfileDto } from '../dto/user/update-user-profile.dto';
+import { UserProfileDto } from '../dto/user/update-userProfile.dto';
 import {
   ImagesLinksRepository,
   ImagesRepository,
 } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
-import { ImagesLinksEntity } from '../entities/image_link_entity';
-import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
-import { UserDataRepository } from '../repositories/user_data.repository';
-import { UserProfileRepository } from '../repositories/user_profile.repository';
-import { UserDataEntity } from '../entities/user_data.entity';
-import { UserProfileEntity } from '../entities/user_profile.entity';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
+import { UserDataEntity } from '../entities/userData.entity';
+import { UserProfileEntity } from '../entities/userProfile.entity';
 
 @Injectable()
 export class UsersService {
@@ -66,7 +66,7 @@ export class UsersService {
     return user;
   }
 
-  async findById(id: number): Promise<UserEntity> {
+  async getById(id: number): Promise<UserEntity> {
     const user: UserEntity = await this.userRepository.findOne({ user_id: id });
     if (!user) {
       throw new HttpException(
@@ -86,10 +86,7 @@ export class UsersService {
     return this.userDataRepository.create(data);
   }
 
-  async updateUser(
-    user_id: number,
-    dataObj: ObjectLiteral,
-  ): Promise<UserEntity> {
+  async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {
     const updatedUser = await this.userRepository.update(user_id, dataObj);
     updatedUser['image'] = await this.getUserImage(updatedUser.user_id);
     return preprocessUserResult(updatedUser);
@@ -157,26 +154,24 @@ export class UsersService {
       );
     }
 
-   
-      const verifyToken = uuidv4();
+    const verifyToken = uuidv4();
 
-      const updatedUser = await this.userRepository.update(user.user_id, {
-        verify_token: verifyToken,
-        verify_token_exp: convertToMySQLDateTime(
-          new Date(Date.now() + 2 * 3600 * 1000),
-        ),
-      });
+    const updatedUser = await this.userRepository.update(user.user_id, {
+      verify_token: verifyToken,
+      verify_token_exp: convertToMySQLDateTime(
+        new Date(Date.now() + 2 * 3600 * 1000),
+      ),
+    });
 
-      await this.mailService.sendUserConfirmation(
-        originUrl,
-        updatedUser,
-        verifyToken,
-      );
-      return true;
-    
+    await this.mailService.sendUserConfirmation(
+      originUrl,
+      updatedUser,
+      verifyToken,
+    );
+    return true;
   }
 
-  async getMyInfo(id: string): Promise<UserEntity> {
+  async getInfo(id: string): Promise<UserEntity> {
     const user = await this.userRepository.findOne({
       select: ['*', `${this.table}.*`],
       join: {

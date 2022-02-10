@@ -25,7 +25,7 @@ import { Response } from 'express';
  */
 @Controller('/fe/v1/auth')
 export class AuthController extends BaseController {
-  constructor(private authService: AuthService) {
+  constructor(private service: AuthService) {
     super();
   }
 
@@ -41,7 +41,7 @@ export class AuthController extends BaseController {
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Res() res,
   ): Promise<IResponse> {
-    await this.authService.signUp(authCredentialsDto);
+    await this.service.signUp(authCredentialsDto);
     return this.responseSuccess(
       res,
       null,
@@ -57,7 +57,7 @@ export class AuthController extends BaseController {
    */
   @Post('login')
   async login(@Body() data: LoginDto, @Res() res): Promise<IResponse> {
-    const userResponse = await this.authService.login(data);
+    const userResponse = await this.service.login(data);
     return this.responseSuccess(res, userResponse);
   }
 
@@ -77,7 +77,7 @@ export class AuthController extends BaseController {
     @Body() AuthLoginProviderDto: AuthLoginProviderDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.authService.loginWithGoogle(
+    const userResponse = await this.service.loginWithGoogle(
       AuthLoginProviderDto,
     );
     return this.responseSuccess(res, userResponse);
@@ -94,7 +94,7 @@ export class AuthController extends BaseController {
     @Body() AuthLoginProviderDto: AuthLoginProviderDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.authService.loginWithFacebook(
+    const userResponse = await this.service.loginWithFacebook(
       AuthLoginProviderDto,
     );
     return this.responseSuccess(res, userResponse);
@@ -112,7 +112,7 @@ export class AuthController extends BaseController {
     const fullUrl = req.protocol + '://' + req.get('host');
     const { email } = req.body;
 
-    await this.authService.resetPasswordByEmail(fullUrl, email);
+    await this.service.resetPasswordByEmail(fullUrl, email);
     return this.responseSuccess(
       res,
       null,
@@ -130,7 +130,7 @@ export class AuthController extends BaseController {
   @Get('forgot-password')
   async restorePasswordByEmail(@Req() req, @Res() res): Promise<void> {
     const { token, user_id } = req.query;
-    await this.authService.restorePasswordByEmail(user_id, token);
+    await this.service.restorePasswordByEmail(user_id, token);
     res.render('forgot-password-form');
   }
 
@@ -150,7 +150,7 @@ export class AuthController extends BaseController {
   ): Promise<IResponse> {
     const { user_id, token, password } = authRestoreDto;
 
-    await this.authService.updatePasswordByEmail(user_id, token, password);
+    await this.service.updatePasswordByEmail(user_id, token, password);
 
     return this.responseSuccess(res, null, `updated`);
   }
@@ -161,10 +161,7 @@ export class AuthController extends BaseController {
     @Query('token') token: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const userDataRes = await this.authService.activeSignUpAccount(
-      user_id,
-      token,
-    );
+    const userDataRes = await this.service.activeSignUpAccount(user_id, token);
     return this.responseSuccess(
       res,
       userDataRes,
@@ -177,7 +174,7 @@ export class AuthController extends BaseController {
     @Body('email') email: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.authService.reactivateSignUpAccount(email);
+    await this.service.reactivateSignUpAccount(email);
     return this.responseSuccess(
       res,
       'Yêu cầu kích hoạt lại tài khoản thành công, vui lòng kiểm tra email.',

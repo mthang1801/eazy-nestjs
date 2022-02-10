@@ -2,22 +2,21 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
 import { BannerEntity } from '../entities/banner.entity';
 import { BannerRepository } from '../repositories/banner.repository';
-import {
-  BannerCreateDTO,
-  UpdateBannerDTO,
-  createBannerImageDTO,
-} from '../dto/banner/banner.dto';
+
 import { ImagesService } from './image.service';
 import { Table, JoinTable } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
-import { BannerDescriptionsRepository } from '../repositories/banner_description.respository';
-import { BannerDescriptionsEntity } from '../entities/banner_descriptions.entity';
+import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
+import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { Like } from 'typeorm';
+import { BannerCreateDTO } from '../dto/banner/create-banner.dto';
+import { UpdateBannerDTO } from '../dto/banner/update-banner.dto';
+import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 
 @Injectable()
 export class BannerService extends BaseService<
-BannerEntity,
-BannerRepository<BannerEntity>
+  BannerEntity,
+  BannerRepository<BannerEntity>
 > {
   constructor(
     repository: BannerRepository<BannerEntity>,
@@ -41,8 +40,7 @@ BannerRepository<BannerEntity>
         if (this.repository.tableProps.includes(key)) {
           filterCondition[`${Table.BANNER}.${key}`] = Like(val);
         } else {
-          filterCondition[`${Table.BANNER_DESCRIPTIONS}.${key}`] =
-            Like(val);
+          filterCondition[`${Table.BANNER_DESCRIPTIONS}.${key}`] = Like(val);
         }
       }
     }
@@ -68,7 +66,10 @@ BannerRepository<BannerEntity>
     result[1].forEach((ele) => {
       _banner.push({
         ...ele,
-        images: result[0].filter((img) => img.object_id == ele.banner_id && img.object_type == 'banners'),
+        images: result[0].filter(
+          (img) =>
+            img.object_id == ele.banner_id && img.object_type == 'banners',
+        ),
       });
     });
     return _banner;
@@ -98,7 +99,6 @@ BannerRepository<BannerEntity>
     return { ...result[1], images: result[0] };
   }
   async Create(data: BannerCreateDTO) {
-
     ///==========================|Add to ddve_banner table|==============
     const bannerTableData = {
       ...this.repository.setData(data),
@@ -121,7 +121,6 @@ BannerRepository<BannerEntity>
     //===========================|Add to ddve_images_links|=============================
 
     return _banner;
-
   }
   async Update(data: UpdateBannerDTO, id: string) {
     //===================|Update ddve_banner table|===================

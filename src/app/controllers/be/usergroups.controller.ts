@@ -16,10 +16,8 @@ import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { Response } from 'express';
-import {
-  CreateUserGroupsDto,
-  UpdateUserGroupsDto,
-} from 'src/app/dto/usergroups/usergroups.dto';
+import { CreateUserGroupsDto } from 'src/app/dto/usergroups/create-usergroups.dto';
+import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
 
 /**
  * User groups controllers
@@ -27,7 +25,7 @@ import {
  */
 @Controller('/be/v1/usergroups')
 export class UsergroupsController extends BaseController {
-  constructor(private readonly usersGroupService: UserGroupsService) {
+  constructor(private readonly service: UserGroupsService) {
     super();
   }
 
@@ -43,15 +41,21 @@ export class UsergroupsController extends BaseController {
     @Body() data: CreateUserGroupsDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const newUserGroup = await this.usersGroupService.create(data);
-    return this.responseSuccess(res, newUserGroup);
+    const result = await this.service.create(data);
+    return this.responseSuccess(res, result);
   }
 
+  /**
+   * get All User, using query params to filter such as page, limit, status, lang_code, type...
+   * @param res
+   * @param params
+   * @returns
+   */
   @Get()
   @UseGuards(AuthGuard)
   async getAll(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const listUserGroup = await this.usersGroupService.getAll(params);
-    return this.responseSuccess(res, listUserGroup);
+    const result = await this.service.getAll(params);
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -62,9 +66,12 @@ export class UsergroupsController extends BaseController {
    */
   @Get(':id')
   @UseGuards(AuthGuard)
-  async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
-    const userGroupRes = await this.usersGroupService.get(id);
-    return this.responseSuccess(res, userGroupRes);
+  async getByUserGroupId(
+    @Param('id') id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getByUserGroupId(id);
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -81,18 +88,24 @@ export class UsergroupsController extends BaseController {
     @Body() data: UpdateUserGroupsDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const updatedUserGroup = await this.usersGroupService.update(id, data);
-    return this.responseSuccess(res, updatedUserGroup);
+    const result = await this.service.update(id, data);
+    return this.responseSuccess(res, result);
   }
 
+  /**
+   * Delete usergroup by usergroup_id
+   * @param id
+   * @param res
+   * @returns
+   */
   @Delete(':id')
   @UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const boolRes = await this.usersGroupService.delete(id);
-    return boolRes
+    const result = await this.service.delete(id);
+    return result
       ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công')
       : this.responseNotFound(res, 'Xoá dữ liệu không thành công.');
   }

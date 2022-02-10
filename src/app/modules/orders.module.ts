@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OrdersRepository } from '../repositories/orders.repository';
-import { OrderDocsRepository } from '../repositories/order_docs.repository';
+import { OrderDocsRepository } from '../repositories/orderDocs.repository';
 import { OrdersService } from '../services/orders.service';
-import { OrderDetailsRepository } from '../repositories/order_details.repository';
-import { OrderTransactionRepository } from '../repositories/order_transactions.repository';
-import { OrderDataRepository } from '../repositories/order_data.repository';
+import { OrderDetailsRepository } from '../repositories/orderDetails.repository';
+import { OrderTransactionRepository } from '../repositories/orderTransactions.repository';
+import { OrderDataRepository } from '../repositories/orderData.repository';
 
 @Module({
   providers: [

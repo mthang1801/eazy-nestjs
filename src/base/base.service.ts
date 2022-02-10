@@ -1,4 +1,4 @@
-import { AbstractRepository } from './abstract-repository';
+import { AbstractRepository } from './abstractRepository';
 import { IBaseService } from './interfaces/base.interface';
 import { ObjectLiteral } from '../common/ObjectLiteral';
 import { Table } from '../database/enums/tables.enum';

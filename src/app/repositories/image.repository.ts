@@ -2,7 +2,7 @@ import { BaseRepositorty } from '../../base/base.repository';
 import { DatabaseService } from '../../database/database.service';
 import { Table } from '../../database/enums/index';
 import { ImagesEntity } from '../entities/image.entity';
-import { ImagesLinksEntity } from '../entities/image_link_entity';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 export class ImagesRepository<
   ImagesEntity,
 > extends BaseRepositorty<ImagesEntity> {

@@ -15,21 +15,19 @@ import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 @Controller('/be/v1/users')
 export class UsersController extends BaseController {
-  constructor(private readonly usersService: UsersService) {
+  constructor(private readonly service: UsersService) {
     super();
   }
+
   @UseGuards(AuthGuard)
   @Put()
-  async updateUserInfo(
+  async update(
     @Body() userUpdateDto: UserUpdateDto,
     @Req() req,
     @Res() res,
   ): Promise<IResponse> {
     const { user_id } = req.user;
-    const updatedUser = await this.usersService.updateUser(
-      user_id,
-      userUpdateDto,
-    );
+    const updatedUser = await this.service.update(user_id, userUpdateDto);
 
     return this.responseSuccess(res, updatedUser);
   }
@@ -37,16 +35,17 @@ export class UsersController extends BaseController {
   @Get()
   @UseGuards(AuthGuard)
   async getMyInfo(@Req() req, @Res() res): Promise<IResponse> {
-    const user = await this.usersService.getMyInfo(req.user.user_id);
+    const user = await this.service.getInfo(req.user.user_id);
     return this.responseSuccess(res, user);
   }
   @Get('/otp')
   async otp_demo(@Req() req, @Res() res): Promise<void> {
     res.render('otp-auth');
   }
+
   @Get('/find/:id')
-  async getUserById(@Req() req, @Res() res): Promise<IResponse> {
-    const user = await this.usersService.findById(req.params.id);
+  async getById(@Req() req, @Res() res): Promise<IResponse> {
+    const user = await this.service.getById(req.params.id);
     return this.responseSuccess(res, { userData: user });
   }
 }

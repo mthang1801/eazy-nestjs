@@ -17,7 +17,7 @@ import { LoggerModule } from '../../logger/logger.module';
 import { StringModule } from './string.module';
 import { ObjectModule } from './object.module';
 import { APP_FILTER } from '@nestjs/core';
-import { AllExceptionsFilter } from '../helpers/exeptions/allExeptionsFilter';
+import { AllExceptionsFilter } from '../../middlewares/allExeptionsFilter';
 import { UserGroupsModule } from './usergroups.module';
 import { CategoryModule } from './category.module';
 import { ImageModule } from './image.module';

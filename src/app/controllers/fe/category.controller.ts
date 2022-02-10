@@ -13,11 +13,8 @@ import {
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { CategoryService } from '../../services/category.service';
-import { AuthGuard } from '../../../middlewares/fe.auth';
-import { CreateCategoryDto } from '../../dto/category/create-category.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { query, Response } from 'express';
-import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 
 /**
  * Controller for Category
@@ -25,7 +22,7 @@ import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
  */
 @Controller('/fe/v1/category')
 export class CategoryController extends BaseController {
-  constructor(private categoryService: CategoryService) {
+  constructor(private service: CategoryService) {
     super();
   }
 
@@ -41,7 +38,7 @@ export class CategoryController extends BaseController {
     @Query() params,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const categoriesMenuList = await this.categoryService.getList(params);
+    const categoriesMenuList = await this.service.getList(params);
     return this.responseSuccess(res, categoriesMenuList);
   }
 }

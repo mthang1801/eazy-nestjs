@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductService } from '../services/products.service';
-import { ProductDescriptionsRepository } from '../repositories/product_descriptions.respository';
+import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 
 @Module({
   providers: [

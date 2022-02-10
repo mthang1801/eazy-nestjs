@@ -25,7 +25,7 @@ import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
  */
 @Controller('/be/v1/category')
 export class CategoryController extends BaseController {
-  constructor(private categoryService: CategoryService) {
+  constructor(private service: CategoryService) {
     super();
   }
 
@@ -41,7 +41,7 @@ export class CategoryController extends BaseController {
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const createdCategory = await this.categoryService.create(categoryDto);
+    const createdCategory = await this.service.create(categoryDto);
     return this.responseSuccess(res, createdCategory);
   }
 
@@ -54,7 +54,7 @@ export class CategoryController extends BaseController {
    */
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const categoriesMenuList = await this.categoryService.getList(params);
+    const categoriesMenuList = await this.service.getList(params);
     return this.responseSuccess(res, categoriesMenuList);
   }
 
@@ -66,7 +66,7 @@ export class CategoryController extends BaseController {
    */
   @Get(':id')
   async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
-    const categoryRes = await this.categoryService.get(id);
+    const categoryRes = await this.service.get(id);
     return this.responseSuccess(res, categoryRes);
   }
 
@@ -84,7 +84,7 @@ export class CategoryController extends BaseController {
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const updatedCategory = await this.categoryService.update(id, categoryDto);
+    const updatedCategory = await this.service.update(id, categoryDto);
     return this.responseSuccess(res, updatedCategory);
   }
 
@@ -94,7 +94,7 @@ export class CategoryController extends BaseController {
     @Param('id') id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const boolRes = await this.categoryService.delete(id);
+    const boolRes = await this.service.delete(id);
     return boolRes
       ? this.responseSuccess(res, null, 'Xoá thành công')
       : this.responseNotFound(

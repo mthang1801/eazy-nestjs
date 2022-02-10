@@ -82,37 +82,3 @@ export class CreateCategoryDto {
   @IsOptional()
   age_warning_message: string = '';
 }
-
-export class CategoryDescriptionDto {
-  @IsOptional()
-  lang_code: string = 'vn';
-
-  @IsOptional()
-  category: string = '';
-
-  @IsOptional()
-  description: string = '';
-
-  @IsOptional()
-  meta_keywords: string = '';
-
-  @IsOptional()
-  meta_description: string = '';
-
-  @IsOptional()
-  page_title: string = '';
-
-  @IsOptional()
-  age_warning_message: string = '';
-}
-
-export class CreateCategoryVendorProductCountDto {
-  @IsNotEmpty()
-  company_id: number;
-
-  @IsNotEmpty()
-  category_id: number;
-
-  @IsNotEmpty()
-  product_count: number;
-}

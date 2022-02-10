@@ -3,21 +3,18 @@ import * as _ from 'lodash';
 
 import { Table } from '../../database/enums/tables.enum';
 
-import {
-  UserGroupDescriptionEntity,
-  UserGroupEntity,
-} from '../entities/usergroups.entity';
+import { UserGroupEntity } from '../entities/usergroups.entity';
 
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
-import { UserGroupLinksRepository } from '../repositories/usergroup_links.repository';
-import { UserGroupLinkEntity } from '../entities/usergroup_links.entity';
+import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
+import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
+import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 import { Like } from '../../database/find-options/operators';
-import {
-  CreateUserGroupsDto,
-  UpdateUserGroupsDto,
-} from '../dto/usergroups/usergroups.dto';
+import { CreateUserGroupsDto } from '../dto/usergroups/create-usergroups.dto';
+import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
+import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
+import { IUserGroup } from '../interfaces/usergroups.interface';
 
 @Injectable()
 export class UserGroupsService {
@@ -27,7 +24,7 @@ export class UserGroupsService {
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
   ) {}
 
-  async create(data: CreateUserGroupsDto): Promise<any> {
+  async create(data: CreateUserGroupsDto): Promise<IUserGroup> {
     const userGroupData = this.userGroupRepo.setData(data);
 
     const userGroup = await this.userGroupRepo.create(userGroupData);
@@ -43,7 +40,7 @@ export class UserGroupsService {
     return { ...userGroup, ...userGroupDescription };
   }
 
-  async get(id: number): Promise<UserGroupEntity> {
+  async getByUserGroupId(id: number): Promise<IUserGroup> {
     const userGroup = await this.userGroupRepo.findOne({
       select: ['*'],
       join: {
@@ -59,7 +56,7 @@ export class UserGroupsService {
     return userGroup;
   }
 
-  async getAll(params): Promise<UserGroupEntity[]> {
+  async getAll(params): Promise<IUserGroup[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;
@@ -94,7 +91,7 @@ export class UserGroupsService {
     return userGroups;
   }
 
-  async update(id: number, data: UpdateUserGroupsDto): Promise<any> {
+  async update(id: number, data: UpdateUserGroupsDto): Promise<IUserGroup> {
     let userGroup = await this.userGroupRepo.findById(id);
     if (!userGroup) {
       throw new HttpException(

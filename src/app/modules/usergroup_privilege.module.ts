@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroup_descriptions.repository';
+import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserRepository } from '../repositories/user.repository';
-import { UserGroupPrivilegeController } from '../controllers/be/usergroup_privilege.controller';
-import { UserGroupPrivilegesRepository } from '../repositories/usergroup_privileges.repository';
-import { UserGroupsPrivilegeService } from '../services/usergroup_privilege.service';
+import { UserGroupPrivilegeController } from '../controllers/be/usergroupPrivilege.controller';
+import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
+import { UserGroupsPrivilegeService } from '../services/usergroupPrivilege.service';
 @Module({
   controllers: [UserGroupPrivilegeController],
   providers: [UserGroupPrivilegesRepository, UserGroupsPrivilegeService],
