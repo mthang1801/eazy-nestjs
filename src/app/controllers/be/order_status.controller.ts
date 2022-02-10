@@ -26,8 +26,8 @@ export class OrderStatusController extends BaseController {
     super();
   }
   @Get()
-  async getAllOrderStatus(@Res() res): Promise<IResponse> {
-    const order = await this.orderStatusService.GetAllOrderStatus();
+  async getAllOrderStatus(@Res() res, @Param() params): Promise<IResponse> {
+    const order = await this.orderStatusService.GetAllOrderStatus(params);
     return this.responseSuccess(res, order);
   }
   @Get('/:id')
@@ -36,12 +36,12 @@ export class OrderStatusController extends BaseController {
     return this.responseSuccess(res, order);
   }
   @Post()
-      async createOrderStatus(
+  async createOrderStatus(
     @Res() res,
     @Body() body: orderStatusCreateDTO,
   ): Promise<IResponse> {
     const order = await this.orderStatusService.createOrderStatus(body);
-     return this.responseSuccess(res, order);
+    return this.responseSuccess(res, order);
   }
   @Put('/:id')
   @UsePipes(ValidationPipe)
