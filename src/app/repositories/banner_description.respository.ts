@@ -6,7 +6,9 @@ export class BannerDescriptionsRepository<BannerDescriptions> extends BaseReposi
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.BANNER_DESCRIPTIONS;
+    this.tableProps = Object.getOwnPropertyNames(new BannerDescriptionsEntity());
+
   }
-  BannerDataProps = Object.getOwnPropertyNames(new BannerDescriptionsEntity());
+
 
 }

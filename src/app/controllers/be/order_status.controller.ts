@@ -19,7 +19,6 @@ import {
   orderStatusCreateDTO,
   orderStatusUpdateDTO,
 } from 'src/app/dto/orderStatus/orderStatus.dto';
-import { Roles } from 'src/app/helpers/decorators/roles.decorator';
 @UseGuards(AuthGuard)
 @Controller('/be/v1/order-status')
 export class OrderStatusController extends BaseController {
@@ -32,24 +31,17 @@ export class OrderStatusController extends BaseController {
     return this.responseSuccess(res, order);
   }
   @Get('/:id')
-  @UseGuards(AuthGuard)
-  @Roles('admin')
   async getOrderStatusById(@Res() res, @Param('id') id): Promise<IResponse> {
     const order = await this.orderStatusService.getOrderStatusById(id);
     return this.responseSuccess(res, order);
   }
   @Post()
-  @UsePipes(ValidationPipe)
-  @UseGuards(AuthGuard)
-  @Roles('admin')
-  async createOrderStatus(
+      async createOrderStatus(
     @Res() res,
     @Body() body: orderStatusCreateDTO,
-  ): Promise<void> {
-    // const order = await this.orderStatusService.createOrderStatus(body);
-    // if (order === '422')
-    //   return this.optionalResponse(res, 422, 'Status and Type duplicated');
-    // return this.responseSuccess(res, order);
+  ): Promise<IResponse> {
+    const order = await this.orderStatusService.createOrderStatus(body);
+     return this.responseSuccess(res, order);
   }
   @Put('/:id')
   @UsePipes(ValidationPipe)

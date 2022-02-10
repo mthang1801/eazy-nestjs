@@ -1,34 +1,34 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { orderStatus } from '../entities/orderStatus.entity';
+import { orderStatusEntity } from '../entities/orderStatus.entity';
 import { OrderStatusRepository } from '../repositories/order_status.repository';
 import { orderStatusCreateDTO, } from '../dto/orderStatus/orderStatus.dto';
-import { OrderStatusDataService } from './order_status_data.service';
-import { OrderStatusDescriptionService } from './order_status_description.service';
+
 import { Table, JoinTable } from '../../database/enums/index';
+import { OrderStatusDescriptionRepository } from '../repositories/order_status_description.repository';
+import { OrderStatusDataRepository } from '../repositories/order_status_data.repository';
+import { orderStatusDescriptionEntity } from '../entities/orderStatus-description.entity';
+import { orderStatusDataEntity } from '../entities/orderStatus-data.entity';
 
 @Injectable()
 export class OrderStatusService extends BaseService<
-orderStatus,
-OrderStatusRepository<orderStatus>
+orderStatusEntity,
+OrderStatusRepository<orderStatusEntity>
 > {
-    constructor(repository: OrderStatusRepository<orderStatus>,
+    constructor(repository: OrderStatusRepository<orderStatusEntity>,
         table: Table,
-        private orderStatusDescriptionService: OrderStatusDescriptionService,
-        private orderStatusDataService: OrderStatusDataService) {
+        private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<orderStatusDescriptionEntity>,
+        private orderStatusDataRepo: OrderStatusDataRepository<orderStatusDataEntity>,
+       ) {
         super(repository, table);
         this.table = Table.ORDER_STATUS;
     }
     async GetAllOrderStatus() {
-        const orders = await this.repository.find({
+        const orders = this.repository.find({
             select: ['*'],
             join: {
                 [JoinTable.join]: {
                     ddv_status_descriptions: { fieldJoin: 'status_id', rootJoin: 'status_id' },
-                    ddv_status_data: {
-                        fieldJoin: 'status_id',
-                        rootJoin: 'status_id',
-                    },
 
                 },
             },
@@ -36,19 +36,31 @@ OrderStatusRepository<orderStatus>
             skip: 0,
             limit: 30,
         });
-        return orders;
+        const orderData = this.orderStatusDataRepo.find({
+            select: ['*'],
+            skip: 0,
+            limit: 30,
+        })
+        const result = await Promise.all([orderData, orders]);
+        let _order = [];
+        result[1].forEach((ele) => {
+            _order.push({
+                ...ele,
+                data: result[0].filter((img) => img.status_id == ele.status_id),
+            });
+        });
+        return _order;
     }
-    async getOrderStatusById(id){
+    async getOrderStatusById(id) {
         const string = `${this.table}.status_id`;
-        const orders = await this.repository.find({
+        const string1 = `${Table.ORDER_STATUS_DATA}.status_id`;
+
+        const orders = this.repository.findOne({
             select: ['*'],
             join: {
                 [JoinTable.join]: {
                     ddv_status_descriptions: { fieldJoin: 'status_id', rootJoin: 'status_id' },
-                    ddv_status_data: {
-                        fieldJoin: 'status_id',
-                        rootJoin: 'status_id',
-                    },
+
 
                 },
             },
@@ -56,152 +68,103 @@ OrderStatusRepository<orderStatus>
             skip: 0,
             limit: 30,
         });
-        return orders;
+        const orderData = this.orderStatusDataRepo.find({
+            select: ['*'],
+            where: { [string1]: id },
+
+            skip: 0,
+            limit: 30,
+
+        })
+        const result = await Promise.all([orderData, orders]);
+        console.log(result[1], result[0]);
+        return { ...result[1], data: result[0] };
     }
     async createOrderStatus(data: orderStatusCreateDTO) {
-        try {
-            const {
-                status,
-                type,
-                is_default,
-                position,
 
-                description,
-                email_subj,
-                email_header,
-                lang_code,
-                param,
-                value
-            } = data;
-            //====Check if exist
-            const check = await this.repository.findOne({where:{status:status,type:type}})
-            if (Object.keys(check).length!=0){
-                return "422"
-            }
-            ///==========================|Add to ddv_statuses table|==============
+        //====Check if exist
 
-            const orderStatusData = {   
-                status: status,
-                type: type,
-                is_default: is_default,
-                position: position,
+        const check = await this.repository.findOne({ where: { status: data.status, type: data.type } })
 
-            };
-            Object.keys(orderStatusData).forEach(
-                (key) =>
-                    orderStatusData[key] === undefined && delete orderStatusData[key],
-            );
-            let _orderStatus = await this.repository.create(orderStatusData);
+        if (check && typeof check === 'object' && Object.keys(check).length != 0) {
 
-            ///==========================|Add to ddv_status_data table|==============
-
-            const orderStatusDataData = {
-                status_id:_orderStatus.status_id,
-                param: param,
-                value: value,
-          
-            };
-            Object.keys(orderStatusDataData).forEach(
-                (key) =>
-                    orderStatusDataData[key] === undefined && delete orderStatusDataData[key],
-            );
-            let _orderStatusData = await this.orderStatusDataService.create(orderStatusDataData);
-            ///==========================|Add to ddv_status_data table|==============
-
-            const orderStatusDataDes = {
-                status_id:_orderStatus.status_id,
-
-                description:description,
-                email_subj:email_subj,
-                email_header:email_header,
-                lang_code:lang_code,
-
-            };
-            Object.keys(orderStatusDataDes).forEach(
-                (key) =>
-                orderStatusDataDes[key] === undefined && delete orderStatusDataDes[key],
-            );
-            let _orderStatusDes = await this.orderStatusDescriptionService.create(orderStatusDataDes)
-            return 'OrderStatus Added'
-        } catch (error) {
-            throw new InternalServerErrorException(error.message);
+            throw new HttpException("Status and Type bị trùng", 422)
         }
+        ///==========================|Add to ddv_statuses table|==============
+        const orderStatusData = {
+            ...this.repository.setData(data),
+
+        };
+
+        let _orderStatus = await this.repository.create(orderStatusData);
+        ///==========================|Add to ddv_status_data table|==============
+
+        const orderStatusDataData = {
+            status_id: _orderStatus.status_id,
+            ...this.orderStatusDataRepo.setData(data)
+
+        };
+
+        let _orderStatusData = await this.orderStatusDataRepo.create(orderStatusDataData);
+        ///==========================|Add to ddv_status_data table|==============
+
+        const orderStatusDataDes = {
+            status_id: _orderStatus.status_id,
+            ...this.orderStatusDescriptionRepo.setData(data)
+
+
+        };
+
+        let _orderStatusDes = await this.orderStatusDescriptionRepo.create(orderStatusDataDes)
+        return _orderStatus
+
     }
-    async UpdateOrderStatus(id,data){
-        try {
-            const {
-                status,
-                type,
-                is_default,
-                position,
+    async UpdateOrderStatus(id, data) {
 
-                description,
-                email_subj,
-                email_header,
-                lang_code,
-                param,
-                value
-            } = data;
-            //=== check if data changes ?====
-            const changed = await this.repository.findOne({where:{status_id:id}})
-            if (!(changed.status === status && changed.type===type)){
-                 //====Check if exist
-                const check = await this.repository.findOne({where:{status:status,type:type}})
-                if (Object.keys(check).length!=0){
-                    return "422"
-                }
+       
+        //=== check if data changes ?====
+        const changed = await this.repository.findOne({ where: { status_id: id } })
+        if (!(changed.status === data.status && changed.type === data.type)) {
+            //====Check if exist
+            const check = await this.repository.findOne({ where: { status: data.status, type: data.type } })
+            if (check && typeof check === 'object' && Object.keys(check).length != 0) {
+
+                throw new HttpException("Status and Type bị trùng", 422)
             }
-
-           
-         
-            ///==========================|Add to ddv_statuses table|==============
-
-            const orderStatusData = {   
-                status: status,
-                type: type,
-                is_default: is_default,
-                position: position,
-
-            };
-            Object.keys(orderStatusData).forEach(
-                (key) =>
-                    orderStatusData[key] === undefined && delete orderStatusData[key],
-            );
-            let _orderStatus = await this.repository.update(id,orderStatusData);
-
-            ///==========================|Add to ddv_status_data table|==============
-
-            const orderStatusDataData = {
-                status_id:id,
-                param: param,
-                value: value,
-          
-            };
-            Object.keys(orderStatusDataData).forEach(
-                (key) =>
-                    orderStatusDataData[key] === undefined && delete orderStatusDataData[key],
-            );
-            let _orderStatusData = await this.orderStatusDataService.update(id,orderStatusDataData);
-            ///==========================|Add to ddv_status_data table|==============
-
-            const orderStatusDataDes = {
-                status_id:id,
-
-                description:description,
-                email_subj:email_subj,
-                email_header:email_header,
-                lang_code:lang_code,
-
-            };
-            Object.keys(orderStatusDataDes).forEach(
-                (key) =>
-                orderStatusDataDes[key] === undefined && delete orderStatusDataDes[key],
-            );
-            let _orderStatusDes = await this.orderStatusDescriptionService.update(id,orderStatusDataDes)
-            return 'OrderStatus Updated'
-        } catch (error) {
-            throw new InternalServerErrorException(error.message);
         }
+
+
+
+        ///==========================|Add to ddv_statuses table|==============
+
+        const orderStatusData = {
+            ...this.repository.setData(data),
+
+        };
+        let _orderStatus = await this.repository.update(id, orderStatusData);
+
+        ///==========================|Add to ddv_status_data table|==============
+
+        const orderStatusDataData = {
+            status_id: id,
+            ...this.orderStatusDataRepo.setData(data)
+
+        };
+        
+
+        let _orderStatusData = await this.orderStatusDataRepo.update(id, orderStatusDataData);
+        ///==========================|Add to ddv_status_data table|==============
+
+        const orderStatusDataDes = {
+            status_id: id,
+            ...this.orderStatusDescriptionRepo.setData(data)
+
+
+        };
+      
+        let _orderStatusDes = await this.orderStatusDescriptionRepo.update(id, orderStatusDataDes)
+        return orderStatusData
+
     }
 
 }

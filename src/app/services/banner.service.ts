@@ -79,7 +79,7 @@ export class BannerService extends BaseService<
     return { ...result[1], images: result[0] };
   }
   async Create(data: BannerCreateDTO) {
-    try {
+    
       ///==========================|Add to ddve_banner table|==============
       const bannerTableData = {
         ...this.repository.setData(data),
@@ -102,9 +102,7 @@ export class BannerService extends BaseService<
       //===========================|Add to ddve_images_links|=============================
 
       return _banner;
-    } catch (error) {
-      throw new InternalServerErrorException(error.message);
-    }
+  
   }
   async Update(data: UpdateBannerDTO, id: string) {
     //===================|Update ddve_banner table|===================

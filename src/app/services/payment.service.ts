@@ -49,133 +49,129 @@ PaymentRepository<PaymentEntity>
         return payments;
     }
     async createPayment(data) {
-        try {
-            const {
-                company_id,
-                usergroup_ids,
-                position,
-                status,
-                template,
-                processor_id,
-                processor_params,
-                a_surcharge,
-                p_surcharge,
-                tax_ids,
-                localization,
-                payment_category,
-                description,
-                payment,
-                instructions,
-                surcharge_title,
 
-                lang_code,
-            } = data;
-            const PaymentData = {   
-                company_id:company_id,
-                usergroup_ids:usergroup_ids,
-                position:position,
-                status:status,
-                template:template,
-                processor_id:processor_id,
-                processor_params:processor_params,
-                a_surcharge:a_surcharge,
-                p_surcharge:p_surcharge,
-                tax_ids:tax_ids,
-                localization:localization,
-                payment_category:payment_category,
+        const {
+            company_id,
+            usergroup_ids,
+            position,
+            status,
+            template,
+            processor_id,
+            processor_params,
+            a_surcharge,
+            p_surcharge,
+            tax_ids,
+            localization,
+            payment_category,
+            description,
+            payment,
+            instructions,
+            surcharge_title,
 
-            };
-            Object.keys(PaymentData).forEach(
-                (key) =>
+            lang_code,
+        } = data;
+        const PaymentData = {
+            company_id: company_id,
+            usergroup_ids: usergroup_ids,
+            position: position,
+            status: status,
+            template: template,
+            processor_id: processor_id,
+            processor_params: processor_params,
+            a_surcharge: a_surcharge,
+            p_surcharge: p_surcharge,
+            tax_ids: tax_ids,
+            localization: localization,
+            payment_category: payment_category,
+
+        };
+        Object.keys(PaymentData).forEach(
+            (key) =>
                 PaymentData[key] === undefined && delete PaymentData[key],
-            );
-            let _payment = await this.repository.create(PaymentData);
+        );
+        let _payment = await this.repository.create(PaymentData);
 
 
-            ///===========================================
-            const PaymentDesData = {   
-                payment_id: _payment.payment_id,
-                description:description,
-                payment:payment,
-                instructions:instructions,
-                surcharge_title:surcharge_title,
+        ///===========================================
+        const PaymentDesData = {
+            payment_id: _payment.payment_id,
+            description: description,
+            payment: payment,
+            instructions: instructions,
+            surcharge_title: surcharge_title,
 
-                lang_code:lang_code,
+            lang_code: lang_code,
 
-            };
-            Object.keys(PaymentDesData).forEach(
-                (key) =>
+        };
+        Object.keys(PaymentDesData).forEach(
+            (key) =>
                 PaymentDesData[key] === undefined && delete PaymentDesData[key],
-            );
-            let _paymentDes = await this.paymentDescriptionService.create(PaymentDesData);
-            return "Payment Added"
-        } catch (error) {
-            throw new InternalServerErrorException(error.message);
-        }
+        );
+        let _paymentDes = await this.paymentDescriptionService.create(PaymentDesData);
+        return "Payment Added"
+
 
     }
-    async updatePayment(id,data){
-        try {
-            const {
-                company_id,
-                usergroup_ids,
-                position,
-                status,
-                template,
-                processor_id,
-                processor_params,
-                a_surcharge,
-                p_surcharge,
-                tax_ids,
-                localization,
-                payment_category,
-                description,
-                payment,
-                instructions,
-                surcharge_title,
+    async updatePayment(id, data) {
 
-                lang_code,
-            } = data;
-            const PaymentData = {   
-                company_id:company_id,
-                usergroup_ids:usergroup_ids,
-                position:position,
-                status:status,
-                template:template,
-                processor_id:processor_id,
-                processor_params:processor_params,
-                a_surcharge:a_surcharge,
-                p_surcharge:p_surcharge,
-                tax_ids:tax_ids,
-                localization:localization,
-                payment_category:payment_category,
+        const {
+            company_id,
+            usergroup_ids,
+            position,
+            status,
+            template,
+            processor_id,
+            processor_params,
+            a_surcharge,
+            p_surcharge,
+            tax_ids,
+            localization,
+            payment_category,
+            description,
+            payment,
+            instructions,
+            surcharge_title,
 
-            };
-            Object.keys(PaymentData).forEach(
-                (key) =>
+            lang_code,
+        } = data;
+        const PaymentData = {
+            company_id: company_id,
+            usergroup_ids: usergroup_ids,
+            position: position,
+            status: status,
+            template: template,
+            processor_id: processor_id,
+            processor_params: processor_params,
+            a_surcharge: a_surcharge,
+            p_surcharge: p_surcharge,
+            tax_ids: tax_ids,
+            localization: localization,
+            payment_category: payment_category,
+
+        };
+        Object.keys(PaymentData).forEach(
+            (key) =>
                 PaymentData[key] === undefined && delete PaymentData[key],
-            );
-            let _payment = await this.repository.update(id,PaymentData);
+        );
+        let _payment = await this.repository.update(id, PaymentData);
 
 
-            ///===========================================
-            const PaymentDesData = {   
-                description:description,
-                payment:payment,
-                instructions:instructions,
-                surcharge_title:surcharge_title,
+        ///===========================================
+        const PaymentDesData = {
+            description: description,
+            payment: payment,
+            instructions: instructions,
+            surcharge_title: surcharge_title,
 
-                lang_code:lang_code,
+            lang_code: lang_code,
 
-            };
-            Object.keys(PaymentDesData).forEach(
-                (key) =>
+        };
+        Object.keys(PaymentDesData).forEach(
+            (key) =>
                 PaymentDesData[key] === undefined && delete PaymentDesData[key],
-            );
-            let _paymentDes = await this.paymentDescriptionService.update(id,PaymentDesData);
-            return "Payment Updated"
-        } catch (error) {
-            throw new InternalServerErrorException(error.message);
-        }
+        );
+        let _paymentDes = await this.paymentDescriptionService.update(id, PaymentDesData);
+        return "Payment Updated"
+
     }
 }
