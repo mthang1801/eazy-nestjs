@@ -29,8 +29,8 @@ import {
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/image_link_entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/image_types.enum';
-import { UserDataRepository } from '../repositories/user-data.repository';
-import { UserProfileRepository } from '../repositories/user-profile.repository';
+import { UserDataRepository } from '../repositories/user_data.repository';
+import { UserProfileRepository } from '../repositories/user_profile.repository';
 import { UserDataEntity } from '../entities/user_data.entity';
 import { UserProfileEntity } from '../entities/user_profile.entity';
 

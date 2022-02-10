@@ -1,28 +1,46 @@
 export enum Table {
+  //============== User ==============
   USERS = 'ddv_users',
   USERS_AUTH = 'ddv_users_auth_external',
   USER_PROFILES = 'ddv_user_profiles',
+  USER_MAILING_LISTS = 'ddv_user_mailing_lists',
+  USER_DATA = 'ddv_user_data',
+  //============== User group ==============
   USER_GROUPS = 'ddv_usergroups',
   USER_GROUP_PRIVILEGES = 'ddv_usergroup_privileges',
   USER_GROUP_DESCRIPTIONS = 'ddv_usergroup_descriptions',
   USER_GROUP_LINKS = 'ddv_usergroup_links',
-  USER_MAILING_LISTS = 'ddv_user_mailing_lists',
-  USER_DATA = 'ddv_user_data',
+  //============== Category ==============
   CATEGORIES = 'ddv_categories',
   CATEGORY_DESCRIPTIONS = 'ddv_category_descriptions',
   CATEGORY_VENDOR_PRODUCT_COUNT = 'ddv_category_vendor_product_count',
+  //============== Banner ==============
   BANNER = 'ddv_banners',
   BANNER_IMAGE = 'ddv_banner_images',
   BANNER_DESCRIPTIONS = 'ddv_banner_descriptions',
+  //============== Image ==============
   IMAGE = 'ddv_images',
   IMAGE_LINK = 'ddv_images_links',
-  ORDER_STATUS = 'ddv_statuses',
-  ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',
-  ORDER_STATUS_DATA = 'ddv_status_data',
+  //============== Payment ==============
   PAYMENT_DESCRIPTION = 'ddv_payment_descriptions',
   PAYMENT = 'ddv_payments',
+  //============== Shipping ==============
   SHIPPINGS = 'ddv_shippings',
   SHIPPINGS_DESCRIPTION = 'ddv_shipping_descriptions',
   SHIPPING_SERVICE = 'ddv_shipping_services',
   SHIPPING_SERVICE_DESCRIPTION = 'ddv_shipping_service_descriptions',
+  //============== Products ==============
+  PRODUCTS_CATEGORIES = 'ddv_products_categories',
+  PRODUCTS = 'ddv_products',
+  PRODUCT_DESCRIPTION = 'ddv_product_descriptions',
+  //============== Order status ==============
+  ORDER_STATUS = 'ddv_statuses',
+  ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',
+  ORDER_STATUS_DATA = 'ddv_status_data',
+  //============== Order ==============
+  ORDERS = 'ddv_orders',
+  ORDER_DOCS = 'ddv_order_docs',
+  ORDER_DATA = 'ddv_order_data',
+  ORDER_DETAILS = 'ddv_order_details',
+  ORDER_TRANSACTIONS = 'ddv_order_transactions',
 }

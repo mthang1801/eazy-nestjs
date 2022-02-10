@@ -27,7 +27,7 @@ export class DatabaseCollection {
     this.arrayCondition = [];
     this.stringCondition = ' ';
     this.sortString = '';
-    this.limit = 9999;
+    this.limit = 999999;
     this.offset = 0;
   }
 
@@ -86,7 +86,7 @@ export class DatabaseCollection {
 
   checkAndReplaceTypeOfJoin(typeOfJoin) {
     let typeJoin = '';
-    console.log(89, typeOfJoin);
+
     switch (typeOfJoin.toLowerCase()) {
       case 'leftJoin':
         typeJoin = 'LEFT JOIN';

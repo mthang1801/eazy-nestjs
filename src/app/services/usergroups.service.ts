@@ -66,7 +66,7 @@ export class UserGroupsService {
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
-    if (typeof others === 'object' && Object.entries(others).length) {
+    if (others && typeof others === 'object' && Object.entries(others).length) {
       for (let [key, val] of Object.entries(others)) {
         if (this.userGroupRepo.tableProps.includes(key)) {
           filterCondition[`${Table.USER_GROUPS}.${key}`] = Like(val);

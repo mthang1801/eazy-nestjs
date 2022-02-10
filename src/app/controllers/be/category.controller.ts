@@ -60,7 +60,7 @@ export class CategoryController extends BaseController {
 
   /**
    * Get category item by category_id, if it is level 1, find all its children
-   * @param id
+   * @param id category_id
    * @param res
    * @returns
    */

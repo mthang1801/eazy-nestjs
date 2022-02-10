@@ -30,11 +30,11 @@ import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserGroupsService } from './usergroups.service';
 
 import { UserGroupEntity } from '../entities/usergroups.entity';
-import { UserProfileRepository } from '../repositories/user-profile.repository';
+import { UserProfileRepository } from '../repositories/user_profile.repository';
 import { MailService } from './mail.service';
 import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
-import { UserMailingListsEntity } from '../entities/user-mailing-lists.entity';
+import { UserMailingListsEntity } from '../entities/user_mailing_lists.entity';
 import { v4 as uuid } from 'uuid';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileEntity } from '../entities/user_profile.entity';
