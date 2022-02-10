@@ -157,7 +157,7 @@ export class UsersService {
       );
     }
 
-    try {
+   
       const verifyToken = uuidv4();
 
       const updatedUser = await this.userRepository.update(user.user_id, {
@@ -173,9 +173,7 @@ export class UsersService {
         verifyToken,
       );
       return true;
-    } catch (error) {
-      throw new InternalServerErrorException({ message: error.message });
-    }
+    
   }
 
   async getMyInfo(id: string): Promise<UserEntity> {
