@@ -1,20 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { Shippings } from '../entities/shippings.entity';
+import { ShippingsEntity } from '../entities/shippings.entity';
 import { ShippingRepository } from '../repositories/shippings.repository';
 import { Table, JoinTable } from '../../database/enums/index';
-import { ShippingDescriptionService } from './shipping_description.service';
-import { ShippingServiceDescriptionService } from './shipping_service_description.service';
-import { ShippingServiceService } from './shippings_service.service';
+
+import { ShippingDescriptionRepository } from '../repositories/shipping_description.repository';
+import { ShippingsDescriptionEntity } from '../entities/shipping_description.entity';
+import { ShippingServiceRepository } from '../repositories/shippings_service.repository';
+import { ShippingsServiceEntity } from '../entities/shippings_service.entity';
+import { ShippingServiceDescriptionRepository } from '../repositories/shipping_service_description.repository';
+import { ShippingsServiceDescriptionEntity } from '../entities/shipping_service_description.entity';
 @Injectable()
 export class ShippingService extends BaseService<
-Shippings,
-ShippingRepository<Shippings>
+ShippingsEntity,
+ShippingRepository<ShippingsEntity>
 > {
-    constructor(repository: ShippingRepository<Shippings>, table: Table,
-        private shippingDescription: ShippingDescriptionService,
-        private shippingService: ShippingServiceService,
-        private shippingServiceDescription: ShippingServiceDescriptionService,) {
+    constructor(repository: ShippingRepository<ShippingsEntity>, table: Table,
+        private shippingDescriptionRepo: ShippingDescriptionRepository<ShippingsDescriptionEntity>,
+        private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
+        private shippingServiceDescriptionRepo: ShippingServiceDescriptionRepository<ShippingsServiceDescriptionEntity>,) {
         super(repository, table);
         this.table = Table.SHIPPINGS;
     }
@@ -34,7 +38,7 @@ ShippingRepository<Shippings>
             skip: 0,
             limit: 30,
         });
-        const service = this.shippingService.find({
+        const service = this.shippingServiceRepo.find({
             select: ['*'],
             join: {
                 [JoinTable.join]: {
@@ -76,7 +80,7 @@ ShippingRepository<Shippings>
             skip: 0,
             limit: 30,
         });
-        const service = this.shippingService.find({
+        const service = this.shippingServiceRepo.find({
             select: ['*'],
             where :{[string1]:id},
 

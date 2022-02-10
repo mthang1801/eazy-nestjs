@@ -6,18 +6,16 @@ import { ShippingServiceRepository } from '../repositories/shippings_service.rep
 import { ShippingController } from '../controllers/be/shippings.controller';
 
 import { ShippingService } from '../services/shippings.service';
-import { ShippingDescriptionService } from '../services/shipping_description.service';
-import { ShippingServiceService } from '../services/shippings_service.service';
-import { ShippingServiceDescriptionService } from '../services/shipping_service_description.service';
+
 
 @Module({
     controllers: [ShippingController],
     providers: [
         ShippingService, ShippingRepository,
-        ShippingDescriptionService, ShippingDescriptionRepository,
-        ShippingServiceDescriptionService, ShippingServiceDescriptionRepository,
-        ShippingServiceService, ShippingServiceRepository, String],
-    exports: [ShippingService,ShippingDescriptionService,ShippingServiceDescriptionService,ShippingServiceService],
+         ShippingDescriptionRepository,
+         ShippingServiceDescriptionRepository,
+     ShippingServiceRepository, String],
+    exports: [ShippingService],
     imports: [],
 
 })

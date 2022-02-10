@@ -12,11 +12,12 @@ import { Table, JoinTable } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/banner_description.respository';
 import { BannerDescriptionsEntity } from '../entities/banner_descriptions.entity';
+import { Like } from 'typeorm';
 
 @Injectable()
 export class BannerService extends BaseService<
-  BannerEntity,
-  BannerRepository<BannerEntity>
+BannerEntity,
+BannerRepository<BannerEntity>
 > {
   constructor(
     repository: BannerRepository<BannerEntity>,
@@ -27,7 +28,25 @@ export class BannerService extends BaseService<
     super(repository, table);
     this.table = Table.BANNER;
   }
-  async getAll() {
+  async getAll(params) {
+    //=====Filter param
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    if (others && typeof others === 'object' && Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.repository.tableProps.includes(key)) {
+          filterCondition[`${Table.BANNER}.${key}`] = Like(val);
+        } else {
+          filterCondition[`${Table.BANNER_DESCRIPTIONS}.${key}`] =
+            Like(val);
+        }
+      }
+    }
+    //===
     const banner = this.repository.find({
       select: ['*'],
       join: {
@@ -39,8 +58,8 @@ export class BannerService extends BaseService<
         },
       },
 
-      skip: 0,
-      limit: 30,
+      skip: skip,
+      limit: limit,
     });
     const images = this.imageService.GetImage();
 
@@ -49,7 +68,7 @@ export class BannerService extends BaseService<
     result[1].forEach((ele) => {
       _banner.push({
         ...ele,
-        images: result[0].filter((img) => img.object_id == ele.banner_id),
+        images: result[0].filter((img) => img.object_id == ele.banner_id && img.object_type == 'banners'),
       });
     });
     return _banner;
@@ -79,30 +98,30 @@ export class BannerService extends BaseService<
     return { ...result[1], images: result[0] };
   }
   async Create(data: BannerCreateDTO) {
-    
-      ///==========================|Add to ddve_banner table|==============
-      const bannerTableData = {
-        ...this.repository.setData(data),
-        created_at: convertToMySQLDateTime(),
-      };
-      let _banner = await this.repository.create(bannerTableData);
 
-      //===========================|Add to ddve_banner description|======
+    ///==========================|Add to ddve_banner table|==============
+    const bannerTableData = {
+      ...this.repository.setData(data),
+      created_at: convertToMySQLDateTime(),
+    };
+    let _banner = await this.repository.create(bannerTableData);
 
-      const bannerDescriptionTableData = {
-        banner_id: _banner.banner_id,
-        ...this.bannerDescriptionRepo.setData(data),
-      };
-      let _banner_description = await this.bannerDescriptionRepo.create(
-        bannerDescriptionTableData,
-      );
+    //===========================|Add to ddve_banner description|======
 
-      //===========================|Add to ddve_images |=============================
-      await this.imageService.Create(data, _banner.banner_id);
-      //===========================|Add to ddve_images_links|=============================
+    const bannerDescriptionTableData = {
+      banner_id: _banner.banner_id,
+      ...this.bannerDescriptionRepo.setData(data),
+    };
+    let _banner_description = await this.bannerDescriptionRepo.create(
+      bannerDescriptionTableData,
+    );
 
-      return _banner;
-  
+    //===========================|Add to ddve_images |=============================
+    await this.imageService.Create(data, _banner.banner_id);
+    //===========================|Add to ddve_images_links|=============================
+
+    return _banner;
+
   }
   async Update(data: UpdateBannerDTO, id: string) {
     //===================|Update ddve_banner table|===================

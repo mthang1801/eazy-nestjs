@@ -1,29 +1,49 @@
 import { HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { BaseService } from '../../base/base.service';
-import { orderStatusEntity } from '../entities/orderStatus.entity';
+import { OrderStatusEntity } from '../entities/orderStatus.entity';
 import { OrderStatusRepository } from '../repositories/order_status.repository';
 import { orderStatusCreateDTO, } from '../dto/orderStatus/orderStatus.dto';
 
 import { Table, JoinTable } from '../../database/enums/index';
 import { OrderStatusDescriptionRepository } from '../repositories/order_status_description.repository';
 import { OrderStatusDataRepository } from '../repositories/order_status_data.repository';
-import { orderStatusDescriptionEntity } from '../entities/orderStatus-description.entity';
-import { orderStatusDataEntity } from '../entities/orderStatus-data.entity';
+import { OrderStatusDescriptionEntity } from '../entities/orderStatus-description.entity';
+import { OrderStatusDataEntity } from '../entities/orderStatus-data.entity';
+import { Like } from 'typeorm';
 
 @Injectable()
 export class OrderStatusService extends BaseService<
-orderStatusEntity,
-OrderStatusRepository<orderStatusEntity>
+OrderStatusEntity,
+OrderStatusRepository<OrderStatusEntity>
 > {
-    constructor(repository: OrderStatusRepository<orderStatusEntity>,
+    constructor(repository: OrderStatusRepository<OrderStatusEntity>,
         table: Table,
-        private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<orderStatusDescriptionEntity>,
-        private orderStatusDataRepo: OrderStatusDataRepository<orderStatusDataEntity>,
+        private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<OrderStatusDescriptionEntity>,
+        private orderStatusDataRepo: OrderStatusDataRepository<OrderStatusDataEntity>,
        ) {
         super(repository, table);
         this.table = Table.ORDER_STATUS;
     }
-    async GetAllOrderStatus() {
+    async GetAllOrderStatus(params) {
+              //=====Filter param
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    if (others && typeof others === 'object' && Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.repository.tableProps.includes(key)) {
+          filterCondition[`${Table.ORDER_STATUS}.${key}`] = Like(val);
+        } else {
+          filterCondition[`${Table.ORDER_STATUS_DESCRIPTION}.${key}`] =
+            Like(val);
+        }
+
+      }
+    }
+    //===
         const orders = this.repository.find({
             select: ['*'],
             join: {
@@ -33,13 +53,13 @@ OrderStatusRepository<orderStatusEntity>
                 },
             },
 
-            skip: 0,
-            limit: 30,
+            skip: skip,
+            limit: limit,
         });
         const orderData = this.orderStatusDataRepo.find({
             select: ['*'],
             skip: 0,
-            limit: 30,
+            limit: 9999,
         })
         const result = await Promise.all([orderData, orders]);
         let _order = [];

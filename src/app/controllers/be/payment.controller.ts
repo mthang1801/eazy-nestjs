@@ -26,8 +26,8 @@ export class PaymentController extends BaseController {
     super();
   }
   @Get()
-  async getAllPayment(@Res() res): Promise<IResponse> {
-    const order = await this.paymentService.getAllPayment();
+  async getAllPayment(@Res() res,@Param() params): Promise<IResponse> {
+    const order = await this.paymentService.getAllPayment(params);
     return this.responseSuccess(res, order);
   }
   @Get('/:id')

@@ -1,6 +1,6 @@
-export class ShippingsServiceDescription {
-    service_id : number;
-    description:string;
-    lang_code:string;
+export class ShippingsServiceDescriptionEntity {
+    service_id : number=0;
+    description:string='';
+    lang_code:string='';
 
 }

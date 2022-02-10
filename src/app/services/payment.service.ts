@@ -6,6 +6,7 @@ import { Table, JoinTable } from '../../database/enums/index';
 import { LoggerService } from '../../logger/custom.logger';
 import { PaymentDescriptionsRepository } from '../repositories/payment-description.repository';
 import { paymentDescriptionsEntity } from '../entities/payment-description.entity';
+import { Like } from 'typeorm';
 
 @Injectable()
 export class PaymentService extends BaseService<
@@ -19,7 +20,25 @@ PaymentRepository<PaymentEntity>
         super(repository, table);
         this.table = Table.PAYMENT;
     }
-    async getAllPayment() {
+async getAllPayment(params) {
+         //=====Filter param
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    if (others && typeof others === 'object' && Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.repository.tableProps.includes(key)) {
+          filterCondition[`${Table.PAYMENT}.${key}`] = Like(val);
+        } else {
+          filterCondition[`${Table.PAYMENT_DESCRIPTION}.${key}`] =
+            Like(val);
+        }
+      }
+    }
+    //===
         const payments = await this.repository.find({
             select: ['*'],
             join: {
@@ -29,8 +48,8 @@ PaymentRepository<PaymentEntity>
                 },
             },
 
-            skip: 0,
-            limit: 30,
+            skip: skip,
+            limit: limit,
         });
         return payments;
     }
@@ -79,26 +98,6 @@ PaymentRepository<PaymentEntity>
     }
     async updatePayment(id, data) {
 
-        const {
-            company_id,
-            usergroup_ids,
-            position,
-            status,
-            template,
-            processor_id,
-            processor_params,
-            a_surcharge,
-            p_surcharge,
-            tax_ids,
-            localization,
-            payment_category,
-            description,
-            payment,
-            instructions,
-            surcharge_title,
-
-            lang_code,
-        } = data;
         const PaymentData = {
             ...this.repository.setData(data),
 

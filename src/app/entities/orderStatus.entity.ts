@@ -1,6 +1,5 @@
 
-
-export class orderStatusEntity {
+export class OrderStatusEntity {
     status_id : number;
     status: string='';
     type : string='';

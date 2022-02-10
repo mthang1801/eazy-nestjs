@@ -26,8 +26,8 @@ export class OrderStatusController extends BaseController {
     super();
   }
   @Get()
-  async getAllOrderStatus(@Res() res): Promise<IResponse> {
-    const order = await this.orderStatusService.GetAllOrderStatus();
+  async getAllOrderStatus(@Res() res,@Param() params): Promise<IResponse> {
+    const order = await this.orderStatusService.GetAllOrderStatus(params);
     return this.responseSuccess(res, order);
   }
   @Get('/:id')

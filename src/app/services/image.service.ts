@@ -92,7 +92,7 @@ export class ImagesService extends BaseService<
         },
       },
       skip: 0,
-      limit: 30,
+      limit: 99999,
     });
   }
   async GetImageById(id) {

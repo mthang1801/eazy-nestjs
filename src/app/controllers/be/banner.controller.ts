@@ -24,6 +24,7 @@ import {
 } from '../../dto/banner/banner.dto';
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
+import { PrimaryKeys, Table } from 'src/database/enums';
 @Controller('/be/v1/banner')
 export class BannerController extends BaseController {
   constructor(private bannerService: BannerService) {
@@ -31,8 +32,8 @@ export class BannerController extends BaseController {
   }
 
   @Get()
-  async getAllBanners(@Res() res): Promise<IResponse> {
-    const banners = await this.bannerService.getAll();
+  async getAllBanners(@Res() res,@Param() param): Promise<IResponse> {
+    const banners = await this.bannerService.getAll(param);
     return this.responseSuccess(res, banners);
   }
 
