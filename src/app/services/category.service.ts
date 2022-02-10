@@ -1,11 +1,8 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
-
 import { convertToMySQLDateTime } from '../../utils/helper';
 import { CreateCategoryDto } from '../dto/category/create-category.dto';
-
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
 import { CategoryDescriptionEntity } from '../entities/category-description.entity';
@@ -99,6 +96,7 @@ export class CategoryService {
     // ignore page and limit
     let { page, limit, ...others } = params;
     let filterCondition = {};
+
     for (let [key, val] of Object.entries(others)) {
       if (this.categoryRepository.tableProps.includes(key)) {
         filterCondition[`${Table.CATEGORIES}.${key}`] = Like(val);

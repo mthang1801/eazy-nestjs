@@ -6,8 +6,8 @@ import { MailModule } from './mail.module';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { UserGroupsModule } from './usergroups.module';
 import { UserRepository } from '../repositories/user.repository';
-import { UserProfileRepository } from '../repositories/user-profile.repository';
-import { UserDataRepository } from '../repositories/user-data.repository';
+import { UserProfileRepository } from '../repositories/user_profile.repository';
+import { UserDataRepository } from '../repositories/user_data.repository';
 import { UserMailingListRepository } from '../repositories/user_mailing_lists.repository';
 @Module({
   imports: [MailModule, UserGroupsModule],

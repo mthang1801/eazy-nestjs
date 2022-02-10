@@ -40,6 +40,7 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token đã hết hạn.', 408);
     }
 
+    // Compare privilege with user menu
     let {
       method,
       route: { path },
