@@ -1,6 +1,6 @@
 export interface ICategory {
   category_id: number;
-  parant_id: number;
+  parent_id: number;
   id_path: string;
   level: number;
   company_id: number;
@@ -8,7 +8,6 @@ export interface ICategory {
   status: string;
   product_count: number;
   position: number;
-  timestampt: Date;
   is_op: string;
   localization: string;
   age_verification: string;
@@ -21,4 +20,6 @@ export interface ICategory {
   product_columns: number;
   is_trash: string;
   category_type: string;
+  created_at: Date;
+  updated_at: Date;
 }
