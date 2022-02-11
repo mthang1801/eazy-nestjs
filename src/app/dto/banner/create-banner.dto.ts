@@ -1,6 +1,6 @@
 import { IsOptional, IsNotEmpty } from 'class-validator';
 
-export class BannerCreateDTO {
+export class bannerCreateDTO {
   @IsOptional()
   status: string;
   @IsOptional()

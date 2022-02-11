@@ -4,7 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { BaseService } from '../../base/base.service';
 import { OrderStatusEntity } from '../entities/orderStatus.entity';
 import { OrderStatusRepository } from '../repositories/orderStatus.repository';
 
@@ -17,18 +16,14 @@ import { Like } from 'typeorm';
 import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto';
 
 @Injectable()
-export class OrderStatusService extends BaseService<
-  OrderStatusEntity,
-  OrderStatusRepository<OrderStatusEntity>
-> {
+export class OrderStatusService{
   constructor(
-    repository: OrderStatusRepository<OrderStatusEntity>,
-    table: Table,
+    private repository: OrderStatusRepository<OrderStatusEntity>,
+    private table: Table = Table.ORDER_STATUS,
     private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<OrderStatusDescriptionEntity>,
     private orderStatusDataRepo: OrderStatusDataRepository<OrderStatusDataEntity>,
   ) {
-    super(repository, table);
-    this.table = Table.ORDER_STATUS;
+
   }
   async GetAllOrderStatus(params) {
     //=====Filter param

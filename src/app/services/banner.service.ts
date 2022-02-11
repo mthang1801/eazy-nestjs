@@ -1,33 +1,27 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { BaseService } from '../../base/base.service';
-import { BannerEntity } from '../entities/banner.entity';
-import { BannerRepository } from '../repositories/banner.repository';
+import { bannerEntity } from '../entities/banner.entity';
+import { bannerRepository } from '../repositories/banner.repository';
 
 import { ImagesService } from './image.service';
 import { Table, JoinTable } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
-import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
-import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
+import { bannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
+import { bannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { Like } from 'typeorm';
-import { BannerCreateDTO } from '../dto/banner/create-banner.dto';
-import { UpdateBannerDTO } from '../dto/banner/update-banner.dto';
+import { bannerCreateDTO } from '../dto/banner/create-banner.dto';
+import { updateBannerDTO } from '../dto/banner/update-banner.dto';
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 
 @Injectable()
-export class BannerService extends BaseService<
-  BannerEntity,
-  BannerRepository<BannerEntity>
-> {
+export class bannerService {
   constructor(
-    repository: BannerRepository<BannerEntity>,
-    table: Table,
-    private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
+    private table : Table=Table.BANNER,
+    private repository: bannerRepository<bannerEntity>,
+    private bannerDescriptionRepo: bannerDescriptionsRepository<bannerDescriptionsEntity>,
     private imageService: ImagesService,
   ) {
-    super(repository, table);
-    this.table = Table.BANNER;
   }
-  async getAll(params) {
+  async getAll(params):Promise<any> {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;
@@ -74,7 +68,7 @@ export class BannerService extends BaseService<
     });
     return _banner;
   }
-  async getById(id) {
+  async getById(id):Promise<any>  {
     const string = `${this.table}.banner_id`;
     const banner = this.repository.findOne({
       select: ['*'],
@@ -98,7 +92,7 @@ export class BannerService extends BaseService<
 
     return { ...result[1], images: result[0] };
   }
-  async Create(data: BannerCreateDTO) {
+  async create(data: bannerCreateDTO):Promise<any>  {
     ///==========================|Add to ddve_banner table|==============
     const bannerTableData = {
       ...this.repository.setData(data),
@@ -122,7 +116,7 @@ export class BannerService extends BaseService<
 
     return _banner;
   }
-  async Update(data: UpdateBannerDTO, id: string) {
+  async update(data: updateBannerDTO, id: string):Promise<any>  {
     //===================|Update ddve_banner table|===================
     const bannerTableData = {
       ...this.repository.setData(data),
@@ -143,17 +137,17 @@ export class BannerService extends BaseService<
     const result = await Promise.all([_banner, _banner_description]);
     return result[0];
   }
-  async Delete(banner_id, images_id) {
+  async Delete(banner_id, images_id):Promise<any>  {
     await this.imageService.Delete(banner_id, images_id);
   }
-  async createBannerImage(data: createBannerImageDTO, id) {
+  async createBannerImage(data: createBannerImageDTO, id):Promise<any>  {
     return this.imageService.Create(data, id);
   }
 
-  async getAllIamgesByBannerId(id) {
+  async getAllIamgesByBannerId(id) :Promise<any> {
     return this.imageService.getAllIamgesByBannerId(id);
   }
-  async updateBannerById(banner_id, images_id, body) {
+  async updateBannerById(banner_id, images_id, body) :Promise<any> {
     return this.imageService.Update(body, banner_id, images_id);
   }
 }

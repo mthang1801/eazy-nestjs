@@ -11,30 +11,30 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
-import { BannerService } from '../../services/banner.service';
+import { bannerService } from '../../services/banner.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
-import { BannerCreateDTO } from 'src/app/dto/banner/create-banner.dto';
-import { UpdateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
+import { bannerCreateDTO } from 'src/app/dto/banner/create-banner.dto';
+import { updateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
 import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
 import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto';
 @Controller('/be/v1/banner')
-export class BannerController extends BaseController {
-  constructor(private service: BannerService) {
+export class bannerController extends BaseController {
+  constructor(private service: bannerService) {
     super();
   }
 
   @Get()
-  async getAllBanners(@Res() res, @Param() param): Promise<IResponse> {
+  async getAll(@Res() res, @Param() param): Promise<IResponse> {
     const banners = await this.service.getAll(param);
     return this.responseSuccess(res, banners);
   }
 
   @Get('/:id')
-  async getAllBannersById(@Res() res, @Param('id') id): Promise<IResponse> {
+  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const banners = await this.service.getById(id);
     return this.responseSuccess(res, banners);
   }
@@ -51,11 +51,11 @@ export class BannerController extends BaseController {
   @Post()
   @UsePipes(ValidationPipe)
   @UseGuards(AuthGuard)
-  async createBanner(
+  async create(
     @Res() res,
-    @Body() body: BannerCreateDTO,
+    @Body() body: bannerCreateDTO,
   ): Promise<IResponse> {
-    const banner = await this.service.Create(body);
+    const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
   }
 
@@ -64,10 +64,10 @@ export class BannerController extends BaseController {
   @UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
-    @Body() body: UpdateBannerDTO,
+    @Body() body: updateBannerDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const banner = await this.service.Update(body, id);
+    const banner = await this.service.update(body, id);
     return this.responseSuccess(res, banner);
   }
 

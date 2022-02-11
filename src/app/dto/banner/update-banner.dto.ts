@@ -1,5 +1,5 @@
 import { IsOptional, IsNotEmpty } from 'class-validator';
-export class UpdateBannerDTO {
+export class updateBannerDTO {
   @IsOptional()
   url: string;
   @IsOptional()

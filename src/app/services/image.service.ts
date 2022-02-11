@@ -1,22 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { BaseService } from '../../base/base.service';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { Table, JoinTable } from '../../database/enums/index';
 import { ImagesLinksRepository } from '../repositories/image.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 @Injectable()
-export class ImagesService extends BaseService<
-  ImagesEntity,
-  ImagesRepository<ImagesEntity>
-> {
+export class ImagesService  {
   constructor(
-    repository: ImagesRepository<ImagesEntity>,
-    table: Table,
+    private repository: ImagesRepository<ImagesEntity>,
+    private table: Table=Table.IMAGE,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {
-    super(repository, table);
-    this.table = Table.IMAGE;
+
   }
   async Create(data, object_id) {
     const imageTableData = {
