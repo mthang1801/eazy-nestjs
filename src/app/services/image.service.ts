@@ -8,7 +8,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 export class ImagesService  {
   constructor(
     private repository: ImagesRepository<ImagesEntity>,
-    private table: Table=Table.IMAGE,
+  
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {
 

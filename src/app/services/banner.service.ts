@@ -15,7 +15,7 @@ import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 @Injectable()
 export class bannerService {
   constructor(
-    private table : Table=Table.BANNER,
+
     private repository: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
@@ -69,10 +69,9 @@ export class bannerService {
     return _banner;
   }
   async getById(id):Promise<any>  {
-    const string = `${this.table}.banner_id`;
+    const string = `${Table.BANNER}.banner_id`;
     const banner = this.repository.findOne({
       select: ['*'],
-      where: { [string]: id },
       join: {
         [JoinTable.join]: {
           ddv_banner_descriptions: {
@@ -81,6 +80,7 @@ export class bannerService {
           },
         },
       },
+      where: { [string]: id },
 
       skip: 0,
       limit: 30,
