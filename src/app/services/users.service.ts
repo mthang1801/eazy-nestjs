@@ -23,9 +23,10 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserProfileDto } from '../dto/user/update-userProfile.dto';
 import {
-  ImagesLinksRepository,
+
   ImagesRepository,
 } from '../repositories/image.repository';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';

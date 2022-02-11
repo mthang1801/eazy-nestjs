@@ -1,6 +1,6 @@
 import { convertToMySQLDateTime } from "src/utils/helper";
 
-export class bannerEntity {
+export class BannerEntity {
     banner_id : number;
     status: string ='A';
     type : string ='G';

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { Table, JoinTable } from '../../database/enums/index';
-import { ImagesLinksRepository } from '../repositories/image.repository';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 @Injectable()
 export class ImagesService  {

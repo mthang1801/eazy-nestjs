@@ -1,12 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { bannerEntity } from '../entities/banner.entity';
-import { bannerRepository } from '../repositories/banner.repository';
+import { BannerEntity } from '../entities/banner.entity';
+import { BannerRepository } from '../repositories/banner.repository';
 
 import { ImagesService } from './image.service';
 import { Table, JoinTable } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
-import { bannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
-import { bannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
+import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
+import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { Like } from 'typeorm';
 import { bannerCreateDTO } from '../dto/banner/create-banner.dto';
 import { updateBannerDTO } from '../dto/banner/update-banner.dto';
@@ -16,9 +16,15 @@ import { IBannerResult } from '../interfaces/bannerResult.interface';
 @Injectable()
 export class bannerService {
   constructor(
+<<<<<<< HEAD
     private table: Table = Table.BANNER,
     private repository: bannerRepository<bannerEntity>,
     private bannerDescriptionRepo: bannerDescriptionsRepository<bannerDescriptionsEntity>,
+=======
+    private table : Table=Table.BANNER,
+    private repository: BannerRepository<BannerEntity>,
+    private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
+>>>>>>> c090906cd39afbc0b4ec7bb8f2954a063740fd41
     private imageService: ImagesService,
   ) {}
   async getAll(params): Promise<IBannerResult[]> {

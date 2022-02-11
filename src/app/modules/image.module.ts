@@ -1,8 +1,8 @@
 import { Module, Global } from '@nestjs/common';
 import {
-  ImagesLinksRepository,
   ImagesRepository,
 } from '../repositories/image.repository';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesService } from '../services/image.service';
 @Global()
 @Module({
