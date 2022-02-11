@@ -6,14 +6,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Pool } from 'mysql2/promise';
 import { UserRepository } from '../app/repositories/user.repository';
 import { ConfigService } from '@nestjs/config';
+import { DatabasePool } from './enums/databasePool.enum';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: 'DATABASE_POOL',
+      provide: DatabasePool.WRITE_POOL,
       useFactory: async (configService: ConfigService) =>
-        DatabasePoolFactory(configService),
+        DatabasePoolFactory(configService, 'write'),
+      inject: [ConfigService],
+    },
+    {
+      provide: DatabasePool.READ_POOL,
+      useFactory: async (configService: ConfigService) =>
+        DatabasePoolFactory(configService, 'read'),
       inject: [ConfigService],
     },
     DatabaseService,
@@ -26,7 +33,8 @@ export class DatabaseModule implements OnApplicationShutdown {
 
   onApplicationShutdown(signal?: string): any {
     this.logger.log(`Shutting down on signal ${signal}`);
-    const pool = this.moduleRef.get('DATABASE_POOL') as Pool;
-    return pool.end();
+    const readPool = this.moduleRef.get(DatabasePool.READ_POOL) as Pool;
+    const writePool = this.moduleRef.get(DatabasePool.WRITE_POOL) as Pool;
+    return readPool ? readPool.end() : writePool.end();
   }
 }

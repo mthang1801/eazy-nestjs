@@ -58,12 +58,11 @@ export class BaseRepositorty<T> {
     }
     let sql = `INSERT INTO ${this.table} SET ? `;
 
-    await this.databaseService.executeQuery(sql, params);
-    const res = await this.databaseService.executeQuery(
+    await this.databaseService.executeQueryWritePool(sql, params);
+    const res = await this.databaseService.executeQueryWritePool(
       'SELECT LAST_INSERT_ID();',
     );
 
-    console.log(46, res[0][0]['LAST_INSERT_ID()']);
     if (res[0][0]['LAST_INSERT_ID()'] === 0) {
       return this.findOne({ where: params });
     }
@@ -82,9 +81,9 @@ export class BaseRepositorty<T> {
 
     let rows;
     if (typeof id === 'object') {
-      rows = await this.databaseService.executeQuery(stringQuery, [id]);
+      rows = await this.databaseService.executeQueryReadPool(stringQuery, [id]);
     } else {
-      rows = await this.databaseService.executeQuery(stringQuery, [
+      rows = await this.databaseService.executeQueryReadPool(stringQuery, [
         { [PrimaryKeys[this.table]]: id },
       ]);
     }
@@ -146,7 +145,9 @@ export class BaseRepositorty<T> {
       }
     }
 
-    const res = await this.databaseService.executeQuery(collection.sql());
+    const res = await this.databaseService.executeQueryReadPool(
+      collection.sql(),
+    );
     let results: any[] = [];
 
     for (let result of res[0]) {
@@ -199,7 +200,7 @@ export class BaseRepositorty<T> {
       sql += ` ${PrimaryKeys[this.table]} = '${id}'`;
     }
 
-    await this.databaseService.executeQuery(sql);
+    await this.databaseService.executeQueryWritePool(sql);
 
     const updatedUser =
       typeof id === 'object' ? await this.findOne(id) : await this.findById(id);
@@ -237,10 +238,12 @@ export class BaseRepositorty<T> {
           }
         });
       }
-      res = await this.databaseService.executeQuery(queryString, [option]);
+      res = await this.databaseService.executeQueryWritePool(queryString, [
+        option,
+      ]);
     } else {
       queryString += ` ? `;
-      res = await this.databaseService.executeQuery(queryString, [
+      res = await this.databaseService.executeQueryWritePool(queryString, [
         { [PrimaryKeys[this.table]]: option },
       ]);
     }
