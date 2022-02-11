@@ -11,17 +11,17 @@ import { Like } from 'typeorm';
 import { bannerCreateDTO } from '../dto/banner/create-banner.dto';
 import { updateBannerDTO } from '../dto/banner/update-banner.dto';
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
+import { IBannerResult } from '../interfaces/bannerResult.interface';
 
 @Injectable()
 export class bannerService {
   constructor(
-    
+    private table: Table = Table.BANNER,
     private repository: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
-  ) {
-  }
-  async getAll(params):Promise<any> {
+  ) {}
+  async getAll(params): Promise<IBannerResult[]> {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;
@@ -68,19 +68,19 @@ export class bannerService {
     });
     return _banner;
   }
-  async getById(id):Promise<any>  {
-    const string = `${Table.BANNER}.banner_id`;
+  async getById(id): Promise<IBannerResult> {
+    const string = `${this.table}.banner_id`;
     const banner = this.repository.findOne({
       select: ['*'],
+      where: { [string]: id },
       join: {
         [JoinTable.join]: {
-          ddv_banner_descriptions: {
+          [Table.BANNER_DESCRIPTIONS]: {
             fieldJoin: 'banner_id',
             rootJoin: 'banner_id',
           },
         },
       },
-      where: { [string]: id },
 
       skip: 0,
       limit: 30,
@@ -92,7 +92,7 @@ export class bannerService {
 
     return { ...result[1], images: result[0] };
   }
-  async create(data: bannerCreateDTO):Promise<any>  {
+  async create(data: bannerCreateDTO): Promise<IBannerResult> {
     ///==========================|Add to ddve_banner table|==============
     const bannerTableData = {
       ...this.repository.setData(data),
@@ -116,7 +116,7 @@ export class bannerService {
 
     return _banner;
   }
-  async update(data: updateBannerDTO, id: string):Promise<any>  {
+  async update(data: updateBannerDTO, id: string): Promise<any> {
     //===================|Update ddve_banner table|===================
     const bannerTableData = {
       ...this.repository.setData(data),
@@ -137,17 +137,17 @@ export class bannerService {
     const result = await Promise.all([_banner, _banner_description]);
     return result[0];
   }
-  async Delete(banner_id, images_id):Promise<any>  {
+  async Delete(banner_id, images_id): Promise<void> {
     await this.imageService.Delete(banner_id, images_id);
   }
-  async createBannerImage(data: createBannerImageDTO, id):Promise<any>  {
+  async createBannerImage(data: createBannerImageDTO, id): Promise<any> {
     return this.imageService.Create(data, id);
   }
 
-  async getAllIamgesByBannerId(id) :Promise<any> {
+  async getAllIamgesByBannerId(id): Promise<any> {
     return this.imageService.getAllIamgesByBannerId(id);
   }
-  async updateBannerById(banner_id, images_id, body) :Promise<any> {
+  async updateBannerById(banner_id, images_id, body): Promise<any> {
     return this.imageService.Update(body, banner_id, images_id);
   }
 }
