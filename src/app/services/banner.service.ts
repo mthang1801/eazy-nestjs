@@ -16,7 +16,6 @@ import { IBannerResult } from '../interfaces/bannerResult.interface';
 @Injectable()
 export class bannerService {
   constructor(
-    private table: Table = Table.BANNER,
     private repository: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
@@ -69,7 +68,7 @@ export class bannerService {
     return _banner;
   }
   async getById(id): Promise<IBannerResult> {
-    const string = `${this.table}.banner_id`;
+    const string = `${Table.BANNER}.banner_id`;
     const banner = this.repository.findOne({
       select: ['*'],
       where: { [string]: id },
