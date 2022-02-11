@@ -61,8 +61,8 @@ export class UserGroupPrivilegeController extends BaseController {
    */
   @Get()
   @UseGuards(AuthGuard)
-  async getAll(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const listDataRes = await this.service.getAll(params);
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const listDataRes = await this.service.getList(params);
     return this.responseSuccess(res, listDataRes);
   }
 

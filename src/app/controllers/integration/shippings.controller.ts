@@ -25,8 +25,8 @@ export class ShippingController extends BaseController {
   }
 
   @Get()
-  async getAll(@Res() res): Promise<IResponse> {
-    const result = await this.service.getAll();
+  async getList(@Res() res): Promise<IResponse> {
+    const result = await this.service.getList();
     return this.responseSuccess(res, result);
   }
 

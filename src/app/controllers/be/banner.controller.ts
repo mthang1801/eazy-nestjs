@@ -28,8 +28,8 @@ export class bannerController extends BaseController {
   }
 
   @Get()
-  async getAll(@Res() res, @Param() param): Promise<IResponse> {
-    const banners = await this.service.getAll(param);
+  async getList(@Res() res, @Param() param): Promise<IResponse> {
+    const banners = await this.service.getList(param);
     return this.responseSuccess(res, banners);
   }
 

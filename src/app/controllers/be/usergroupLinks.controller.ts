@@ -29,8 +29,8 @@ export class UserGroupLinksController extends BaseController {
    */
   @Get()
   @UseGuards(AuthGuard)
-  async getAll(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const userGroupLinksRes = await this.service.getAll(params);
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const userGroupLinksRes = await this.service.getList(params);
     return this.responseSuccess(res, userGroupLinksRes);
   }
 

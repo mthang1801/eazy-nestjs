@@ -19,7 +19,7 @@ import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
 /**
  * Controller for Category
- * @Author TrinhLong
+ * @Author LongTRinh
  */
 @UseGuards(AuthGuard)
 @Controller('/integration/payment')
@@ -34,8 +34,8 @@ export class PaymentController extends BaseController {
    * @returns
    */
   @Get()
-  async getAll(@Res() res, @Param() params): Promise<IResponse> {
-    const result = await this.service.getAll(params);
+  async getList(@Res() res, @Param() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 

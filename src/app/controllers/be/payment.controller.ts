@@ -34,8 +34,8 @@ export class PaymentController extends BaseController {
    * @returns
    */
   @Get()
-  async getAll(@Res() res, @Param() params): Promise<IResponse> {
-    const result = await this.service.getAll(params);
+  async getList(@Res() res, @Param() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
