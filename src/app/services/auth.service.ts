@@ -46,6 +46,7 @@ import {
 } from 'src/database/enums/tableFieldEnum/userMailingLists.enum';
 import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
 import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
+import { IImage } from '../interfaces/image.interface';
 @Injectable()
 export class AuthService {
   constructor(
@@ -169,7 +170,7 @@ export class AuthService {
     return dataResult;
   }
 
-  async getUserImage(user_id: number): Promise<any> {
+  async getUserImage(user_id: number): Promise<IImage> {
     const imageLinks = await this.imageLinksRepository.findOne({
       where: {
         object_id: user_id,
@@ -333,7 +334,10 @@ export class AuthService {
     return true;
   }
 
-  async activeSignUpAccount(user_id: number, token: string): Promise<any> {
+  async activeSignUpAccount(
+    user_id: number,
+    token: string,
+  ): Promise<IResponseUserToken> {
     const checkMail: UserMailingListsEntity =
       await this.userMailingListRepository.findOne({
         subscriber_id: user_id,

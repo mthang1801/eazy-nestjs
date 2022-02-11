@@ -11,6 +11,7 @@ import { CategoryDescriptionRepository } from '../repositories/categoryDescripti
 import * as _ from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { Like } from '../../database/find-options/operators';
+import { ICategoryResponse } from '../interfaces/categoryResponse.interface';
 
 @Injectable()
 export class CategoryService {
@@ -19,7 +20,7 @@ export class CategoryService {
     private categoryRepository: CategoryRepository<CategoryEntity>,
   ) {}
 
-  async create(data: CreateCategoryDto): Promise<any> {
+  async create(data: CreateCategoryDto): Promise<ICategoryResponse> {
     const categoryData = this.categoryRepository.setData(data);
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
@@ -39,7 +40,10 @@ export class CategoryService {
     return { ...createdCategory, ...createdCategoryDescription };
   }
 
-  async update(id: number, data: UpdateCategoryDto): Promise<any> {
+  async update(
+    id: number,
+    data: UpdateCategoryDto,
+  ): Promise<ICategoryResponse> {
     const oldCategoryData = await this.categoryRepository.findOne({
       category_id: id,
     });
@@ -92,7 +96,7 @@ export class CategoryService {
     return { ...updatedCategoryData, ...updatedCategoryDescription };
   }
 
-  async getList(params): Promise<any> {
+  async getList(params): Promise<ICategoryResponse[]> {
     // ignore page and limit
     let { page, limit, ...others } = params;
     let filterCondition = {};
@@ -140,7 +144,7 @@ export class CategoryService {
     return categoryMenuList;
   }
 
-  async get(id: number): Promise<CategoryEntity> {
+  async get(id: number): Promise<ICategoryResponse> {
     let category = await this.categoryRepository.findOne({
       select: ['*'],
       join: {
