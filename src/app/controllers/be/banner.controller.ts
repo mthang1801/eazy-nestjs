@@ -16,7 +16,7 @@ import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 
 import {} from '../../interfaces/response.interface';
-import { AuthGuard } from '../../../middlewares/fe.auth';
+import { AuthGuard } from '../../../middlewares/be.auth';
 import { bannerCreateDTO } from 'src/app/dto/banner/create-banner.dto';
 import { updateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
 import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
@@ -101,7 +101,7 @@ export class bannerController extends BaseController {
 
   @Post('/:id/createimages')
   @UsePipes(ValidationPipe)
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async createBannerImage(
     @Res() res,
     @Body() body: createBannerImageDTO,

@@ -14,7 +14,7 @@ import {
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 
-import { AuthGuard } from '../../../middlewares/fe.auth';
+import { AuthGuard } from '../../../middlewares/be.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
 import { UpdateCreateDTO } from 'src/app/dto/shipping/update-shipping.dto';

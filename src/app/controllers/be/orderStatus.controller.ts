@@ -25,17 +25,17 @@ export class OrderStatusController extends BaseController {
     super();
   }
   @Get()
-  async getAllOrderStatus(@Res() res, @Param() params): Promise<IResponse> {
+  async getList(@Res() res, @Param() params): Promise<IResponse> {
     const order = await this.service.getList(params);
     return this.responseSuccess(res, order);
   }
   @Get('/:id')
-  async getOrderStatusById(@Res() res, @Param('id') id): Promise<IResponse> {
+  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const order = await this.service.getById(id);
     return this.responseSuccess(res, order);
   }
   @Post()
-  async createOrderStatus(
+  async create(
     @Res() res,
     @Body() body: OrderStatusCreateDTO,
   ): Promise<IResponse> {
