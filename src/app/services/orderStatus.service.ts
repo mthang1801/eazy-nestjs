@@ -19,7 +19,7 @@ import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto'
 export class OrderStatusService{
   constructor(
     private repository: OrderStatusRepository<OrderStatusEntity>,
-    private table: Table = Table.ORDER_STATUS,
+    
     private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<OrderStatusDescriptionEntity>,
     private orderStatusDataRepo: OrderStatusDataRepository<OrderStatusDataEntity>,
   ) {
@@ -74,9 +74,8 @@ export class OrderStatusService{
     return _order;
   }
   async getOrderStatusById(id) {
-    const string = `${this.table}.status_id`;
+    const string = `${Table.ORDER_STATUS}.status_id`;
     const string1 = `${Table.ORDER_STATUS_DATA}.status_id`;
-
     const orders = this.repository.findOne({
       select: ['*'],
       join: {
@@ -87,7 +86,7 @@ export class OrderStatusService{
           },
         },
       },
-      where: { [string]: id },
+      where: { [string]: +id },
       skip: 0,
       limit: 30,
     });
