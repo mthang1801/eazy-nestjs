@@ -1,4 +1,4 @@
-export class bannerDescriptionsEntity {
+export class BannerDescriptionsEntity {
   banner_id: number = 0;
   banner: string = '';
   url: string = '';

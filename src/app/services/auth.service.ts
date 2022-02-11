@@ -19,9 +19,10 @@ import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
 import {
-  ImagesLinksRepository,
+  
   ImagesRepository,
 } from '../repositories/image.repository';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';

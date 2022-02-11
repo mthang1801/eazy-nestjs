@@ -1,7 +1,7 @@
 import { BaseRepositorty } from '../../base/base.repository';
 import { DatabaseService } from '../../database/database.service';
 import { Table } from '../../database/enums/index';
-import { paymentDescriptionsEntity } from '../entities/paymentDescription.entity';
+import { PaymentDescriptionsEntity } from '../entities/paymentDescription.entity';
 export class PaymentDescriptionsRepository<
   paymentDescriptionsEntity,
 > extends BaseRepositorty<paymentDescriptionsEntity> {
@@ -9,7 +9,7 @@ export class PaymentDescriptionsRepository<
     super(databaseService, table);
     this.table = Table.PAYMENT_DESCRIPTION;
     this.tableProps = Object.getOwnPropertyNames(
-      new paymentDescriptionsEntity(),
+      new PaymentDescriptionsEntity(),
     );
   }
 }

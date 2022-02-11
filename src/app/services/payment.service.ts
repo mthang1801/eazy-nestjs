@@ -3,7 +3,7 @@ import { PaymentEntity } from '../entities/payment.entity';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { Table, JoinTable } from '../../database/enums/index';
 import { PaymentDescriptionsRepository } from '../repositories/paymentDescription.repository';
-import { paymentDescriptionsEntity } from '../entities/paymentDescription.entity';
+import { PaymentDescriptionsEntity } from '../entities/paymentDescription.entity';
 
 import { IPayment } from '../interfaces/payment.interface';
 import { Like } from 'src/database/find-options/operators';
@@ -12,7 +12,7 @@ import { Like } from 'src/database/find-options/operators';
 export class PaymentService {
   constructor(
     private paymentRepository: PaymentRepository<PaymentEntity>,
-    private paymentDescriptionRepo: PaymentDescriptionsRepository<paymentDescriptionsEntity>,
+    private paymentDescriptionRepo: PaymentDescriptionsRepository<PaymentDescriptionsEntity>,
   ) {}
 
   async getAll(params): Promise<IPayment[]> {

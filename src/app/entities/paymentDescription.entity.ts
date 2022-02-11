@@ -1,4 +1,4 @@
-export class paymentDescriptionsEntity {
+export class PaymentDescriptionsEntity {
   payment_id: number;
   description: string = '';
   payment: string = '';
