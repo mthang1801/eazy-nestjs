@@ -20,7 +20,7 @@ export class bannerService {
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
   ) {}
-  async getAll(params): Promise<IBannerResult[]> {
+  async getList(params): Promise<IBannerResult[]> {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;

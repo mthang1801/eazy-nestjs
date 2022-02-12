@@ -15,7 +15,7 @@ export class PaymentService {
     private paymentDescriptionRepo: PaymentDescriptionsRepository<PaymentDescriptionsEntity>,
   ) {}
 
-  async getAll(params): Promise<IPayment[]> {
+  async getList(params): Promise<IPayment[]> {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;

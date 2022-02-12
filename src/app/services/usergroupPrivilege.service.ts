@@ -63,7 +63,7 @@ export class UserGroupsPrivilegeService {
     return menu;
   }
 
-  async getAll(params): Promise<IUserGroupPrivilege[]> {
+  async getList(params): Promise<IUserGroupPrivilege[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;

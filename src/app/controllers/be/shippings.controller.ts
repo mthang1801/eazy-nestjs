@@ -14,9 +14,11 @@ import {
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 
-import { AuthGuard } from '../../../middlewares/fe.auth';
+import { AuthGuard } from '../../../middlewares/be.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
+import { UpdateCreateDTO } from 'src/app/dto/shipping/update-shipping.dto';
+import { identity } from 'rxjs';
 @UseGuards(AuthGuard)
 @Controller('/be/v1/shippings')
 export class ShippingController extends BaseController {
@@ -25,8 +27,8 @@ export class ShippingController extends BaseController {
   }
 
   @Get()
-  async GetAll(@Res() res): Promise<IResponse> {
-    const result = await this.service.getAll();
+  async getList(@Res() res): Promise<IResponse> {
+    const result = await this.service.getList();
     return this.responseSuccess(res, result);
   }
   @Get('/:id')
@@ -40,6 +42,15 @@ export class ShippingController extends BaseController {
     @Body() body: ShippingCreateDTO,
   ): Promise<IResponse> {
     const result = await this.service.create(body);
+    return this.responseSuccess(res, result);
+  }
+  @Put('/:id')
+  async update(
+    @Res() res,
+    @Body() body: UpdateCreateDTO,
+    @Param('id') id,
+  ): Promise<IResponse> {
+    const result = await this.service.update(id,body);
     return this.responseSuccess(res, result);
   }
 }

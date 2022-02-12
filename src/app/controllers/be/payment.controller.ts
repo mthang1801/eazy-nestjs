@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
-import { AuthGuard } from '../../../middlewares/fe.auth';
+import { AuthGuard } from '../../../middlewares/be.auth';
 import { PaymentService } from 'src/app/services/payment.service';
 import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
@@ -34,8 +34,8 @@ export class PaymentController extends BaseController {
    * @returns
    */
   @Get()
-  async getAll(@Res() res, @Param() params): Promise<IResponse> {
-    const result = await this.service.getAll(params);
+  async getList(@Res() res, @Param() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 

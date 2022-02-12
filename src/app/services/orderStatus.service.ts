@@ -25,7 +25,7 @@ export class OrderStatusService{
   ) {
 
   }
-  async GetAllOrderStatus(params) {
+  async getList(params) {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;
@@ -73,7 +73,7 @@ export class OrderStatusService{
     });
     return _order;
   }
-  async getOrderStatusById(id) {
+  async getById(id) {
     const string = `${Table.ORDER_STATUS}.status_id`;
     const string1 = `${Table.ORDER_STATUS_DATA}.status_id`;
     const orders = this.repository.findOne({
@@ -101,7 +101,7 @@ export class OrderStatusService{
     console.log(result[1], result[0]);
     return { ...result[1], data: result[0] };
   }
-  async createOrderStatus(data: OrderStatusCreateDTO) {
+  async create(data: OrderStatusCreateDTO) {
     //====Check if exist
 
     const check = await this.repository.findOne({
@@ -139,7 +139,7 @@ export class OrderStatusService{
     );
     return _orderStatus;
   }
-  async UpdateOrderStatus(id, data) {
+  async update(id, data) {
     //=== check if data changes ?====
     const changed = await this.repository.findOne({ where: { status_id: id } });
     if (!(changed.status === data.status && changed.type === data.type)) {

@@ -56,7 +56,7 @@ export class UserGroupsService {
     return userGroup;
   }
 
-  async getAll(params): Promise<IUserGroup[]> {
+  async getList(params): Promise<IUserGroup[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;

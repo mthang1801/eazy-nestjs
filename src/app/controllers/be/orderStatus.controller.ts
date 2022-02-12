@@ -25,21 +25,21 @@ export class OrderStatusController extends BaseController {
     super();
   }
   @Get()
-  async getAllOrderStatus(@Res() res, @Param() params): Promise<IResponse> {
-    const order = await this.service.GetAllOrderStatus(params);
+  async getList(@Res() res, @Param() params): Promise<IResponse> {
+    const order = await this.service.getList(params);
     return this.responseSuccess(res, order);
   }
   @Get('/:id')
-  async getOrderStatusById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const order = await this.service.getOrderStatusById(id);
+  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
+    const order = await this.service.getById(id);
     return this.responseSuccess(res, order);
   }
   @Post()
-  async createOrderStatus(
+  async create(
     @Res() res,
     @Body() body: OrderStatusCreateDTO,
   ): Promise<IResponse> {
-    const order = await this.service.createOrderStatus(body);
+    const order = await this.service.create(body);
     return this.responseSuccess(res, order);
   }
   @Put('/:id')
@@ -49,7 +49,7 @@ export class OrderStatusController extends BaseController {
     @Body() body: OrderStatusUpdateDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const order = await this.service.UpdateOrderStatus(id, body);
+    const order = await this.service.update(id, body);
     if (order === '422')
       return this.optionalResponse(res, 422, 'Status and Type duplicated');
     return this.responseSuccess(res, order);
