@@ -13,6 +13,7 @@ import { JoinTable } from '../../database/enums/joinTable.enum';
 import { Table } from 'src/database/enums';
 import { Like } from 'src/database/find-options/operators';
 import { UpdateProductFeatureDto } from '../dto/productFeatures/update-productFeatures.dto';
+import { IProductFeaturesResponse } from '../interfaces/productFeaturesResponse.interface';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -22,7 +23,9 @@ export class ProductFeatureService {
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
   ) {}
 
-  async create(data: CreateProductFeatureDto): Promise<any> {
+  async create(
+    data: CreateProductFeatureDto,
+  ): Promise<IProductFeaturesResponse> {
     const { feature_name, feature_values, display_status } = data;
     // create a new record on feature and feature_description
     const newFeature: ProductFeatureEntity =
@@ -59,7 +62,7 @@ export class ProductFeatureService {
     return { ...newFeature, ...newFeatureDesription, feature_variants };
   }
 
-  async getList(params): Promise<any> {
+  async getList(params): Promise<IProductFeaturesResponse[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;
@@ -117,7 +120,7 @@ export class ProductFeatureService {
     return productFeatures;
   }
 
-  async getById(id: number): Promise<any> {
+  async getById(id: number): Promise<IProductFeaturesResponse> {
     let result = await this.productFeaturesRepo.findOne({
       select: ['*'],
       join: {
@@ -153,7 +156,10 @@ export class ProductFeatureService {
     return result;
   }
 
-  async update(id: number, data: UpdateProductFeatureDto): Promise<any> {
+  async update(
+    id: number,
+    data: UpdateProductFeatureDto,
+  ): Promise<IProductFeaturesResponse> {
     const checkProductFeatureExist = await this.productFeaturesRepo.findById(
       id,
     );
