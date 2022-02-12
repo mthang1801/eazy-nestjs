@@ -18,10 +18,7 @@ import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
-import {
-  
-  ImagesRepository,
-} from '../repositories/image.repository';
+import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
@@ -48,6 +45,7 @@ import {
 import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
 import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
 import { IImage } from '../interfaces/image.interface';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -343,17 +341,58 @@ export class AuthService {
       await this.userMailingListRepository.findOne({
         subscriber_id: user_id,
         activation_key: token,
-        status: UserMailingListsStatusEnum.Active,
       });
+
     if (!checkMail) {
       throw new HttpException(
-        'Không tìm thấy email mail phù hợp .',
+        'Mã xác thực hoặc mã người dùng không đúng.',
         HttpStatus.NOT_FOUND,
       );
     }
-    if (checkMail.confirmed !== 0) {
-      throw new HttpException('Token đã được sử dụng.', HttpStatus.NOT_FOUND);
+
+    if (checkMail.status === UserMailingListsStatusEnum.Disabled) {
+      throw new HttpException('Mã xác thực email không còn hoạt động.', 409);
     }
+
+    if (checkMail.confirmed !== 0) {
+      const checkUserHasBeenActive = await this.userRepository.findById(
+        user_id,
+      );
+      if (checkUserHasBeenActive.status === UserStatusEnum.Active) {
+        throw new HttpException(
+          'Tài khoản đã được kích hoạt, bạn có thể đăng nhập.',
+          409,
+        );
+      } else {
+        // Update user to active status
+        // Update user
+        await this.userRepository.update(user_id, {
+          status: UserStatusEnum.Active,
+        });
+        // Update email
+        await this.userMailingListRepository.update(checkMail.list_id, {
+          confirmed: 1,
+          status: UserMailingListsStatusEnum.Disabled,
+        });
+        const user = await this.userService.findUserAllInfo({
+          [`${Table.USERS}.user_id`]: user_id,
+        });
+
+        if (user.usergroup_id) {
+          const menu =
+            await this.userGroupsPrivilegeService.getListByUserGroupId(
+              user.usergroup_id,
+            );
+
+          user['menu'] = menu;
+        }
+        return {
+          token: this.generateToken(user),
+          userData: preprocessUserResult(user),
+        };
+      }
+    }
+
     if (new Date(checkMail.expired_at).getTime() < new Date().getTime()) {
       await this.userMailingListRepository.delete({
         list_id: checkMail.list_id,
@@ -410,14 +449,23 @@ export class AuthService {
     );
   }
 
-  async reactivateSignUpAccount(email: string): Promise<void> {
-    const user = await this.userRepository.findOne({ email });
+  async reactivateSignUpAccount(user_id: string): Promise<void> {
+    const user = await this.userRepository.findById(user_id);
     if (!user) {
-      throw new HttpException('Email không tồn tại.', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'Người dùng không tồn tại.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (user.status === UserStatusEnum.Active) {
+      throw new HttpException(
+        'Tài khoản đã hoạt động, bạn có thể đăng nhập.',
+        409,
+      );
     }
     // find
     const oldSignUpMailsList = await this.userMailingListRepository.find({
-      email,
+      subscriber_id: user_id,
       type: UserMailingListsTypeEnum.ActivateSignUpAccount,
     });
     // Disabled all old mail status

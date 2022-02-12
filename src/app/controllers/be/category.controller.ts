@@ -23,6 +23,7 @@ import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
  * Controller for Category
  * @Author MvThang
  */
+@UseGuards(AuthGuard)
 @Controller('/be/v1/category')
 export class CategoryController extends BaseController {
   constructor(private service: CategoryService) {
@@ -36,7 +37,6 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Post()
-  @UseGuards(AuthGuard)
   async create(
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
@@ -78,7 +78,6 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Put('/:id')
-  @UseGuards(AuthGuard)
   async update(
     @Body() categoryDto: UpdateCategoryDto,
     @Param('id') id: number,
@@ -89,7 +88,6 @@ export class CategoryController extends BaseController {
   }
 
   @Delete('/:id')
-  @UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,

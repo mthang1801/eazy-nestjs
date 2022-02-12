@@ -33,13 +33,15 @@ export class BaseRepositorty<T> {
   }
 
   setData(data) {
-    let userGroupDataObject = {};
+    let dataObject = {};
+
     for (let [key, val] of Object.entries(data)) {
       if (this._tableProps.includes(key)) {
-        userGroupDataObject[key] = val;
+        dataObject[key] = val;
       }
     }
-    return userGroupDataObject;
+
+    return dataObject;
   }
 
   /**
@@ -56,9 +58,11 @@ export class BaseRepositorty<T> {
         HttpStatus.BAD_REQUEST,
       );
     }
+
     let sql = `INSERT INTO ${this.table} SET ? `;
 
     await this.databaseService.executeQueryWritePool(sql, params);
+
     const res = await this.databaseService.executeQueryWritePool(
       'SELECT LAST_INSERT_ID();',
     );
@@ -66,6 +70,7 @@ export class BaseRepositorty<T> {
     if (res[0][0]['LAST_INSERT_ID()'] === 0) {
       return this.findOne({ where: params });
     }
+
     return this.findById(res[0][0]['LAST_INSERT_ID()']);
   }
 

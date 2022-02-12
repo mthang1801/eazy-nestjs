@@ -16,10 +16,6 @@ import { IBannerResult } from '../interfaces/bannerResult.interface';
 @Injectable()
 export class bannerService {
   constructor(
-<<<<<<< HEAD
-    private table: Table = Table.BANNER,
-=======
->>>>>>> 9e6c20da944246f3ab1e09a855d0f27703b6002e
     private repository: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,

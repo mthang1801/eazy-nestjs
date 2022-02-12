@@ -119,10 +119,28 @@ export class CategoryService {
       where: filterCondition,
       orderBy: [{ field: `${Table.CATEGORIES}.level`, sort_by: SortBy.ASC }],
     });
+
     let categoryMenuList = [];
     for (let categoryMenuItem of categoryMenuRawList) {
       if (categoryMenuItem.level === 1) {
-        categoryMenuList.push({ ...categoryMenuItem, children: [] });
+        const childrenCategories = await this.categoryRepository.find({
+          select: ['*', `${Table.CATEGORIES}.*`],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.CATEGORY_DESCRIPTIONS]: {
+                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+                rootJoin: `${Table.CATEGORIES}.category_id`,
+              },
+            },
+          },
+          where: {
+            [`${Table.CATEGORIES}.parent_id`]: categoryMenuItem.category_id,
+          },
+        });
+        categoryMenuList.push({
+          ...categoryMenuItem,
+          children: childrenCategories,
+        });
         continue;
       }
       if (categoryMenuItem.level === 2) {

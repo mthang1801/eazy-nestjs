@@ -33,6 +33,10 @@ export enum Table {
   PRODUCTS_CATEGORIES = 'ddv_products_categories',
   PRODUCTS = 'ddv_products',
   PRODUCT_DESCRIPTION = 'ddv_product_descriptions',
+  PRODUCT_FEATURES = 'ddv_product_features',
+  PRODUCT_FEATURE_DESCRIPTIONS = 'ddv_product_features_descriptions',
+  PRODUCT_FEATURES_VARIANTS = 'ddv_product_feature_variants',
+  PRODUCT_FEATURES_VARIANT_DESCRIPTIONS = 'ddv_product_feature_variant_descriptions',
   //============== Order status ==============
   ORDER_STATUS = 'ddv_statuses',
   ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',

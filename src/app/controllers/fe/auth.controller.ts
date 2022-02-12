@@ -171,12 +171,13 @@ export class AuthController extends BaseController {
 
   @Post('reactivate')
   async reactivateSignUpAccount(
-    @Body('email') email: string,
+    @Body('user_id') user_id: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.service.reactivateSignUpAccount(email);
+    await this.service.reactivateSignUpAccount(user_id);
     return this.responseSuccess(
       res,
+      null,
       'Yêu cầu kích hoạt lại tài khoản thành công, vui lòng kiểm tra email.',
     );
   }
