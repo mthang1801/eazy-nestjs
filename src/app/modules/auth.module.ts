@@ -10,8 +10,8 @@ import { AuthProviderRepository } from '../repositories/auth.repository';
 import { UserGroupsModule } from './usergroups.module';
 import { ImageModule } from './image.module';
 import { MailModule } from './mail.module';
-import { UserGroupLinksModule } from './usergroup_links.module';
-import { UserGroupPrivilegeModule } from './usergroup_privilege.module';
+import { UserGroupLinksModule } from './usergroupLinks.module';
+import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
 
 @Module({
   imports: [

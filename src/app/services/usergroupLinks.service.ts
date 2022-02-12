@@ -85,9 +85,9 @@ export class UserGroupLinkService {
 
   async getListUsersByUserGroupId(
     usergroup_id: number,
-    query: any,
+    params: any,
   ): Promise<IUserGroupLinkExtend[]> {
-    let { page, limit } = query;
+    let { page, limit } = params;
     page = +page || 1;
     limit = +limit || 9999;
     const skip = (page - 1) * limit;

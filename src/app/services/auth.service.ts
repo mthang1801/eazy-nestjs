@@ -243,6 +243,7 @@ export class AuthService {
         ...newUserData,
       };
     }
+
     // Create image at ddv_images and ddv_image_links
     let userImageLink = await this.imageLinksRepository.findOne({
       where: {
@@ -250,7 +251,9 @@ export class AuthService {
         object_type: ImageObjectType.USER,
       },
     });
+
     let userImage;
+
     if (!userImageLink) {
       const userImage = await this.imagesRepository.create({
         image_path: providerData.imageUrl,
@@ -265,7 +268,9 @@ export class AuthService {
     } else {
       userImage = await this.imagesRepository.findById(userImageLink.image_id);
     }
+
     userExists['image'] = userImage;
+
     // Create or update at ddv_users_auth_external table
     let authProvider: AuthProviderEntity = await this.authRepository.findOne({
       where: {
