@@ -28,7 +28,6 @@ export class AuthController extends BaseController {
    * @returns
    */
   @Post('register')
-  @UsePipes(ValidationPipe)
   async signUp(
     @Body() authCredentialsDto: AuthCredentialsDto,
     @Res() res,

@@ -67,6 +67,7 @@ export class AuthService {
     const payload = {
       sub: user,
     };
+
     return this.jwtService.sign(payload);
   }
 
@@ -95,12 +96,25 @@ export class AuthService {
       status: UserStatusEnum.Deactive,
       created_at: convertToMySQLDateTime(),
     });
+
+    // After creating a new record, we need sent an email to activate
+    console.log(99, user);
+
+    try {
+      await this.sendMailActivateSignUpAccount(user);
+    } catch (error) {
+      // If sent email fail, a new record will be deleted immediately, the process below will be not performed
+      await this.userRepository.delete(user.user_id);
+      throw new HttpException(`Lỗi trong quá trình gửi email : ${error}`, 500);
+    }
+
     //create a new record as customer position at ddv_usergroup_links
     const userGroupForCustomer: UserGroupEntity =
       await this.userGroupLinksService.createUserGroupLinkPosition(
         user.user_id,
         UserGroupTypeEnum.Customer,
       );
+
     //create a new record at ddv_user_profiles
     const newUserProfile = await this.userService.createUserProfile({
       user_id: user.user_id,
@@ -108,15 +122,13 @@ export class AuthService {
       b_lastname: lastname,
       b_phone: phone,
     });
+
     // Create a new record at ddv_user_data
     const newUserData = await this.userService.createUserData({
       user_id: user.user_id,
       type: '',
       data: '',
     });
-
-    // Create a new record to user mailing list db and send email
-    this.sendMailActivateSignUpAccount(user);
   }
 
   async login(data: any): Promise<IResponseUserToken> {
@@ -176,10 +188,12 @@ export class AuthService {
         object_type: ImageObjectType.USER,
       },
     });
+
     if (imageLinks) {
       const image = await this.imagesRepository.findById(imageLinks.image_id);
       return image;
     }
+
     return null;
   }
 
@@ -200,24 +214,28 @@ export class AuthService {
         email: providerData.email,
         created_at: convertToMySQLDateTime(),
       });
+
       // Create a new record at ddv_user_profiles
       const userProfile = await this.userProfileRepository.create({
         user_id: userExists.user_id,
         b_firstname: userExists.firstname,
         b_lastname: userExists.lastname,
       });
+
       //create a new record as customer position at ddv_usergroup_links
       const userGroupForCustomer =
         await this.userGroupLinksService.createUserGroupLinkPosition(
           userExists.user_id,
           UserGroupTypeEnum.Customer,
         );
+
       // Create a new record at ddv_user_data
       const newUserData = await this.userService.createUserData({
         user_id: userExists.user_id,
         type: '',
         data: '',
       });
+
       userExists = {
         ...userExists,
         ...userProfile,
@@ -337,6 +355,15 @@ export class AuthService {
     user_id: number,
     token: string,
   ): Promise<IResponseUserToken> {
+    //Firstly, check user status has been active or not
+    const checkUserHasBeenActive = await this.userRepository.findById(user_id);
+    if (checkUserHasBeenActive.status === UserStatusEnum.Active) {
+      throw new HttpException(
+        'Tài khoản đã được kích hoạt, bạn có thể đăng nhập.',
+        409,
+      );
+    }
+
     const checkMail: UserMailingListsEntity =
       await this.userMailingListRepository.findOne({
         subscriber_id: user_id,
@@ -345,67 +372,27 @@ export class AuthService {
 
     if (!checkMail) {
       throw new HttpException(
-        'Mã xác thực hoặc mã người dùng không đúng.',
+        'Mã xác thực hoặc người dùng không đúng.',
         HttpStatus.NOT_FOUND,
       );
     }
 
-    if (checkMail.status === UserMailingListsStatusEnum.Disabled) {
-      throw new HttpException('Mã xác thực email không còn hoạt động.', 409);
-    }
-
-    if (checkMail.confirmed !== 0) {
-      const checkUserHasBeenActive = await this.userRepository.findById(
-        user_id,
-      );
-      if (checkUserHasBeenActive.status === UserStatusEnum.Active) {
+    // check user has been activate email
+    // If user still not activate email, check mail expiration
+    if (checkMail.confirmed === 0) {
+      if (new Date(checkMail.expired_at).getTime() < new Date().getTime()) {
         throw new HttpException(
-          'Tài khoản đã được kích hoạt, bạn có thể đăng nhập.',
-          409,
+          'Mã xác thực đã hết hạn, vui lòng kích hoạt lại.',
+          408,
         );
-      } else {
-        // Update user to active status
-        // Update user
-        await this.userRepository.update(user_id, {
-          status: UserStatusEnum.Active,
-        });
-        // Update email
-        await this.userMailingListRepository.update(checkMail.list_id, {
-          confirmed: 1,
-          status: UserMailingListsStatusEnum.Disabled,
-        });
-        const user = await this.userService.findUserAllInfo({
-          [`${Table.USERS}.user_id`]: user_id,
-        });
-
-        if (user.usergroup_id) {
-          const menu =
-            await this.userGroupsPrivilegeService.getListByUserGroupId(
-              user.usergroup_id,
-            );
-
-          user['menu'] = menu;
-        }
-        return {
-          token: this.generateToken(user),
-          userData: preprocessUserResult(user),
-        };
       }
     }
 
-    if (new Date(checkMail.expired_at).getTime() < new Date().getTime()) {
-      await this.userMailingListRepository.delete({
-        list_id: checkMail.list_id,
-      });
-      throw new HttpException(
-        'Mã xác thực đã hết hạn, vui lòng kích hoạt lại.',
-        408,
-      );
-    }
     // Update user
     await this.userRepository.update(user_id, {
       status: UserStatusEnum.Active,
     });
+
     // Update email
     await this.userMailingListRepository.update(checkMail.list_id, {
       confirmed: 1,
@@ -423,6 +410,7 @@ export class AuthService {
 
       user['menu'] = menu;
     }
+
     return {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
@@ -430,7 +418,7 @@ export class AuthService {
   }
 
   async sendMailActivateSignUpAccount(user: UserEntity): Promise<void> {
-    // Create a record at ddv_user_mailings_list
+    // Create a record at ddv_user_mailings_list with 1 day expiration
     const newMailingList: UserMailingListsEntity =
       await this.userMailingListRepository.create({
         subscriber_id: user.user_id,
@@ -442,40 +430,40 @@ export class AuthService {
         ),
         created_at: convertToMySQLDateTime(),
       });
+
     // Send email
-    await this.mailService.sendUserActivateSignUpAccount(
-      user,
-      newMailingList.activation_key,
-    );
+    return new Promise(async (resolve, reject) => {
+      try {
+        await this.mailService.sendUserActivateSignUpAccount(
+          user,
+          newMailingList.activation_key,
+        );
+        resolve();
+      } catch (error) {
+        // Delete new mail if sending mail failed
+        await this.userMailingListRepository.delete(newMailingList.list_id);
+        reject(error);
+      }
+    });
   }
 
   async reactivateSignUpAccount(user_id: string): Promise<void> {
     const user = await this.userRepository.findById(user_id);
+
     if (!user) {
       throw new HttpException(
         'Người dùng không tồn tại.',
         HttpStatus.NOT_FOUND,
       );
     }
+
     if (user.status === UserStatusEnum.Active) {
       throw new HttpException(
         'Tài khoản đã hoạt động, bạn có thể đăng nhập.',
         409,
       );
     }
-    // find
-    const oldSignUpMailsList = await this.userMailingListRepository.find({
-      subscriber_id: user_id,
-      type: UserMailingListsTypeEnum.ActivateSignUpAccount,
-    });
-    // Disabled all old mail status
-    if (oldSignUpMailsList.length) {
-      for (let mailItem of oldSignUpMailsList) {
-        await this.userMailingListRepository.update(mailItem.list_id, {
-          status: UserMailingListsStatusEnum.Disabled,
-        });
-      }
-    }
+
     // create new mail
     await this.sendMailActivateSignUpAccount(user);
   }
