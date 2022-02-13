@@ -29,9 +29,6 @@ export class UpdateCategoryDto {
   is_op: string;
 
   @IsOptional()
-  is_display: string;
-
-  @IsOptional()
   localization: string;
 
   @IsOptional()

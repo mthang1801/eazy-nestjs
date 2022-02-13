@@ -43,5 +43,5 @@ export class ProductsEntity {
   parent_product_id: number = 0;
   buy_now_url: string = '';
   created_at: Date = new Date();
-  updated_at: Date = new Date();
+  display_at: Date = new Date();
 }

@@ -9,7 +9,6 @@ export class CategoryEntity {
   product_count: number = 0;
   position: number = 0;
   is_op: string = 'N';
-  is_display: string = 'Y';
   localization: string = '';
   age_verification: string = 'N';
   age_limit: number = 0;
