@@ -134,6 +134,10 @@ export class ProductFeatureService {
       where: { [`${Table.PRODUCT_FEATURES}.feature_id`]: id },
     });
 
+    if (!result) {
+      throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
+    }
+
     // If product feature has existed, find product variants from it
     if (result) {
       let productVariants = await this.productFeatureVariantsRepo.find({
@@ -192,14 +196,115 @@ export class ProductFeatureService {
         );
     }
 
-    return { ...updatedFeaturesData, ...productFeatureDescription };
+    let currentVariants = [];
+
+    let updatedFeatureVariants = [];
+
+    if (data.feature_variants && data.feature_variants.length) {
+      // Find all product feature variants by feature_id to get variant_id list
+      currentVariants = await this.productFeatureVariantsRepo.find({
+        select: ['variant_id'],
+        where: { feature_id: id },
+      });
+
+      // Convert array object type to array number
+      if (currentVariants.length) {
+        currentVariants = currentVariants.reduce(
+          (acc, ele) => [...acc, ele.variant_id],
+          [],
+        );
+      }
+
+      for (let featureVariant of data.feature_variants) {
+        const featureVariantData =
+          this.productFeatureVariantsRepo.setData(featureVariant);
+        const featureVariantDescriptionData =
+          this.productFeatureVariantDescriptionRepo.setData(featureVariant);
+
+        // If featureVariantData is not variant_id, we will add new record
+        if (!featureVariantData['variant_id']) {
+          console.log(219, featureVariantData);
+          const newFeatureVariant =
+            await this.productFeatureVariantsRepo.create({
+              feature_id: id,
+              ...featureVariantData,
+            });
+          const newFeatureVariantDescription =
+            await this.productFeatureVariantDescriptionRepo.create({
+              variant_id: newFeatureVariant.variant_id,
+              ...featureVariantDescriptionData,
+            });
+          updatedFeatureVariants.push({
+            ...newFeatureVariant,
+            ...newFeatureVariantDescription,
+          });
+          continue;
+        }
+
+        // If currentVariants array has contained featureVariantData, we will update. In contrary, we will delete record
+        if (currentVariants.includes(featureVariantData['variant_id'])) {
+          console.log(239, featureVariantData);
+          const updatedFeatureVariant =
+            await this.productFeatureVariantsRepo.update(
+              featureVariantData['variant_id'],
+              featureVariantData,
+            );
+          const updatedFeatureVariantDescription =
+            await this.productFeatureVariantDescriptionRepo.update(
+              featureVariantDescriptionData['variant_description_id'],
+              featureVariantDescriptionData,
+            );
+
+          updatedFeatureVariants.push({
+            ...updatedFeatureVariant,
+            ...updatedFeatureVariantDescription,
+          });
+          continue;
+        }
+      }
+    } else {
+      updatedFeatureVariants = await this.productFeatureVariantsRepo.find({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+              fieldJoin: 'variant_id',
+              rootJoin: 'variant_id',
+            },
+          },
+        },
+        where: {
+          [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]: id,
+        },
+      });
+    }
+
+    //  Delete each of record which is not on updated list feature product variant
+    for (let variantId of currentVariants) {
+      if (
+        !updatedFeatureVariants.some(
+          ({ variant_id }) => variantId === variant_id,
+        )
+      ) {
+        await this.productFeatureVariantsRepo.delete({ variant_id: variantId });
+        await this.productFeatureVariantDescriptionRepo.delete({
+          variant_id: variantId,
+        });
+      }
+    }
+
+    return {
+      ...updatedFeaturesData,
+      ...productFeatureDescription,
+      feature_variants: updatedFeatureVariants,
+    };
   }
 
   async delete(id: number): Promise<void> {
     // delete product feature
     let result = await this.productFeaturesRepo.delete(id);
     if (!result) {
-      throw new HttpException('Không tìm thấy dữ liệu để xoá', 404);
+      throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
     }
     // delete product feature description
     await this.productFeatureDescriptionRepo.delete({ feature_id: id });

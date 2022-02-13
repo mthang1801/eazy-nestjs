@@ -1,4 +1,5 @@
 import { IsOptional } from 'class-validator';
+import { IProductFeatureVariantsResponse } from '../../interfaces/productFeatureVariantsResponse.interface';
 
 export class UpdateProductFeatureDto {
   @IsOptional()
@@ -57,4 +58,7 @@ export class UpdateProductFeatureDto {
 
   @IsOptional()
   lang_code: string;
+
+  @IsOptional()
+  feature_variants: IProductFeatureVariantsResponse[];
 }
