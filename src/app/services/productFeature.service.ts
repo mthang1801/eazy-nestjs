@@ -223,7 +223,6 @@ export class ProductFeatureService {
 
         // If featureVariantData is not variant_id, we will add new record
         if (!featureVariantData['variant_id']) {
-          console.log(219, featureVariantData);
           const newFeatureVariant =
             await this.productFeatureVariantsRepo.create({
               feature_id: id,
@@ -243,7 +242,6 @@ export class ProductFeatureService {
 
         // If currentVariants array has contained featureVariantData, we will update. In contrary, we will delete record
         if (currentVariants.includes(featureVariantData['variant_id'])) {
-          console.log(239, featureVariantData);
           const updatedFeatureVariant =
             await this.productFeatureVariantsRepo.update(
               featureVariantData['variant_id'],

@@ -29,6 +29,9 @@ export class CreateCategoryDto {
   is_op: string = 'N';
 
   @IsOptional()
+  is_display: string = 'Y';
+
+  @IsOptional()
   localization: string = '';
 
   @IsOptional()
@@ -81,4 +84,7 @@ export class CreateCategoryDto {
 
   @IsOptional()
   age_warning_message: string = '';
+
+  @IsOptional()
+  display_at: Date = new Date();
 }

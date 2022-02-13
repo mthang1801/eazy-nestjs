@@ -22,21 +22,27 @@ export class CategoryService {
 
   async create(data: CreateCategoryDto): Promise<ICategoryResult> {
     const categoryData = this.categoryRepository.setData(data);
+
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
+        display_at: convertToMySQLDateTime(
+          categoryData['display_at']
+            ? new Date(categoryData['display_at'])
+            : new Date(),
+        ),
         created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
       });
+
     const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
+
     const createdCategoryDescription: CategoryDescriptionEntity =
       await this.categoryDescriptionRepo.create({
         category_id: createdCategory.category_id,
         ...categoryDescriptionData,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
       });
 
+    // Add category_id to product
     return { ...createdCategory, ...createdCategoryDescription };
   }
 
@@ -55,6 +61,12 @@ export class CategoryService {
 
     for (let [key, val] of Object.entries(data)) {
       if (this.categoryRepository.tableProps.includes(key)) {
+        if (key === 'display_at') {
+          updatedCategoryDataObject['display_at'] = convertToMySQLDateTime(
+            new Date(val),
+          );
+          continue;
+        }
         updatedCategoryDataObject[key] = val;
       }
     }
@@ -63,34 +75,43 @@ export class CategoryService {
       oldCategoryData.category_id,
       {
         ...updatedCategoryDataObject,
-        updated_at: convertToMySQLDateTime(),
       },
     );
 
     const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
     });
+
     if (!oldCategoryDescription) {
       throw new HttpException(
         `Không tìm thấy category description với id là ${id}`,
         HttpStatus.NOT_FOUND,
       );
     }
+
     let updatedCategoryDescriptionDataObject = {};
     for (let [key, val] of Object.entries(data)) {
       if (this.categoryDescriptionRepo.tableProps.includes(key)) {
         updatedCategoryDescriptionDataObject[key] = val;
       }
     }
-    const updatedCategoryDescription =
-      await this.categoryDescriptionRepo.update(
-        oldCategoryDescription.category_description_id,
-        {
-          ...updatedCategoryDescriptionDataObject,
-          updated_at: convertToMySQLDateTime(),
-        },
-      );
-    return { ...updatedCategoryData, ...updatedCategoryDescription };
+
+    if (Object.entries(updatedCategoryDescriptionDataObject).length) {
+      const updatedCategoryDescription =
+        await this.categoryDescriptionRepo.update(
+          oldCategoryDescription.category_description_id,
+          {
+            ...updatedCategoryDescriptionDataObject,
+          },
+        );
+      return { ...updatedCategoryData, ...updatedCategoryDescription };
+    }
+
+    const categoryDescription = await this.categoryDescriptionRepo.findOne({
+      category_id: id,
+    });
+
+    return { ...updatedCategoryData, ...categoryDescription };
   }
 
   async getList(params): Promise<ICategoryResult[]> {
@@ -121,6 +142,7 @@ export class CategoryService {
     });
 
     let categoryMenuList = [];
+
     for (let categoryMenuItem of categoryMenuRawList) {
       if (categoryMenuItem.level === 1) {
         const childrenCategories = await this.categoryRepository.find({
@@ -137,10 +159,12 @@ export class CategoryService {
             [`${Table.CATEGORIES}.parent_id`]: categoryMenuItem.category_id,
           },
         });
+
         categoryMenuList.push({
           ...categoryMenuItem,
           children: childrenCategories,
         });
+
         continue;
       }
       if (categoryMenuItem.level === 2) {
@@ -156,6 +180,7 @@ export class CategoryService {
         continue;
       }
     }
+
     return categoryMenuList;
   }
 
@@ -172,6 +197,7 @@ export class CategoryService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: id },
     });
+
     // If level 1, find all its children
     if (category.level === 1) {
       const children = await this.categoryRepository.find({
@@ -188,6 +214,7 @@ export class CategoryService {
       });
       category['children'] = children;
     }
+
     return category;
   }
 
@@ -195,7 +222,9 @@ export class CategoryService {
     const deleteStatus = await this.categoryRepository.delete({
       category_id: id,
     });
+
     await this.categoryDescriptionRepo.delete({ category_id: id });
+
     return deleteStatus;
   }
 }

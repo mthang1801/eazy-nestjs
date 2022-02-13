@@ -29,6 +29,9 @@ export class UpdateCategoryDto {
   is_op: string;
 
   @IsOptional()
+  is_display: string;
+
+  @IsOptional()
   localization: string;
 
   @IsOptional()
@@ -81,4 +84,7 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   age_warning_message: string;
+
+  @IsOptional()
+  display_at: Date;
 }

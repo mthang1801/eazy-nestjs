@@ -9,6 +9,7 @@ export interface ICategory {
   product_count: number;
   position: number;
   is_op: string;
+  is_display: string;
   localization: string;
   age_verification: string;
   age_limit: number;
@@ -21,5 +22,5 @@ export interface ICategory {
   is_trash: string;
   category_type: string;
   created_at: Date;
-  updated_at: Date;
+  display_at: Date;
 }
