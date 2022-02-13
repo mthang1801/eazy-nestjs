@@ -9,7 +9,6 @@ export interface ICategory {
   product_count: number;
   position: number;
   is_op: string;
-  is_display: string;
   localization: string;
   age_verification: string;
   age_limit: number;

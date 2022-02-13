@@ -29,9 +29,6 @@ export class CreateCategoryDto {
   is_op: string = 'N';
 
   @IsOptional()
-  is_display: string = 'Y';
-
-  @IsOptional()
   localization: string = '';
 
   @IsOptional()

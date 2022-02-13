@@ -42,14 +42,40 @@ export class CategoryService {
         ...categoryDescriptionData,
       });
 
-    // Add category_id to product
+    // Update product count from current category to root category
+    await this.updateCategoryProductCount(createdCategory);
+
+    // Add category_id to product, working with ddv_products_categories table
+
     return { ...createdCategory, ...createdCategoryDescription };
   }
 
-  async update(id: number, data: UpdateCategoryDto): Promise<ICategoryResult> {
-    const oldCategoryData = await this.categoryRepository.findOne({
-      category_id: id,
+  //Using recursion to update product count for category by parent_id
+  async updateCategoryProductCount(
+    currentCategory: CategoryEntity,
+    product_count: number = currentCategory.product_count,
+  ): Promise<void> {
+    if (currentCategory.level === 1) return;
+
+    const parentCategory: CategoryEntity =
+      await this.categoryRepository.findById(currentCategory.parent_id);
+
+    if (!parentCategory) return;
+
+    const parentProductCount = parentCategory.product_count + product_count;
+
+    await this.categoryRepository.update(parentCategory.category_id, {
+      product_count: parentProductCount,
     });
+
+    await this.updateCategoryProductCount(parentCategory, product_count);
+  }
+
+  async update(id: number, data: UpdateCategoryDto): Promise<ICategoryResult> {
+    const oldCategoryData: CategoryEntity =
+      await this.categoryRepository.findOne({
+        category_id: id,
+      });
 
     if (!oldCategoryData) {
       throw new HttpException(
@@ -110,6 +136,15 @@ export class CategoryService {
     const categoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
     });
+
+    const diffProductCount = data.product_count - oldCategoryData.product_count;
+    console.log(oldCategoryData, data.product_count, diffProductCount);
+    if (diffProductCount) {
+      await this.updateCategoryProductCount(
+        updatedCategoryData,
+        diffProductCount,
+      );
+    }
 
     return { ...updatedCategoryData, ...categoryDescription };
   }
