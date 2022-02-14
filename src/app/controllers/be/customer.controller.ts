@@ -31,6 +31,12 @@ export class CustomerController extends BaseController {
 
     return this.responseSuccess(res, result, `action return all customer`);
   }
+  @Get('/:id')
+  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
+    const result = await this.service.getById(id)
+
+    return this.responseSuccess(res, result, `action return all customer`);
+  }
   @Put('/:id')
   async update(@Res() res, @Param('id') id, @Body() body: UpdateCustomerDTO,): Promise<IResponse> {
     const result = await this.service.update(id, body)

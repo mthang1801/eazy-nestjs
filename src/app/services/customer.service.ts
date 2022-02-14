@@ -17,6 +17,11 @@ export class CustomerService {
         const users = await this.usersService.findUsersAllInfo({[`${Table.USERS}.user_type`]:'C'})
         return users
     }
+    async getById(id){
+        const users = await this.usersService.findUsersAllInfo({[`${Table.USERS}.user_type`]:'C'
+        ,[`${Table.USERS}.user_id`]:id})
+        return users
+    }
     async update(id,data:UpdateCustomerDTO){
         const users= await this.usersService.updateProfilebyAdmin(id,data);
         return users
