@@ -98,7 +98,6 @@ export class OrderStatusService{
       limit: 30,
     });
     const result = await Promise.all([orderData, orders]);
-    console.log(result[1], result[0]);
     return { ...result[1], data: result[0] };
   }
   async create(data: OrderStatusCreateDTO) {

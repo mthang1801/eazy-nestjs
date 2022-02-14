@@ -26,7 +26,7 @@ import { UserGroupLinksModule } from './usergroupLinks.module';
 import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
 import { OrdersModule } from './orders.module';
 import { ProductFeaturesModule } from './productFeatures.module';
-
+import { CustomerModule } from './customer.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,6 +52,7 @@ import { ProductFeaturesModule } from './productFeatures.module';
     ImageModule,
     ShippingModule,
     ProductFeaturesModule,
+    CustomerModule,
   ],
   providers: [
     {
