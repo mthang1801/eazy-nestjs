@@ -21,5 +21,5 @@ export interface ICategory {
   is_trash: string;
   category_type: string;
   created_at: Date;
-  updated_at: Date;
+  display_at: Date;
 }

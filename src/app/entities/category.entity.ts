@@ -21,5 +21,5 @@ export class CategoryEntity {
   is_trash: string = '';
   category_type: string = 'C';
   created_at: Date = new Date();
-  updated_at: Date = new Date();
+  display_at: Date = new Date();
 }

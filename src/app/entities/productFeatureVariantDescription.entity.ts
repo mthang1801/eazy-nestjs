@@ -1,4 +1,5 @@
 export class ProductFeatureVariantDescriptionEntity {
+  variant_description_id: number = 0;
   variant_id: number = 0;
   variant: string = '';
   description: string = '';

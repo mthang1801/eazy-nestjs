@@ -35,6 +35,11 @@ export class DatabaseModule implements OnApplicationShutdown {
     this.logger.log(`Shutting down on signal ${signal}`);
     const readPool = this.moduleRef.get(DatabasePool.READ_POOL) as Pool;
     const writePool = this.moduleRef.get(DatabasePool.WRITE_POOL) as Pool;
-    return readPool ? readPool.end() : writePool.end();
+    if (readPool) {
+      readPool.end();
+    }
+    if (writePool) {
+      writePool.end();
+    }
   }
 }
