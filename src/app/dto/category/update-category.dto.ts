@@ -81,4 +81,7 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   age_warning_message: string;
+
+  @IsOptional()
+  display_at: Date;
 }

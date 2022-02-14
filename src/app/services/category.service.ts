@@ -22,28 +22,60 @@ export class CategoryService {
 
   async create(data: CreateCategoryDto): Promise<ICategoryResult> {
     const categoryData = this.categoryRepository.setData(data);
+
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
+        display_at: convertToMySQLDateTime(
+          categoryData['display_at']
+            ? new Date(categoryData['display_at'])
+            : new Date(),
+        ),
         created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
       });
+
     const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
+
     const createdCategoryDescription: CategoryDescriptionEntity =
       await this.categoryDescriptionRepo.create({
         category_id: createdCategory.category_id,
         ...categoryDescriptionData,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
       });
+
+    // Update product count from current category to root category
+    await this.updateCategoryProductCount(createdCategory);
+
+    // Add category_id to product, working with ddv_products_categories table
 
     return { ...createdCategory, ...createdCategoryDescription };
   }
 
-  async update(id: number, data: UpdateCategoryDto): Promise<ICategoryResult> {
-    const oldCategoryData = await this.categoryRepository.findOne({
-      category_id: id,
+  //Using recursion to update product count for category by parent_id
+  async updateCategoryProductCount(
+    currentCategory: CategoryEntity,
+    product_count: number = currentCategory.product_count,
+  ): Promise<void> {
+    if (currentCategory.level === 1) return;
+
+    const parentCategory: CategoryEntity =
+      await this.categoryRepository.findById(currentCategory.parent_id);
+
+    if (!parentCategory) return;
+
+    const parentProductCount = parentCategory.product_count + product_count;
+
+    await this.categoryRepository.update(parentCategory.category_id, {
+      product_count: parentProductCount,
     });
+
+    await this.updateCategoryProductCount(parentCategory, product_count);
+  }
+
+  async update(id: number, data: UpdateCategoryDto): Promise<ICategoryResult> {
+    const oldCategoryData: CategoryEntity =
+      await this.categoryRepository.findOne({
+        category_id: id,
+      });
 
     if (!oldCategoryData) {
       throw new HttpException(
@@ -55,6 +87,12 @@ export class CategoryService {
 
     for (let [key, val] of Object.entries(data)) {
       if (this.categoryRepository.tableProps.includes(key)) {
+        if (key === 'display_at') {
+          updatedCategoryDataObject['display_at'] = convertToMySQLDateTime(
+            new Date(val),
+          );
+          continue;
+        }
         updatedCategoryDataObject[key] = val;
       }
     }
@@ -63,34 +101,52 @@ export class CategoryService {
       oldCategoryData.category_id,
       {
         ...updatedCategoryDataObject,
-        updated_at: convertToMySQLDateTime(),
       },
     );
 
     const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
     });
+
     if (!oldCategoryDescription) {
       throw new HttpException(
         `Không tìm thấy category description với id là ${id}`,
         HttpStatus.NOT_FOUND,
       );
     }
+
     let updatedCategoryDescriptionDataObject = {};
     for (let [key, val] of Object.entries(data)) {
       if (this.categoryDescriptionRepo.tableProps.includes(key)) {
         updatedCategoryDescriptionDataObject[key] = val;
       }
     }
-    const updatedCategoryDescription =
-      await this.categoryDescriptionRepo.update(
-        oldCategoryDescription.category_description_id,
-        {
-          ...updatedCategoryDescriptionDataObject,
-          updated_at: convertToMySQLDateTime(),
-        },
+
+    if (Object.entries(updatedCategoryDescriptionDataObject).length) {
+      const updatedCategoryDescription =
+        await this.categoryDescriptionRepo.update(
+          oldCategoryDescription.category_description_id,
+          {
+            ...updatedCategoryDescriptionDataObject,
+          },
+        );
+      return { ...updatedCategoryData, ...updatedCategoryDescription };
+    }
+
+    const categoryDescription = await this.categoryDescriptionRepo.findOne({
+      category_id: id,
+    });
+
+    const diffProductCount = data.product_count - oldCategoryData.product_count;
+    console.log(oldCategoryData, data.product_count, diffProductCount);
+    if (diffProductCount) {
+      await this.updateCategoryProductCount(
+        updatedCategoryData,
+        diffProductCount,
       );
-    return { ...updatedCategoryData, ...updatedCategoryDescription };
+    }
+
+    return { ...updatedCategoryData, ...categoryDescription };
   }
 
   async getList(params): Promise<ICategoryResult[]> {
@@ -121,6 +177,7 @@ export class CategoryService {
     });
 
     let categoryMenuList = [];
+
     for (let categoryMenuItem of categoryMenuRawList) {
       if (categoryMenuItem.level === 1) {
         const childrenCategories = await this.categoryRepository.find({
@@ -137,10 +194,12 @@ export class CategoryService {
             [`${Table.CATEGORIES}.parent_id`]: categoryMenuItem.category_id,
           },
         });
+
         categoryMenuList.push({
           ...categoryMenuItem,
           children: childrenCategories,
         });
+
         continue;
       }
       if (categoryMenuItem.level === 2) {
@@ -156,6 +215,7 @@ export class CategoryService {
         continue;
       }
     }
+
     return categoryMenuList;
   }
 
@@ -172,6 +232,7 @@ export class CategoryService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: id },
     });
+
     // If level 1, find all its children
     if (category.level === 1) {
       const children = await this.categoryRepository.find({
@@ -188,6 +249,7 @@ export class CategoryService {
       });
       category['children'] = children;
     }
+
     return category;
   }
 
@@ -195,7 +257,9 @@ export class CategoryService {
     const deleteStatus = await this.categoryRepository.delete({
       category_id: id,
     });
+
     await this.categoryDescriptionRepo.delete({ category_id: id });
+
     return deleteStatus;
   }
 }

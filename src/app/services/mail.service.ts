@@ -44,17 +44,24 @@ export class MailService {
   async sendUserActivateSignUpAccount(
     user: UserEntity,
     token: string,
-  ): Promise<void> {
-    const url = `https://ddvwsdev.ntlogistics.vn/active?user_id=${user.user_id}&token=${token}`;
+  ): Promise<boolean> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const url = `https://ddvwsdev.ntlogistics.vn/active?user_id=${user.user_id}&token=${token}`;
 
-    await this.mailerService.sendMail({
-      to: user.email,
-      subject: 'Di Động Việt [Kích hoạt tài khoản]',
-      template: 'activateSignUpAccount',
-      context: {
-        name: user.firstname + ' ' + user.lastname,
-        url,
-      },
+        await this.mailerService.sendMail({
+          to: user.email,
+          subject: 'Di Động Việt [Kích hoạt tài khoản]',
+          template: 'activateSignUpAccount',
+          context: {
+            name: user.firstname + ' ' + user.lastname,
+            url,
+          },
+        });
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 

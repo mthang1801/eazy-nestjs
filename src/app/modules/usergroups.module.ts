@@ -4,8 +4,8 @@ import { UserGroupsService } from '../services/usergroups.service';
 import { UsergroupsController } from '../controllers/be/usergroups.controller';
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
-import { UserGroupPrivilegeModule } from './usergroup_privilege.module';
-import { UserGroupLinksModule } from './usergroup_links.module';
+import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
+import { UserGroupLinksModule } from './usergroupLinks.module';
 
 @Module({
   imports: [UserGroupPrivilegeModule, UserGroupLinksModule],

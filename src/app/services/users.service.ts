@@ -34,6 +34,7 @@ import { UserDataRepository } from '../repositories/userData.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserProfileEntity } from '../entities/userProfile.entity';
+import { LimitOnUpdateNotSupportedError } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -99,7 +100,7 @@ export class UsersService {
   }
 
   async findUserAllInfo(condition: any): Promise<any> {
-    return this.findOne({
+    const users =  this.findOne({
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -125,10 +126,44 @@ export class UsersService {
           },
         },
       },
+
       where: { ...condition },
     });
+    return preprocessUserResult(users);
   }
-
+  async findUsersAllInfo(condition: any,limit=30): Promise<any> {
+    
+    const users= await  this.userRepository.find({
+      select: ['*', `${Table.USERS}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_LINKS]: {
+            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.USER_GROUPS]: {
+            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+          },
+          [Table.USER_PROFILES]: {
+            fieldJoin: `${Table.USER_PROFILES}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_DATA]: {
+            fieldJoin: `${Table.USER_DATA}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+        },
+      },
+      limit:limit,
+      where: { ...condition },
+    });
+    return preprocessUserResult(users);
+  }
   async getUserImage(user_id: number): Promise<ImagesEntity> {
     const imageLinks = await this.imageLinksRepository.findOne({
       object_id: user_id,
@@ -278,5 +313,17 @@ export class UsersService {
     );
     updatedProfile['image'] = await this.getUserImage(updatedProfile.user_id);
     return updatedProfile;
+  }
+  async updateProfilebyAdmin(id,data){
+    const user = {
+      ...this.userRepository.setData(data),
+    };
+    let _user = await this.userRepository.update(id,user);
+    const userProfile = {
+      ...this.userProfileRepository.setData(data),
+
+    }
+    const _userProfile = await this.userProfileRepository.update(id,userProfile);
+    return user;
   }
 }
