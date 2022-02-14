@@ -5,30 +5,37 @@ export enum Table {
   USER_PROFILES = 'ddv_user_profiles',
   USER_MAILING_LISTS = 'ddv_user_mailing_lists',
   USER_DATA = 'ddv_user_data',
+
   //============== User group ==============
   USER_GROUPS = 'ddv_usergroups',
   USER_GROUP_PRIVILEGES = 'ddv_usergroup_privileges',
   USER_GROUP_DESCRIPTIONS = 'ddv_usergroup_descriptions',
   USER_GROUP_LINKS = 'ddv_usergroup_links',
+
   //============== Category ==============
   CATEGORIES = 'ddv_categories',
   CATEGORY_DESCRIPTIONS = 'ddv_category_descriptions',
   CATEGORY_VENDOR_PRODUCT_COUNT = 'ddv_category_vendor_product_count',
+
   //============== Banner ==============
   BANNER = 'ddv_banners',
   BANNER_IMAGE = 'ddv_banner_images',
   BANNER_DESCRIPTIONS = 'ddv_banner_descriptions',
+
   //============== Image ==============
   IMAGE = 'ddv_images',
   IMAGE_LINK = 'ddv_images_links',
+
   //============== Payment ==============
   PAYMENT_DESCRIPTION = 'ddv_payment_descriptions',
   PAYMENT = 'ddv_payments',
+
   //============== Shipping ==============
   SHIPPINGS = 'ddv_shippings',
   SHIPPINGS_DESCRIPTION = 'ddv_shipping_descriptions',
   SHIPPING_SERVICE = 'ddv_shipping_services',
   SHIPPING_SERVICE_DESCRIPTION = 'ddv_shipping_service_descriptions',
+
   //============== Products ==============
   PRODUCTS_CATEGORIES = 'ddv_products_categories',
   PRODUCTS = 'ddv_products',
@@ -37,10 +44,19 @@ export enum Table {
   PRODUCT_FEATURE_DESCRIPTIONS = 'ddv_product_features_descriptions',
   PRODUCT_FEATURES_VARIANTS = 'ddv_product_feature_variants',
   PRODUCT_FEATURES_VARIANT_DESCRIPTIONS = 'ddv_product_feature_variant_descriptions',
+  PRODUCT_FEATURE_VALUES = 'ddv_product_features_values',
+  PRODUCT_POINT_PRICES = 'ddv_product_point_prices',
+  PRODUCT_OPTIONS = 'ddv_product_options',
+  PRODUCT_OPTIONS_DESCRIPTIONS = 'ddv_product_options_descriptions',
+  PRODUCT_OPTIONS_INVENTORY = 'ddv_product_options_inventory',
+  PRODUCT_OPTIONS_VARIANTS = 'ddv_product_option_variants',
+  PRODUCT_OPTIONS_VARIANT_DESCRIPTIONS = 'ddv_product_option_variants_descriptions',
+
   //============== Order status ==============
   ORDER_STATUS = 'ddv_statuses',
   ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',
   ORDER_STATUS_DATA = 'ddv_status_data',
+
   //============== Order ==============
   ORDERS = 'ddv_orders',
   ORDER_DOCS = 'ddv_order_docs',
