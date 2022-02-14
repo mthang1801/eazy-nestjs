@@ -22,10 +22,7 @@ import { saltHashPassword } from '../../utils/cipherHelper';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UserProfileDto } from '../dto/user/update-userProfile.dto';
-import {
-
-  ImagesRepository,
-} from '../repositories/image.repository';
+import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
@@ -100,8 +97,24 @@ export class UsersService {
   }
 
   async findUserAllInfo(condition: any): Promise<any> {
-    const users =  this.findOne({
-      select: ['*', `${Table.USERS}.*`],
+    const users = this.findOne({
+      select: [
+        `${Table.USERS}.user_id`,
+        `${Table.USERS}.status`,
+        'user_type',
+        'last_login',
+        'firstname',
+        'lastname',
+        'password',
+        'salt',
+        'email',
+        'phone',
+        'birthday',
+        'last_passwords',
+        'password_change_timestamp',
+        `${Table.USER_GROUP_LINKS}.usergroup_id`,
+        'usergroup',
+      ],
       join: {
         [JoinTable.leftJoin]: {
           [Table.USER_GROUP_LINKS]: {
@@ -115,10 +128,6 @@ export class UsersService {
           [Table.USER_GROUPS]: {
             fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
             rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
           },
           [Table.USER_DATA]: {
             fieldJoin: `${Table.USER_DATA}.user_id`,
@@ -129,11 +138,11 @@ export class UsersService {
 
       where: { ...condition },
     });
-    return preprocessUserResult(users);
+    return users;
   }
-  async findUsersAllInfo(condition: any,limit=30): Promise<any> {
-    
-    const users= await  this.userRepository.find({
+
+  async findUsersAllInfo(condition: any, limit = 30): Promise<any> {
+    const users = await this.userRepository.find({
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -159,7 +168,7 @@ export class UsersService {
           },
         },
       },
-      limit:limit,
+      limit: limit,
       where: { ...condition },
     });
     return preprocessUserResult(users);
@@ -314,16 +323,18 @@ export class UsersService {
     updatedProfile['image'] = await this.getUserImage(updatedProfile.user_id);
     return updatedProfile;
   }
-  async updateProfilebyAdmin(id,data){
+  async updateProfilebyAdmin(id, data) {
     const user = {
       ...this.userRepository.setData(data),
     };
-    let _user = await this.userRepository.update(id,user);
+    let _user = await this.userRepository.update(id, user);
     const userProfile = {
       ...this.userProfileRepository.setData(data),
-
-    }
-    const _userProfile = await this.userProfileRepository.update(id,userProfile);
+    };
+    const _userProfile = await this.userProfileRepository.update(
+      id,
+      userProfile,
+    );
     return user;
   }
 }

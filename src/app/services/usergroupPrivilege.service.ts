@@ -44,7 +44,10 @@ export class UserGroupsPrivilegeService {
     let menu = [];
     for (let userGroupPrivilegeItem of userGroupPrivilegeRawListSortByLevel) {
       if (userGroupPrivilegeItem.level === 1) {
-        menu.push({ ...userGroupPrivilegeItem, children: [] });
+        menu.push({
+          ...this.getUserGroupPrivilegeShorten(userGroupPrivilegeItem),
+          children: [],
+        });
         continue;
       }
       if (userGroupPrivilegeItem.level === 2) {
@@ -53,7 +56,9 @@ export class UserGroupsPrivilegeService {
             menuItem.level === 1 &&
             menuItem.privilege_id === userGroupPrivilegeItem.parent_id
           ) {
-            menuItem.children.push(userGroupPrivilegeItem);
+            menuItem.children.push(
+              this.getUserGroupPrivilegeShorten(userGroupPrivilegeItem),
+            );
           }
           return menuItem;
         });
@@ -61,6 +66,17 @@ export class UserGroupsPrivilegeService {
     }
 
     return menu;
+  }
+
+  getUserGroupPrivilegeShorten(userGroupPrivilege: UserGroupPrivilegeEntity) {
+    if (!userGroupPrivilege) {
+      return;
+    }
+    return {
+      description: userGroupPrivilege.description,
+      route: userGroupPrivilege.route,
+      icon: userGroupPrivilege.icon,
+    };
   }
 
   async getList(params): Promise<IUserGroupPrivilege[]> {

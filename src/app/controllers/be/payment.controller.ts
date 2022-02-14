@@ -21,7 +21,7 @@ import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
  * Controller for Category
  * @Author TrinhLong
  */
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @Controller('/be/v1/payment')
 export class PaymentController extends BaseController {
   constructor(private service: PaymentService) {

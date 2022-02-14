@@ -26,7 +26,7 @@ export class UsersController extends BaseController {
    * @param res
    * @returns
    */
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   @Put()
   async update(
     @Body() userUpdateDto: UserUpdateDto,
@@ -46,7 +46,7 @@ export class UsersController extends BaseController {
    * @returns
    */
   @Get()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getInfo(@Req() req, @Res() res): Promise<IResponse> {
     const user = await this.service.getInfo(req.user.user_id);
     return this.responseSuccess(res, user);
@@ -59,7 +59,7 @@ export class UsersController extends BaseController {
   }
 
   @Put('/update-user-profile')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async updateUserProfile(
     @Body() userProfileDto: UserProfileDto,
     @Req() req,

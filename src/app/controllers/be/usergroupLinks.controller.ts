@@ -28,7 +28,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Get()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const userGroupLinksRes = await this.service.getList(params);
     return this.responseSuccess(res, userGroupLinksRes);
@@ -42,7 +42,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Get(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getListUsersByUserGroupId(
     @Param('id') id: number,
     @Query() query,
@@ -63,7 +63,7 @@ export class UserGroupLinksController extends BaseController {
    * @returns
    */
   @Put(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async updateByUserId(
     @Param('id') id,
     @Body() data: UpdateUserGroupLinkDto,

@@ -18,22 +18,25 @@ import { AuthGuard } from '../../../middlewares/be.auth';
 import { OrderStatusCreateDTO } from 'src/app/dto/orderStatus/create-orderStatus.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
 
-@UseGuards(AuthGuard)
 @Controller('/be/v1/order-status')
 export class OrderStatusController extends BaseController {
   constructor(private service: OrderStatusService) {
     super();
   }
+
   @Get()
+  //@UseGuards(AuthGuard)
   async getList(@Res() res, @Param() params): Promise<IResponse> {
     const order = await this.service.getList(params);
     return this.responseSuccess(res, order);
   }
+
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const order = await this.service.getById(id);
     return this.responseSuccess(res, order);
   }
+
   @Post()
   async create(
     @Res() res,
@@ -42,6 +45,7 @@ export class OrderStatusController extends BaseController {
     const order = await this.service.create(body);
     return this.responseSuccess(res, order);
   }
+
   @Put('/:id')
   @UsePipes(ValidationPipe)
   async UpdateOrderStatus(

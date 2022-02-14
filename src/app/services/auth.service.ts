@@ -99,7 +99,6 @@ export class AuthService {
     });
 
     // After creating a new record, we need sent an email to activate
-    console.log(99, user);
 
     try {
       await this.sendMailService(user);
@@ -175,11 +174,11 @@ export class AuthService {
       user.usergroup_id,
     );
 
-    user['menu'] = menu;
-
     const dataResult = {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
+      permission: `UID_PERMISION_${user.user_id}`,
+      menu,
     };
 
     return dataResult;
@@ -305,8 +304,6 @@ export class AuthService {
       userExists.usergroup_id,
     );
 
-    userExists['menu'] = menu;
-
     //Update current provider at ddv_users
     await this.userService.update(userExists.user_id, {
       user_login: providerName,
@@ -320,6 +317,8 @@ export class AuthService {
     return {
       token: this.generateToken(userData),
       userData,
+      permission: `UID_PERMISION_${userData.user_id}`,
+      menu,
     };
   }
 
@@ -347,52 +346,6 @@ export class AuthService {
     }
 
     await this.sendMailService(user, UserMailingListsTypeEnum.ResetPassword);
-  }
-
-  async restorePasswordEmail(
-    data: AuthRestoreDto,
-  ): Promise<IResponseUserToken> {
-    const { user_id, token, password } = data;
-
-    const user = await this.userRepository.findById(user_id);
-    if (!user) {
-      throw new HttpException(
-        'Người dùng không tồn tại.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    const checkMailingList = await this.userMailingListRepository.findOne({
-      subscriber_id: user_id,
-      activation_key: token,
-    });
-
-    if (!checkMailingList) {
-      throw new HttpException(
-        'Mã kích hoạt hoặc người dùng không đúng.',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    if (checkMailingList.confirmed !== 0) {
-      throw new HttpException('Mã kích hoạt đã được sử dụng.', 409);
-    }
-
-    // update email
-    await this.userMailingListRepository.update(checkMailingList.list_id, {
-      confirmed: 1,
-    });
-
-    // update user
-    const { passwordHash, salt } = saltHashPassword(password);
-
-    const updatedUser = await this.userRepository.update(user_id, {
-      password: passwordHash,
-      salt,
-    });
-
-    const userLogin = { email: updatedUser.email, password };
-    return this.login(userLogin);
   }
 
   async activeSignUpAccount(
@@ -446,19 +399,65 @@ export class AuthService {
     const user = await this.userService.findUserAllInfo({
       [`${Table.USERS}.user_id`]: user_id,
     });
-
+    let menu;
     if (user.usergroup_id) {
-      const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
+      menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
         user.usergroup_id,
       );
-
-      user['menu'] = menu;
     }
 
     return {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
+      permission: `UID_PERMISION_${user.user_id}`,
+      menu,
     };
+  }
+
+  async restorePasswordEmail(
+    data: AuthRestoreDto,
+  ): Promise<IResponseUserToken> {
+    const { user_id, token, password } = data;
+
+    const user = await this.userRepository.findById(user_id);
+    if (!user) {
+      throw new HttpException(
+        'Người dùng không tồn tại.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const checkMailingList = await this.userMailingListRepository.findOne({
+      subscriber_id: user_id,
+      activation_key: token,
+    });
+
+    if (!checkMailingList) {
+      throw new HttpException(
+        'Mã kích hoạt hoặc người dùng không đúng.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (checkMailingList.confirmed !== 0) {
+      throw new HttpException('Mã kích hoạt đã được sử dụng.', 409);
+    }
+
+    // update email
+    await this.userMailingListRepository.update(checkMailingList.list_id, {
+      confirmed: 1,
+    });
+
+    // update user
+    const { passwordHash, salt } = saltHashPassword(password);
+
+    const updatedUser = await this.userRepository.update(user_id, {
+      password: passwordHash,
+      salt,
+    });
+
+    const userLogin = { email: updatedUser.email, password };
+    return this.login(userLogin);
   }
 
   async sendMailService(

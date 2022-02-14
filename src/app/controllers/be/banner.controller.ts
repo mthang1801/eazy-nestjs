@@ -50,18 +50,15 @@ export class bannerController extends BaseController {
 
   @Post()
   @UsePipes(ValidationPipe)
-  @UseGuards(AuthGuard)
-  async create(
-    @Res() res,
-    @Body() body: bannerCreateDTO,
-  ): Promise<IResponse> {
+  //@UseGuards(AuthGuard)
+  async create(@Res() res, @Body() body: bannerCreateDTO): Promise<IResponse> {
     const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
   }
 
   @Put('/:id')
   @UsePipes(ValidationPipe)
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
     @Body() body: updateBannerDTO,
@@ -72,7 +69,7 @@ export class bannerController extends BaseController {
   }
 
   @Delete('/:banner_id/images/:images_id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async deleteBannerById(
     @Res() res,
     @Param('banner_id') banner_id,
@@ -83,7 +80,7 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, banner);
   }
   @Put('/:banner_id/images/:images_id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async updateBannerById(
     @Res() res,
     @Param('banner_id') banner_id,
@@ -101,7 +98,7 @@ export class bannerController extends BaseController {
 
   @Post('/:id/createimages')
   @UsePipes(ValidationPipe)
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async createBannerImage(
     @Res() res,
     @Body() body: createBannerImageDTO,

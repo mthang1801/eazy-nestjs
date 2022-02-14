@@ -29,7 +29,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Post()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserGroupPrivilegeDto,
     @Res() res: Response,
@@ -44,7 +44,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Get(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getListByUserGroupId(
     @Param('id') id: number,
     @Res() res: Response,
@@ -60,7 +60,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Get()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const listDataRes = await this.service.getList(params);
     return this.responseSuccess(res, listDataRes);
@@ -74,7 +74,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Put(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async update(
     @Body() data: UpdateUserGroupPrivilegeDto,
     @Param('id') id: number,
@@ -91,7 +91,7 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,

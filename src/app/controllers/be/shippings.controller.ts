@@ -19,7 +19,7 @@ import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
 import { UpdateCreateDTO } from 'src/app/dto/shipping/update-shipping.dto';
 import { identity } from 'rxjs';
-@UseGuards(AuthGuard)
+//@UseGuards(AuthGuard)
 @Controller('/be/v1/shippings')
 export class ShippingController extends BaseController {
   constructor(private service: ShippingService) {
@@ -50,7 +50,7 @@ export class ShippingController extends BaseController {
     @Body() body: UpdateCreateDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const result = await this.service.update(id,body);
+    const result = await this.service.update(id, body);
     return this.responseSuccess(res, result);
   }
 }

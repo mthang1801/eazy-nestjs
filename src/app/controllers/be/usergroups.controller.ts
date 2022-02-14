@@ -36,7 +36,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Post()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserGroupsDto,
     @Res() res: Response,
@@ -52,7 +52,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Get()
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
@@ -65,7 +65,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Get(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async getByUserGroupId(
     @Param('id') id: number,
     @Res() res: Response,
@@ -82,7 +82,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Put(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() data: UpdateUserGroupsDto,
@@ -99,7 +99,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Delete(':id')
-  @UseGuards(AuthGuard)
+  //@UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,

@@ -1,4 +1,5 @@
 import { IUser } from './users.interface';
+import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
 
 export interface IResponse {
   statusCode?: number;
@@ -9,4 +10,6 @@ export interface IResponse {
 export interface IResponseUserToken {
   token: string;
   userData: IUser;
+  permission: string;
+  menu: UserGroupPrivilegeEntity[];
 }
