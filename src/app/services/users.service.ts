@@ -315,4 +315,16 @@ export class UsersService {
     updatedProfile['image'] = await this.getUserImage(updatedProfile.user_id);
     return updatedProfile;
   }
+  async updateProfilebyAdmin(id,data){
+    const user = {
+      ...this.userRepository.setData(data),
+    };
+    let _user = await this.userRepository.update(id,user);
+    const userProfile = {
+      ...this.userProfileRepository.setData(data),
+
+    }
+    const _userProfile = await this.userProfileRepository.update(id,userProfile);
+    return user;
+  }
 }

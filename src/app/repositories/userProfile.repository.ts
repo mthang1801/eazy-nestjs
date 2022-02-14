@@ -3,6 +3,7 @@ import { DatabaseService } from '../../database/database.service';
 import { BaseRepositorty } from '../../base/base.repository';
 
 import { Table } from '../../database/enums/index';
+import { UserProfileEntity } from '../entities/userProfile.entity';
 @Injectable()
 export class UserProfileRepository<
   UserProfileEntity,
@@ -10,5 +11,7 @@ export class UserProfileRepository<
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.USER_PROFILES;
+    this.tableProps = Object.getOwnPropertyNames(new UserProfileEntity());
+
   }
 }
