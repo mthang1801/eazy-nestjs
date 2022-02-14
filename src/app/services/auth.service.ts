@@ -45,6 +45,7 @@ import {
 import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
 import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
 import { IImage } from '../interfaces/image.interface';
+import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 
 @Injectable()
 export class AuthService {
@@ -116,7 +117,7 @@ export class AuthService {
     });
 
     // Create a new record to user mailing list db and send email
-    this.sendMailActivateSignUpAccount(user);
+    this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
   }
 
   async login(data: any): Promise<IResponseUserToken> {
@@ -313,24 +314,59 @@ export class AuthService {
     );
   }
 
-  async resetPasswordByEmail(url: string, email: string): Promise<boolean> {
-    await this.userService.resetPasswordByEmail(url, email);
-    return true;
+  async resetPasswordByEmail(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ email });
+    if (!user) {
+      throw new HttpException('Email không tồn tại.', 404);
+    }
+
+    await this.sendMailService(user, UserMailingListsTypeEnum.ResetPassword);
   }
-  async restorePasswordByEmail(
-    user_id: string,
-    token: string,
-  ): Promise<UserEntity> {
-    const user = await this.userService.restorePasswordByEmail(user_id, token);
-    return user;
-  }
-  async updatePasswordByEmail(
-    user_id: number,
-    token: string,
-    password: string,
-  ): Promise<boolean> {
-    await this.userService.updatePasswordByEmail(user_id, token, password);
-    return true;
+
+  async restorePasswordEmail(
+    data: AuthRestoreDto,
+  ): Promise<IResponseUserToken> {
+    const { user_id, token, password } = data;
+
+    const user = await this.userRepository.findById(user_id);
+    if (!user) {
+      throw new HttpException(
+        'Người dùng không tồn tại.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const checkMailingList = await this.userMailingListRepository.findOne({
+      subscriber_id: user_id,
+      activation_key: token,
+    });
+
+    if (!checkMailingList) {
+      throw new HttpException(
+        'Mã kích hoạt hoặc người dùng không đúng.',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (checkMailingList.confirmed !== 0) {
+      throw new HttpException('Mã kích hoạt đã được sử dụng.', 409);
+    }
+
+    // update email
+    await this.userMailingListRepository.update(checkMailingList.list_id, {
+      confirmed: 1,
+    });
+
+    // update user
+    const { passwordHash, salt } = saltHashPassword(password);
+
+    const updatedUser = await this.userRepository.update(user_id, {
+      password: passwordHash,
+      salt,
+    });
+
+    const userLogin = { email: updatedUser.email, password };
+    return this.login(userLogin);
   }
 
   async activeSignUpAccount(
@@ -429,24 +465,39 @@ export class AuthService {
     };
   }
 
-  async sendMailActivateSignUpAccount(user: UserEntity): Promise<void> {
+  async sendMailService(
+    user: UserEntity,
+    type: string = UserMailingListsTypeEnum.ActivateSignUpAccount,
+  ): Promise<void> {
     // Create a record at ddv_user_mailings_list
     const newMailingList: UserMailingListsEntity =
       await this.userMailingListRepository.create({
         subscriber_id: user.user_id,
         activation_key: uuid().replace(/-/g, ''),
         confirmed: 0,
-        type: UserMailingListsTypeEnum.ActivateSignUpAccount,
+        type,
         expired_at: convertToMySQLDateTime(
           new Date(Date.now() + 24 * 3600 * 1000),
         ),
         created_at: convertToMySQLDateTime(),
       });
-    // Send email
-    await this.mailService.sendUserActivateSignUpAccount(
-      user,
-      newMailingList.activation_key,
-    );
+
+    switch (type) {
+      case UserMailingListsTypeEnum.ActivateSignUpAccount: {
+        await this.mailService.sendUserActivateSignUpAccount(
+          user,
+          newMailingList.activation_key,
+        );
+        break;
+      }
+      case UserMailingListsTypeEnum.ResetPassword: {
+        await this.mailService.sendMailResetPassword(
+          user,
+          newMailingList.activation_key,
+        );
+        break;
+      }
+    }
   }
 
   async reactivateSignUpAccount(user_id: string): Promise<void> {
@@ -477,6 +528,9 @@ export class AuthService {
       }
     }
     // create new mail
-    await this.sendMailActivateSignUpAccount(user);
+    await this.sendMailService(
+      user,
+      UserMailingListsTypeEnum.ActivateSignUpAccount,
+    );
   }
 }

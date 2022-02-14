@@ -8,6 +8,7 @@ export class ProductsEntity {
   list_price: number = 0;
   amount: number = 0;
   weight: number = 0;
+  weight_type: string = 'A';
   length: number = 0;
   width: number = 0;
   height: number = 0;

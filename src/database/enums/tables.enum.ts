@@ -51,6 +51,11 @@ export enum Table {
   PRODUCT_OPTIONS_INVENTORY = 'ddv_product_options_inventory',
   PRODUCT_OPTIONS_VARIANTS = 'ddv_product_option_variants',
   PRODUCT_OPTIONS_VARIANT_DESCRIPTIONS = 'ddv_product_option_variants_descriptions',
+  PRODUCT_PRICES = 'ddv_product_prices',
+  PRODUCT_SALES = 'ddv_product_sales',
+  PRODUCT_VARIATION_GROUPS = 'ddv_product_variation_groups',
+  PRODUCT_VARIATION_GROUP_PRODUCTS = 'ddv_product_variation_group_products',
+  PRODUCT_VARIATION_GROUP_FEATURES = 'ddv_product_variation_group_features',
 
   //============== Order status ==============
   ORDER_STATUS = 'ddv_statuses',

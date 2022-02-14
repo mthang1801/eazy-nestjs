@@ -51,6 +51,10 @@ export enum PrimaryKeys {
   ddv_product_options_inventory = 'product_inventory_id',
   ddv_product_option_variants = 'option_variant_id',
   ddv_product_option_variants_descriptions = 'option_variant_description_id',
+  ddv_product_prices = 'product_price_id',
+  ddv_product_sales = 'product_sale_id',
+  ddv_product_variation_group_products = 'group_products_id',
+  ddv_product_variation_group_features = 'group_feature_id',
 
   //============== Order status ==============
   ddv_statuses = 'status_id',

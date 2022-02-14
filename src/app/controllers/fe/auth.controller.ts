@@ -18,6 +18,7 @@ import { AuthLoginProviderDto } from '../../dto/auth/auth-login-provider.dto';
 import { LoginDto } from '../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../base/base.controllers';
 import { Response } from 'express';
+import { AuthRestoreDto } from '../../dto/auth/auth-restore.dto';
 /**
  * Authentication controller
  * @Describe Using 3 authenticate types : Local, Google, Facebook
@@ -109,50 +110,23 @@ export class AuthController extends BaseController {
    */
   @Post('reset-password-by-email')
   async resetPasswordByEmail(@Req() req, @Res() res): Promise<IResponse> {
-    const fullUrl = req.protocol + '://' + req.get('host');
     const { email } = req.body;
 
-    await this.service.resetPasswordByEmail(fullUrl, email);
+    await this.service.resetPasswordByEmail(email);
     return this.responseSuccess(
       res,
       null,
-      `request to reset password success, please visit to email to activate new password`,
+      `Yêu cầu reset password thành công, vui lòng kiểm tra email để kích hoạt lại tài khoản.`,
     );
   }
 
-  /**
-   * User visit to his / her email, then click verify link which server send before. At this time, server will check query URL including token and user_id and token_exp.
-   * If everything is ok, server will render new password form in order to user enable to fill in it
-   * If everything is bad, server will raise error immediately
-   * @param req
-   * @param res
-   */
-  @Get('forgot-password')
-  async restorePasswordByEmail(@Req() req, @Res() res): Promise<void> {
-    const { token, user_id } = req.query;
-    await this.service.restorePasswordByEmail(user_id, token);
-    res.render('forgot-password-form');
-  }
-
-  /**
-   * @Describe When user submit password form, server will received user_id, token and password
-   * Next, server will find user by user_id, token
-   * If finding user, server will compare now time with verify_token_expiration
-   * Server will perform update new password, remove verify token
-   * @param authRestoreDto {user_id : number; token : string; password : stringh}
-   * @param res
-   * @returns
-   */
-  @Put('update-password-by-email')
-  async updatePasswordByEmail(
-    @Body() authRestoreDto: AuthUpdatePasswordDto,
-    @Res() res,
+  @Post('restore-password')
+  async restorePassword(
+    @Body() data: AuthRestoreDto,
+    @Res() res: Response,
   ): Promise<IResponse> {
-    const { user_id, token, password } = authRestoreDto;
-
-    await this.service.updatePasswordByEmail(user_id, token, password);
-
-    return this.responseSuccess(res, null, `updated`);
+    const result = await this.service.restorePasswordEmail(data);
+    return this.responseSuccess(res, result, 'Khôi phục mật khẩu thành công');
   }
 
   @Get('active')

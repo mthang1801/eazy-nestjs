@@ -25,6 +25,7 @@ import { ShippingModule } from './shippings.module';
 import { UserGroupLinksModule } from './usergroup_links.module';
 import { UserGroupPrivilegeModule } from './usergroup_privilege.module';
 import { OrdersModule } from './orders.module';
+import { ProductsModule } from './products.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { OrdersModule } from './orders.module';
     PaymentModule,
     ImageModule,
     ShippingModule,
+    ProductsModule,
   ],
   providers: [
     {

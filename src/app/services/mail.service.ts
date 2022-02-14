@@ -57,4 +57,17 @@ export class MailService {
       },
     });
   }
+
+  async sendMailResetPassword(user: UserEntity, token: string): Promise<void> {
+    const url = `https://localhost:5000/fe/v1/reset-password?user_id=${user.user_id}&token=${token}`;
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Di Động Việt [Cập nhật mật khẩu]',
+      template: 'resetPassword',
+      context: {
+        name: user.firstname + ' ' + user.lastname,
+        url,
+      },
+    });
+  }
 }

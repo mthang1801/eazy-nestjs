@@ -9,6 +9,12 @@ import { ProductOptionsRepository } from '../repositories/productOptions.reposit
 import { ProductOptionDescriptionRepository } from '../repositories/productOptionsDescriptions.repository';
 import { ProductOptionVariantsRepository } from '../repositories/productOptionVariants.repository';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
+import { ProductsController as ProductsControllerBE } from '../controllers/be/products.controller';
+import { ProductPricesRepository } from '../repositories/productPrices.repository';
+import { ProductSalesRepository } from '../repositories/productSales.repository';
+import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
+import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
+import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
 
 @Module({
   providers: [
@@ -22,6 +28,11 @@ import { ProductOptionVariantDescriptionRepository } from '../repositories/produ
     ProductOptionDescriptionRepository,
     ProductOptionVariantsRepository,
     ProductOptionVariantDescriptionRepository,
+    ProductPricesRepository,
+    ProductSalesRepository,
+    ProductVariationGroupsRepository,
+    ProductVariationGroupProductsRepository,
+    ProductVariationGroupFeaturesRepository,
   ],
   exports: [
     ProductService,
@@ -34,6 +45,12 @@ import { ProductOptionVariantDescriptionRepository } from '../repositories/produ
     ProductOptionDescriptionRepository,
     ProductOptionVariantsRepository,
     ProductOptionVariantDescriptionRepository,
+    ProductPricesRepository,
+    ProductSalesRepository,
+    ProductVariationGroupsRepository,
+    ProductVariationGroupProductsRepository,
+    ProductVariationGroupFeaturesRepository,
   ],
+  controllers: [ProductsControllerBE],
 })
 export class ProductsModule {}
