@@ -100,7 +100,7 @@ export class UsersService {
   }
 
   async findUserAllInfo(condition: any): Promise<any> {
-    return this.findOne({
+    const users =  this.findOne({
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -129,6 +129,7 @@ export class UsersService {
 
       where: { ...condition },
     });
+    return preprocessUserResult(users);
   }
   async findUsersAllInfo(condition: any,limit=30): Promise<any> {
     
@@ -161,8 +162,6 @@ export class UsersService {
       limit:limit,
       where: { ...condition },
     });
-    let result = preprocessUserResult(users);
-    console.log(result);
     return preprocessUserResult(users);
   }
   async getUserImage(user_id: number): Promise<ImagesEntity> {
