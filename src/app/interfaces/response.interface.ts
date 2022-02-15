@@ -10,6 +10,5 @@ export interface IResponse {
 export interface IResponseUserToken {
   token: string;
   userData: IUser;
-  permission: string;
   menu: UserGroupPrivilegeEntity[];
 }

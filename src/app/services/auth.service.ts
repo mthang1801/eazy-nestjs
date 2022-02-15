@@ -177,7 +177,6 @@ export class AuthService {
     const dataResult = {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
-      permission: `UID_PERMISION_${user.user_id}`,
       menu,
     };
 
@@ -317,7 +316,6 @@ export class AuthService {
     return {
       token: this.generateToken(userData),
       userData,
-      permission: `UID_PERMISION_${userData.user_id}`,
       menu,
     };
   }
@@ -409,7 +407,6 @@ export class AuthService {
     return {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
-      permission: `UID_PERMISION_${user.user_id}`,
       menu,
     };
   }
