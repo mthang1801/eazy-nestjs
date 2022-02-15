@@ -180,13 +180,8 @@ export class BaseRepositorty<T> {
 
     const collection = new DatabaseCollection(this.table);
     Object.entries(params).forEach(([key, val]) => {
-      switch (key) {
-        case 'where':
-          collection.where(val);
-          break;
-        case 'join':
-          collection.join(val);
-          break;
+      if (['join', 'where'].includes(key)) {
+        collection[key](val);
       }
     });
 

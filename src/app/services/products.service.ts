@@ -50,7 +50,7 @@ import { ProductFeatureDescriptionsRepository } from '../repositories/productFea
 import { ProductFeatureDescriptionEntity } from '../entities/productFeatureDescription.entity';
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
 import { ProductFeatureVariantDescriptionEntity } from '../entities/productFeatureVariantDescription.entity';
-
+import * as _ from 'lodash';
 @Injectable()
 export class ProductService {
   constructor(
@@ -343,7 +343,9 @@ export class ProductService {
   ): Promise<any> {
     const category = await this.categoryRepo.findById(categoryId);
 
-    let categoriesList: any = [{ category_id: category.category_id }];
+    let categoriesList: { category_id: number }[] = [
+      { category_id: category.category_id },
+    ];
 
     switch (category.level) {
       case 1:
@@ -360,7 +362,9 @@ export class ProductService {
         break;
     }
 
-    categoriesList = categoriesList.map(({ category_id }) => category_id);
+    let categoriesListFlatten: number[] = categoriesList.map(
+      ({ category_id }) => category_id,
+    );
 
     let { page, limit, ...others } = params;
 
@@ -396,12 +400,12 @@ export class ProductService {
       }
     }
 
-    const productsList = await this.productRepo.find({
+    let productsList = await this.productRepo.find({
       select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
       join: {
-        [JoinTable.rightJoin]: productFeaturesByCategory,
+        [JoinTable.join]: productFeaturesByCategory,
       },
-      where: categoriesList.map((categoryId) => ({
+      where: categoriesListFlatten.map((categoryId) => ({
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
         ...filterFeaturesCondition,
       })),
@@ -411,13 +415,15 @@ export class ProductService {
 
     const totalProducts = await this.productRepo.count({
       join: {
-        [JoinTable.rightJoin]: productFeaturesByCategory,
+        [JoinTable.join]: productFeaturesByCategory,
       },
-      where: categoriesList.map((categoryId) => ({
+      where: categoriesListFlatten.map((categoryId) => ({
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
         ...filterFeaturesCondition,
       })),
     });
+
+    productsList = _.uniqBy(productsList, 'product_id');
 
     return { total_products: totalProducts, products: productsList };
   }
