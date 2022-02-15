@@ -75,5 +75,8 @@ export function Not<T>(cb: { operator: string; value?: string }): {
   operator: string;
   value?: string;
 } {
-  return { operator: 'NOT ' };
+  return {
+    operator: cb.operator === '=' ? `!=` : `NOT ${cb.operator}`,
+    value: cb.value,
+  };
 }

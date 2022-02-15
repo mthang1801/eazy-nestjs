@@ -17,6 +17,7 @@ import { ProductVariationGroupProductsRepository } from '../repositories/product
 import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
 import { CategoryModule } from './category.module';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { ProductsController as ProductsControllerFE } from '../controllers/fe/product.controller';
 
 @Module({
   imports: [CategoryModule],
@@ -56,6 +57,6 @@ import { ProductsCategoriesRepository } from '../repositories/productsCategories
     ProductVariationGroupFeaturesRepository,
     ProductsCategoriesRepository,
   ],
-  controllers: [ProductsControllerBE],
+  controllers: [ProductsControllerBE, ProductsControllerFE],
 })
 export class ProductsModule {}

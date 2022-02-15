@@ -1,26 +1,21 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
 import { CreateProductDto } from '../../dto/product/create-product.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
-@Controller('be/v1/products')
+@Controller('fe/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
     super();
   }
-  @Post()
-  async create(
-    @Body() data: CreateProductDto,
+
+  @Get(':id')
+  async get(
+    @Param('id') productId: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.create(data);
-    return this.responseSuccess(res, result);
-  }
-
-  @Get()
-  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getList(params);
+    const result = await this.service.get(productId);
     return this.responseSuccess(res, result);
   }
 }
