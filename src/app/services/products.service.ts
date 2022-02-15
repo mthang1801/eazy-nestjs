@@ -17,20 +17,23 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantsEntity } from '../entities/productOptionVariants.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
-import { CreateProductDto } from '../dto/product/create-product.dto';
-import { ProductPricesRepository } from '../repositories/productPrices.repository';
-import { ProductPricesEntity } from '../entities/productPrices.entity';
-import { ProductSalesRepository } from '../repositories/productSales.repository';
-import { ProductSalesEntity } from '../entities/productSales.entity';
+import { convertToMySQLDateTime } from 'src/utils/helper';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
 import { ProductVariationGroupFeaturesEntity } from '../entities/productVariationGroupFeatures.entity';
 import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
 import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
-import { convertToMySQLDateTime } from 'src/utils/helper';
-import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
-import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
-import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
+import { ProductSalesRepository } from '../repositories/productSales.repository';
+import { ProductSalesEntity } from '../entities/productSales.entity';
+import { ProductPricesRepository } from '../repositories/productPrices.repository';
+import { ProductPricesEntity } from '../entities/productPrices.entity';
+import { Table } from 'src/database/enums';
+import { Equal, Like, Not } from 'src/database/find-options/operators';
+import { JoinTable } from '../../database/enums/joinTable.enum';
+import { type } from 'os';
+import { CreateProductDto } from '../dto/product/create-product.dto';
 
 @Injectable()
 export class ProductService {
@@ -156,7 +159,6 @@ export class ProductService {
 
     // Product features values and product group Features
     const { product_features, purpose } = data;
-    let productFeatureValues = [];
 
     if (product_features.length) {
       for (let { feature_id, variant_id } of product_features) {
@@ -165,15 +167,13 @@ export class ProductService {
           variant_id,
           product_id: newProductItem.product_id,
         });
-        if (featureValue) {
+        if (!featureValue) {
           featureValue = await this.productFeatureValueRepo.create({
             feature_id,
             variant_id,
             product_id: newProductItem.product_id,
           });
         }
-
-        productFeatureValues.push(featureValue);
 
         // Check group feature by feature_id and group_id, if not exists, create new record
         let checkProductGroupFeatureExist =
@@ -200,5 +200,282 @@ export class ProductService {
       ...newProductCategory,
     };
     return result;
+  }
+
+  async getList(params: any): Promise<any> {
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    if (Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.productRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
+          continue;
+        }
+        if (this.productDescriptionsRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
+          continue;
+        }
+        if (this.productVariationGroupFeatureRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.${key}`] =
+            Like(val);
+          continue;
+        }
+        if (this.productCategoryRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCTS_CATEGORIES}.${key}`] = Like(val);
+          continue;
+        }
+      }
+    }
+
+    let productLists = await this.productRepo.find({
+      select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCTS_CATEGORIES]: {
+            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
+            fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCT_VARIATION_GROUPS]: {
+            fieldJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
+            rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`,
+          },
+          [Table.PRODUCT_PRICES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
+          },
+          [Table.PRODUCT_SALES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
+          },
+          [Table.PRODUCTS_CATEGORIES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+          },
+        },
+      },
+      where: filterCondition,
+      skip,
+      limit,
+    });
+
+    let filterConditionFeatures = {};
+    if (Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.productFeatureValueRepo.tableProps.includes(key)) {
+          filterConditionFeatures[`${Table.PRODUCT_FEATURE_VALUES}.${key}`] =
+            val;
+          continue;
+        }
+      }
+    }
+
+    // get product features
+    let productByFilterFeatures = [];
+    for (let productItem of productLists) {
+      let productFeatures = await this.productFeatureValueRepo.find({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+              fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+            },
+            [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+              fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
+            },
+          },
+        },
+        where: {
+          product_id: productItem.product_id,
+          ...filterConditionFeatures,
+        },
+      });
+      productItem['features'] = productFeatures;
+      productByFilterFeatures.push(productItem);
+    }
+
+    return productByFilterFeatures;
+  }
+
+  async get(productId: number): Promise<any> {
+    // get Product item
+    let product = await this.productRepo.findOne({
+      select: [
+        '*',
+        `${Table.PRODUCTS}.*`,
+        `${Table.PRODUCT_DESCRIPTION}.*`,
+        `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
+      ],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCTS_CATEGORIES]: {
+            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
+            fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCT_VARIATION_GROUPS]: {
+            fieldJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
+            rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`,
+          },
+          [Table.PRODUCT_PRICES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
+          },
+          [Table.PRODUCT_SALES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
+          },
+          [Table.PRODUCTS_CATEGORIES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+          },
+        },
+      },
+      where: { [`${Table.PRODUCTS}.product_id`]: productId },
+    });
+
+    // get features of product
+    const productFeatures = await this.productFeatureValueRepo.find({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+            fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+          },
+          [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+            fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
+          },
+        },
+      },
+      where: {
+        [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
+      },
+    });
+
+    product['features'] = productFeatures;
+
+    // filter condition base on family
+    const productsFamilyFilterCondition =
+      product.parent_product_id === 0
+        ? {
+            [`${Table.PRODUCTS}.parent_product_id`]: product.product_id,
+          }
+        : [
+            {
+              [`${Table.PRODUCTS}.parent_product_id`]:
+                product.parent_product_id,
+            },
+            {
+              [`${Table.PRODUCTS}.product_id`]: product.parent_product_id,
+            },
+          ];
+
+    const productsFamily = await this.productRepo.find({
+      select: ['*', `${Table.PRODUCTS}.*`],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCTS_CATEGORIES]: {
+            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+            rootJoin: `${Table.PRODUCTS}.product_id`,
+          },
+          [Table.PRODUCT_PRICES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
+          },
+          [Table.PRODUCT_SALES]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
+          },
+        },
+      },
+      where: productsFamilyFilterCondition,
+    });
+
+    product['products_family'] = productsFamily.filter(
+      (productsFamilyItem) =>
+        productsFamilyItem.product_id !== product.product_id,
+    );
+
+    if (product.group_id) {
+      const productsGroup = await this.productRepo.find({
+        select: ['*', `${Table.PRODUCTS}.*`],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.PRODUCT_DESCRIPTION]: {
+              fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+              rootJoin: `${Table.PRODUCTS}.product_id`,
+            },
+            [Table.PRODUCTS_CATEGORIES]: {
+              fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+              rootJoin: `${Table.PRODUCTS}.product_id`,
+            },
+            [Table.PRODUCT_PRICES]: {
+              fieldJoin: `${Table.PRODUCTS}.product_id`,
+              rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
+            },
+            [Table.PRODUCT_SALES]: {
+              fieldJoin: `${Table.PRODUCTS}.product_id`,
+              rootJoin: `${Table.PRODUCT_SALES}.product_id`,
+            },
+            [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
+              fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
+              rootJoin: `${Table.PRODUCTS}.product_id`,
+            },
+          },
+        },
+        where:
+          product.parent_product_id === 0
+            ? {
+                [`${Table.PRODUCTS}.parent_product_id`]: Not(
+                  Equal(product.product_id),
+                ),
+                [`${Table.PRODUCTS}.product_id`]: Not(
+                  Equal(product.product_id),
+                ),
+                [`${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`]:
+                  product.group_id,
+              }
+            : {
+                [`${Table.PRODUCTS}.parent_product_id`]: Not(
+                  Equal(product.parent_product_id),
+                ),
+                [`${Table.PRODUCTS}.product_id`]: Not(
+                  Equal(product.parent_product_id),
+                ),
+                [`${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`]:
+                  product.group_id,
+              },
+      });
+
+      product['products_group'] = productsGroup;
+    }
+
+    return product;
   }
 }

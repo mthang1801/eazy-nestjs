@@ -138,7 +138,7 @@ export class CategoryService {
     });
 
     const diffProductCount = data.product_count - oldCategoryData.product_count;
-    console.log(oldCategoryData, data.product_count, diffProductCount);
+
     if (diffProductCount) {
       await this.updateCategoryProductCount(
         updatedCategoryData,

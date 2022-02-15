@@ -27,10 +27,9 @@ export class UserGroupsPrivilegeService {
   async getListByUserGroupId(
     usergroup_id: number,
   ): Promise<IUserGroupPrivilege[]> {
-    const userGroupPrivilegeRawList: UserGroupPrivilegeEntity[] =
-      await this.userGroupPrivilegeRepo.find({
-        where: { usergroup_id },
-      });
+    const userGroupPrivilegeRawList = await this.userGroupPrivilegeRepo.find({
+      where: { usergroup_id },
+    });
 
     const userGroupPrivilegeRawListSortByLevel = _.sortBy(
       userGroupPrivilegeRawList,
@@ -50,15 +49,16 @@ export class UserGroupsPrivilegeService {
         });
         continue;
       }
+
       if (userGroupPrivilegeItem.level === 2) {
         menu = menu.map((menuItem) => {
           if (
             menuItem.level === 1 &&
             menuItem.privilege_id === userGroupPrivilegeItem.parent_id
           ) {
-            menuItem.children.push(
-              this.getUserGroupPrivilegeShorten(userGroupPrivilegeItem),
-            );
+            menuItem.children.push({
+              ...this.getUserGroupPrivilegeShorten(userGroupPrivilegeItem),
+            });
           }
           return menuItem;
         });
@@ -72,11 +72,12 @@ export class UserGroupsPrivilegeService {
     if (!userGroupPrivilege) {
       return;
     }
-    return {
-      description: userGroupPrivilege.description,
-      route: userGroupPrivilege.route,
-      icon: userGroupPrivilege.icon,
-    };
+    delete userGroupPrivilege.privilege;
+    delete userGroupPrivilege.parent_id;
+    delete userGroupPrivilege.level;
+    delete userGroupPrivilege.method;
+
+    return userGroupPrivilege;
   }
 
   async getList(params): Promise<IUserGroupPrivilege[]> {
