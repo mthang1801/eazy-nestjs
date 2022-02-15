@@ -11,6 +11,7 @@ import { CategoryController as CategoryControllerFE } from '../controllers/fe/ca
     CategoryDescriptionRepository,
     CategoryRepository,
   ],
+  exports: [CategoryService, CategoryDescriptionRepository, CategoryRepository],
   controllers: [CategoryControllerBE, CategoryControllerFE],
 })
 export class CategoryModule {}

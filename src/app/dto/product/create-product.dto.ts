@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, Max, MaxLength } from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -19,6 +19,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   price: number;
 
+  @IsOptional()
+  @Max(100, { message: 'Tỉ lệ discount không đúng.' })
+  percentage_discount: number = 0;
+
   @IsNotEmpty()
   product_code: string;
 
@@ -26,6 +30,7 @@ export class CreateProductDto {
   barcode: string;
 
   @IsNotEmpty()
+  @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
   product_type: string;
 
   @IsNotEmpty()
@@ -56,7 +61,7 @@ export class CreateProductDto {
   status: string;
 
   @IsOptional()
-  display_at: Date;
+  display_at: Date = new Date();
 
   @IsNotEmpty()
   category_id: number;
@@ -81,4 +86,7 @@ export class CreateProductDto {
 
   @IsOptional()
   purpose: string = '';
+
+  @IsOptional()
+  group_id: number = 0;
 }

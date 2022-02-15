@@ -15,8 +15,11 @@ import { ProductSalesRepository } from '../repositories/productSales.repository'
 import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
 import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
+import { CategoryModule } from './category.module';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 
 @Module({
+  imports: [CategoryModule],
   providers: [
     ProductService,
     ProductsRepository,
@@ -33,6 +36,7 @@ import { ProductVariationGroupFeaturesRepository } from '../repositories/product
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
     ProductVariationGroupFeaturesRepository,
+    ProductsCategoriesRepository,
   ],
   exports: [
     ProductService,
@@ -50,6 +54,7 @@ import { ProductVariationGroupFeaturesRepository } from '../repositories/product
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
     ProductVariationGroupFeaturesRepository,
+    ProductsCategoriesRepository,
   ],
   controllers: [ProductsControllerBE],
 })
