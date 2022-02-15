@@ -251,6 +251,8 @@ export class DatabaseCollection {
       }
 
       this.arrayCondition.push(condition);
+
+      console.log(this.arrayCondition);
     }
   }
   orderBy(sortArray: { field: string; sort_by: SortBy }[]): void {
@@ -333,10 +335,13 @@ export class DatabaseCollection {
         if (typeof val !== 'object') {
           if (Object.entries(arrayFields[i]).length > 1) {
             if (j === 0) {
+              console.log(338, field, operator, value);
               this.orAndWhere(field, operator, value, 'first');
             } else if (j === Object.entries(arrayFields[i]).length - 1) {
+              console.log(341, field, operator, value);
               this.orAndWhere(field, operator, value, 'last');
             } else {
+              console.log(344, field, operator, value);
               this.orAndWhere(field, operator, value, 'middle');
             }
           } else {
@@ -417,7 +422,6 @@ export class DatabaseCollection {
       this.stringJoin +
       this.stringCondition +
       orderString;
-    console.log(sql_string);
     if (is_limit == true) {
       sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset}`;
     }
