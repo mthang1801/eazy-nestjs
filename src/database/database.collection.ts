@@ -99,7 +99,6 @@ export class DatabaseCollection {
       default:
         typeJoin = 'JOIN';
     }
-    console.log(typeJoin);
     return typeJoin;
   }
 
@@ -251,8 +250,6 @@ export class DatabaseCollection {
       }
 
       this.arrayCondition.push(condition);
-
-      console.log(this.arrayCondition);
     }
   }
   orderBy(sortArray: { field: string; sort_by: SortBy }[]): void {
@@ -331,17 +328,13 @@ export class DatabaseCollection {
       Object.entries(arrayFields[i]).forEach(([field, val], j) => {
         let value = val['value'] || val;
         let operator = val['operator'] || '=';
-
         if (typeof val !== 'object') {
           if (Object.entries(arrayFields[i]).length > 1) {
             if (j === 0) {
-              console.log(338, field, operator, value);
               this.orAndWhere(field, operator, value, 'first');
             } else if (j === Object.entries(arrayFields[i]).length - 1) {
-              console.log(341, field, operator, value);
               this.orAndWhere(field, operator, value, 'last');
             } else {
-              console.log(344, field, operator, value);
               this.orAndWhere(field, operator, value, 'middle');
             }
           } else {
@@ -352,6 +345,7 @@ export class DatabaseCollection {
             for (let k = 0; k < value.length; k++) {
               let subValue = val[j]['value'] || val[j];
               let subOperator = val[j]['operator'] || '=';
+
               if (Object.entries(arrayFields[i]).length > 1) {
                 if (j === 0 && k === 0) {
                   this.orAndWhere(field, subOperator, subValue, 'first');
@@ -390,12 +384,11 @@ export class DatabaseCollection {
   }
 
   sqlCount(): string {
-    // const condition = this.where();
-    const condition = '';
-    const sql =
-      this.arrayCondition.length === 0
-        ? `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin}`
-        : `SELECT count(*) AS total    ${this.table} ${this.alias} ${this.stringJoin} ${condition}`;
+    this.stringCondition = this.genCondition();
+    const sql = `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin} ${this.stringCondition}`;
+    // this.arrayCondition.length === 0
+    //   ? `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin}`
+    //   : `SELECT count(*) AS total    ${this.table} ${this.alias} ${this.stringJoin} ${this.stringCondition}`;
     return sql;
   }
 
@@ -448,24 +441,45 @@ export class DatabaseCollection {
     return sql;
   }
 
+  // This is old version, may be deprecated in the future
+  // genCondition(): string {
+  //   let stringCondition = '';
+  //   if (this.arrayCondition.length > 0) {
+  //
+  //     let arrayCheckExist = [];
+  //     for (let i = 0; i < this.arrayCondition.length; i++) {
+  //       arrayCheckExist[
+  //         this.arrayCondition[i].field + '_' + this.arrayCondition[i].value
+  //       ] = this.arrayCondition[i];
+  //     }
+
+  //     let i = 0;
+  //     for (let data in arrayCheckExist) {
+  //       if (i == 0) {
+  //         stringCondition += `WHERE ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
+  //       } else {
+  //         stringCondition += ` ${arrayCheckExist[data].connect} ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
+  //       }
+  //       i++;
+  //     }
+  //   }
+  //   return stringCondition;
+  // }
+
   genCondition(): string {
     let stringCondition = '';
     if (this.arrayCondition.length > 0) {
       let arrayCheckExist = [];
       for (let i = 0; i < this.arrayCondition.length; i++) {
-        arrayCheckExist[
-          this.arrayCondition[i].field + '_' + this.arrayCondition[i].value
-        ] = this.arrayCondition[i];
+        arrayCheckExist = [...arrayCheckExist, this.arrayCondition[i]];
       }
 
-      let i = 0;
-      for (var data in arrayCheckExist) {
+      for (let [i, checkExistItem] of arrayCheckExist.entries()) {
         if (i == 0) {
-          stringCondition += `WHERE ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
+          stringCondition += `WHERE ${checkExistItem.field} ${checkExistItem.operation} ${checkExistItem.value} `;
         } else {
-          stringCondition += ` ${arrayCheckExist[data].connect} ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
+          stringCondition += ` ${checkExistItem.connect} ${checkExistItem.field} ${checkExistItem.operation} ${checkExistItem.value} `;
         }
-        i++;
       }
     }
     return stringCondition;

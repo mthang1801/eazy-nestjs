@@ -35,6 +35,7 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryEntity } from '../entities/category.entity';
 import {
   productFamilyJoiner,
+  productFeaturesByCategory,
   productFeaturesJoiner,
   productJoiner,
 } from 'src/utils/joinTable';
@@ -342,14 +343,20 @@ export class ProductService {
   ): Promise<any> {
     const category = await this.categoryRepo.findById(categoryId);
 
-    let categoriesList;
+    let categoriesList: any = [{ category_id: category.category_id }];
 
     switch (category.level) {
       case 1:
-        categoriesList = await this.getCategoriesListLevel1(categoryId);
+        categoriesList = [
+          ...categoriesList,
+          ...(await this.getCategoriesListLevel1(categoryId)),
+        ];
         break;
       case 2:
-        categoriesList = await this.getCategoriesListLevel2(categoryId);
+        categoriesList = [
+          ...categoriesList,
+          ...(await this.getCategoriesListLevel2(categoryId)),
+        ];
         break;
     }
 
@@ -392,21 +399,7 @@ export class ProductService {
     const productsList = await this.productRepo.find({
       select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
       join: {
-        [JoinTable.rightJoin]: {
-          ...productJoiner,
-          [Table.PRODUCT_FEATURE_VALUES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
-          },
-          [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-            fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
-            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
-          },
-          [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-            fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
-            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
-          },
-        },
+        [JoinTable.rightJoin]: productFeaturesByCategory,
       },
       where: categoriesList.map((categoryId) => ({
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
@@ -416,7 +409,17 @@ export class ProductService {
       limit,
     });
 
-    return productsList;
+    const totalProducts = await this.productRepo.count({
+      join: {
+        [JoinTable.rightJoin]: productFeaturesByCategory,
+      },
+      where: categoriesList.map((categoryId) => ({
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+        ...filterFeaturesCondition,
+      })),
+    });
+
+    return { total_products: totalProducts, products: productsList };
   }
 
   async getCategoriesListLevel1(categoryId: number): Promise<any> {
@@ -443,7 +446,7 @@ export class ProductService {
   }
 
   async getCategoriesListLevel2(categoryId: number): Promise<any> {
-    return await this.categoryRepo.find({
+    return this.categoryRepo.find({
       select: ['category_id'],
       where: { parent_id: categoryId, level: 3 },
     });

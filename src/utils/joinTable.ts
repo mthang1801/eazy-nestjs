@@ -63,3 +63,27 @@ export const productFamilyJoiner = {
     },
   },
 };
+
+export const productFeaturesByCategory = {
+  ...productJoiner,
+  [Table.PRODUCT_FEATURE_VALUES]: {
+    fieldJoin: `${Table.PRODUCTS}.product_id`,
+    rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+  },
+  [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+    rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+  },
+  [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+    fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+    rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
+  },
+  [Table.PRODUCT_FEATURES]: {
+    fieldJoin: `${Table.PRODUCT_FEATURES}.feature_id`,
+    rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
+  },
+  [Table.PRODUCT_FEATURES_VARIANTS]: {
+    fieldJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+    rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+  },
+};
