@@ -13,9 +13,13 @@ import { BaseController } from '../../../base/base.controllers';
 import { CreateProductDto } from '../../dto/product/create-product.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
+import { UpdateProductDto } from '../../dto/product/update-product.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
-  constructor(private service: ProductService) {
+  constructor(
+    private service: ProductService,
+    private productService: ProductService,
+  ) {
     super();
   }
   @Post()
@@ -45,6 +49,10 @@ export class ProductsController extends BaseController {
   @Put(':id')
   async update(
     @Param('id') identifier: number | string,
-    @Body() data,
-  ): Promise<void> {}
+    @Body() data: UpdateProductDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.productService.update(identifier, data);
+    return this.responseSuccess(res, result);
+  }
 }

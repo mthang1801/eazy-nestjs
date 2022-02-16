@@ -12,9 +12,9 @@ import {
 } from '@nestjs/common';
 import { AuthService } from '../../services/auth.service';
 import { AuthCredentialsDto } from '../../dto/auth/auth-credential.dto';
-import { AuthUpdatePasswordDto } from '../../dto/auth/auth-update-password.dto';
+import { AuthUpdatePasswordDto } from '../../dto/auth/auth-updatePassword.dto';
 import { IResponse } from '../../interfaces/response.interface';
-import { AuthLoginProviderDto } from '../../dto/auth/auth-login-provider.dto';
+import { AuthLoginProviderDto } from '../../dto/auth/auth-loginProvider.dto';
 import { LoginDto } from '../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../base/base.controllers';
 import { Response } from 'express';

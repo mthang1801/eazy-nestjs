@@ -10,9 +10,6 @@ export class CreateProductDto {
   @IsNotEmpty()
   short_description: string;
 
-  @IsOptional()
-  image_urls: string[];
-
   @IsNotEmpty()
   list_price: number;
 
@@ -90,4 +87,31 @@ export class CreateProductDto {
 
   @IsOptional()
   group_id: number = 0;
+
+  @IsOptional()
+  shortname: string = ''; //product descriptions
+
+  @IsOptional()
+  full_description: string = ''; //product descriptions
+
+  @IsOptional()
+  lang_code: string = 'vn'; //product descriptions
+
+  @IsOptional()
+  age_warning_message: string = ''; //product descriptions
+
+  @IsOptional()
+  lower_limit: number = 0; //product price
+
+  @IsOptional()
+  usergroup_id: number = 0; //product price
+
+  @IsOptional()
+  link_type: string = 'M'; // product category
+
+  @IsOptional()
+  position: number = 0; // product position
+
+  @IsOptional()
+  category_position: number = 0; // product position
 }

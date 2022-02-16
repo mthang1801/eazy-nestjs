@@ -12,6 +12,6 @@ export class ProductFeatureEntity {
   display_on_catalog: string = 'Y';
   display_on_header: string = 'N';
   status: string = 'A';
-  position: string = 'O';
+  position: number = 0;
   comparison: string = 'N';
 }

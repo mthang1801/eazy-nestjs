@@ -28,6 +28,7 @@ import { OrdersModule } from './orders.module';
 import { ProductsModule } from './products.module';
 
 import { CustomerModule } from './customer.module';
+import { ProductFeaturesModule } from './productFeatures.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -54,6 +55,7 @@ import { CustomerModule } from './customer.module';
     ShippingModule,
     ProductsModule,
     CustomerModule,
+    ProductFeaturesModule,
   ],
   providers: [
     {

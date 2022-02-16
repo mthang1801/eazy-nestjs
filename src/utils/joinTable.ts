@@ -29,6 +29,10 @@ export const productJoiner = {
     fieldJoin: `${Table.PRODUCTS}.product_id`,
     rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
   },
+  [Table.CATEGORY_DESCRIPTIONS]: {
+    fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+    rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+  },
 };
 
 export const productFeaturesJoiner = {
