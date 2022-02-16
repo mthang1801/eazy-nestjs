@@ -1,48 +1,46 @@
-import { IsIn, IsNotEmpty, IsOptional, Max, MaxLength } from 'class-validator';
+import { IsIn, IsOptional, Max, MaxLength } from 'class-validator';
 
-export class CreateProductDto {
-  @IsNotEmpty()
+export class UpdateProductDto {
+  @IsOptional()
   product: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   promo_text: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   short_description: string;
 
   @IsOptional()
-  image_urls: string[];
-
-  @IsNotEmpty()
   list_price: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   price: number;
 
   @IsOptional()
   @Max(100, { message: 'Tỉ lệ discount không đúng.' })
   percentage_discount: number = 0;
 
-  @IsNotEmpty()
+  @IsOptional()
   product_code: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   barcode: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
   product_type: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   amount: number;
 
   @IsOptional()
+  @IsIn(['Y', 'N'])
   approved: string = 'Y';
 
-  @IsNotEmpty()
+  @IsOptional()
   weight: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   weight_type: string;
 
   @IsOptional()
@@ -59,15 +57,15 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsIn(['A', 'D'])
-  status: string = 'A';
+  status: string;
 
   @IsOptional()
   display_at: Date = new Date();
 
-  @IsNotEmpty()
+  @IsOptional()
   category_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   company_id: number;
 
   @IsOptional()

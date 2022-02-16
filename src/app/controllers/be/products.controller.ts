@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
 import { CreateProductDto } from '../../dto/product/create-product.dto';
@@ -23,4 +32,19 @@ export class ProductsController extends BaseController {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
+
+  @Get(':id')
+  async get(
+    @Param('id') identifier: number | string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.get(identifier);
+    return this.responseSuccess(res, result);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') identifier: number | string,
+    @Body() data,
+  ): Promise<void> {}
 }

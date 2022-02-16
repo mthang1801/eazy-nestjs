@@ -51,6 +51,11 @@ import { ProductFeatureDescriptionEntity } from '../entities/productFeatureDescr
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
 import { ProductFeatureVariantDescriptionEntity } from '../entities/productFeatureVariantDescription.entity';
 import * as _ from 'lodash';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 @Injectable()
 export class ProductService {
   constructor(
@@ -73,11 +78,13 @@ export class ProductService {
     private productFeaturesRepo: ProductFeaturesRepository<ProductFeatureEntity>,
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
+    private imageRepo: ImagesRepository<ImagesEntity>,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
 
   async create(data: CreateProductDto): Promise<any> {
     // check unique key
-    let { code, product_code, group_id } = data;
+    let { code, product_code, group_id, image_urls } = data;
     if (!group_id) {
       const checkProductGroupExists =
         await this.productVariationGroupRepo.findOne({
@@ -114,6 +121,22 @@ export class ProductService {
       ...productData,
       created_at: convertToMySQLDateTime(),
     });
+
+    // product images
+    let productImages = [];
+    if (image_urls.length) {
+      for (let imageUrl of image_urls) {
+        let createdImage: ImagesEntity = await this.imageRepo.create({
+          image_path: imageUrl,
+        });
+        let createdImageLink = await this.imageLinkRepo.create({
+          object_id: newProductItem.product_id,
+          object_type: ImageObjectType.PRODUCT,
+          image_id: createdImage.image_id,
+        });
+        productImages.push({ ...createdImage, ...createdImageLink });
+      }
+    }
 
     // Mô tả sp
     const productDescriptionData = this.productDescriptionsRepo.setData(data);
@@ -218,7 +241,9 @@ export class ProductService {
       ...newProductPrice,
       ...newProductSale,
       ...newProductCategory,
+      images: productImages,
     };
+
     return result;
   }
 
@@ -228,66 +253,67 @@ export class ProductService {
     limit = +limit || 9999;
     let skip = (page - 1) * limit;
 
-    let filterCondition = {};
-
-    for (let [key, val] of Object.entries(others)) {
-      if (this.productRepo.tableProps.includes(key)) {
-        filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
-        continue;
-      }
-      if (this.productDescriptionsRepo.tableProps.includes(key)) {
-        filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
-        continue;
-      }
-      if (this.productVariationGroupFeatureRepo.tableProps.includes(key)) {
-        filterCondition[`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.${key}`] =
-          Like(val);
-        continue;
-      }
-      if (this.productCategoryRepo.tableProps.includes(key)) {
-        filterCondition[`${Table.PRODUCTS_CATEGORIES}.${key}`] = Like(val);
-        continue;
-      }
-    }
-
-    let productLists = await this.productRepo.find({
-      select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
-      join: { [JoinTable.leftJoin]: productJoiner },
-      where: filterCondition,
-      skip,
-      limit,
-    });
-
     let filterConditionFeatures = {};
     if (Object.entries(others).length) {
       for (let [key, val] of Object.entries(others)) {
-        if (this.productFeatureValueRepo.tableProps.includes(key)) {
-          filterConditionFeatures[`${Table.PRODUCT_FEATURE_VALUES}.${key}`] =
-            val;
-          continue;
-        }
+        filterConditionFeatures[
+          `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.prefix`
+        ] = key;
+        filterConditionFeatures[
+          `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.meta_keywords`
+        ] = Like(val);
       }
     }
+    console.log(filterConditionFeatures);
 
-    // get product features
-    let productByFilterFeatures = [];
-    for (let productItem of productLists) {
-      let productFeatures = await this.productFeatureValueRepo.find({
-        select: ['*'],
-        join: { [JoinTable.leftJoin]: productFeaturesJoiner },
-        where: {
-          product_id: productItem.product_id,
-          ...filterConditionFeatures,
-        },
-      });
-      productItem['features'] = productFeatures;
-      productByFilterFeatures.push(productItem);
-    }
+    // // filter product features base on params
+    // let productByFilterFeatures = [];
+    // for (let productItem of productLists) {
+    //   let productFeatures = await this.productFeatureValueRepo.find({
+    //     select: ['*'],
+    //     join: { [JoinTable.leftJoin]: productFeaturesJoiner },
+    //     where: {
+    //       product_id: productItem.product_id,
+    //       ...filterConditionFeatures,
+    //     },
+    //   });
+    //   productItem['features'] = productFeatures;
+    //   productByFilterFeatures.push(productItem);
+    // }
 
-    return productByFilterFeatures;
+    // let filterCondition = {};
+    // for (let [key, val] of Object.entries(others)) {
+    //   if (this.productRepo.tableProps.includes(key)) {
+    //     filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
+    //     continue;
+    //   }
+    //   if (this.productDescriptionsRepo.tableProps.includes(key)) {
+    //     filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
+    //     continue;
+    //   }
+    //   if (this.productVariationGroupFeatureRepo.tableProps.includes(key)) {
+    //     filterCondition[`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.${key}`] =
+    //       Like(val);
+    //     continue;
+    //   }
+    //   if (this.productCategoryRepo.tableProps.includes(key)) {
+    //     filterCondition[`${Table.PRODUCTS_CATEGORIES}.${key}`] = Like(val);
+    //     continue;
+    //   }
+    // }
+
+    // let productLists = await this.productRepo.find({
+    //   select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
+    //   join: { [JoinTable.leftJoin]: productJoiner },
+    //   where: filterCondition,
+    //   skip,
+    //   limit,
+    // });
+
+    // return productByFilterFeatures;
   }
 
-  async get(productId: number): Promise<any> {
+  async get(identifier: number | string): Promise<any> {
     // get Product item
     let product = await this.productRepo.findOne({
       select: [
@@ -297,7 +323,10 @@ export class ProductService {
         `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
       ],
       join: { [JoinTable.leftJoin]: productJoiner },
-      where: { [`${Table.PRODUCTS}.product_id`]: productId },
+      where: [
+        { [`${Table.PRODUCTS}.product_id`]: identifier },
+        { [`${Table.PRODUCTS}.product_code`]: identifier },
+      ],
     });
 
     // get features of product
