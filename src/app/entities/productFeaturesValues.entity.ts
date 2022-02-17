@@ -5,5 +5,5 @@ export class ProductFeatureValueEntity {
   variant_id: number = 0;
   value: string = '';
   value_int: number = 0;
-  lang_code: string = '';
+  lang_code: string = 'vi';
 }

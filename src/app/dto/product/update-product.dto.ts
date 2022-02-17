@@ -2,40 +2,28 @@ import { IsIn, IsOptional, Max, MaxLength, IsNotEmpty } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
-  product: string;
-
-  @IsOptional()
-  promo_text: string;
-
-  @IsOptional()
-  short_description: string;
-
-  @IsOptional()
-  list_price: number;
-
-  @IsOptional()
-  price: number;
-
-  @IsOptional()
-  @Max(100, { message: 'Tỉ lệ discount không đúng.' })
-  percentage_discount: number = 0;
-
-  @IsOptional()
   product_code: string;
 
   @IsOptional()
   barcode: string;
 
   @IsOptional()
-  @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
   product_type: string;
 
   @IsOptional()
-  amount: number;
+  status: string;
 
   @IsOptional()
-  @IsIn(['Y', 'N'])
-  approved: string = 'Y';
+  company_id: number;
+
+  @IsOptional()
+  approved: string;
+
+  @IsOptional()
+  list_price: number;
+
+  @IsOptional()
+  amount: number;
 
   @IsOptional()
   weight: number;
@@ -44,75 +32,202 @@ export class UpdateProductDto {
   weight_type: string;
 
   @IsOptional()
-  product_features: { feature_id: number; variant_id: number }[];
+  length: number;
 
   @IsOptional()
-  page_title: string;
+  width: number;
 
   @IsOptional()
-  meta_description: string;
+  height: number;
+
+  @IsOptional()
+  shipping_freight: number;
+
+  @IsOptional()
+  low_avail_limit: number;
+
+  @IsOptional()
+  usergroup_ids: string;
+
+  @IsOptional()
+  is_edp: string;
+
+  @IsOptional()
+  edp_shipping: string;
+
+  @IsOptional()
+  unlimited_download: string;
+
+  @IsOptional()
+  tracking: string;
+
+  @IsOptional()
+  free_shipping: string;
+
+  @IsOptional()
+  zero_price_action: string;
+
+  @IsOptional()
+  is_pbp: string;
+
+  @IsOptional()
+  is_op: string;
+
+  @IsOptional()
+  is_oper: string;
+
+  @IsOptional()
+  is_returnable: string;
+
+  @IsOptional()
+  return_period: number;
+
+  @IsOptional()
+  avail_since: number;
+
+  @IsOptional()
+  out_of_stock_actions: string;
+
+  @IsOptional()
+  localization: string;
+
+  @IsOptional()
+  min_qty: number;
+
+  @IsOptional()
+  max_qty: number;
+
+  @IsOptional()
+  qty_step: number;
+
+  @IsOptional()
+  list_qty_count: number;
+
+  @IsOptional()
+  tax_ids: string;
+
+  @IsOptional()
+  age_verification: string;
+
+  @IsOptional()
+  age_limit: number;
+
+  @IsOptional()
+  options_type: string;
+
+  @IsOptional()
+  exceptions_type: string;
+
+  @IsOptional()
+  details_layout: string;
+
+  @IsOptional()
+  shipping_params: string;
+
+  @IsOptional()
+  facebook_obj_type: string;
+
+  @IsOptional()
+  buy_now_url: string;
+
+  // product description
+
+  @IsOptional()
+  lang_code: string;
+
+  @IsOptional()
+  product: string;
+
+  @IsOptional()
+  shortname: string;
 
   @IsOptional()
   alias: string;
 
   @IsOptional()
-  @IsIn(['A', 'D'])
-  status: string;
+  short_description: string;
 
   @IsOptional()
-  display_at: Date = new Date();
-
-  @IsNotEmpty()
-  category_id: number;
-
-  @IsOptional()
-  company_id: number;
-
-  @IsOptional()
-  search_words: string;
+  full_description: string;
 
   @IsOptional()
   meta_keywords: string;
 
   @IsOptional()
-  sale_amount: number = 0;
+  meta_description: string;
 
   @IsOptional()
-  code: string = '';
+  search_words: string;
 
   @IsOptional()
-  parent_product_id: number = 0;
+  page_title: string;
 
   @IsOptional()
-  purpose: string = '';
+  age_warning_message: string;
 
   @IsOptional()
-  group_id: number = 0;
+  promo_text: string;
+
+  // product sales
 
   @IsOptional()
-  shortname: string = ''; //product descriptions
+  sale_amount: number;
+
+  // Product price
 
   @IsOptional()
-  full_description: string = ''; //product descriptions
+  price: number;
 
   @IsOptional()
-  lang_code: string = 'vn'; //product descriptions
+  percentage_discount: number;
 
   @IsOptional()
-  age_warning_message: string = ''; //product descriptions
+  lower_limit: number;
 
   @IsOptional()
-  lower_limit: number = 0; //product price
+  usergroup_id: number;
+
+  // product category
 
   @IsOptional()
-  usergroup_id: number = 0; //product price
+  category_id: number;
 
   @IsOptional()
-  link_type: string = 'M'; // product category
+  link_type: string;
 
   @IsOptional()
-  position: number = 0; // product position
+  position: number;
 
   @IsOptional()
-  category_position: number = 0; // product position
+  category_position: number;
+
+  // product group
+  @IsOptional()
+  parent_product_id: number;
+
+  @IsOptional()
+  group_id: number;
+
+  @IsOptional()
+  feature_values: ProductFeatureValueDto[];
+}
+
+class ProductFeatureValueDto {
+  @IsNotEmpty()
+  feature_id: number;
+
+  @IsNotEmpty()
+  product_id: number;
+
+  @IsNotEmpty()
+  variant_id: number;
+
+  @IsOptional()
+  value: string;
+
+  @IsOptional()
+  value_int: number;
+
+  @IsOptional()
+  lang_code: string;
 }

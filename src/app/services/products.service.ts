@@ -518,7 +518,7 @@ export class ProductService {
     identifier: number | string,
     data: UpdateProductDto,
   ): Promise<any> {
-    const checkProductExists = await this.productRepo.findOne({
+    const currentProduct = await this.productRepo.findOne({
       select: [
         '*',
         `${Table.PRODUCTS}.*`,
@@ -532,61 +532,56 @@ export class ProductService {
       ],
     });
 
-    if (!checkProductExists) {
+    if (!currentProduct) {
       throw new HttpException('Sản phẩm không tồn tại.', 404);
     }
 
-    const { product_code } = data;
-
-    if (product_code !== checkProductExists.product_code) {
-      const checkProductCodeExists = await this.productRepo.findOne({
-        product_code,
+    if (data.product_code !== currentProduct.product_code) {
+      const productCodeExists = await this.productRepo.findOne({
+        product_code: data.product_code,
       });
-      if (checkProductCodeExists) {
+      if (productCodeExists) {
         throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
       }
     }
 
-    // products
+    // update product
     const productData = this.productRepo.setData(data);
-    if (productData['display_at']) {
-      productData['display_at'] = convertToMySQLDateTime(
-        productData['display_at'],
-      );
-    }
-    const updatedProductItem = await this.productRepo.update(
-      checkProductExists.product_id,
+    const updatedProduct = await this.productRepo.update(
+      {
+        product_id: currentProduct.product_id,
+      },
       productData,
     );
 
-    // product descriptions
+    // // product descriptions
     const productDescriptionData = this.productDescriptionsRepo.setData(data);
     const updatedProductDescription = await this.productDescriptionsRepo.update(
-      { product_id: checkProductExists.product_id },
+      { product_id: currentProduct.product_id },
       productDescriptionData,
     );
 
-    // Price
+    // // Price
     const productPriceData = this.productPriceRepo.setData(data);
     const updatedProductPrice: ProductPricesEntity =
       await this.productPriceRepo.update(
-        { product_id: checkProductExists.product_id },
+        { product_id: currentProduct.product_id },
         productPriceData,
       );
 
-    // Sale
+    // // Sale
     const productSaleData = this.productSaleRepo.setData(data);
     const updatedProductSale: ProductSalesEntity =
       await this.productSaleRepo.update(
-        { product_id: checkProductExists.product_id },
+        { product_id: currentProduct.product_id },
         productSaleData,
       );
 
-    // ----- Product category -----
+    // // ----- Product category -----
 
     const productCategoryData = this.productCategoryRepo.setData(data);
     const updatedProductCategory = await this.productCategoryRepo.update(
-      { product_id: checkProductExists.product_id },
+      { product_id: currentProduct.product_id },
       productCategoryData,
     );
 
@@ -595,63 +590,51 @@ export class ProductService {
       this.productVariationGroupProductsRepo.setData(data);
     const updatedProductGroup =
       await this.productVariationGroupProductsRepo.update(
-        { product_id: checkProductExists.product_id },
+        { product_id: currentProduct.product_id },
         productGroupProductData,
       );
 
     // Product features values and product group Features
-    const { product_features, purpose } = data;
 
-    if (product_features.length) {
+    if (data.feature_values.length) {
+      // delete all old product features
       await this.productFeatureValueRepo.delete({
-        product_id: checkProductExists.product_id,
+        product_id: currentProduct.product_id,
       });
-      for (let { feature_id, variant_id } of product_features) {
+      for (let { feature_id, variant_id } of data.feature_values) {
         const productFeatureVariant =
           await this.productFeatureVariantDescriptionRepo.findById(variant_id);
-
-        let featureValue = await this.productFeatureValueRepo.findOne({
+        const featureValue = await this.productFeatureValueRepo.create({
           feature_id,
           variant_id,
-          product_id: checkProductExists.product_id,
+          product_id: currentProduct.product_id,
+          value: isNaN(+productFeatureVariant.variant * 1)
+            ? productFeatureVariant.variant
+            : '',
+          value_int: !isNaN(+productFeatureVariant.variant * 1)
+            ? +productFeatureVariant.variant
+            : 0,
         });
-
-        if (!featureValue) {
-          featureValue = await this.productFeatureValueRepo.create({
-            feature_id,
-            variant_id,
-            product_id: checkProductExists.product_id,
-            value: isNaN(+productFeatureVariant.variant * 1)
-              ? productFeatureVariant.variant
-              : '',
-            value_int: !isNaN(+productFeatureVariant.variant * 1)
-              ? +productFeatureVariant.variant
-              : 0,
-          });
-        }
-
         // Check group feature by feature_id and group_id, if not exists, create new record
         let checkProductGroupFeatureExist =
           await this.productVariationGroupFeatureRepo.findOne({
             feature_id,
-            group_id: checkProductExists.product_id,
+            group_id: currentProduct.product_id,
           });
-
         const feature: ProductFeatureDescriptionEntity =
           await this.productFeatureDescriptionRepo.findOne({ feature_id });
-
         if (!checkProductGroupFeatureExist) {
           await this.productVariationGroupFeatureRepo.create({
             feature_id,
-            group_id: checkProductExists.product_id,
-            purpose: data.purpose || feature.description,
+            group_id: currentProduct.product_id,
+            purpose: feature.description,
           });
         }
       }
     }
 
     const result = {
-      ...updatedProductItem,
+      ...updatedProduct,
       ...updatedProductDescription,
       ...updatedProductPrice,
       ...updatedProductSale,

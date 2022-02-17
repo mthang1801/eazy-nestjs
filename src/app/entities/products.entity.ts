@@ -1,14 +1,16 @@
 export class ProductsEntity {
   product_id: number = 0;
+  parent_product_id: number = 0;
   product_code: string = '';
+  barcode: string = '';
   product_type: string = 'P';
   status: string = 'A';
   company_id: number = 0;
   approved: string = 'Y';
   list_price: number = 0;
+  weight_type: string = 'A';
   amount: number = 0;
   weight: number = 0;
-  weight_type: string = 'A';
   length: number = 0;
   width: number = 0;
   height: number = 0;
@@ -41,7 +43,6 @@ export class ProductsEntity {
   details_layout: string = '';
   shipping_params: string = '';
   facebook_obj_type: string = '';
-  parent_product_id: number = 0;
   buy_now_url: string = '';
   created_at: Date = new Date();
   display_at: Date = new Date();
