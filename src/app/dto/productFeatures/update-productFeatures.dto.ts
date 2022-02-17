@@ -2,7 +2,7 @@ import { IsIn, IsNotEmpty, IsOptional } from 'class-validator';
 import { IProductFeatureVariantsResponse } from '../../interfaces/productFeatureVariantsResponse.interface';
 
 export class UpdateProductFeatureDto {
-  @IsNotEmpty({ message: 'Code là bắt buộc.' })
+  @IsOptional({ message: 'Feature Code là bắt buộc.' })
   feature_code: string;
 
   @IsOptional()
@@ -11,7 +11,7 @@ export class UpdateProductFeatureDto {
   @IsOptional()
   purpose: string = '';
 
-  @IsNotEmpty({ message: 'Tên thuộc tính là bắt buộc.' })
+  @IsOptional({ message: 'Tên thuộc tính là bắt buộc.' })
   description: string;
 
   @IsOptional()
@@ -59,7 +59,7 @@ export class UpdateProductFeatureDto {
   @IsOptional()
   lang_code: string = 'vn';
 
-  @IsNotEmpty({ message: 'Giá trị thuộc tính là bắt buộc.' })
+  @IsOptional({ message: 'Giá trị thuộc tính là bắt buộc.' })
   feature_values: ProductVariant[];
 }
 

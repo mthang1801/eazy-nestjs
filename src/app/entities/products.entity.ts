@@ -8,7 +8,7 @@ export class ProductsEntity {
   company_id: number = 0;
   approved: string = 'Y';
   list_price: number = 0;
-  weight_type: string = 'A';
+  weight_type: string = 'G';
   amount: number = 0;
   weight: number = 0;
   length: number = 0;

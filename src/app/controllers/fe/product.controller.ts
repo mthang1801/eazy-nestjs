@@ -18,4 +18,10 @@ export class ProductsController extends BaseController {
     const result = await this.service.get(identifier);
     return this.responseSuccess(res, result);
   }
+
+  @Get()
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
 }

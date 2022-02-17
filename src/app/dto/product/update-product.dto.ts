@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, Max, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsIn, IsOptional, IsNotEmpty, Min } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -20,17 +20,22 @@ export class UpdateProductDto {
   approved: string;
 
   @IsOptional()
+  @Min(0, { message: 'list_price Không được nhỏ hơn 0' })
   list_price: number;
 
   @IsOptional()
+  @Min(0, { message: 'amount Không được nhỏ hơn 0' })
   amount: number;
 
   @IsOptional()
+  @Min(0, { message: 'weight Không được nhỏ hơn 0' })
   weight: number;
 
   @IsOptional()
+  @IsIn(['K', 'G'])
   weight_type: string;
 
+  @Min(0, { message: 'length Không được nhỏ hơn 0' })
   @IsOptional()
   length: number;
 
@@ -177,6 +182,12 @@ export class UpdateProductDto {
 
   @IsOptional()
   price: number;
+
+  @IsOptional()
+  collect_price: number; //Giá thu gom
+
+  @IsOptional()
+  whole_price: number; //Giá bản sỉ
 
   @IsOptional()
   percentage_discount: number;

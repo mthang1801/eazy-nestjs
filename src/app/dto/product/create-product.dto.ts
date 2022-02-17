@@ -1,4 +1,12 @@
-import { IsIn, IsNotEmpty, IsOptional, Max, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  Max,
+  MaxLength,
+  Min,
+  min,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -11,10 +19,17 @@ export class CreateProductDto {
   short_description: string;
 
   @IsNotEmpty()
-  list_price: number;
+  @Min(0, { message: 'Không được nhỏ hơn 0' })
+  list_price: number; // Giá niêm yết
 
   @IsNotEmpty()
-  price: number;
+  price: number; // Giá bán lẻ
+
+  @IsOptional()
+  collect_price: number = 0; //Giá thu gom
+
+  @IsOptional()
+  whole_price: number = 0; //Giá bản sỉ
 
   @IsOptional()
   @Max(100, { message: 'Tỉ lệ discount không đúng.' })
@@ -26,9 +41,9 @@ export class CreateProductDto {
   @IsNotEmpty()
   barcode: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
-  product_type: string;
+  product_type: string = 'P';
 
   @IsNotEmpty()
   amount: number;
@@ -40,6 +55,7 @@ export class CreateProductDto {
   weight: number;
 
   @IsNotEmpty()
+  @IsIn(['K', 'G'])
   weight_type: string;
 
   @IsOptional()

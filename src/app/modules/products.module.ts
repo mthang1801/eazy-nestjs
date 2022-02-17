@@ -22,6 +22,7 @@ import { ProductFeaturesRepository } from '../repositories/productFeature.reposi
 import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
+import { ProductIntegrationController } from '../controllers/integration/products.controller';
 
 @Module({
   imports: [forwardRef(() => CategoryModule)],
@@ -69,6 +70,10 @@ import { ProductFeatureVariantDescriptionRepository } from '../repositories/prod
     ProductFeatureVariantsRepository,
     ProductFeatureVariantDescriptionRepository,
   ],
-  controllers: [ProductsControllerBE, ProductsControllerFE],
+  controllers: [
+    ProductsControllerBE,
+    ProductsControllerFE,
+    ProductIntegrationController,
+  ],
 })
 export class ProductsModule {}

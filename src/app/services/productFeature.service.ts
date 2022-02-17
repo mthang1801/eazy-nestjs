@@ -14,6 +14,10 @@ import { Table } from 'src/database/enums';
 import { Like } from 'src/database/find-options/operators';
 import { UpdateProductFeatureDto } from '../dto/productFeatures/update-productFeatures.dto';
 import { IProductFeaturesResponse } from '../interfaces/productFeaturesResponse.interface';
+import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
+import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.entity';
+import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
+import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -21,6 +25,8 @@ export class ProductFeatureService {
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantsRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
+    private productFeatureValuesRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
+    private ProductOptionVariantDescriptionRepository: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
   ) {}
 
   async create(
@@ -167,94 +173,29 @@ export class ProductFeatureService {
     return result;
   }
 
-  async update(id: number, data: UpdateProductFeatureDto): Promise<any> {
-    const checkProductFeatureExist = await this.productFeaturesRepo.findById(
-      id,
-    );
+  async update(sku: string, data: UpdateProductFeatureDto): Promise<any> {
+    const checkProductFeatureExist = await this.productFeaturesRepo.findOne({
+      product_code: sku,
+    });
     if (!checkProductFeatureExist) {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
     }
-
-    const productFeatureData = this.productFeaturesRepo.setData(data);
-    const updatedFeature = await this.productFeaturesRepo.update(
-      { feature_id: id },
-      productFeatureData,
-    );
-
-    const featureDescriptionData =
-      this.productFeatureDescriptionRepo.setData(data);
-    const udpatedFeatureDescription =
-      await this.productFeatureDescriptionRepo.update(
-        { feature_id: id },
-        featureDescriptionData,
-      );
-
-    let feature_variants = [];
-    for (let feature_value of data.feature_values) {
-      const featureVariantData =
-        this.productFeatureVariantsRepo.setData(feature_value);
-
-      const featureVariantDescriptionData =
-        this.productFeatureVariantDescriptionRepo.setData(feature_value);
-      // if has variant_id -> update
-      if (feature_value.variant_id) {
-        const updatedFeatureVariant =
-          await this.productFeatureVariantsRepo.update(
-            { variant_id: feature_value.variant_id },
-            featureVariantData,
-          );
-        const updatedFeatureVariantDescription =
-          await this.productFeatureVariantDescriptionRepo.update(
-            { variant_id: feature_value.variant_id },
-            featureVariantDescriptionData,
-          );
-        feature_variants.push({
-          ...updatedFeatureVariant,
-          ...updatedFeatureVariantDescription,
-        });
-        continue;
-      }
-      // if has no variant_id -> create new
-      const newFeatureVariant: ProductFeatureVariantEntity =
-        await this.productFeatureVariantsRepo.create({
-          ...featureVariantData,
-          feature_id: id,
-        });
-      const featureVariantDescription: ProductFeatureVariantDescriptionEntity =
-        await this.productFeatureVariantDescriptionRepo.create({
-          ...featureVariantDescriptionData,
-          variant_id: newFeatureVariant.variant_id,
-        });
-      feature_variants.push({
-        ...newFeatureVariant,
-        ...featureVariantDescription,
-      });
-    }
-    return {
-      ...updatedFeature,
-      ...udpatedFeatureDescription,
-      feature_values: [...feature_variants],
-    };
   }
 
-  async delete(id: number): Promise<void> {
-    // delete product feature
-    let result = await this.productFeaturesRepo.delete(id);
-    if (!result) {
-      throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
+  async deleteVariant(variantId: number): Promise<void> {
+    const checkProductFeatureVariantExist =
+      await this.productFeatureVariantsRepo.findOne({ variant_id: variantId });
+    if (!checkProductFeatureVariantExist) {
+      throw new HttpException('Không tìm giá trị thấy thuộc tính', 404);
     }
-    // delete product feature description
-    await this.productFeatureDescriptionRepo.delete({ feature_id: id });
+    const checkProductFeatureValues =
+      await this.productFeatureValuesRepo.findOne({ variant_id: variantId });
 
-    let feature_variants = await this.productFeatureVariantsRepo.find({
-      where: { feature_id: id },
-    });
-    // delete product feature vairants and description
-    for (let feature_variant of feature_variants) {
-      await this.productFeatureVariantsRepo.delete(feature_variant.variant_id);
-      await this.productFeatureVariantDescriptionRepo.delete({
-        variant_id: feature_variant.variant_id,
-      });
+    if (checkProductFeatureValues) {
+      throw new HttpException(
+        'Giá trị thuộc tính đang chứa sản phẩm, không thể xoá.',
+        409,
+      );
     }
   }
 }

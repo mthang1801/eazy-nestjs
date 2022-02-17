@@ -9,7 +9,6 @@ import { CategoryDescriptionEntity } from '../entities/categoryDescription.entit
 import { CategoryEntity } from '../entities/category.entity';
 import { CategoryDescriptionRepository } from '../repositories/categoryDescriptions.repository';
 import * as _ from 'lodash';
-import { SortBy } from '../../database/enums/sortBy.enum';
 import { Like } from '../../database/find-options/operators';
 import { ICategoryResult } from '../interfaces/categoryReult.interface';
 
@@ -20,12 +19,39 @@ export class CategoryService {
     private categoryRepository: CategoryRepository<CategoryEntity>,
   ) {}
 
-  async create(data: CreateCategoryDto): Promise<ICategoryResult> {
+  async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
     const categoryData = this.categoryRepository.setData(data);
+
+    if (data.level > 1 && !data.parent_id) {
+      throw new HttpException('Level lớn hơn 1 cần có parent_id', 400);
+    }
+
+    if (data.level === 1 && data.parent_id) {
+      throw new HttpException(
+        'Level 1 không thể nằm trong danh mục khác.',
+        400,
+      );
+    }
+
+    let idPath = '';
+
+    if (data.level === 2) {
+      idPath = `${data.parent_id}`;
+    }
+    if (data.level === 3 && data.parent_id) {
+      let parentCategory = await this.categoryRepository.findById(
+        data.parent_id,
+      );
+      let grandParentCategory = await this.categoryRepository.findById(
+        parentCategory.parent_id,
+      );
+      idPath = `${grandParentCategory.category_id}/${parentCategory.category_id}`;
+    }
 
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
+        id_path: idPath,
         display_at: convertToMySQLDateTime(
           categoryData['display_at']
             ? new Date(categoryData['display_at'])
@@ -162,8 +188,8 @@ export class CategoryService {
       }
     }
 
-    const categoryMenuRawList = await this.categoryRepository.find({
-      select: ['*', `${Table.CATEGORIES}.*`],
+    const categoriesListLevel1 = await this.categoryRepository.find({
+      select: [`*`],
       join: {
         [JoinTable.leftJoin]: {
           [Table.CATEGORY_DESCRIPTIONS]: {
@@ -172,51 +198,30 @@ export class CategoryService {
           },
         },
       },
-      where: filterCondition,
-      orderBy: [{ field: `${Table.CATEGORIES}.level`, sort_by: SortBy.ASC }],
+      where: { [`${Table.CATEGORIES}.level`]: 1 },
     });
 
-    let categoryMenuList = [];
-
-    for (let categoryMenuItem of categoryMenuRawList) {
-      if (categoryMenuItem.level === 1) {
-        const childrenCategories = await this.categoryRepository.find({
-          select: ['*', `${Table.CATEGORIES}.*`],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.CATEGORY_DESCRIPTIONS]: {
-                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
+    for (let categoryLevel1Item of categoriesListLevel1) {
+      let categoriesListLevel2 = await this.categoryRepository.find({
+        select: [`*`],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.CATEGORY_DESCRIPTIONS]: {
+              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
             },
           },
-          where: {
-            [`${Table.CATEGORIES}.parent_id`]: categoryMenuItem.category_id,
-          },
-        });
+        },
+        where: {
+          [`${Table.CATEGORIES}.level`]: 2,
+          parent_id: categoryLevel1Item.category_id,
+        },
+      });
 
-        categoryMenuList.push({
-          ...categoryMenuItem,
-          children: childrenCategories,
-        });
-
-        continue;
-      }
-      if (categoryMenuItem.level === 2) {
-        categoryMenuList = categoryMenuList.map((_categoryMenuItem) => {
-          if (
-            _categoryMenuItem.level === 1 &&
-            _categoryMenuItem.category_id === categoryMenuItem.parent_id
-          ) {
-            _categoryMenuItem['children'].push(categoryMenuItem);
-          }
-          return _categoryMenuItem;
-        });
-        continue;
-      }
+      categoryLevel1Item.children = categoriesListLevel2;
     }
 
-    return categoryMenuList;
+    return categoriesListLevel1;
   }
 
   async get(id: number): Promise<ICategoryResult> {
