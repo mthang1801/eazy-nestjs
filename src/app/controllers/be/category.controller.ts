@@ -18,6 +18,7 @@ import { CreateCategoryDto } from '../../dto/category/create-category.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
+import { ProductService } from 'src/app/services/products.service';
 
 /**
  * Controller for Category
@@ -26,7 +27,10 @@ import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 //@UseGuards(AuthGuard)
 @Controller('/be/v1/category')
 export class CategoryController extends BaseController {
-  constructor(private service: CategoryService) {
+  constructor(
+    private service: CategoryService,
+    private productService: ProductService,
+  ) {
     super();
   }
 
@@ -99,5 +103,18 @@ export class CategoryController extends BaseController {
           res,
           `Xoá không thành công, không tìm thấy id ${id}.`,
         );
+  }
+
+  @Get(':id/products')
+  async getProductsList(
+    @Param('id') categoryId: number,
+    @Query() params,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.productService.getProductsListByCategoryId(
+      categoryId,
+      params,
+    );
+    return this.responseSuccess(res, result);
   }
 }

@@ -161,6 +161,37 @@ export class BaseRepositorty<T> {
     return results;
   }
 
+  async count(params): Promise<any> {
+    this.logger.log('=============== COUNT ================');
+    if (
+      typeof params !== 'object' ||
+      Object.keys(params).some(
+        (value: string) =>
+          orderCmds.includes(value.toLowerCase()) &&
+          value.toLowerCase() !== 'where' &&
+          value.toLowerCase() !== 'join',
+      )
+    ) {
+      throw new HttpException(
+        'Tham số truyền vào không hợp lệ.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const collection = new DatabaseCollection(this.table);
+    Object.entries(params).forEach(([key, val]) => {
+      if (['join', 'where'].includes(key)) {
+        collection[key](val);
+      }
+    });
+
+    const result = await this.databaseService.executeQueryReadPool(
+      collection.sqlCount(),
+    );
+
+    return result[0][0]['total'] || 0;
+  }
+
   /**
    * Update one record by primary key
    * @param id primary key

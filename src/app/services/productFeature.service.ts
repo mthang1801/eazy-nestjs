@@ -14,6 +14,10 @@ import { Table } from 'src/database/enums';
 import { Like } from 'src/database/find-options/operators';
 import { UpdateProductFeatureDto } from '../dto/productFeatures/update-productFeatures.dto';
 import { IProductFeaturesResponse } from '../interfaces/productFeaturesResponse.interface';
+import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
+import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.entity';
+import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
+import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -21,38 +25,47 @@ export class ProductFeatureService {
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantsRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
+    private productFeatureValuesRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
+    private ProductOptionVariantDescriptionRepository: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
   ) {}
 
   async create(
     data: CreateProductFeatureDto,
   ): Promise<IProductFeaturesResponse> {
-    const { feature_name, feature_values, display_status } = data;
     // create a new record on feature and feature_description
+    const productFeatureData = this.productFeaturesRepo.setData(data);
     const newFeature: ProductFeatureEntity =
-      await this.productFeaturesRepo.create({
-        display_on_catalog: display_status
-          ? ProductFeatureDisplayStatus.Yes
-          : ProductFeatureDisplayStatus.No,
-      });
+      await this.productFeaturesRepo.create(productFeatureData);
 
+    const featureDescriptionData =
+      this.productFeatureDescriptionRepo.setData(data);
     const newFeatureDesription: ProductFeatureDescriptionEntity =
       await this.productFeatureDescriptionRepo.create({
+        ...featureDescriptionData,
         feature_id: newFeature.feature_id,
-        description: feature_name,
       });
 
     let feature_variants = [];
     // create record item on feature_variant and feature_variant_description from feature_values
-    for (let feature_value of feature_values) {
+    for (let feature_value of data.feature_values) {
+      const featureVariantData =
+        this.productFeatureVariantsRepo.setData(feature_value);
+
       const newFeatureVariant: ProductFeatureVariantEntity =
         await this.productFeatureVariantsRepo.create({
+          ...featureVariantData,
           feature_id: newFeature.feature_id,
         });
+
+      const featureVariantDescription =
+        this.productFeatureVariantDescriptionRepo.setData(feature_value);
+
       const newFeatureVariantDescription: ProductFeatureVariantDescriptionEntity =
         await this.productFeatureVariantDescriptionRepo.create({
+          ...featureVariantDescription,
           variant_id: newFeatureVariant.variant_id,
-          variant: feature_value,
         });
+
       feature_variants.push({
         ...newFeatureVariant,
         ...newFeatureVariantDescription,
@@ -160,162 +173,29 @@ export class ProductFeatureService {
     return result;
   }
 
-  async update(
-    id: number,
-    data: UpdateProductFeatureDto,
-  ): Promise<IProductFeaturesResponse> {
-    const checkProductFeatureExist = await this.productFeaturesRepo.findById(
-      id,
-    );
+  async update(sku: string, data: UpdateProductFeatureDto): Promise<any> {
+    const checkProductFeatureExist = await this.productFeaturesRepo.findOne({
+      product_code: sku,
+    });
     if (!checkProductFeatureExist) {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
     }
-
-    const productFeaturesData = this.productFeaturesRepo.setData(data);
-    const updatedFeaturesData = await this.productFeaturesRepo.update(
-      checkProductFeatureExist.feature_id,
-      productFeaturesData,
-    );
-
-    let productFeatureDescription =
-      await this.productFeatureDescriptionRepo.findOne({
-        feature_id: checkProductFeatureExist.feature_id,
-      });
-
-    const productFeatureDescriptionsData =
-      this.productFeatureDescriptionRepo.setData(data);
-
-    if (
-      productFeatureDescription &&
-      Object.entries(productFeatureDescriptionsData).length
-    ) {
-      productFeatureDescription =
-        await this.productFeatureDescriptionRepo.update(
-          productFeatureDescription.feature_description_id,
-          productFeatureDescriptionsData,
-        );
-    }
-
-    let currentVariants = [];
-
-    let updatedFeatureVariants = [];
-
-    if (data.feature_variants && data.feature_variants.length) {
-      // Find all product feature variants by feature_id to get variant_id list
-      currentVariants = await this.productFeatureVariantsRepo.find({
-        select: ['variant_id'],
-        where: { feature_id: id },
-      });
-
-      // Convert array object type to array number
-      if (currentVariants.length) {
-        currentVariants = currentVariants.reduce(
-          (acc, ele) => [...acc, ele.variant_id],
-          [],
-        );
-      }
-
-      for (let featureVariant of data.feature_variants) {
-        const featureVariantData =
-          this.productFeatureVariantsRepo.setData(featureVariant);
-        const featureVariantDescriptionData =
-          this.productFeatureVariantDescriptionRepo.setData(featureVariant);
-
-        // If featureVariantData is not variant_id, we will add new record
-        if (!featureVariantData['variant_id']) {
-          const newFeatureVariant =
-            await this.productFeatureVariantsRepo.create({
-              feature_id: id,
-              ...featureVariantData,
-            });
-          const newFeatureVariantDescription =
-            await this.productFeatureVariantDescriptionRepo.create({
-              variant_id: newFeatureVariant.variant_id,
-              ...featureVariantDescriptionData,
-            });
-          updatedFeatureVariants.push({
-            ...newFeatureVariant,
-            ...newFeatureVariantDescription,
-          });
-          continue;
-        }
-
-        // If currentVariants array has contained featureVariantData, we will update. In contrary, we will delete record
-        if (currentVariants.includes(featureVariantData['variant_id'])) {
-          const updatedFeatureVariant =
-            await this.productFeatureVariantsRepo.update(
-              featureVariantData['variant_id'],
-              featureVariantData,
-            );
-          const updatedFeatureVariantDescription =
-            await this.productFeatureVariantDescriptionRepo.update(
-              featureVariantDescriptionData['variant_description_id'],
-              featureVariantDescriptionData,
-            );
-
-          updatedFeatureVariants.push({
-            ...updatedFeatureVariant,
-            ...updatedFeatureVariantDescription,
-          });
-          continue;
-        }
-      }
-    } else {
-      updatedFeatureVariants = await this.productFeatureVariantsRepo.find({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-              fieldJoin: 'variant_id',
-              rootJoin: 'variant_id',
-            },
-          },
-        },
-        where: {
-          [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]: id,
-        },
-      });
-    }
-
-    //  Delete each of record which is not on updated list feature product variant
-    for (let variantId of currentVariants) {
-      if (
-        !updatedFeatureVariants.some(
-          ({ variant_id }) => variantId === variant_id,
-        )
-      ) {
-        await this.productFeatureVariantsRepo.delete({ variant_id: variantId });
-        await this.productFeatureVariantDescriptionRepo.delete({
-          variant_id: variantId,
-        });
-      }
-    }
-
-    return {
-      ...updatedFeaturesData,
-      ...productFeatureDescription,
-      feature_variants: updatedFeatureVariants,
-    };
   }
 
-  async delete(id: number): Promise<void> {
-    // delete product feature
-    let result = await this.productFeaturesRepo.delete(id);
-    if (!result) {
-      throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
+  async deleteVariant(variantId: number): Promise<void> {
+    const checkProductFeatureVariantExist =
+      await this.productFeatureVariantsRepo.findOne({ variant_id: variantId });
+    if (!checkProductFeatureVariantExist) {
+      throw new HttpException('Không tìm giá trị thấy thuộc tính', 404);
     }
-    // delete product feature description
-    await this.productFeatureDescriptionRepo.delete({ feature_id: id });
+    const checkProductFeatureValues =
+      await this.productFeatureValuesRepo.findOne({ variant_id: variantId });
 
-    let feature_variants = await this.productFeatureVariantsRepo.find({
-      where: { feature_id: id },
-    });
-    // delete product feature vairants and description
-    for (let feature_variant of feature_variants) {
-      await this.productFeatureVariantsRepo.delete(feature_variant.variant_id);
-      await this.productFeatureVariantDescriptionRepo.delete({
-        variant_id: feature_variant.variant_id,
-      });
+    if (checkProductFeatureValues) {
+      throw new HttpException(
+        'Giá trị thuộc tính đang chứa sản phẩm, không thể xoá.',
+        409,
+      );
     }
   }
 }

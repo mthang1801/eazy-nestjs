@@ -12,6 +12,6 @@ export interface IProductFeature {
   display_on_catalog: string;
   display_on_header: string;
   status: string;
-  position: string;
+  position: number;
   comparison: string;
 }

@@ -12,10 +12,16 @@ export class ProductsController extends BaseController {
 
   @Get(':id')
   async get(
-    @Param('id') productId: number,
+    @Param('id') identifier: number | string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.get(productId);
+    const result = await this.service.get(identifier);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 }

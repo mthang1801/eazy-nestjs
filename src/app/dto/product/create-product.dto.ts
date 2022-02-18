@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsOptional, Max, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  Max,
+  MaxLength,
+  Min,
+  min,
+} from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty()
@@ -11,13 +19,17 @@ export class CreateProductDto {
   short_description: string;
 
   @IsNotEmpty()
-  image_urls: string[];
+  @Min(0, { message: 'Không được nhỏ hơn 0' })
+  list_price: number; // Giá niêm yết
 
   @IsNotEmpty()
-  list_price: number;
+  price: number; // Giá bán lẻ
 
-  @IsNotEmpty()
-  price: number;
+  @IsOptional()
+  collect_price: number = 0; //Giá thu gom
+
+  @IsOptional()
+  whole_price: number = 0; //Giá bản sỉ
 
   @IsOptional()
   @Max(100, { message: 'Tỉ lệ discount không đúng.' })
@@ -29,9 +41,9 @@ export class CreateProductDto {
   @IsNotEmpty()
   barcode: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
-  product_type: string;
+  product_type: string = 'P';
 
   @IsNotEmpty()
   amount: number;
@@ -43,6 +55,7 @@ export class CreateProductDto {
   weight: number;
 
   @IsNotEmpty()
+  @IsIn(['K', 'G'])
   weight_type: string;
 
   @IsOptional()
@@ -58,7 +71,8 @@ export class CreateProductDto {
   alias: string;
 
   @IsOptional()
-  status: string;
+  @IsIn(['A', 'D'])
+  status: string = 'A';
 
   @IsOptional()
   display_at: Date = new Date();
@@ -89,4 +103,31 @@ export class CreateProductDto {
 
   @IsOptional()
   group_id: number = 0;
+
+  @IsOptional()
+  shortname: string = ''; //product descriptions
+
+  @IsOptional()
+  full_description: string = ''; //product descriptions
+
+  @IsOptional()
+  lang_code: string = 'vn'; //product descriptions
+
+  @IsOptional()
+  age_warning_message: string = ''; //product descriptions
+
+  @IsOptional()
+  lower_limit: number = 0; //product price
+
+  @IsOptional()
+  usergroup_id: number = 0; //product price
+
+  @IsOptional()
+  link_type: string = 'M'; // product category
+
+  @IsOptional()
+  position: number = 0; // product position
+
+  @IsOptional()
+  category_position: number = 0; // product position
 }

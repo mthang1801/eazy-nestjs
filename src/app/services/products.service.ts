@@ -29,12 +29,36 @@ import { ProductSalesRepository } from '../repositories/productSales.repository'
 import { ProductSalesEntity } from '../entities/productSales.entity';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
-import { Table } from 'src/database/enums';
-import { Equal, Like, Not } from 'src/database/find-options/operators';
-import { JoinTable } from '../../database/enums/joinTable.enum';
-import { type } from 'os';
+import { JoinTable, Table } from 'src/database/enums';
 import { CreateProductDto } from '../dto/product/create-product.dto';
-
+import { CategoryRepository } from '../repositories/category.repository';
+import { CategoryEntity } from '../entities/category.entity';
+import {
+  productByCategoryJoiner,
+  productFamilyJoiner,
+  productFeaturesByCategory,
+  productFeaturesJoiner,
+  productJoiner,
+} from 'src/utils/joinTable';
+import {
+  productsFamilyFilterConditioner,
+  productsGroupFilterConditioner,
+} from 'src/utils/tableConditioner';
+import { In, Like, Not } from 'src/database/find-options/operators';
+import { ProductFeaturesRepository } from '../repositories/productFeature.repository';
+import { ProductFeatureEntity } from '../entities/productFeature.entity';
+import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
+import { ProductFeatureDescriptionEntity } from '../entities/productFeatureDescription.entity';
+import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
+import { ProductFeatureVariantDescriptionEntity } from '../entities/productFeatureVariantDescription.entity';
+import * as _ from 'lodash';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
+import { UpdateProductDto } from '../dto/product/update-product.dto';
+import { Equal } from '../../database/find-options/operators';
 @Injectable()
 export class ProductService {
   constructor(
@@ -53,6 +77,12 @@ export class ProductService {
     private productOptionDescriptionRepo: ProductOptionDescriptionRepository<ProductOptionDescriptionEntity>,
     private productOptionVariantsRepo: ProductOptionVariantsRepository<ProductOptionVariantsEntity>,
     private productOptionVariantDescriptionRepo: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
+    private categoryRepo: CategoryRepository<CategoryEntity>,
+    private productFeaturesRepo: ProductFeaturesRepository<ProductFeatureEntity>,
+    private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
+    private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
+    private imageRepo: ImagesRepository<ImagesEntity>,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
 
   async create(data: CreateProductDto): Promise<any> {
@@ -119,9 +149,10 @@ export class ProductService {
       });
 
     // ----- Product category -----
-    const { category_id } = data;
+
+    const productCategoryData = this.productCategoryRepo.setData(data);
     const newProductCategory = await this.productCategoryRepo.create({
-      category_id,
+      ...productCategoryData,
       product_id: newProductItem.product_id,
     });
 
@@ -162,6 +193,9 @@ export class ProductService {
 
     if (product_features.length) {
       for (let { feature_id, variant_id } of product_features) {
+        const productFeatureVariant =
+          await this.productFeatureVariantDescriptionRepo.findOne(variant_id);
+
         let featureValue = await this.productFeatureValueRepo.findOne({
           feature_id,
           variant_id,
@@ -172,6 +206,12 @@ export class ProductService {
             feature_id,
             variant_id,
             product_id: newProductItem.product_id,
+            value: isNaN(+productFeatureVariant.variant * 1)
+              ? productFeatureVariant.variant
+              : '',
+            value_int: !isNaN(+productFeatureVariant.variant * 1)
+              ? +productFeatureVariant.variant
+              : 0,
           });
         }
 
@@ -183,10 +223,12 @@ export class ProductService {
           });
 
         if (!checkProductGroupFeatureExist) {
+          const feature: ProductFeatureDescriptionEntity =
+            await this.productFeatureDescriptionRepo.findOne({ feature_id });
           await this.productVariationGroupFeatureRepo.create({
             feature_id,
             group_id,
-            purpose,
+            purpose: purpose || feature.description,
           });
         }
       }
@@ -199,118 +241,11 @@ export class ProductService {
       ...newProductSale,
       ...newProductCategory,
     };
+
     return result;
   }
 
-  async getList(params: any): Promise<any> {
-    let { page, limit, ...others } = params;
-    page = +page || 1;
-    limit = +limit || 9999;
-    let skip = (page - 1) * limit;
-
-    let filterCondition = {};
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.productRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.productDescriptionsRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.productVariationGroupFeatureRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.${key}`] =
-            Like(val);
-          continue;
-        }
-        if (this.productCategoryRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCTS_CATEGORIES}.${key}`] = Like(val);
-          continue;
-        }
-      }
-    }
-
-    let productLists = await this.productRepo.find({
-      select: ['*', `${Table.PRODUCTS}.*`, `${Table.PRODUCT_DESCRIPTION}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCTS_CATEGORIES]: {
-            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
-            fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCT_VARIATION_GROUPS]: {
-            fieldJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
-            rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`,
-          },
-          [Table.PRODUCT_PRICES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
-          },
-          [Table.PRODUCT_SALES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
-          },
-          [Table.PRODUCTS_CATEGORIES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-          },
-        },
-      },
-      where: filterCondition,
-      skip,
-      limit,
-    });
-
-    let filterConditionFeatures = {};
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.productFeatureValueRepo.tableProps.includes(key)) {
-          filterConditionFeatures[`${Table.PRODUCT_FEATURE_VALUES}.${key}`] =
-            val;
-          continue;
-        }
-      }
-    }
-
-    // get product features
-    let productByFilterFeatures = [];
-    for (let productItem of productLists) {
-      let productFeatures = await this.productFeatureValueRepo.find({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-              fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
-              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
-            },
-            [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-              fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
-              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
-            },
-          },
-        },
-        where: {
-          product_id: productItem.product_id,
-          ...filterConditionFeatures,
-        },
-      });
-      productItem['features'] = productFeatures;
-      productByFilterFeatures.push(productItem);
-    }
-
-    return productByFilterFeatures;
-  }
-
-  async get(productId: number): Promise<any> {
+  async get(identifier: number | string): Promise<any> {
     // get Product item
     let product = await this.productRepo.findOne({
       select: [
@@ -319,56 +254,17 @@ export class ProductService {
         `${Table.PRODUCT_DESCRIPTION}.*`,
         `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
       ],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCTS_CATEGORIES]: {
-            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
-            fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCT_VARIATION_GROUPS]: {
-            fieldJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
-            rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`,
-          },
-          [Table.PRODUCT_PRICES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
-          },
-          [Table.PRODUCT_SALES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
-          },
-          [Table.PRODUCTS_CATEGORIES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-          },
-        },
-      },
-      where: { [`${Table.PRODUCTS}.product_id`]: productId },
+      join: { [JoinTable.leftJoin]: productJoiner },
+      where: [
+        { [`${Table.PRODUCTS}.product_id`]: identifier },
+        { [`${Table.PRODUCTS}.product_code`]: identifier },
+      ],
     });
 
     // get features of product
     const productFeatures = await this.productFeatureValueRepo.find({
       select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-            fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
-            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
-          },
-          [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-            fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
-            rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
-          },
-        },
-      },
+      join: { [JoinTable.leftJoin]: productFeaturesJoiner },
       where: {
         [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
       },
@@ -377,44 +273,11 @@ export class ProductService {
     product['features'] = productFeatures;
 
     // filter condition base on family
-    const productsFamilyFilterCondition =
-      product.parent_product_id === 0
-        ? {
-            [`${Table.PRODUCTS}.parent_product_id`]: product.product_id,
-          }
-        : [
-            {
-              [`${Table.PRODUCTS}.parent_product_id`]:
-                product.parent_product_id,
-            },
-            {
-              [`${Table.PRODUCTS}.product_id`]: product.parent_product_id,
-            },
-          ];
 
     const productsFamily = await this.productRepo.find({
       select: ['*', `${Table.PRODUCTS}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCTS_CATEGORIES]: {
-            fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-            rootJoin: `${Table.PRODUCTS}.product_id`,
-          },
-          [Table.PRODUCT_PRICES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
-          },
-          [Table.PRODUCT_SALES]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_SALES}.product_id`,
-          },
-        },
-      },
-      where: productsFamilyFilterCondition,
+      join: productFamilyJoiner,
+      where: productsFamilyFilterConditioner(product),
     });
 
     product['products_family'] = productsFamily.filter(
@@ -425,57 +288,434 @@ export class ProductService {
     if (product.group_id) {
       const productsGroup = await this.productRepo.find({
         select: ['*', `${Table.PRODUCTS}.*`],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.PRODUCT_DESCRIPTION]: {
-              fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-              rootJoin: `${Table.PRODUCTS}.product_id`,
-            },
-            [Table.PRODUCTS_CATEGORIES]: {
-              fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-              rootJoin: `${Table.PRODUCTS}.product_id`,
-            },
-            [Table.PRODUCT_PRICES]: {
-              fieldJoin: `${Table.PRODUCTS}.product_id`,
-              rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
-            },
-            [Table.PRODUCT_SALES]: {
-              fieldJoin: `${Table.PRODUCTS}.product_id`,
-              rootJoin: `${Table.PRODUCT_SALES}.product_id`,
-            },
-            [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
-              fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
-              rootJoin: `${Table.PRODUCTS}.product_id`,
-            },
-          },
-        },
-        where:
-          product.parent_product_id === 0
-            ? {
-                [`${Table.PRODUCTS}.parent_product_id`]: Not(
-                  Equal(product.product_id),
-                ),
-                [`${Table.PRODUCTS}.product_id`]: Not(
-                  Equal(product.product_id),
-                ),
-                [`${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`]:
-                  product.group_id,
-              }
-            : {
-                [`${Table.PRODUCTS}.parent_product_id`]: Not(
-                  Equal(product.parent_product_id),
-                ),
-                [`${Table.PRODUCTS}.product_id`]: Not(
-                  Equal(product.parent_product_id),
-                ),
-                [`${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`]:
-                  product.group_id,
-              },
+        join: { [JoinTable.leftJoin]: productJoiner },
+        where: productsGroupFilterConditioner(product),
       });
 
       product['products_group'] = productsGroup;
     }
 
     return product;
+  }
+
+  async getList(params: any): Promise<any> {
+    let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 9999;
+    let skip = (page - 1) * limit;
+
+    let products = [];
+    let count;
+    let filterCondition = {};
+    let isContinue = true;
+
+    if (Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.productDescriptionsRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
+        }
+      }
+      for (let [key, val] of Object.entries(others)) {
+        const getFeatureByKey = await this.productFeaturesRepo.findOne({
+          feature_code: key,
+        });
+
+        const getVariantByVal = await this.productFeatureValueRepo.findOne({
+          value: val,
+        });
+
+        if (!getFeatureByKey || !getVariantByVal) continue;
+
+        isContinue = false;
+
+        count = await this.productRepo.find({
+          select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+          join: {
+            [JoinTable.leftJoin]: productByCategoryJoiner,
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+              getFeatureByKey.feature_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+              getVariantByVal.variant_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+              (productItem) => productItem.product_id,
+            ),
+          },
+        });
+
+        products = await this.productRepo.find({
+          select: [
+            `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
+          ],
+          join: {
+            [JoinTable.leftJoin]: productByCategoryJoiner,
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+              getFeatureByKey.feature_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+              getVariantByVal.variant_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+              (productItem) => productItem.product_id,
+            ),
+          },
+          skip,
+          limit,
+        });
+      }
+
+      if (!isContinue) {
+        return { totalProducts: count ? count[0].total : 0, products };
+      }
+    }
+
+    count = await this.productRepo.find({
+      select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: filterCondition,
+    });
+
+    products = await this.productRepo.find({
+      select: [
+        `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
+      ],
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: filterCondition,
+      skip,
+      limit,
+    });
+
+    console.log(products);
+    for (let productItem of products) {
+      const listFeatureValues = await this.productRepo.find({
+        select: ['*'],
+        join: {
+          [JoinTable.rightJoin]: {
+            [Table.PRODUCT_FEATURE_VALUES]: {
+              fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+              rootJoin: `${Table.PRODUCTS}.product_id`,
+            },
+            [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+              fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
+            },
+
+            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+              fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+            },
+          },
+        },
+        where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
+      });
+      productItem.features = listFeatureValues;
+    }
+
+    return { totalProducts: count ? count[0].total : 0, products };
+  }
+
+  async getProductsListByCategoryId(
+    categoryId: number,
+    params: any,
+  ): Promise<any> {
+    const category = await this.categoryRepo.findById(categoryId);
+
+    let categoriesList: { category_id: number }[] = [
+      { category_id: category.category_id },
+    ];
+
+    switch (category.level) {
+      case 1:
+        categoriesList = [
+          ...categoriesList,
+          ...(await this.getCategoriesListLevel1(categoryId)),
+        ];
+        break;
+      case 2:
+        categoriesList = [
+          ...categoriesList,
+          ...(await this.getCategoriesListLevel2(categoryId)),
+        ];
+        break;
+    }
+
+    let categoriesListFlatten: number[] = categoriesList.map(
+      ({ category_id }) => category_id,
+    );
+
+    let { page, limit, ...others } = params;
+
+    page = +page || 1;
+    limit = +limit || 9999;
+    const skip = (page - 1) * limit;
+
+    let products = [];
+    let count;
+    if (Object.entries(others).length) {
+      for (let [i, [key, val]] of Object.entries(others).entries()) {
+        const getFeatureByKey = await this.productFeaturesRepo.findOne({
+          feature_code: key,
+        });
+
+        const getVariantByVal = await this.productFeatureValueRepo.findOne({
+          value: val,
+        });
+
+        if (!getFeatureByKey || !getVariantByVal) continue;
+
+        count = await this.productRepo.find({
+          select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+          join: {
+            [JoinTable.leftJoin]: productByCategoryJoiner,
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+              getFeatureByKey.feature_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+              getVariantByVal.variant_id,
+            [`${Table.PRODUCTS_CATEGORIES}.category_id`]:
+              categoriesListFlatten.map((categoryId) => categoryId),
+            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+              (productItem) => productItem.product_id,
+            ),
+          },
+        });
+
+        products = await this.productRepo.find({
+          select: [
+            `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
+          ],
+          join: {
+            [JoinTable.leftJoin]: productByCategoryJoiner,
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+              getFeatureByKey.feature_id,
+            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+              getVariantByVal.variant_id,
+            [`${Table.PRODUCTS_CATEGORIES}.category_id`]:
+              categoriesListFlatten.map((categoryId) => categoryId),
+            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+              (productItem) => productItem.product_id,
+            ),
+          },
+          skip,
+          limit,
+        });
+      }
+      return { total: count ? count[0]?.total : 0, products };
+    }
+
+    count = await this.productRepo.find({
+      select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesListFlatten.map(
+          (categoryId) => categoryId,
+        ),
+      },
+    });
+
+    products = await this.productRepo.find({
+      select: [
+        `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
+      ],
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesListFlatten.map(
+          (categoryId) => categoryId,
+        ),
+      },
+      skip,
+      limit,
+    });
+
+    return { total: count ? count[0]?.total : 0, products };
+  }
+
+  async getCategoriesListLevel1(categoryId: number): Promise<any> {
+    let categoriesListLevel2 = await this.categoryRepo.find({
+      select: ['category_id'],
+      where: { parent_id: categoryId, level: 2 },
+    });
+
+    let categoriesListLevel3 = [];
+    for (let categoryItem of categoriesListLevel2) {
+      let categoriesListLevel3ByLevel2 = await this.getCategoriesListLevel2(
+        categoryItem.category_id,
+      );
+
+      if (categoriesListLevel3ByLevel2.length) {
+        categoriesListLevel3 = [
+          ...categoriesListLevel3,
+          ...categoriesListLevel3ByLevel2,
+        ];
+      }
+    }
+
+    return [...categoriesListLevel2, ...categoriesListLevel3];
+  }
+
+  async getCategoriesListLevel2(categoryId: number): Promise<any> {
+    return this.categoryRepo.find({
+      select: ['category_id'],
+      where: { parent_id: categoryId, level: 3 },
+    });
+  }
+
+  async update(
+    identifier: number | string,
+    data: UpdateProductDto,
+  ): Promise<any> {
+    const currentProduct = await this.productRepo.findOne({
+      select: [
+        '*',
+        `${Table.PRODUCTS}.*`,
+        `${Table.PRODUCT_DESCRIPTION}.*`,
+        `${Table.CATEGORY_DESCRIPTIONS}.* `,
+      ],
+      join: { [JoinTable.leftJoin]: productJoiner },
+      where: [
+        { [`${Table.PRODUCTS}.product_id`]: identifier },
+        { product_code: identifier },
+      ],
+    });
+
+    if (!currentProduct) {
+      throw new HttpException('Sản phẩm không tồn tại.', 404);
+    }
+
+    if (data.group_id) {
+      const checkGroupIdExist = await this.productVariationGroupRepo.findById(
+        data.group_id,
+      );
+      if (!checkGroupIdExist)
+        throw new HttpException('Group id không tồn tại', 404);
+    }
+
+    if (
+      data.product_code &&
+      data.product_code !== currentProduct.product_code
+    ) {
+      const productCodeExists = await this.productRepo.findOne({
+        product_code: data.product_code,
+      });
+      if (productCodeExists) {
+        throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
+      }
+    }
+
+    //update product
+    const productData = this.productRepo.setData(data);
+    const updatedProduct = await this.productRepo.update(
+      {
+        product_id: currentProduct.product_id,
+      },
+      productData,
+    );
+
+    // product descriptions
+    const productDescriptionData = this.productDescriptionsRepo.setData(data);
+    const updatedProductDescription = await this.productDescriptionsRepo.update(
+      { product_id: currentProduct.product_id },
+      productDescriptionData,
+    );
+
+    // Price
+    const productPriceData = this.productPriceRepo.setData(data);
+    const updatedProductPrice: ProductPricesEntity =
+      await this.productPriceRepo.update(
+        { product_id: currentProduct.product_id },
+        productPriceData,
+      );
+
+    // Sale
+    const productSaleData = this.productSaleRepo.setData(data);
+    const updatedProductSale: ProductSalesEntity =
+      await this.productSaleRepo.update(
+        { product_id: currentProduct.product_id },
+        productSaleData,
+      );
+
+    // ----- Product category -----
+    const productCategoryData = this.productCategoryRepo.setData(data);
+    const updatedProductCategory = await this.productCategoryRepo.update(
+      { product_id: currentProduct.product_id },
+      productCategoryData,
+    );
+
+    // ----- Product groups -----
+    let productGroupProductData =
+      this.productVariationGroupProductsRepo.setData(data);
+    const updatedProductGroup =
+      await this.productVariationGroupProductsRepo.update(
+        { product_id: currentProduct.product_id },
+        productGroupProductData,
+      );
+
+    // Product features values and product group Features
+
+    if (data.feature_values.length) {
+      // delete all old product feature values by product id
+
+      await this.productFeatureValueRepo.delete({
+        product_id: currentProduct.product_id,
+      });
+
+      for (let { feature_id, variant_id } of data.feature_values) {
+        const productFeatureVariant =
+          await this.productFeatureVariantDescriptionRepo.findOne({
+            variant_id,
+          });
+
+        const featureValue = await this.productFeatureValueRepo.create({
+          feature_id,
+          variant_id,
+          product_id: currentProduct.product_id,
+          value: isNaN(+productFeatureVariant.variant * 1)
+            ? productFeatureVariant.variant
+            : '',
+          value_int: !isNaN(+productFeatureVariant.variant * 1)
+            ? +productFeatureVariant.variant
+            : 0,
+        });
+
+        // Check group feature by feature_id and group_id, if not exists, create new record
+        let checkProductGroupFeatureExist =
+          await this.productVariationGroupFeatureRepo.findOne({
+            feature_id,
+            group_id: currentProduct.product_id,
+          });
+
+        if (!checkProductGroupFeatureExist) {
+          const feature: ProductFeatureDescriptionEntity =
+            await this.productFeatureDescriptionRepo.findOne({ feature_id });
+          await this.productVariationGroupFeatureRepo.create({
+            feature_id,
+            group_id: currentProduct.product_id,
+            purpose: feature.description,
+          });
+        }
+      }
+    }
+
+    const result = {
+      ...updatedProduct,
+      ...updatedProductDescription,
+      ...updatedProductPrice,
+      ...updatedProductSale,
+      ...updatedProductCategory,
+    };
+
+    return result;
   }
 }

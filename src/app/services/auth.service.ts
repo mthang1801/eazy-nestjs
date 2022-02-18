@@ -14,7 +14,7 @@ import {
   convertToMySQLDateTime,
   preprocessUserResult,
 } from '../../utils/helper';
-import { AuthLoginProviderDto } from '../dto/auth/auth-login-provider.dto';
+import { AuthLoginProviderDto } from '../dto/auth/auth-loginProvider.dto';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';

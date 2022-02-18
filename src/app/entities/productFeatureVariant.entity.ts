@@ -3,5 +3,5 @@ export class ProductFeatureVariantEntity {
   feature_id: number = 0;
   url: string = '';
   color: string = '';
-  position: string = '';
+  position: number = 0;
 }

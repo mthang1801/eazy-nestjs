@@ -45,22 +45,22 @@ export class ProductFeatureController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(':id')
+  @Put(':sku')
   async update(
-    @Param('id') id: number,
+    @Param('sku') sku: string,
     @Body() data: UpdateProductFeatureDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, data);
+    const result = await this.service.update(sku, data);
     return this.responseSuccess(res, result);
   }
 
   @Delete(':id')
-  async delete(
-    @Param('id') id: number,
+  async deleteVariant(
+    @Param('id') variantId: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.service.delete(id);
+    await this.service.deleteVariant(variantId);
     return this.responseSuccess(res, null, 'Xoá thành công');
   }
 }

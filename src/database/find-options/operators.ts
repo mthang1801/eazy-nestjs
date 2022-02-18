@@ -53,9 +53,12 @@ export function Between<T>(
 
 export function In<T>(arr: T[]): {
   operator: string;
-  value: T[];
+  value: string;
 } {
-  return { operator: 'IN', value: arr };
+  return {
+    operator: 'IN',
+    value: `(${arr.map((item) => `'${item}'`).join()})`,
+  };
 }
 
 export function Any<T>(arr: T[]): {
