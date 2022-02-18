@@ -5,8 +5,10 @@ import { OrdersService } from '../services/orders.service';
 import { OrderDetailsRepository } from '../repositories/orderDetails.repository';
 import { OrderTransactionRepository } from '../repositories/orderTransactions.repository';
 import { OrderDataRepository } from '../repositories/orderData.repository';
-
+import { OrderController } from '../controllers/be/order.controller';
+import { ProductsRepository } from '../repositories/products.repository';
 @Module({
+  controllers:[OrderController],
   providers: [
     OrdersService,
     OrdersRepository,
@@ -14,6 +16,7 @@ import { OrderDataRepository } from '../repositories/orderData.repository';
     OrderDetailsRepository,
     OrderTransactionRepository,
     OrderDataRepository,
+    ProductsRepository
   ],
   exports: [
     OrdersService,

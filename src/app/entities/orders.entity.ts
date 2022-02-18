@@ -3,7 +3,7 @@ export class OrderEntity {
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;
-  issuer_id: string = '';
+  issuer_id: number = 0;
   user_id: number = 0;
   total: number = 0;
   subtotal: number = 0;
@@ -53,5 +53,5 @@ export class OrderEntity {
   repaid: number = 0;
   validation_code: string = '';
   localization_id: number = 0;
-  profile_id: number = 0;
+  utm_source: number = 0;
 }
