@@ -8,8 +8,10 @@ import { OrderDataRepository } from '../repositories/orderData.repository';
 import { OrderController } from '../controllers/be/order.controller';
 import { ProductsRepository } from '../repositories/products.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
+import { OrderIntegrationController } from '../controllers/integration/order.controller';
+import { OrderStatusModule } from './orderStatus.module';
 @Module({
-  controllers:[OrderController],
+  controllers:[OrderController,OrderIntegrationController],
   providers: [
     OrdersService,
     OrdersRepository,
@@ -19,6 +21,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
     OrderDataRepository,
     ProductsRepository,
     UserProfileRepository,
+    
   ],
   exports: [
     OrdersService,
@@ -29,5 +32,6 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
     OrderDataRepository,
     UserProfileRepository,
   ],
+  imports:[OrderStatusModule],
 })
 export class OrdersModule {}
