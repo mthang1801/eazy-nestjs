@@ -24,7 +24,7 @@ import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus
  * @Author LongTRinh
  */
 //@UseGuards(AuthGuard)
-@Controller('/itg/v1/payment')
+@Controller('/itg/v1/order')
 export class OrderIntegrationController extends BaseController {
   constructor(private orderservice: OrdersService, private orderStatusService: OrderStatusService,
   ) {

@@ -21,7 +21,7 @@ import {
   import { updateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
   import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
   import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto';
-  @Controller('/be/v1/banner')
+  @Controller('/fe/v1/banners')
   export class bannerController extends BaseController {
     constructor(private service: bannerService) {
       super();
