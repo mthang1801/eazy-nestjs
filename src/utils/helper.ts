@@ -1,5 +1,3 @@
-import { type } from "os";
-
 export const convertToMySQLDateTime = (DateTime = new Date()) =>
   new Date(new Date(DateTime).getTime() + 7 * 3600 * 1000)
     .toISOString()
@@ -7,22 +5,21 @@ export const convertToMySQLDateTime = (DateTime = new Date()) =>
     .replace('T', ' ');
 
 export const preprocessUserResult = (user) => {
-  if (!user) return null
-  if (typeof (user) == 'object' && Array.isArray(user)) {
+  if (!user) return null;
+  if (typeof user == 'object' && Array.isArray(user)) {
     let users = [];
     user.forEach((item) => {
       let userObject = { ...item };
       delete userObject.password;
       delete userObject.salt;
-      users.push(userObject)
-    })
+      users.push(userObject);
+    });
     return users;
   }
   let userObject = { ...user };
   delete userObject.password;
   delete userObject.salt;
   return userObject;
-
 };
 
 export const generateOTPDigits = () =>

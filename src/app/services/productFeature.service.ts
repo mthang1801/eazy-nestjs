@@ -34,8 +34,19 @@ export class ProductFeatureService {
   ): Promise<IProductFeaturesResponse> {
     // create a new record on feature and feature_description
     const productFeatureData = this.productFeaturesRepo.setData(data);
+
+    const featureCodeExists = await this.productFeaturesRepo.findOne({
+      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
+    });
+    if (featureCodeExists) {
+      throw new HttpException('feature code đã tồn tại', 404);
+    }
+
     const newFeature: ProductFeatureEntity =
-      await this.productFeaturesRepo.create(productFeatureData);
+      await this.productFeaturesRepo.create({
+        ...productFeatureData,
+        feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
+      });
 
     const featureDescriptionData =
       this.productFeatureDescriptionRepo.setData(data);
