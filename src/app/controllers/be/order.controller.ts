@@ -27,8 +27,8 @@ export class OrderController extends BaseController {
     //@UseGuards(AuthGuard)
     @Get()
     async getList(@Res() res, @Param() param): Promise<IResponse> {
-
-        return this.responseSuccess(res, {}, `action return all orders`);
+        const result = await this.service.getList(param);
+        return this.responseSuccess(res, result, `action return all orders`);
     }
     @Get('/:id')
     async getById(@Res() res, @Param('id') id): Promise<IResponse> {

@@ -22,7 +22,45 @@ export class OrdersService {
     ) { }
     async getList(params) {
         //=====Filter param
+        const orders =  this.orderRepo.find({
+            select: ['*'],
 
+            skip: 0,
+            limit: 9999,
+        });
+
+        const products =  this.orderDetailRepo.find({
+            select: [`${Table.PRODUCT_DESCRIPTION}.*`,
+            `${Table.ORDER_DETAILS}.*`
+            ],
+            join: {
+                [JoinTable.join]: {
+                    [Table.PRODUCTS]: {
+                        fieldJoin: `${Table.PRODUCTS}.product_id`,
+                        rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+                    },
+                    [Table.PRODUCT_DESCRIPTION]: {
+                        fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+                        rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+                    },
+                },
+
+            },
+            skip: 0,
+            limit: 9999,
+        });
+        const result = await Promise.all([products, orders]);
+        let _result = [];
+        result[1].forEach((ele) => {
+            _result.push({
+                ...ele,
+                products: result[0].filter(
+                    (product) =>
+                        product.order_id == ele.order_id ,
+                ),
+            });
+        });
+        return _result
     }
     async getById(id) {
 
@@ -46,9 +84,9 @@ export class OrdersService {
             limit: 9999,
         })
         let total = 0;
-        data.products.map(ele=>{
-            products.map(item=>{
-                if (ele.product_id === item.product_id){
+        data.products.map(ele => {
+            products.map(item => {
+                if (ele.product_id === item.product_id) {
                     total += ele.amount * item.list_price;
                     ele['price'] = item.list_price
                     ele['product_code'] = item.product_code;
@@ -66,9 +104,9 @@ export class OrdersService {
             orderData,
         );
         let _orderdetail = []
-        data.products.forEach(ele=>{
-            _orderdetail.push(this.orderDetailRepo.create({...ele,order_id:_orderData.order_id}))
-        })    
+        data.products.forEach(ele => {
+            _orderdetail.push(this.orderDetailRepo.create({ ...ele, order_id: _orderData.order_id }))
+        })
         await Promise.all(_orderdetail);
         return _orderData
     }
