@@ -2,7 +2,7 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsOptional()
-  parent_id: number;
+  parent_id: number = 0;
 
   @IsOptional()
   id_path: string = '';
@@ -46,8 +46,8 @@ export class CreateCategoryDto {
   @IsOptional()
   selected_views: string = '';
 
-  @IsOptional()
-  default_view: string = '';
+  @IsNotEmpty()
+  slug: string = '';
 
   @IsOptional()
   product_details_view: string = '';

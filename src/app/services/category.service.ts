@@ -21,16 +21,8 @@ export class CategoryService {
 
   async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
     const categoryData = this.categoryRepository.setData(data);
-
     if (data.level > 1 && !data.parent_id) {
       throw new HttpException('Level lớn hơn 1 cần có parent_id', 400);
-    }
-
-    if (data.level === 1 && data.parent_id) {
-      throw new HttpException(
-        'Level 1 không thể nằm trong danh mục khác.',
-        400,
-      );
     }
 
     let idPath = '';
@@ -48,10 +40,29 @@ export class CategoryService {
       idPath = `${grandParentCategory.category_id}/${parentCategory.category_id}`;
     }
 
+    const checkSlugExist = await this.categoryRepository.findOne({
+      slug: data.slug.replace(/\s+/g, '-').toLowerCase(),
+    });
+
+    if (checkSlugExist) {
+      throw new HttpException('Đường dẫn đã tồn tại.', 409);
+    }
+
+    let parentLevel;
+    if (data.parent_id > 0) {
+      parentLevel = await this.categoryRepository.findById(data.parent_id);
+
+      if (!parentLevel) {
+        throw new HttpException('Không tìm thấy danh mục cha.', 404);
+      }
+    }
+
     const createdCategory: CategoryEntity =
       await this.categoryRepository.create({
         ...categoryData,
         id_path: idPath,
+        slug: data.slug.replace(/\s+/g, '-').toLowerCase(),
+        level: data.parent_id ? parentLevel.level + 1 : 1,
         display_at: convertToMySQLDateTime(
           categoryData['display_at']
             ? new Date(categoryData['display_at'])
@@ -217,6 +228,26 @@ export class CategoryService {
           parent_id: categoryLevel1Item.category_id,
         },
       });
+
+      for (let categoryLevel2Item of categoriesListLevel2) {
+        let categoriesListLevel3 = await this.categoryRepository.find({
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.CATEGORY_DESCRIPTIONS]: {
+                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+                rootJoin: `${Table.CATEGORIES}.category_id`,
+              },
+            },
+          },
+          where: {
+            [`${Table.CATEGORIES}.level`]: 3,
+            parent_id: categoryLevel2Item.category_id,
+          },
+        });
+
+        categoryLevel2Item.children = categoriesListLevel3;
+      }
 
       categoryLevel1Item.children = categoriesListLevel2;
     }

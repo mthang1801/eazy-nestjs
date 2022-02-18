@@ -4,11 +4,11 @@ export class ProductsEntity {
   product_code: string = '';
   barcode: string = '';
   product_type: string = 'P';
+  product_status: string = 'A';
   status: string = 'A';
   company_id: number = 0;
   approved: string = 'Y';
   list_price: number = 0;
-  weight_type: string = 'G';
   amount: number = 0;
   weight: number = 0;
   length: number = 0;
@@ -36,6 +36,8 @@ export class ProductsEntity {
   qty_step: number = 0;
   list_qty_count: number = 0;
   tax_ids: string = '';
+  tax_name: string = '';
+  slug: string = '';
   age_verification: string = 'N';
   age_limit: number = 0;
   options_type: string = 'P';

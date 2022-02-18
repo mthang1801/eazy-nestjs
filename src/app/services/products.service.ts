@@ -59,6 +59,8 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { Equal } from '../../database/find-options/operators';
+import { v4 as uuid } from 'uuid';
+import { group } from 'console';
 @Injectable()
 export class ProductService {
   constructor(
@@ -109,6 +111,12 @@ export class ProductService {
       }
     }
 
+    // product code
+    const productCode = data.product_code;
+
+    const prefixCode = productCode.replace(/[0-9]+/g, '').toUpperCase();
+    const subfixCode = productCode.replace(/[a-zA-Z]+/g, '');
+
     const checkProductCodeExists = await this.productRepo.findOne({
       product_code,
     });
@@ -122,17 +130,18 @@ export class ProductService {
     const productData = this.productRepo.setData(data);
     const newProductItem: ProductsEntity = await this.productRepo.create({
       ...productData,
+      product_code: productCode.toUpperCase(),
       created_at: convertToMySQLDateTime(),
     });
 
-    // Mô tả sp
+    // // Mô tả sp
     const productDescriptionData = this.productDescriptionsRepo.setData(data);
     const newProductDescription = await this.productDescriptionsRepo.create({
       product_id: newProductItem.product_id,
       ...productDescriptionData,
     });
 
-    // Price
+    // // Price
     const productPriceData = this.productPriceRepo.setData(data);
     const newProductPrice: ProductPricesEntity =
       await this.productPriceRepo.create({
@@ -140,7 +149,7 @@ export class ProductService {
         ...productPriceData,
       });
 
-    // Sale
+    // // Sale
     const productSaleData = this.productSaleRepo.setData(data);
     const newProductSale: ProductSalesEntity =
       await this.productSaleRepo.create({
@@ -148,7 +157,7 @@ export class ProductService {
         ...productSaleData,
       });
 
-    // ----- Product category -----
+    // // ----- Product category -----
 
     const productCategoryData = this.productCategoryRepo.setData(data);
     const newProductCategory = await this.productCategoryRepo.create({
@@ -156,7 +165,7 @@ export class ProductService {
       product_id: newProductItem.product_id,
     });
 
-    // ----- Product groups -----
+    // // ----- Product groups -----
 
     // If group_id exists, add product to group
     let productGroupProductData =
@@ -192,20 +201,126 @@ export class ProductService {
     const { product_features, purpose } = data;
 
     if (product_features.length) {
-      for (let { feature_id, variant_id } of product_features) {
+      await this.createProductFeatures(
+        product_features,
+        newProductItem.product_id,
+        group_id,
+        purpose,
+      );
+    }
+
+    // Create children products with auto ge
+    let childrenProductsList = [];
+    if (data.children_products.length) {
+      for (let [i, productItem] of data.children_products.entries()) {
+        let childProductDigitCode = +subfixCode + i + 1;
+        let childProductCode = prefixCode + childProductDigitCode;
+        const checkProductCode = await this.productRepo.findOne({
+          product_code: childProductCode,
+        });
+        if (checkProductCode) {
+          childProductCode = prefixCode + uuid().split('-')[0].toUpperCase();
+        }
+
+        // product for child
+        const childProductData = this.productRepo.setData(productItem);
+        const newProductChildItem = await this.productRepo.create({
+          ...childProductData,
+          product_code: childProductCode,
+          parent_product_id: newProductItem.product_id,
+          created_at: convertToMySQLDateTime(),
+          display_at: convertToMySQLDateTime(),
+        });
+
+        // product description for child
+        const newChildProductDescription =
+          await this.productDescriptionsRepo.create({
+            ...productDescriptionData,
+            product_id: newProductChildItem.product_id,
+          });
+
+        // product price for child
+        const childProductPriceData =
+          this.productPriceRepo.setData(productItem);
+        const newChildProductPrice = await this.productPriceRepo.create({
+          ...childProductPriceData,
+          product_id: newProductChildItem.product_id,
+        });
+
+        // price Sale for child
+        const childProductSaleData = this.productSaleRepo.setData(data);
+        const newChildProductSale: ProductSalesEntity =
+          await this.productSaleRepo.create({
+            product_id: newProductChildItem.product_id,
+            ...childProductSaleData,
+          });
+
+        // product category
+        const newChildProductCategory = await this.productCategoryRepo.create({
+          ...productCategoryData,
+          product_id: newProductChildItem.product_id,
+        });
+
+        // insert product into group
+        await this.productVariationGroupProductsRepo.create({
+          ...productGroupProductData,
+          product_id: newProductChildItem.product_id,
+          parent_product_id: newProductItem.product_id,
+        });
+
+        if (productItem.product_features) {
+          await this.createProductFeatures(
+            productItem.product_features,
+            newProductChildItem.product_id,
+            group_id,
+            productItem.purpose,
+          );
+        }
+        childrenProductsList.push({
+          ...newProductItem,
+          ...newChildProductDescription,
+          ...newChildProductPrice,
+          ...newChildProductSale,
+          ...newChildProductCategory,
+        });
+      }
+    }
+
+    const result = {
+      ...newProductItem,
+      ...newProductDescription,
+      ...newProductPrice,
+      ...newProductSale,
+      ...newProductCategory,
+      children_products: childrenProductsList,
+    };
+
+    return result;
+  }
+
+  async createProductFeatures(
+    productFeatures,
+    productId,
+    groupId,
+    purpose = '',
+  ): Promise<void> {
+    if (productFeatures.length) {
+      for (let { feature_id, variant_id } of productFeatures) {
         const productFeatureVariant =
-          await this.productFeatureVariantDescriptionRepo.findOne(variant_id);
+          await this.productFeatureVariantDescriptionRepo.findOne({
+            variant_id,
+          });
 
         let featureValue = await this.productFeatureValueRepo.findOne({
           feature_id,
           variant_id,
-          product_id: newProductItem.product_id,
+          product_id: productId,
         });
         if (!featureValue) {
           featureValue = await this.productFeatureValueRepo.create({
             feature_id,
             variant_id,
-            product_id: newProductItem.product_id,
+            product_id: productId,
             value: isNaN(+productFeatureVariant.variant * 1)
               ? productFeatureVariant.variant
               : '',
@@ -219,7 +334,7 @@ export class ProductService {
         let checkProductGroupFeatureExist =
           await this.productVariationGroupFeatureRepo.findOne({
             feature_id,
-            group_id,
+            group_id: groupId,
           });
 
         if (!checkProductGroupFeatureExist) {
@@ -227,22 +342,12 @@ export class ProductService {
             await this.productFeatureDescriptionRepo.findOne({ feature_id });
           await this.productVariationGroupFeatureRepo.create({
             feature_id,
-            group_id,
+            group_id: groupId,
             purpose: purpose || feature.description,
           });
         }
       }
     }
-
-    const result = {
-      ...newProductItem,
-      ...newProductDescription,
-      ...newProductPrice,
-      ...newProductSale,
-      ...newProductCategory,
-    };
-
-    return result;
   }
 
   async get(identifier: number | string): Promise<any> {

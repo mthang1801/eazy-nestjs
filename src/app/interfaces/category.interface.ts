@@ -15,7 +15,7 @@ export interface ICategory {
   parent_age_verification: string;
   parent_age_limit: number;
   selected_views: string;
-  default_view: string;
+  slug: string;
   product_details_view: string;
   product_columns: number;
   is_trash: string;

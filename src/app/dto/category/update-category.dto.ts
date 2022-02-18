@@ -47,7 +47,7 @@ export class UpdateCategoryDto {
   selected_views: string;
 
   @IsOptional()
-  default_view: string;
+  slug: string;
 
   @IsOptional()
   product_details_view: string;

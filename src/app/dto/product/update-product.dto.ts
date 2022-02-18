@@ -11,6 +11,9 @@ export class UpdateProductDto {
   product_type: string;
 
   @IsOptional()
+  product_status: string;
+
+  @IsOptional()
   status: string;
 
   @IsOptional()
@@ -32,8 +35,10 @@ export class UpdateProductDto {
   weight: number;
 
   @IsOptional()
-  @IsIn(['K', 'G'])
-  weight_type: string;
+  vat_name: string = '';
+
+  @IsOptional()
+  var_code: string = '';
 
   @Min(0, { message: 'length Không được nhỏ hơn 0' })
   @IsOptional()
@@ -109,7 +114,13 @@ export class UpdateProductDto {
   list_qty_count: number;
 
   @IsOptional()
-  tax_ids: string;
+  tax_name: string = '';
+
+  @IsOptional()
+  tax_ids: string = '';
+
+  @IsOptional()
+  slug: string = '';
 
   @IsOptional()
   age_verification: string;
@@ -221,6 +232,20 @@ export class UpdateProductDto {
 
   @IsOptional()
   feature_values: ProductFeatureValueDto[];
+}
+
+class ChildrenProductDto {
+  @IsNotEmpty()
+  product_code: string;
+
+  @IsOptional()
+  product_features: ProductFeatureValueDto[];
+
+  @IsOptional()
+  buy_price: number = 0;
+
+  @IsNotEmpty()
+  price: number = 0;
 }
 
 class ProductFeatureValueDto {

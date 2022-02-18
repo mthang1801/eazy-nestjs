@@ -15,7 +15,7 @@ export class CategoryEntity {
   parent_age_verification: string = 'N';
   parent_age_limit: number = 0;
   selected_views: string = '';
-  default_view: string = '';
+  slug: string = '';
   product_details_view: string = '';
   product_columns: number = 0;
   is_trash: string = '';
