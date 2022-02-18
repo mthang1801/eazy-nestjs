@@ -75,7 +75,7 @@ export class CreateProductDto {
   @IsOptional()
   slug: string = '';
 
-  @IsOptional()
+  @IsNotEmpty()
   product_features: { feature_id: number; variant_id: number }[];
 
   @IsOptional()
@@ -154,6 +154,9 @@ export class CreateProductDto {
 
 class ChildrenProductDto {
   @IsOptional()
+  product_code: string = '';
+
+  @IsOptional()
   product_features: { feature_id: number; variant_id: number }[];
 
   @IsOptional()
@@ -193,6 +196,7 @@ class ChildrenProductDto {
   product_type: string = 'P';
 
   @IsOptional()
+  @IsIn(['A', 'B', 'C', 'D'])
   product_status: string = 'A';
 
   @IsOptional()
