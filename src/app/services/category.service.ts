@@ -1,7 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { convertToMySQLDateTime, convertToSlug } from '../../utils/helper';
 import { CreateCategoryDto } from '../dto/category/create-category.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
@@ -41,7 +41,7 @@ export class CategoryService {
     }
 
     const checkSlugExist = await this.categoryRepository.findOne({
-      slug: data.slug.replace(/\s+/g, '-').toLowerCase(),
+      slug: convertToSlug(data.slug),
     });
 
     if (checkSlugExist) {
@@ -61,7 +61,7 @@ export class CategoryService {
       await this.categoryRepository.create({
         ...categoryData,
         id_path: idPath,
-        slug: data.slug.replace(/\s+/g, '-').toLowerCase(),
+        slug: convertToSlug(data.slug),
         level: data.parent_id ? parentLevel.level + 1 : 1,
         display_at: convertToMySQLDateTime(
           categoryData['display_at']
@@ -120,6 +120,15 @@ export class CategoryService {
         HttpStatus.NOT_FOUND,
       );
     }
+
+    if (data.slug && data.slug !== oldCategoryData.slug) {
+      const checkSlug = await this.categoryRepository.findOne({
+        slug: convertToSlug(data.slug),
+      });
+      if (checkSlug) {
+        throw new HttpException('Slug đã tồn tại, không thể cập nhật.', 409);
+      }
+    }
     let updatedCategoryDataObject = {};
 
     for (let [key, val] of Object.entries(data)) {
@@ -128,6 +137,11 @@ export class CategoryService {
           updatedCategoryDataObject['display_at'] = convertToMySQLDateTime(
             new Date(val),
           );
+          continue;
+        }
+        if (key === 'slug') {
+          console.log(143, key, val);
+          updatedCategoryDataObject['slug'] = convertToSlug(val);
           continue;
         }
         updatedCategoryDataObject[key] = val;

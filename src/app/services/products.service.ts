@@ -62,6 +62,7 @@ import { Equal } from '../../database/find-options/operators';
 import { v4 as uuid } from 'uuid';
 import { group } from 'console';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
+import { convertToSlug } from '../../utils/helper';
 @Injectable()
 export class ProductService {
   constructor(
@@ -112,6 +113,13 @@ export class ProductService {
       }
     }
 
+    const checkSlugExists = await this.productRepo.findOne({
+      slug: convertToSlug(data.slug),
+    });
+    if (checkSlugExists) {
+      throw new HttpException('Slug đã tồn tại, không thể tạo sp mới', 409);
+    }
+
     const findWhiteSpace = /\s/g;
     if (findWhiteSpace.test(data.product_code)) {
       throw new HttpException('Mã sản phẩm không được chứa khoảng trắng', 400);
@@ -158,6 +166,7 @@ export class ProductService {
     const productData = this.productRepo.setData(data);
     const newProductItem: ProductsEntity = await this.productRepo.create({
       ...productData,
+      slug: convertToSlug(data.slug),
       product_code: productCode.toUpperCase(),
       created_at: convertToMySQLDateTime(),
     });
@@ -207,7 +216,7 @@ export class ProductService {
 
       group_id = groupProduct.group_id;
     }
-    console.log(209, group_id);
+
     if (!groupProduct) {
       if (group_id) {
         await this.productVariationGroupProductsRepo.create({
@@ -754,6 +763,13 @@ export class ProductService {
       data.product_code &&
       data.product_code !== currentProduct.product_code
     ) {
+      const findWhiteSpace = /\s/g;
+      if (findWhiteSpace.test(data.product_code)) {
+        throw new HttpException(
+          'Mã sản phẩm không được chứa khoảng trắng',
+          400,
+        );
+      }
       const productCodeExists = await this.productRepo.findOne({
         product_code: data.product_code,
       });
@@ -762,13 +778,30 @@ export class ProductService {
       }
     }
 
+    // check slug
+    if (data.slug && convertToSlug(data.slug) !== currentProduct.slug) {
+      const checkSlugExists = await this.productRepo.findOne({
+        slug: convertToSlug(data.slug),
+      });
+      if (checkSlugExists) {
+        throw new HttpException(
+          'Slug đã tồn tại, không thể cập nhật sản phẩm',
+          409,
+        );
+      }
+    }
+
+    if (data.parent_product_id !== 0 && data.children_products.length) {
+      throw new HttpException('Sản phẩm này không thể chứa sản phẩm con', 400);
+    }
+
     //update product
     const productData = this.productRepo.setData(data);
     const updatedProduct = await this.productRepo.update(
       {
         product_id: currentProduct.product_id,
       },
-      productData,
+      { ...productData, slug: convertToSlug(data.slug) || currentProduct.slug },
     );
 
     // product descriptions
@@ -812,14 +845,14 @@ export class ProductService {
 
     // Product features values and product group Features
 
-    if (data.feature_values.length) {
+    if (data.product_features.length) {
       // delete all old product feature values by product id
 
       await this.productFeatureValueRepo.delete({
         product_id: currentProduct.product_id,
       });
 
-      for (let { feature_id, variant_id } of data.feature_values) {
+      for (let { feature_id, variant_id } of data.product_features) {
         const productFeatureVariant =
           await this.productFeatureVariantDescriptionRepo.findOne({
             variant_id,
@@ -855,6 +888,90 @@ export class ProductService {
         }
       }
     }
+
+    // const prefixCode = updatedProduct.product_code
+    //   .replace(/[0-9]+/g, '')
+    //   .toUpperCase();
+    // const subfixCode = updatedProduct.product_code.replace(/[a-zA-Z]+/g, '');
+
+    // let childrenProductsList = [];
+    // if (data.children_products.length) {
+    //   for (let [i, productItem] of data.children_products.entries()) {
+    //     let childProductDigitCode = +subfixCode + i + 1;
+    //     let childProductCode =
+    //       productItem.product_code || prefixCode + childProductDigitCode;
+
+    //     const checkProductCode = await this.productRepo.findOne({
+    //       product_code: childProductCode,
+    //     });
+
+    //     if (checkProductCode) {
+    //       childProductCode = prefixCode + uuid().split('-')[0].toUpperCase();
+    //     }
+
+    //     // product for child
+    //     const childProductData = this.productRepo.setData(productItem);
+    //     const newChildProductItem = await this.productRepo.create({
+    //       ...childProductData,
+    //       product_code: childProductCode,
+    //       parent_product_id: updatedProduct.product_id,
+    //       created_at: convertToMySQLDateTime(),
+    //       display_at: convertToMySQLDateTime(),
+    //     });
+
+    //     // product description for child
+    //     const newChildProductDescription =
+    //       await this.productDescriptionsRepo.create({
+    //         ...productDescriptionData,
+    //         product_id: newChildProductItem.product_id,
+    //       });
+
+    //     // product price for child
+    //     const childProductPriceData =
+    //       this.productPriceRepo.setData(productItem);
+    //     const newChildProductPrice = await this.productPriceRepo.create({
+    //       ...childProductPriceData,
+    //       product_id: newChildProductItem.product_id,
+    //     });
+
+    //     // price Sale for child
+    //     const childProductSaleData = this.productSaleRepo.setData(data);
+    //     const newChildProductSale: ProductSalesEntity =
+    //       await this.productSaleRepo.create({
+    //         product_id: newChildProductItem.product_id,
+    //         ...childProductSaleData,
+    //       });
+
+    //     // product category
+    //     const newChildProductCategory = await this.productCategoryRepo.create({
+    //       ...productCategoryData,
+    //       product_id: newChildProductItem.product_id,
+    //     });
+
+    //     // insert product into group
+    //     await this.productVariationGroupProductsRepo.create({
+    //       ...productGroupProductData,
+    //       product_id: newChildProductItem.product_id,
+    //       group_id: updatedProductGroup.group_id,
+    //       parent_product_id: updatedProduct.product_id,
+    //     });
+
+    //     if (productItem.product_features) {
+    //       await this.createProductFeatures(
+    //         productItem.product_features,
+    //         newChildProductItem.product_id,
+    //         updatedProductGroup.group_id,
+    //       );
+    //     }
+    //     childrenProductsList.push({
+    //       ...newChildProductItem,
+    //       ...newChildProductDescription,
+    //       ...newChildProductPrice,
+    //       ...newChildProductSale,
+    //       ...newChildProductCategory,
+    //     });
+    //   }
+    // }
 
     const result = {
       ...updatedProduct,

@@ -59,7 +59,7 @@ export class CreateProductFeatureDto {
   lang_code: string = 'vn';
 
   @IsNotEmpty({ message: 'Giá trị thuộc tính là bắt buộc.' })
-  feature_values: ProductVariant[];
+  feature_values: ProductVariant[] = [];
 }
 
 class ProductVariant {

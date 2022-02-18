@@ -6,61 +6,61 @@ export class UpdateProductFeatureDto {
   feature_code: string;
 
   @IsOptional()
-  company_id: number = 0;
+  company_id: number;
 
   @IsOptional()
-  purpose: string = '';
+  purpose: string;
 
   @IsOptional({ message: 'Tên thuộc tính là bắt buộc.' })
   description: string;
 
   @IsOptional()
-  feature_style: string = '';
+  feature_style: string;
 
   @IsOptional()
-  filter_style: string = '';
+  filter_style: string;
 
   @IsOptional()
-  feature_type: string = 'T';
+  feature_type: string;
 
   @IsOptional()
-  categories_path: string = '';
+  categories_path: string;
 
   @IsOptional()
-  parent_id: number = 0;
+  parent_id: number;
 
   @IsOptional()
-  display_on_product: string = 'Y';
+  display_on_product: string;
 
   @IsOptional()
-  display_on_catalog: string = 'Y';
+  display_on_catalog: string;
 
   @IsOptional()
-  display_on_header: string = 'N';
+  display_on_header: string;
 
   @IsOptional()
-  status: string = 'A';
+  status: string;
 
   @IsOptional()
-  position: number = 0;
+  position: number;
 
   @IsOptional()
-  comparison: string = 'N';
+  comparison: string;
 
   @IsOptional()
-  full_description: string = '';
+  full_description: string;
 
   @IsOptional()
-  prefix: string = '';
+  prefix: string;
 
   @IsOptional()
-  suffix: string = '';
+  suffix: string;
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string;
 
   @IsOptional({ message: 'Giá trị thuộc tính là bắt buộc.' })
-  feature_values: ProductVariant[];
+  feature_values: ProductVariant[] = [];
 }
 
 class ProductVariant {
@@ -68,29 +68,29 @@ class ProductVariant {
   variant_id: number;
 
   @IsNotEmpty()
-  variant: string = '';
+  variant: string;
 
   @IsOptional()
-  description: string = '';
+  description: string;
 
   @IsOptional()
-  page_title: string = '';
+  page_title: string;
 
   @IsOptional()
-  meta_keywords: string = '';
+  meta_keywords: string;
 
   @IsOptional()
-  meta_description: string = '';
+  meta_description: string;
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string;
 
   @IsOptional()
-  url: string = '';
+  url: string;
 
   @IsOptional()
-  position: number = 0;
+  position: number;
 
   @IsOptional()
-  color: string = '';
+  color: string;
 }

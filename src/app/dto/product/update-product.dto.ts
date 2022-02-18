@@ -34,21 +34,18 @@ export class UpdateProductDto {
   @Min(0, { message: 'weight Không được nhỏ hơn 0' })
   weight: number;
 
-  @IsOptional()
-  vat_name: string = '';
-
-  @IsOptional()
-  var_code: string = '';
-
   @Min(0, { message: 'length Không được nhỏ hơn 0' })
   @IsOptional()
   length: number;
 
   @IsOptional()
-  width: number;
+  width: number = 0;
 
   @IsOptional()
-  height: number;
+  height: number = 0;
+
+  @IsOptional()
+  tax_ids: string = '';
 
   @IsOptional()
   shipping_freight: number;
@@ -115,9 +112,6 @@ export class UpdateProductDto {
 
   @IsOptional()
   tax_name: string = '';
-
-  @IsOptional()
-  tax_ids: string = '';
 
   @IsOptional()
   slug: string = '';
@@ -201,6 +195,9 @@ export class UpdateProductDto {
   whole_price: number; //Giá bản sỉ
 
   @IsOptional()
+  buy_price: number;
+
+  @IsOptional()
   percentage_discount: number;
 
   @IsOptional()
@@ -231,21 +228,13 @@ export class UpdateProductDto {
   group_id: number;
 
   @IsOptional()
-  feature_values: ProductFeatureValueDto[];
-}
-
-class ChildrenProductDto {
-  @IsNotEmpty()
-  product_code: string;
-
-  @IsOptional()
   product_features: ProductFeatureValueDto[];
 
   @IsOptional()
-  buy_price: number = 0;
+  display_at: Date = new Date();
 
-  @IsNotEmpty()
-  price: number = 0;
+  @IsOptional()
+  children_products: UpdateProductDto[] = [];
 }
 
 class ProductFeatureValueDto {

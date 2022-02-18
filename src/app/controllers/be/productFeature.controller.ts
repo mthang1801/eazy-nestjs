@@ -45,13 +45,13 @@ export class ProductFeatureController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(':sku')
+  @Put(':id')
   async update(
-    @Param('sku') sku: string,
+    @Param('id') id: number,
     @Body() data: UpdateProductFeatureDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(sku, data);
+    const result = await this.service.update(id, data);
     return this.responseSuccess(res, result);
   }
 

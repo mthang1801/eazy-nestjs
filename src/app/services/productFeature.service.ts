@@ -58,29 +58,31 @@ export class ProductFeatureService {
 
     let feature_variants = [];
     // create record item on feature_variant and feature_variant_description from feature_values
-    for (let feature_value of data.feature_values) {
-      const featureVariantData =
-        this.productFeatureVariantsRepo.setData(feature_value);
+    if (data.feature_values.length) {
+      for (let feature_value of data.feature_values) {
+        const featureVariantData =
+          this.productFeatureVariantsRepo.setData(feature_value);
 
-      const newFeatureVariant: ProductFeatureVariantEntity =
-        await this.productFeatureVariantsRepo.create({
-          ...featureVariantData,
-          feature_id: newFeature.feature_id,
+        const newFeatureVariant: ProductFeatureVariantEntity =
+          await this.productFeatureVariantsRepo.create({
+            ...featureVariantData,
+            feature_id: newFeature.feature_id,
+          });
+
+        const featureVariantDescription =
+          this.productFeatureVariantDescriptionRepo.setData(feature_value);
+
+        const newFeatureVariantDescription: ProductFeatureVariantDescriptionEntity =
+          await this.productFeatureVariantDescriptionRepo.create({
+            ...featureVariantDescription,
+            variant_id: newFeatureVariant.variant_id,
+          });
+
+        feature_variants.push({
+          ...newFeatureVariant,
+          ...newFeatureVariantDescription,
         });
-
-      const featureVariantDescription =
-        this.productFeatureVariantDescriptionRepo.setData(feature_value);
-
-      const newFeatureVariantDescription: ProductFeatureVariantDescriptionEntity =
-        await this.productFeatureVariantDescriptionRepo.create({
-          ...featureVariantDescription,
-          variant_id: newFeatureVariant.variant_id,
-        });
-
-      feature_variants.push({
-        ...newFeatureVariant,
-        ...newFeatureVariantDescription,
-      });
+      }
     }
 
     return { ...newFeature, ...newFeatureDesription, feature_variants };
@@ -184,12 +186,39 @@ export class ProductFeatureService {
     return result;
   }
 
-  async update(sku: string, data: UpdateProductFeatureDto): Promise<any> {
-    const checkProductFeatureExist = await this.productFeaturesRepo.findOne({
-      product_code: sku,
-    });
+  async update(id: number, data: UpdateProductFeatureDto): Promise<any> {
+    const checkProductFeatureExist = await this.productFeaturesRepo.findById(
+      id,
+    );
     if (!checkProductFeatureExist) {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
+    }
+    const productFeatureData = this.productFeaturesRepo.setData(data);
+    let updatedFeature;
+
+    if (Object.entries(productFeatureData).length) {
+      updatedFeature = await this.productFeaturesRepo.update(
+        id,
+        productFeatureData,
+      );
+    }
+    const productFeatureDescriptionData =
+      this.productFeatureDescriptionRepo.setData(data);
+    let updatedFeatureDescription;
+
+    if (Object.entries(productFeatureDescriptionData).length) {
+      updatedFeatureDescription =
+        await this.productFeatureDescriptionRepo.update(
+          { feature_id: id },
+          productFeatureDescriptionData,
+        );
+    }
+    let variantsList = [];
+    if (data.feature_values.length) {
+      for (let variantItem of data.feature_values) {
+        if (variantItem.variant_id) {
+        }
+      }
     }
   }
 

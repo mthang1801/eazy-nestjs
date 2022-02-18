@@ -54,3 +54,9 @@ export function formatDate(date) {
 
   return [year, month, day].join('-');
 }
+
+export const convertToSlug = (text) =>
+  text
+    .toLowerCase()
+    .replace(/ /g, '-')
+    .replace(/[^\w-]+/g, '');
