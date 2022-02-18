@@ -1,12 +1,9 @@
-import { IsOptional, IsNotEmpty, MaxLength } from 'class-validator';
-class Product{
-    @IsOptional()
+import { IsOptional, IsNotEmpty, MaxLength,ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';class Product{
+    @IsNotEmpty()
     product_id: number;
-    @IsOptional()
-    product_code: string;
-    @IsOptional()
-    price: number;
-    @IsOptional()
+
+    @IsNotEmpty()
     amount: number;
     @IsOptional()
     extra: string;
@@ -92,6 +89,8 @@ export class OrderUpdateDTO {
     utm_source: number;
 
     @IsOptional()
+    @ValidateNested({ each: true })
+    @Type(() => Product)
     products: Product[]=[];
    
 }
