@@ -11,7 +11,8 @@ class Product{
     @IsOptional()
     extra: string;
 }
-export class OrderCreateDTO {
+export class OrderUpdateDTO {
+
 
     @IsOptional()
     is_parent_order: string;
@@ -20,10 +21,6 @@ export class OrderCreateDTO {
     @IsOptional()
     company_id: number;
     @IsOptional()
-    issuer_id: number;
-    @IsNotEmpty()
-    user_id: number;
-    @IsOptional()
     subtotal_discount: number;
     @IsOptional()
     payment_surcharge: number;
@@ -31,8 +28,6 @@ export class OrderCreateDTO {
     shipping_ids: string;
     @IsOptional()
     shipping_cost: number;
-    @IsOptional()
-    timestamp: Date = new Date();
     @IsOptional()
     status: string;
     @IsOptional()
@@ -49,26 +44,6 @@ export class OrderCreateDTO {
     lastname: string;
     @IsOptional()
     company: string;
-    @IsOptional()
-    b_firstname: string;
-    @IsOptional()
-    b_lastname: string;
-    @IsOptional()
-    b_address: string;
-    @IsOptional()
-    b_address_2: string;
-    @IsOptional()
-    b_city: string;
-    @IsOptional()
-    b_county: string;
-    @IsOptional()
-    b_state: string;
-    @IsOptional()
-    b_country: string;
-    @IsOptional()
-    b_zipcode: string;
-    @IsOptional()
-    b_phone: string;
     @IsOptional()
     s_firstname: string;
     @IsOptional()
@@ -116,8 +91,8 @@ export class OrderCreateDTO {
     @IsOptional()
     utm_source: number;
 
-    @IsNotEmpty()
-    products: [Product];
+    @IsOptional()
+    products: Product[]=[];
    
 }
 
