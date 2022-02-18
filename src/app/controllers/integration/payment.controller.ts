@@ -22,7 +22,7 @@ import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
  * @Author LongTRinh
  */
 //@UseGuards(AuthGuard)
-@Controller('/integration/payment')
+@Controller('/itg/v1/payment')
 export class PaymentController extends BaseController {
   constructor(private service: PaymentService) {
     super();

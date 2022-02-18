@@ -18,7 +18,7 @@ import { AuthGuard } from '../../../middlewares/fe.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
 //@UseGuards(AuthGuard)
-@Controller('/integration/shipping')
+@Controller('/itg/v1/shipping')
 export class ShippingController extends BaseController {
   constructor(private service: ShippingService) {
     super();
