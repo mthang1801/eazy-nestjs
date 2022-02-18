@@ -32,14 +32,15 @@ export class OrderController extends BaseController {
     }
     @Get('/:id')
     async getById(@Res() res, @Param('id') id): Promise<IResponse> {
+        const result = await this.service.getById(id);
 
-
-        return this.responseSuccess(res, {}, `action return orders by id`);
+        
+        return this.responseSuccess(res, result, `action return orders by id`);
     }
     @Post()
     async create(@Res() res, @Body() body: OrderCreateDTO,
     ): Promise<IResponse> {
-        const result = this.service.create(body);
+        const result = await this.service.create(body);
         return this.responseSuccess(res, result, `action create an order`);
     }
     @Put('/:id')

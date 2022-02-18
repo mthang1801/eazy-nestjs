@@ -7,6 +7,7 @@ import { OrderTransactionRepository } from '../repositories/orderTransactions.re
 import { OrderDataRepository } from '../repositories/orderData.repository';
 import { OrderController } from '../controllers/be/order.controller';
 import { ProductsRepository } from '../repositories/products.repository';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
 @Module({
   controllers:[OrderController],
   providers: [
@@ -16,7 +17,8 @@ import { ProductsRepository } from '../repositories/products.repository';
     OrderDetailsRepository,
     OrderTransactionRepository,
     OrderDataRepository,
-    ProductsRepository
+    ProductsRepository,
+    UserProfileRepository,
   ],
   exports: [
     OrdersService,
@@ -25,6 +27,7 @@ import { ProductsRepository } from '../repositories/products.repository';
     OrderDetailsRepository,
     OrderTransactionRepository,
     OrderDataRepository,
+    UserProfileRepository,
   ],
 })
 export class OrdersModule {}

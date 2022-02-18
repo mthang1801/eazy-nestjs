@@ -10,6 +10,8 @@ import { OrderDetailsRepository } from '../repositories/orderDetails.repository'
 import { OrderDetailsEntity } from '../entities/orderDetails.entity';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
+import { UserProfileEntity } from '../entities/userProfile.entity';
 
 
 @Injectable()
@@ -18,18 +20,20 @@ export class OrdersService {
         private orderRepo: OrdersRepository<OrderEntity>,
         private orderDetailRepo: OrderDetailsRepository<OrderDetailsEntity>,
         private productRepo: ProductsRepository<ProductsEntity>,
+        private userProfileRepository: UserProfileRepository<UserProfileEntity>,
 
     ) { }
     async getList(params) {
         //=====Filter param
-        const orders =  this.orderRepo.find({
+
+        const orders = this.orderRepo.find({
             select: ['*'],
 
             skip: 0,
             limit: 9999,
         });
 
-        const products =  this.orderDetailRepo.find({
+        const products = this.orderDetailRepo.find({
             select: [`${Table.PRODUCT_DESCRIPTION}.*`,
             `${Table.ORDER_DETAILS}.*`
             ],
@@ -63,12 +67,46 @@ export class OrdersService {
         return _result
     }
     async getById(id) {
+        const string = `${Table.ORDERS}.order_id`
+        const string1 = `${Table.ORDER_DETAILS}.order_id`
+        const orders = this.orderRepo.findOne({
+            select: ['*'],
 
+            skip: 0,
+            limit: 9999,
+            where:{[string]:id}
+        });
+        const products = this.orderDetailRepo.find({
+            select: [`${Table.PRODUCT_DESCRIPTION}.*`,
+            `${Table.ORDER_DETAILS}.*`
+            ],
+            join: {
+                [JoinTable.join]: {
+                    [Table.PRODUCTS]: {
+                        fieldJoin: `${Table.PRODUCTS}.product_id`,
+                        rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+                    },
+                    [Table.PRODUCT_DESCRIPTION]: {
+                        fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+                        rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+                    },
+                },
+
+            },
+            where:{[string1]:id},
+
+            skip: 0,
+            limit: 9999,
+        });
+        const result = await Promise.all([products, orders]);
+        return {...result[1],products:result[0]}
     }
     async update(id, data: UpdateCustomerDTO) {
 
     }
     async create(data) {
+
+
         //get the product prize
         const discount = 0;
         const products = await this.productRepo.find({
@@ -108,6 +146,15 @@ export class OrdersService {
             _orderdetail.push(this.orderDetailRepo.create({ ...ele, order_id: _orderData.order_id }))
         })
         await Promise.all(_orderdetail);
+
+        //update userprofile
+        const userProfile = {
+            ...this.userProfileRepository.setData(data)
+        }
+        const id = userProfile[`user_id`];
+        delete userProfile[`user_id`];
+        await this.userProfileRepository.update(id, userProfile)
+
         return _orderData
     }
 }
