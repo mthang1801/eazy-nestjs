@@ -87,7 +87,7 @@ export class DatabaseCollection {
   checkAndReplaceTypeOfJoin(typeOfJoin) {
     let typeJoin = '';
 
-    switch (typeOfJoin.toLowerCase()) {
+    switch (typeOfJoin) {
       case 'leftJoin':
         typeJoin = 'LEFT JOIN';
       case 'rightJoin':

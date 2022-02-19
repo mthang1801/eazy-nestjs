@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsNotEmpty, Min } from 'class-validator';
+import { IsIn, IsOptional, IsNotEmpty, Min, Max } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -13,13 +13,15 @@ export class UpdateProductDto {
   @IsOptional()
   product_status: string;
 
-  @IsOptional()
+  @IsOptional({ message: 'Trạng thái hiển thị chỉ có thể là A hoặc D' })
+  @IsIn(['A', 'D'])
   status: string;
 
   @IsOptional()
   company_id: number;
 
-  @IsOptional()
+  @IsOptional({ message: 'Chỉ có thể Y hoặc N' })
+  @IsIn(['Y', 'N'])
   approved: string;
 
   @IsOptional()
@@ -34,32 +36,38 @@ export class UpdateProductDto {
   @Min(0, { message: 'weight Không được nhỏ hơn 0' })
   weight: number;
 
-  @Min(0, { message: 'length Không được nhỏ hơn 0' })
   @IsOptional()
+  @Min(0, { message: 'length Không được nhỏ hơn 0' })
   length: number;
 
   @IsOptional()
+  @Min(0, { message: 'width Không được nhỏ hơn 0' })
   width: number = 0;
 
   @IsOptional()
+  @Min(0, { message: 'height Không được nhỏ hơn 0' })
   height: number = 0;
 
   @IsOptional()
   tax_ids: string = '';
 
   @IsOptional()
+  @Min(0, { message: 'shipping_freight Không được nhỏ hơn 0' })
   shipping_freight: number;
 
   @IsOptional()
+  @Min(0, { message: 'low_avail_limit Không được nhỏ hơn 0' })
   low_avail_limit: number;
 
   @IsOptional()
   usergroup_ids: string;
 
-  @IsOptional()
+  @IsOptional({ message: 'is_edp chỉ có thể Y hoặc N' })
+  @IsIn(['Y', 'N'])
   is_edp: string;
 
   @IsOptional()
+  @IsOptional({ message: 'edp_shipping chỉ có thể Y hoặc N' })
   edp_shipping: string;
 
   @IsOptional()
@@ -69,6 +77,7 @@ export class UpdateProductDto {
   tracking: string;
 
   @IsOptional()
+  @IsOptional({ message: 'free_shipping chỉ có thể Y hoặc N' })
   free_shipping: string;
 
   @IsOptional()
@@ -111,10 +120,10 @@ export class UpdateProductDto {
   list_qty_count: number;
 
   @IsOptional()
-  tax_name: string = '';
+  tax_name: string;
 
   @IsOptional()
-  slug: string = '';
+  slug: string;
 
   @IsOptional()
   age_verification: string;
@@ -186,21 +195,28 @@ export class UpdateProductDto {
   // Product price
 
   @IsOptional()
+  @Min(0, { message: 'price Không được nhỏ hơn 0' })
   price: number;
 
   @IsOptional()
+  @Min(0, { message: 'collect_price Không được nhỏ hơn 0' })
   collect_price: number; //Giá thu gom
 
   @IsOptional()
+  @Min(0, { message: 'whole_price price Không được nhỏ hơn 0' })
   whole_price: number; //Giá bản sỉ
 
   @IsOptional()
+  @Min(0, { message: 'buy_price Không được nhỏ hơn 0' })
   buy_price: number;
 
   @IsOptional()
+  @Min(0, { message: 'percentage_discount Không được nhỏ hơn 0' })
+  @Max(100, { message: 'percentage_discount Không vượt quá 100' })
   percentage_discount: number;
 
   @IsOptional()
+  @Min(0, { message: 'lower_limit Không được nhỏ hơn 0' })
   lower_limit: number;
 
   @IsOptional()

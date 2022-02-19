@@ -163,6 +163,17 @@ export class ProductService {
       );
     }
 
+    // Check parent product
+    if (data.parent_product_id !== 0) {
+      const checkParentProductIsParent =
+        await this.productVariationGroupProductsRepo.findOne({
+          product_id: data.parent_product_id,
+        });
+      if (checkParentProductIsParent.parent_product_id !== 0) {
+        throw new HttpException('Sản phẩm cha không phù hợp.', 400);
+      }
+    }
+
     const productData = this.productRepo.setData(data);
     const newProductItem: ProductsEntity = await this.productRepo.create({
       ...productData,
@@ -225,6 +236,15 @@ export class ProductService {
       });
 
       group_id = groupProduct.group_id;
+
+      const newGroupProduct =
+        await this.productVariationGroupProductsRepo.create({
+          product_id: result.product_id,
+          group_id: groupProduct.group_id,
+          parent_product_id: result.parent_product_id,
+        });
+
+      result = { ...result, ...newGroupProduct };
     }
 
     if (!groupProduct) {
@@ -272,7 +292,7 @@ export class ProductService {
       await this.createProductFeatures(
         product_features,
         newProductItem.product_id,
-        group_id,
+        result['group_id'],
         purpose,
       );
     }
@@ -305,7 +325,10 @@ export class ProductService {
         const newChildProductItem = await this.productRepo.create({
           ...childProductData,
           product_code: childProductCode,
-          parent_product_id: result.product_id,
+          parent_product_id:
+            result.parent_product_id !== 0
+              ? result.parent_product_id
+              : result.product_id,
           created_at: convertToMySQLDateTime(),
           display_at: data.display_at
             ? convertToMySQLDateTime(new Date(data.display_at))
@@ -360,14 +383,17 @@ export class ProductService {
             ...productGroupProductData,
             product_id: newChildProductItem.product_id,
             group_id: result['group_id'],
-            parent_product_id: result.product_id,
+            parent_product_id:
+              result.parent_product_id !== 0
+                ? result.parent_product_id
+                : result.product_id,
           });
 
         if (productItem.product_features) {
           await this.createProductFeatures(
             productItem.product_features,
             newChildProductItem.product_id,
-            group_id,
+            result['group_id'],
             productItem.purpose,
           );
         }
@@ -798,8 +824,13 @@ export class ProductService {
       const checkGroupIdExist = await this.productVariationGroupRepo.findById(
         data.group_id,
       );
+
       if (!checkGroupIdExist)
         throw new HttpException('Group id không tồn tại', 404);
+    }
+
+    if (data.product_code === '') {
+      throw new HttpException('Mã sản phẩm không được để trống', 400);
     }
 
     if (
@@ -822,6 +853,7 @@ export class ProductService {
     }
 
     // check slug
+
     if (data.slug && convertToSlug(data.slug) !== currentProduct.slug) {
       const checkSlugExists = await this.productRepo.findOne({
         slug: convertToSlug(data.slug),
@@ -847,7 +879,9 @@ export class ProductService {
     }
 
     // Check parent product id is root product
+
     if (
+      data?.parent_product_id &&
       currentProduct.parent_product_id !== data.parent_product_id &&
       data.parent_product_id !== 0 &&
       currentProduct.parent_product_id !== 0
@@ -881,7 +915,7 @@ export class ProductService {
         },
         {
           ...productData,
-          slug: convertToSlug(data.slug) || currentProduct.slug,
+          slug: data.slug ? convertToSlug(data.slug) : currentProduct.slug,
         },
       );
     }

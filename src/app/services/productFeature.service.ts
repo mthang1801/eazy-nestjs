@@ -37,7 +37,7 @@ export class ProductFeatureService {
     const productFeatureData = this.productFeaturesRepo.setData(data);
 
     const featureCodeExists = await this.productFeaturesRepo.findOne({
-      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
+      feature_code: data.feature_code.replace(/\s+/g, '-').toUpperCase(),
     });
     if (featureCodeExists) {
       throw new HttpException('feature code đã tồn tại', 404);
@@ -46,7 +46,7 @@ export class ProductFeatureService {
     const newFeature: ProductFeatureEntity =
       await this.productFeaturesRepo.create({
         ...productFeatureData,
-        feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
+        feature_code: data.feature_code.replace(/\s+/g, '-').toUpperCase(),
       });
 
     const featureDescriptionData =
