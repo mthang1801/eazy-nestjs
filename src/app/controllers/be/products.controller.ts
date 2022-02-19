@@ -37,22 +37,22 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':id')
+  @Get(':sku')
   async get(
-    @Param('id') identifier: number | string,
+    @Param('sku') identifier: number | string,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.get(identifier);
     return this.responseSuccess(res, result);
   }
 
-  @Put(':id')
+  @Put(':sku')
   async update(
-    @Param('id') identifier: number | string,
+    @Param('sku') sku: string,
     @Body() data: UpdateProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.productService.update(identifier, data);
+    const result = await this.productService.update(sku, data);
     return this.responseSuccess(res, result);
   }
 }

@@ -776,10 +776,7 @@ export class ProductService {
     });
   }
 
-  async update(
-    identifier: number | string,
-    data: UpdateProductDto,
-  ): Promise<any> {
+  async update(sku: string, data: UpdateProductDto): Promise<any> {
     const currentProduct = await this.productRepo.findOne({
       select: [
         '*',
@@ -789,7 +786,7 @@ export class ProductService {
       ],
       join: { [JoinTable.leftJoin]: productJoiner },
       where: {
-        [`${Table.PRODUCTS}.product_code`]: identifier,
+        [`${Table.PRODUCTS}.product_code`]: sku,
       },
     });
 

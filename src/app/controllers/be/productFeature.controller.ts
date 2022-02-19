@@ -51,8 +51,8 @@ export class ProductFeatureController extends BaseController {
     @Body() data: UpdateProductFeatureDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, data);
-    return this.responseSuccess(res, result);
+    const { result, message } = await this.service.update(id, data);
+    return this.responseSuccess(res, result, message);
   }
 
   @Delete(':id')

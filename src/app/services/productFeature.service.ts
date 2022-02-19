@@ -18,6 +18,7 @@ import { ProductFeatureValueRepository } from '../repositories/productFeaturesVa
 import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
+import * as _ from 'lodash';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -193,19 +194,21 @@ export class ProductFeatureService {
     if (!checkProductFeatureExist) {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
     }
-    const productFeatureData = this.productFeaturesRepo.setData(data);
-    let updatedFeature;
 
+    const productFeatureData = this.productFeaturesRepo.setData(data);
+    let updatedFeature = {};
     if (Object.entries(productFeatureData).length) {
       updatedFeature = await this.productFeaturesRepo.update(
         id,
         productFeatureData,
       );
     }
+
+    let result = { ...checkProductFeatureExist, ...updatedFeature };
+
     const productFeatureDescriptionData =
       this.productFeatureDescriptionRepo.setData(data);
-    let updatedFeatureDescription;
-
+    let updatedFeatureDescription = {};
     if (Object.entries(productFeatureDescriptionData).length) {
       updatedFeatureDescription =
         await this.productFeatureDescriptionRepo.update(
@@ -213,13 +216,180 @@ export class ProductFeatureService {
           productFeatureDescriptionData,
         );
     }
+
+    result = { ...result, ...updatedFeatureDescription };
+
+    // find all variant_id contained in feature
+    let currentVariantLists = await this.productFeatureVariantsRepo.find({
+      select: [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`],
+      where: { feature_id: id },
+    });
+    // Nếu trong danh sách cập nhật không có variant_id, sẽ được liệt kê vào danh sách sẽ xoá
+    let willDeleteVariants = [];
+
+    currentVariantLists = currentVariantLists.map(
+      ({ variant_id }) => variant_id,
+    );
+
     let variantsList = [];
+    let logErrorsDelete = '';
+    let logErrorsCreateUpdate = '';
+
+    let willCreateNewVariants = [];
+    let willUpdateVariants = [];
+
     if (data.feature_values.length) {
       for (let variantItem of data.feature_values) {
         if (variantItem.variant_id) {
+          willUpdateVariants = [...willUpdateVariants, { ...variantItem }];
+        } else {
+          willCreateNewVariants = [
+            ...willCreateNewVariants,
+            { ...variantItem },
+          ];
         }
       }
     }
+
+    // Xoá các variants không nằm trong variant update
+    willDeleteVariants = currentVariantLists.filter(
+      (variantId) =>
+        !willUpdateVariants.some(({ variant_id }) => variantId === variant_id),
+    );
+
+    // Kiểm tra các variant này có tồn tại trong bảng ddv_product_features_values hay chưa, nếu có thì không được xoá
+    for (let variantId of willDeleteVariants) {
+      let checkVariantExists = await this.productFeatureValuesRepo.findOne({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+              fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+            },
+          },
+        },
+        where: { [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId },
+      });
+
+      if (checkVariantExists) {
+        logErrorsDelete =
+          logErrorsDelete === '' ? `Không thể xoá variant : ` : logErrorsDelete;
+        logErrorsDelete += `${checkVariantExists.value} (${checkVariantExists.variant_id}), `;
+        continue;
+      }
+      await this.productFeatureVariantsRepo.delete({ variant_id: variantId });
+      await this.productFeatureVariantDescriptionRepo.delete({
+        variant_id: variantId,
+      });
+    }
+
+    const setVarianItem = async (
+      variantItem,
+      type = 'create',
+    ): Promise<void> => {
+      let updatedResult = {};
+
+      const productFeatureVariantData =
+        this.productFeatureVariantsRepo.setData(variantItem);
+
+      const productFeatureDescriptionData =
+        this.productFeatureVariantDescriptionRepo.setData(variantItem);
+
+      let checkVariantNameExist = await this.productFeatureVariantsRepo.findOne(
+        {
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+                fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+                rootJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+              },
+            },
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]: id,
+            [`${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant`]:
+              variantItem.variant,
+          },
+        },
+      );
+
+      if (checkVariantNameExist) {
+        logErrorsCreateUpdate =
+          logErrorsCreateUpdate === ''
+            ? `Lỗi trùng lặp, không thể cập nhật hoặc thêm mới variant có tên: ${checkVariantNameExist.variant}`
+            : logErrorsCreateUpdate + `, ${checkVariantNameExist.variant}`;
+
+        variantsList = [...variantsList, { ...checkVariantNameExist }];
+
+        return;
+      }
+
+      if (type === 'update') {
+        if (Object.entries(productFeatureVariantData).length) {
+          const updatedProductFeatureVariant =
+            await this.productFeatureVariantsRepo.update(
+              { variant_id: variantItem['variant_id'] },
+              productFeatureVariantData,
+            );
+          updatedResult = {
+            ...updatedResult,
+            ...updatedProductFeatureVariant,
+          };
+        }
+
+        if (Object.entries(productFeatureDescriptionData).length) {
+          const updatedProductFeatureVariantDesc =
+            await this.productFeatureVariantDescriptionRepo.update(
+              { variant_id: variantItem.variant_id },
+              productFeatureDescriptionData,
+            );
+          updatedResult = {
+            ...updatedResult,
+            ...updatedProductFeatureVariantDesc,
+          };
+        }
+      } else {
+        const newProductFeatureVariant =
+          await this.productFeatureVariantsRepo.create({
+            ...productFeatureVariantData,
+            feature_id: result['feature_id'],
+          });
+
+        updatedResult = { ...newProductFeatureVariant };
+
+        const newProductFeatureDescription =
+          await this.productFeatureVariantDescriptionRepo.create({
+            ...productFeatureDescriptionData,
+            variant_id: updatedResult['variant_id'],
+          });
+        updatedResult = { ...updatedResult, ...newProductFeatureDescription };
+      }
+      variantsList = [...variantsList, { ...updatedResult }];
+
+      return;
+    };
+
+    // Ưu tiên update trước, tạo mới sau
+    if (willUpdateVariants.length) {
+      for (let variantItem of willUpdateVariants) {
+        await setVarianItem(variantItem, 'update');
+      }
+    }
+
+    if (willCreateNewVariants.length) {
+      for (let variantItem of willCreateNewVariants) {
+        await setVarianItem(variantItem, 'create');
+      }
+    }
+
+    return {
+      result: _.uniqBy(variantsList, 'variant_id'),
+      message: `${logErrorsCreateUpdate} 
+      ${logErrorsDelete}
+      `,
+    };
   }
 
   async deleteVariant(variantId: number): Promise<void> {

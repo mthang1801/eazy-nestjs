@@ -37,7 +37,7 @@ export class BaseRepositorty<T> {
 
     for (let [key, val] of Object.entries(data)) {
       if (this._tableProps.includes(key)) {
-        dataObject[key] = val;
+        dataObject[key] = typeof val === 'string' ? val.trim() : val;
       }
     }
 

@@ -31,11 +31,11 @@ export class ProductIntegrationController extends BaseController {
 
   @Put(':sku')
   async update(
-    @Param('sku') identifier: number | string,
+    @Param('sku') sku: string,
     @Body() data: UpdateProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(identifier, data);
+    const result = await this.service.update(sku, data);
     return this.responseSuccess(res, result);
   }
 }
