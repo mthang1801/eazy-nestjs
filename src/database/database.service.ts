@@ -13,7 +13,7 @@ export class DatabaseService {
     queryText: string,
     values: any[] = [],
   ): Promise<void> {
-    this.logger.debug(`Executing query: ${queryText} (${values})`);
+    this.logger.debug(`Executing mutation: ${queryText} (${values})`);
     return new Promise(async (resolve, reject) => {
       this.writePool
         .query(queryText, values)

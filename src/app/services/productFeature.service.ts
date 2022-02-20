@@ -37,25 +37,29 @@ export class ProductFeatureService {
     const productFeatureData = this.productFeaturesRepo.setData(data);
 
     const featureCodeExists = await this.productFeaturesRepo.findOne({
-      feature_code: data.feature_code.replace(/\s+/g, '-').toUpperCase(),
+      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
     });
     if (featureCodeExists) {
       throw new HttpException('feature code đã tồn tại', 404);
     }
 
-    const newFeature: ProductFeatureEntity =
-      await this.productFeaturesRepo.create({
-        ...productFeatureData,
-        feature_code: data.feature_code.replace(/\s+/g, '-').toUpperCase(),
-      });
+    const newFeature = await this.productFeaturesRepo.create({
+      ...productFeatureData,
+      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
+    });
+
+    let result = { ...newFeature };
 
     const featureDescriptionData =
       this.productFeatureDescriptionRepo.setData(data);
-    const newFeatureDesription: ProductFeatureDescriptionEntity =
+
+    const newFeatureDesription =
       await this.productFeatureDescriptionRepo.create({
         ...featureDescriptionData,
-        feature_id: newFeature.feature_id,
+        feature_id: result.feature_id,
       });
+
+    result = { ...result, ...newFeatureDesription };
 
     let feature_variants = [];
     // create record item on feature_variant and feature_variant_description from feature_values
@@ -84,9 +88,11 @@ export class ProductFeatureService {
           ...newFeatureVariantDescription,
         });
       }
+
+      result = { ...result, feature_variants: [...feature_variants] };
     }
 
-    return { ...newFeature, ...newFeatureDesription, feature_variants };
+    return result;
   }
 
   async getList(params): Promise<IProductFeaturesResponse[]> {
@@ -384,8 +390,10 @@ export class ProductFeatureService {
       }
     }
 
+    result['feature_variants'] = _.uniqBy(variantsList, 'variant_id');
+
     return {
-      result: _.uniqBy(variantsList, 'variant_id'),
+      result,
       message: `${logErrorsCreateUpdate} 
       ${logErrorsDelete}
       `,

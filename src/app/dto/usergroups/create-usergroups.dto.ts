@@ -14,5 +14,5 @@ export class CreateUserGroupsDto {
   usergroup: string = '';
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 }

@@ -3,5 +3,5 @@ export class BannerDescriptionsEntity {
   banner: string = '';
   url: string = '';
   description: string = '';
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 }

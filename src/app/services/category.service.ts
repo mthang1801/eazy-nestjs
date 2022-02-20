@@ -11,12 +11,25 @@ import { CategoryDescriptionRepository } from '../repositories/categoryDescripti
 import * as _ from 'lodash';
 import { Like } from '../../database/find-options/operators';
 import { ICategoryResult } from '../interfaces/categoryReult.interface';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 
 @Injectable()
 export class CategoryService {
   constructor(
     private categoryDescriptionRepo: CategoryDescriptionRepository<CategoryDescriptionEntity>,
     private categoryRepository: CategoryRepository<CategoryEntity>,
+    private productRepository: ProductsRepository<ProductsEntity>,
+    private productCategoryRepository: ProductsCategoriesRepository<ProductsCategoriesEntity>,
+    private imageRepository: ImagesRepository<ImagesEntity>,
+    private imageLinkRepository: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
@@ -57,19 +70,20 @@ export class CategoryService {
       }
     }
 
-    const createdCategory: CategoryEntity =
-      await this.categoryRepository.create({
-        ...categoryData,
-        id_path: idPath,
-        slug: convertToSlug(data.slug),
-        level: data.parent_id ? parentLevel.level + 1 : 1,
-        display_at: convertToMySQLDateTime(
-          categoryData['display_at']
-            ? new Date(categoryData['display_at'])
-            : new Date(),
-        ),
-        created_at: convertToMySQLDateTime(),
-      });
+    const createdCategory = await this.categoryRepository.create({
+      ...categoryData,
+      id_path: idPath,
+      slug: convertToSlug(data.slug),
+      level: data.parent_id ? parentLevel.level + 1 : 1,
+      display_at: convertToMySQLDateTime(
+        categoryData['display_at']
+          ? new Date(categoryData['display_at'])
+          : new Date(),
+      ),
+      created_at: convertToMySQLDateTime(),
+    });
+
+    let result = { ...createdCategory };
 
     const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
 
@@ -79,46 +93,69 @@ export class CategoryService {
         ...categoryDescriptionData,
       });
 
-    // Update product count from current category to root category
-    await this.updateCategoryProductCount(createdCategory);
+    result = { ...result, ...createdCategoryDescription };
+
+    // add category_id to products in ddv_product_category
+    if (data.products_list.length) {
+      for (let productCode of data.products_list) {
+        const product: ProductsEntity = await this.productRepository.findOne({
+          product_code: productCode,
+        });
+        if (!product) continue;
+        const productCategory = await this.productCategoryRepository.findOne({
+          product_id: product.product_id,
+          category_id: result.category_id,
+        });
+
+        if (!productCategory) {
+          await this.productCategoryRepository.create({
+            product_id: product.product_id,
+            category_id: result.category_id,
+            link_type: result.category_type,
+            position: product.parent_product_id,
+            category_position: result.position,
+          });
+        }
+      }
+    }
+
+    // upload image
+    if (data.image) {
+      const image = await this.imageRepository.create({
+        image_path: data.image,
+      });
+
+      const imageLink = await this.imageLinkRepository.create({
+        object_id: result.category_id,
+        object_type: ImageObjectType.CATEGORY,
+        image_id: image.image_id,
+      });
+      result = { ...result, image: { ...image, ...imageLink } };
+    }
 
     // Add category_id to product, working with ddv_products_categories table
 
-    return { ...createdCategory, ...createdCategoryDescription };
+    return result;
   }
 
-  //Using recursion to update product count for category by parent_id
-  async updateCategoryProductCount(
-    currentCategory: CategoryEntity,
-    product_count: number = currentCategory.product_count,
-  ): Promise<void> {
-    if (currentCategory.level === 1) return;
-
-    const parentCategory: CategoryEntity =
-      await this.categoryRepository.findById(currentCategory.parent_id);
-
-    if (!parentCategory) return;
-
-    const parentProductCount = parentCategory.product_count + product_count;
-
-    await this.categoryRepository.update(parentCategory.category_id, {
-      product_count: parentProductCount,
+  async update(id: number, data: UpdateCategoryDto): Promise<any> {
+    const oldCategoryData = await this.categoryRepository.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+            rootJoin: `${Table.CATEGORIES}.category_id`,
+          },
+        },
+      },
+      where: {
+        [`${Table.CATEGORIES}.category_id`]: id,
+      },
     });
 
-    await this.updateCategoryProductCount(parentCategory, product_count);
-  }
-
-  async update(id: number, data: UpdateCategoryDto): Promise<ICategoryResult> {
-    const oldCategoryData: CategoryEntity =
-      await this.categoryRepository.findOne({
-        category_id: id,
-      });
-
     if (!oldCategoryData) {
-      throw new HttpException(
-        `Không tìm thấy category với id là ${id}`,
-        HttpStatus.NOT_FOUND,
-      );
+      throw new HttpException(`Không tìm thấy category với id là ${id}`, 404);
     }
 
     if (data.slug && data.slug !== oldCategoryData.slug) {
@@ -126,34 +163,34 @@ export class CategoryService {
         slug: convertToSlug(data.slug),
       });
       if (checkSlug) {
-        throw new HttpException('Slug đã tồn tại, không thể cập nhật.', 409);
+        throw new HttpException(
+          'đường dẫn đã tồn tại, không thể cập nhật.',
+          409,
+        );
       }
     }
-    let updatedCategoryDataObject = {};
+    let updatedCategoryData = this.categoryRepository.setData(data);
 
-    for (let [key, val] of Object.entries(data)) {
-      if (this.categoryRepository.tableProps.includes(key)) {
-        if (key === 'display_at') {
-          updatedCategoryDataObject['display_at'] = convertToMySQLDateTime(
-            new Date(val),
-          );
-          continue;
-        }
+    let result = { ...oldCategoryData };
+
+    if (Object.entries(updatedCategoryData).length) {
+      for (let [key, val] of Object.entries(updatedCategoryData)) {
         if (key === 'slug') {
-          console.log(143, key, val);
-          updatedCategoryDataObject['slug'] = convertToSlug(val);
+          updatedCategoryData['slug'] = convertToSlug(val);
           continue;
         }
-        updatedCategoryDataObject[key] = val;
+        updatedCategoryData[key] = val;
       }
-    }
 
-    const updatedCategoryData = await this.categoryRepository.update(
-      oldCategoryData.category_id,
-      {
-        ...updatedCategoryDataObject,
-      },
-    );
+      const updatedCategory = await this.categoryRepository.update(
+        oldCategoryData.category_id,
+        {
+          ...updatedCategoryData,
+        },
+      );
+
+      result = { ...result, ...updatedCategory };
+    }
 
     const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
@@ -166,38 +203,132 @@ export class CategoryService {
       );
     }
 
-    let updatedCategoryDescriptionDataObject = {};
-    for (let [key, val] of Object.entries(data)) {
-      if (this.categoryDescriptionRepo.tableProps.includes(key)) {
-        updatedCategoryDescriptionDataObject[key] = val;
+    let updatedCategoryDescriptionData =
+      this.categoryDescriptionRepo.setData(data);
+
+    if (Object.entries(updatedCategoryDescriptionData).length) {
+      const updatedCategoryDescription =
+        await this.categoryDescriptionRepo.update(
+          result.category_id,
+          updatedCategoryDescriptionData,
+        );
+
+      result = { ...result, ...updatedCategoryDescription };
+    }
+
+    // update products
+    if (data.products_list && data.products_list.length) {
+      let currentProductsLists = await this.productCategoryRepository.find({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.PRODUCTS]: {
+              fieldJoin: `${Table.PRODUCTS}.product_id`,
+              rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+            },
+          },
+        },
+        where: {
+          category_id: result.category_id,
+        },
+      });
+      const willDeleteProducts = currentProductsLists.filter(
+        ({ product_code }) => !data.products_list.includes(product_code),
+      );
+
+      if (willDeleteProducts.length) {
+        for (let willDeleteProductItem of willDeleteProducts) {
+          await this.productCategoryRepository.delete({
+            category_id: result.category_id,
+            product_id: willDeleteProductItem.product_id,
+          });
+        }
+      }
+
+      currentProductsLists = currentProductsLists.filter(({ product_code }) =>
+        data.products_list.includes(product_code),
+      );
+
+      const willCreateProducts = data.products_list.filter(
+        (productCode) =>
+          !currentProductsLists.some(
+            ({ product_code }) => product_code === productCode,
+          ),
+      );
+
+      if (willCreateProducts.length) {
+        for (let willCreateProductItem of willCreateProducts) {
+          let product = await this.productRepository.findOne({
+            product_code: willCreateProductItem,
+          });
+          if (!product) continue;
+
+          const productCategory = await this.productCategoryRepository.findOne({
+            product_id: product.product_id,
+            category_id: result.category_id,
+          });
+
+          if (!productCategory) {
+            await this.productCategoryRepository.create({
+              product_id: product.product_id,
+              category_id: result.category_id,
+              link_type: result.category_type,
+              position: product.parent_product_id,
+              category_position: result.position,
+            });
+          }
+        }
       }
     }
 
-    if (Object.entries(updatedCategoryDescriptionDataObject).length) {
-      const updatedCategoryDescription =
-        await this.categoryDescriptionRepo.update(
-          oldCategoryDescription.category_description_id,
-          {
-            ...updatedCategoryDescriptionDataObject,
-          },
-        );
-      return { ...updatedCategoryData, ...updatedCategoryDescription };
+    // update image
+    if (data.image) {
+      let currentImageLink = await this.imageLinkRepository.findOne({
+        object_id: result.category_id,
+        object_type: ImageObjectType.CATEGORY,
+      });
+      let isSuccess = true;
+      // Néu tìm thấy image_link
+      if (currentImageLink) {
+        // Tìm kiếm image được liên kết từ image_link,
+        // Nếu ko thì xoá luôn image link và tạo mới
+        let currentImage = await this.imageRepository.findOne({
+          image_id: currentImageLink.image_id,
+        });
+        // Nếu image tồn tại thì update
+        if (currentImage) {
+          const updatedImage = await this.imageRepository.update(
+            { image_id: currentImage.image_id },
+            { image_path: data.image },
+          );
+          result = {
+            ...result,
+            image: { ...currentImageLink, ...updatedImage },
+          };
+        } else {
+          await this.imageLinkRepository.delete({
+            object_id: result.category_id,
+            object_type: ImageObjectType.CATEGORY,
+          });
+          isSuccess = false;
+        }
+      }
+
+      if (!currentImageLink || !isSuccess) {
+        const image = await this.imageRepository.create({
+          image_path: data.image,
+        });
+
+        const imageLink = await this.imageLinkRepository.create({
+          object_id: result.category_id,
+          object_type: ImageObjectType.CATEGORY,
+          image_id: image.image_id,
+        });
+        result = { ...result, image: { ...image, ...imageLink } };
+      }
     }
 
-    const categoryDescription = await this.categoryDescriptionRepo.findOne({
-      category_id: id,
-    });
-
-    const diffProductCount = data.product_count - oldCategoryData.product_count;
-
-    if (diffProductCount) {
-      await this.updateCategoryProductCount(
-        updatedCategoryData,
-        diffProductCount,
-      );
-    }
-
-    return { ...updatedCategoryData, ...categoryDescription };
+    return result;
   }
 
   async getList(params): Promise<ICategoryResult[]> {

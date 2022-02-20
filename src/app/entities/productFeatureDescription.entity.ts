@@ -4,5 +4,5 @@ export class ProductFeatureDescriptionEntity {
   full_description: string = '';
   prefix: string = '';
   suffix: string = '';
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 }

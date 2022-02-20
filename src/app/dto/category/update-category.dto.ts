@@ -84,4 +84,10 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   display_at: Date;
+
+  @IsOptional()
+  products_list: string[];
+
+  @IsOptional()
+  image: string;
 }

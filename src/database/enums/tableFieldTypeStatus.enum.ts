@@ -20,4 +20,5 @@ export enum ImageObjectType {
   PRODUCT = 'products',
   BANNER = 'banners',
   USER = 'users',
+  CATEGORY = 'categories',
 }

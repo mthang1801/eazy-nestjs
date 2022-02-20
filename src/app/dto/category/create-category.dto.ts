@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsIn, Min } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsOptional()
@@ -17,15 +17,18 @@ export class CreateCategoryDto {
   usergroup_ids: string = '0';
 
   @IsOptional()
+  @IsIn(['A', 'D'], { message: 'Trạng thái hiển thị chỉ có thể là A hoặc D' })
   status: string = 'A';
 
   @IsOptional()
+  @Min(0, { message: 'product_count không được nhỏ hơn 0' })
   product_count: number = 0;
 
   @IsOptional()
   position: number = 0;
 
   @IsOptional()
+  @IsIn(['Y', 'N'])
   is_op: string = 'N';
 
   @IsOptional()
@@ -62,12 +65,12 @@ export class CreateCategoryDto {
   category_type: string = 'C';
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 
-  @IsOptional()
+  @IsNotEmpty({ message: 'Tên danh mục là bắt buộc' })
   category: string = '';
 
-  @IsOptional()
+  @IsNotEmpty({ message: 'description là bắt buộc' })
   description: string = '';
 
   @IsOptional()
@@ -76,7 +79,7 @@ export class CreateCategoryDto {
   @IsOptional()
   meta_description: string = '';
 
-  @IsOptional()
+  @IsNotEmpty()
   page_title: string = '';
 
   @IsOptional()
@@ -84,4 +87,10 @@ export class CreateCategoryDto {
 
   @IsOptional()
   display_at: Date = new Date();
+
+  @IsOptional()
+  products_list: string[] = [];
+
+  @IsOptional()
+  image: string = '';
 }

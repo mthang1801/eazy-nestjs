@@ -1,4 +1,5 @@
-import { IsIn, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateProductFeatureDto {
   @IsNotEmpty({ message: 'Code là bắt buộc.' })
@@ -56,9 +57,11 @@ export class CreateProductFeatureDto {
   suffix: string = '';
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 
   @IsNotEmpty({ message: 'Giá trị thuộc tính là bắt buộc.' })
+  @ValidateNested()
+  @Type(() => ProductVariant)
   feature_values: ProductVariant[] = [];
 }
 
@@ -79,7 +82,7 @@ class ProductVariant {
   meta_description: string = '';
 
   @IsOptional()
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
 
   @IsOptional()
   url: string = '';

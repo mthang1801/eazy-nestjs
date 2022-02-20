@@ -3,7 +3,10 @@ import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
-import { preprocessDatabaseBeforeResponse } from '../utils/helper';
+import {
+  convertToMySQLDateTime,
+  preprocessDatabaseBeforeResponse,
+} from '../utils/helper';
 const orderCmds = [
   'select',
   'from',
@@ -37,6 +40,10 @@ export class BaseRepositorty<T> {
 
     for (let [key, val] of Object.entries(data)) {
       if (this._tableProps.includes(key)) {
+        if (/_at/.test(key)) {
+          dataObject[key] = convertToMySQLDateTime(new Date(val.toString()));
+          continue;
+        }
         dataObject[key] = typeof val === 'string' ? val.trim() : val;
       }
     }

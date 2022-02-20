@@ -6,6 +6,7 @@ import { CategoryDescriptionRepository } from '../repositories/categoryDescripti
 import { CategoryController as CategoryControllerFE } from '../controllers/fe/category.controller';
 import { ProductService } from '../services/products.service';
 import { ProductsModule } from './products.module';
+import { CategoryController as CategoryControllerIntegration } from '../controllers/integration/category.controller';
 
 @Module({
   imports: [forwardRef(() => ProductsModule)],
@@ -16,6 +17,10 @@ import { ProductsModule } from './products.module';
     ProductService,
   ],
   exports: [CategoryService, CategoryDescriptionRepository, CategoryRepository],
-  controllers: [CategoryControllerBE, CategoryControllerFE],
+  controllers: [
+    CategoryControllerBE,
+    CategoryControllerFE,
+    CategoryControllerIntegration,
+  ],
 })
 export class CategoryModule {}

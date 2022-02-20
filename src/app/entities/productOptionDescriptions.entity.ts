@@ -1,6 +1,6 @@
 export class ProductOptionDescriptionEntity {
   option_id: number = 0;
-  lang_code: string = 'vn';
+  lang_code: string = 'vi';
   option_name: string = '';
   internal_option_name: string = '';
   option_text: string = '';

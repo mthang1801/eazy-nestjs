@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsIn,
   IsNotEmpty,
@@ -6,6 +7,8 @@ import {
   MaxLength,
   Min,
   min,
+  Matches,
+  ValidateNested,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -23,16 +26,20 @@ export class CreateProductDto {
   list_price: number; // Giá niêm yết
 
   @IsNotEmpty()
+  @Min(0, { message: 'price không được nhỏ hơn 0' })
   price: number; // Giá bán lẻ
 
   @IsOptional()
+  @Min(0, { message: 'collect_price không được nhỏ hơn 0' })
   collect_price: number = 0; //Giá thu gom
 
   @IsOptional()
+  @Min(0, { message: 'whole_price không được nhỏ hơn 0' })
   whole_price: number = 0; //Giá bản sỉ
 
   @IsOptional()
   @Max(100, { message: 'Tỉ lệ discount không đúng.' })
+  @Min(0, { message: 'percentage_discount không được nhỏ hơn 0' })
   percentage_discount: number = 0;
 
   @IsNotEmpty()
@@ -43,27 +50,40 @@ export class CreateProductDto {
 
   @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
+  @IsIn(['P', 'S', 'A'], {
+    message: 'product_type chỉ chứa 1 ký tự và giá trị có thể là P,S,A',
+  })
   product_type: string = 'P';
 
   @IsOptional()
+  @IsIn(['A', 'B', 'C', 'D'], {
+    message:
+      'product_status chỉ chứa 1 ký tự và giá trị có thể là A (new),B (like new), C(used), D(demo)',
+  })
   product_status: string = 'A';
 
   @IsOptional()
+  @Min(0, { message: 'amount không được nhỏ hơn 0' })
   amount: number;
 
   @IsOptional()
+  @IsIn(['Y', 'N'], { message: 'approved chỉ cho phép Y hoặc N' })
   approved: string = 'Y';
 
   @IsNotEmpty()
+  @Min(0, { message: 'weight không được nhỏ hơn 0' })
   weight: number;
 
   @IsOptional()
+  @Min(0, { message: 'length không được nhỏ hơn 0' })
   length: number = 0;
 
   @IsOptional()
+  @Min(0, { message: 'width không được nhỏ hơn 0' })
   width: number = 0;
 
   @IsOptional()
+  @Min(0, { message: 'height không được nhỏ hơn 0' })
   height: number = 0;
 
   @IsOptional()
@@ -72,29 +92,31 @@ export class CreateProductDto {
   @IsOptional()
   tax_ids: string = '';
 
-  @IsOptional()
-  slug: string = '';
+  @IsNotEmpty({ message: 'slug là bắt buộc' })
+  slug: string;
 
   @IsNotEmpty()
-  product_features: { feature_id: number; variant_id: number }[];
+  @ValidateNested()
+  @Type(() => ProductFeatureDto)
+  product_features: ProductFeatureDto[] = [];
 
-  @IsOptional()
+  @IsNotEmpty({ message: 'page_title là bắt buộc' })
   page_title: string;
 
-  @IsOptional()
+  @IsNotEmpty({ message: 'meta_description là bắt buộc' })
   meta_description: string;
 
   @IsOptional()
-  alias: string;
+  alias: string = '';
 
   @IsOptional()
-  @IsIn(['A', 'D'])
+  @IsIn(['A', 'D'], { message: 'status chỉ có thể là A hoặc D.' })
   status: string = 'A';
 
   @IsOptional()
   display_at: Date = new Date();
 
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'category_id là bắt buộc' })
   category_id: number;
 
   @IsOptional()
@@ -128,7 +150,7 @@ export class CreateProductDto {
   full_description: string = ''; //product descriptions
 
   @IsOptional()
-  lang_code: string = 'vn'; //product descriptions
+  lang_code: string = 'vi'; //product descriptions
 
   @IsOptional()
   age_warning_message: string = ''; //product descriptions
@@ -150,4 +172,12 @@ export class CreateProductDto {
 
   @IsOptional()
   children_products: CreateProductDto[] = [];
+}
+
+class ProductFeatureDto {
+  @IsNotEmpty()
+  feature_id: number;
+
+  @IsNotEmpty()
+  variant_id: number;
 }
