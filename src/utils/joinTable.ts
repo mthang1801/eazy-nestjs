@@ -1,6 +1,6 @@
 import { JoinTable, Table } from 'src/database/enums';
 
-export const productJoiner = {
+export const productFullJoiner = {
   [Table.PRODUCT_DESCRIPTION]: {
     fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,
@@ -69,7 +69,7 @@ export const productFamilyJoiner = {
 };
 
 export const productFeaturesByCategory = {
-  ...productJoiner,
+  ...productFullJoiner,
   [Table.PRODUCT_FEATURE_VALUES]: {
     fieldJoin: `${Table.PRODUCTS}.product_id`,
     rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
@@ -108,5 +108,16 @@ export const productByCategoryJoiner = {
   [Table.PRODUCT_FEATURE_VALUES]: {
     fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
     rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+  },
+};
+
+export const productJoiner = {
+  [Table.PRODUCT_DESCRIPTION]: {
+    fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+  [Table.PRODUCT_PRICES]: {
+    fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
   },
 };

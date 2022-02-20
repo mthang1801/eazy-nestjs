@@ -14,12 +14,10 @@ import { CreateProductDto } from '../../dto/product/create-product.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateProductDto } from '../../dto/product/update-product.dto';
+import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
-  constructor(
-    private service: ProductService,
-    private productService: ProductService,
-  ) {
+  constructor(private service: ProductService) {
     super();
   }
   @Post()
@@ -52,7 +50,17 @@ export class ProductsController extends BaseController {
     @Body() data: UpdateProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.productService.update(sku, data);
+    const result = await this.service.update(sku, data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/:sku/images')
+  async updateImage(
+    @Param('sku') sku: string,
+    @Body() data: UpdateImageDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.updateImage(sku, data);
     return this.responseSuccess(res, result);
   }
 }

@@ -19,7 +19,7 @@ export enum PrimaryKeys {
 
   //============== Image ==============
   ddv_images = 'image_id',
-  ddv_images_links = 'image_id',
+  ddv_images_links = 'pair_id',
 
   //============== Category ==============
   ddv_categories = 'category_id',
