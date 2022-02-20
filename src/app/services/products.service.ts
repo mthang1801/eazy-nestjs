@@ -471,7 +471,7 @@ export class ProductService {
     // get Product item
     let product = await this.productRepo.findOne({
       select: [
-        '*',
+        `DISTINCT(${Table.PRODUCTS}.product_id)`,
         `${Table.PRODUCTS}.*`,
         `${Table.PRODUCT_DESCRIPTION}.*`,
         `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
@@ -500,7 +500,7 @@ export class ProductService {
     // filter condition base on family
 
     const productsFamily = await this.productRepo.find({
-      select: ['*', `${Table.PRODUCTS}.*`],
+      select: [`DISTINCT(${Table.PRODUCTS}.product_id)`, `${Table.PRODUCTS}.*`],
       join: productFamilyJoiner,
       where: productsFamilyFilterConditioner(product),
     });
@@ -512,7 +512,10 @@ export class ProductService {
 
     if (product.group_id) {
       const productsGroup = await this.productRepo.find({
-        select: ['*', `${Table.PRODUCTS}.*`],
+        select: [
+          `DISTINCT(${Table.PRODUCTS}.product_id)`,
+          `${Table.PRODUCTS}.*`,
+        ],
         join: { [JoinTable.leftJoin]: productFullJoiner },
         where: productsGroupFilterConditioner(product),
       });
