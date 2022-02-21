@@ -593,6 +593,7 @@ export class ProductService {
             [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
               (productItem) => productItem.product_id,
             ),
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
             [`${Table.PRODUCTS}.status`]: status || 'A',
           },
         });
@@ -612,6 +613,7 @@ export class ProductService {
             [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
               (productItem) => productItem.product_id,
             ),
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
             [`${Table.PRODUCTS}.status`]: status || 'A',
           },
           skip,
@@ -652,6 +654,7 @@ export class ProductService {
       },
       where: {
         ...filterCondition,
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
         [`${Table.PRODUCTS}.status`]: status || 'A',
       },
     });
@@ -665,6 +668,7 @@ export class ProductService {
       },
       where: {
         ...filterCondition,
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
         [`${Table.PRODUCTS}.status`]: status || 'A',
       },
       skip,
@@ -773,6 +777,7 @@ export class ProductService {
             [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
               (productItem) => productItem.product_id,
             ),
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
             [`${Table.PRODUCTS}.status`]: status || 'A',
           },
         });
@@ -794,6 +799,7 @@ export class ProductService {
             [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
               (productItem) => productItem.product_id,
             ),
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
             [`${Table.PRODUCTS}.status`]: status || 'A',
           },
           skip,
@@ -833,6 +839,7 @@ export class ProductService {
         ...filterCondition,
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
         [`${Table.PRODUCTS}.status`]: status || 'A',
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       })),
     });
 
@@ -847,6 +854,7 @@ export class ProductService {
         ...filterCondition,
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
         [`${Table.PRODUCTS}.status`]: status || 'A',
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       })),
 
       skip,

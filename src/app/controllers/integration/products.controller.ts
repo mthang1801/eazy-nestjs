@@ -7,6 +7,7 @@ import {
   Res,
   Response,
   Param,
+  Query,
 } from '@nestjs/common';
 import { CreateProductDto } from 'src/app/dto/product/create-product.dto';
 import { UpdateProductDto } from 'src/app/dto/product/update-product.dto';
@@ -47,6 +48,21 @@ export class ProductIntegrationController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.updateImage(sku, data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
+  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':sku')
+  async get(
+    @Param('sku') identifier: number | string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.get(identifier);
     return this.responseSuccess(res, result);
   }
 }
