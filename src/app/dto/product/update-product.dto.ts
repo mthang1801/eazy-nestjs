@@ -42,14 +42,14 @@ export class UpdateProductDto {
 
   @IsOptional()
   @Min(0, { message: 'width Không được nhỏ hơn 0' })
-  width: number = 0;
+  width: number;
 
   @IsOptional()
   @Min(0, { message: 'height Không được nhỏ hơn 0' })
-  height: number = 0;
+  height: number;
 
   @IsOptional()
-  tax_ids: string = '';
+  tax_ids: string;
 
   @IsOptional()
   @Min(0, { message: 'shipping_freight Không được nhỏ hơn 0' })
@@ -247,10 +247,10 @@ export class UpdateProductDto {
   product_features: ProductFeatureValueDto[];
 
   @IsOptional()
-  display_at: Date = new Date();
+  display_at: Date;
 
   @IsOptional()
-  children_products: UpdateProductDto[] = [];
+  children_products: UpdateProductDto[];
 }
 
 class ProductFeatureValueDto {

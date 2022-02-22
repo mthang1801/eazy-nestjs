@@ -29,7 +29,7 @@ import { ProductSalesRepository } from '../repositories/productSales.repository'
 import { ProductSalesEntity } from '../entities/productSales.entity';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
-import { JoinTable, Table } from 'src/database/enums';
+import { JoinTable, SortBy, Table } from 'src/database/enums';
 import { CreateProductDto } from '../dto/product/create-product.dto';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryEntity } from '../entities/category.entity';
@@ -61,7 +61,6 @@ import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.en
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { Equal } from '../../database/find-options/operators';
 import { v4 as uuid } from 'uuid';
-import { group } from 'console';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { convertToSlug } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
@@ -475,6 +474,8 @@ export class ProductService {
         `${Table.PRODUCTS}.*`,
         `${Table.PRODUCT_DESCRIPTION}.*`,
         `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
+        `${Table.PRODUCT_PRICES}.*`,
+        `${Table.PRODUCTS_CATEGORIES}.category_id`,
       ],
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: [
@@ -501,9 +502,23 @@ export class ProductService {
 
     const productsFamily = await this.productRepo.find({
       select: [`DISTINCT(${Table.PRODUCTS}.product_id)`, `${Table.PRODUCTS}.*`],
-      join: productFamilyJoiner,
+      join: productFullJoiner,
       where: productsFamilyFilterConditioner(product),
     });
+
+    if (productsFamily.length) {
+      for (let productItem of productsFamily) {
+        const productFeatures = await this.productFeatureValueRepo.find({
+          select: ['*'],
+          join: { [JoinTable.leftJoin]: productFeaturesJoiner },
+          where: {
+            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]:
+              productItem.product_id,
+          },
+        });
+        productItem['features'] = productFeatures;
+      }
+    }
 
     product['products_family'] = productsFamily.filter(
       (productsFamilyItem) =>
@@ -540,15 +555,16 @@ export class ProductService {
       },
     });
 
+    console.log(product);
     product['images'] = productImages;
 
     return product;
   }
 
   async getList(params: any): Promise<any> {
-    let { page, limit, status, ...others } = params;
+    let { page, limit, search, ...others } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let products = [];
@@ -584,18 +600,44 @@ export class ProductService {
           join: {
             [JoinTable.leftJoin]: productByCategoryJoiner,
           },
-          where: {
-            ...filterCondition,
-            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-              getFeatureByKey.feature_id,
-            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-              getVariantByVal.variant_id,
-            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-              (productItem) => productItem.product_id,
-            ),
-            [`${Table.PRODUCTS}.parent_product_id`]: 0,
-            [`${Table.PRODUCTS}.status`]: status || 'A',
-          },
+          where: search
+            ? [
+                {
+                  ...filterCondition,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                    getFeatureByKey.feature_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                    getVariantByVal.variant_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                    (productItem) => productItem.product_id,
+                  ),
+                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
+                  [`${Table.PRODUCTS}.product_code`]: Like(search),
+                },
+                {
+                  ...filterCondition,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                    getFeatureByKey.feature_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                    getVariantByVal.variant_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                    (productItem) => productItem.product_id,
+                  ),
+                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
+                  [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
+                },
+              ]
+            : {
+                ...filterCondition,
+                [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                  getFeatureByKey.feature_id,
+                [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                  getVariantByVal.variant_id,
+                [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                  (productItem) => productItem.product_id,
+                ),
+                [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              },
         });
 
         products = await this.productRepo.find({
@@ -605,17 +647,47 @@ export class ProductService {
           join: {
             [JoinTable.leftJoin]: productByCategoryJoiner,
           },
-          where: {
-            [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-              getFeatureByKey.feature_id,
-            [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-              getVariantByVal.variant_id,
-            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-              (productItem) => productItem.product_id,
-            ),
-            [`${Table.PRODUCTS}.parent_product_id`]: 0,
-            [`${Table.PRODUCTS}.status`]: status || 'A',
-          },
+          where: search
+            ? [
+                {
+                  ...filterCondition,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                    getFeatureByKey.feature_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                    getVariantByVal.variant_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                    (productItem) => productItem.product_id,
+                  ),
+                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
+                  [`${Table.PRODUCTS}.product_code`]: Like(search),
+                },
+                {
+                  ...filterCondition,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                    getFeatureByKey.feature_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                    getVariantByVal.variant_id,
+                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                    (productItem) => productItem.product_id,
+                  ),
+                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
+                  [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
+                },
+              ]
+            : {
+                ...filterCondition,
+                [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
+                  getFeatureByKey.feature_id,
+                [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
+                  getVariantByVal.variant_id,
+                [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
+                  (productItem) => productItem.product_id,
+                ),
+                [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              },
+          orderBy: [
+            { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+          ],
           skip,
           limit,
         });
@@ -643,7 +715,14 @@ export class ProductService {
           productItem['image'] = image;
         }
 
-        return { totalProducts: count ? count[0].total : 0, products };
+        return {
+          products,
+          paging: {
+            currentPage: page,
+            pageSize: limit,
+            total: count ? count[0].total : 0,
+          },
+        };
       }
     }
 
@@ -652,11 +731,23 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productJoiner,
       },
-      where: {
-        ...filterCondition,
-        [`${Table.PRODUCTS}.parent_product_id`]: 0,
-        [`${Table.PRODUCTS}.status`]: status || 'A',
-      },
+      where: search
+        ? [
+            {
+              ...filterCondition,
+              [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              [`${Table.PRODUCTS}.product_code`]: Like(search),
+            },
+            {
+              ...filterCondition,
+              [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
+            },
+          ]
+        : {
+            ...filterCondition,
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
+          },
     });
 
     products = await this.productRepo.find({
@@ -666,11 +757,26 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productJoiner,
       },
-      where: {
-        ...filterCondition,
-        [`${Table.PRODUCTS}.parent_product_id`]: 0,
-        [`${Table.PRODUCTS}.status`]: status || 'A',
-      },
+      orderBy: [
+        { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+      ],
+      where: search
+        ? [
+            {
+              ...filterCondition,
+              [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              [`${Table.PRODUCTS}.product_code`]: Like(search),
+            },
+            {
+              ...filterCondition,
+              [`${Table.PRODUCTS}.parent_product_id`]: 0,
+              [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
+            },
+          ]
+        : {
+            ...filterCondition,
+            [`${Table.PRODUCTS}.parent_product_id`]: 0,
+          },
       skip,
       limit,
     });
@@ -696,25 +802,47 @@ export class ProductService {
       productItem['image'] = image;
     }
 
-    return { totalProducts: count ? count[0].total : 0, products };
+    return {
+      products,
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count ? count[0].total : 0,
+      },
+    };
   }
 
   async getProductsListByCategoryId(
     categoryId: number,
     params: any,
   ): Promise<any> {
-    const category = await this.categoryRepo.findById(categoryId);
+    const category = await this.categoryRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORIES}.category_id`,
+            rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
+    });
 
     let categoriesList: { category_id: number }[] = [
       { category_id: category.category_id },
     ];
 
+    let homeChildrenCategoryId = [];
+    let homeChildrenCategory = [];
+
     switch (category.level) {
       case 1:
-        categoriesList = [
-          ...categoriesList,
-          ...(await this.getCategoriesListLevel1(categoryId)),
-        ];
+        const categoriesListLevel1 = await this.getCategoriesListLevel1(
+          categoryId,
+        );
+        categoriesList = [...categoriesList, ...categoriesListLevel1];
+        homeChildrenCategoryId = [...categoriesListLevel1];
         break;
       case 2:
         categoriesList = [
@@ -724,14 +852,37 @@ export class ProductService {
         break;
     }
 
+    if (homeChildrenCategoryId.length) {
+      for (let { category_id } of homeChildrenCategoryId) {
+        const categoryItem = await this.categoryRepo.findOne({
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.CATEGORY_DESCRIPTIONS]: {
+                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+                rootJoin: `${Table.CATEGORIES}.category_id`,
+              },
+            },
+          },
+          where: { [`${Table.CATEGORIES}.category_id`]: category_id },
+        });
+        if (categoryItem) {
+          homeChildrenCategory = [
+            ...homeChildrenCategory,
+            { ...categoryItem, slug: `${category.slug}/${categoryItem.slug}` },
+          ];
+        }
+      }
+    }
+
     let categoriesListFlatten: number[] = categoriesList.map(
       ({ category_id }) => category_id,
     );
 
-    let { page, limit, status, ...others } = params;
+    let { page, limit, ...others } = params;
 
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     const skip = (page - 1) * limit;
 
     let products = [];
@@ -778,7 +929,6 @@ export class ProductService {
               (productItem) => productItem.product_id,
             ),
             [`${Table.PRODUCTS}.parent_product_id`]: 0,
-            [`${Table.PRODUCTS}.status`]: status || 'A',
           },
         });
 
@@ -789,6 +939,9 @@ export class ProductService {
           join: {
             [JoinTable.leftJoin]: productByCategoryJoiner,
           },
+          orderBy: [
+            { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+          ],
           where: {
             [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
               getFeatureByKey.feature_id,
@@ -800,7 +953,6 @@ export class ProductService {
               (productItem) => productItem.product_id,
             ),
             [`${Table.PRODUCTS}.parent_product_id`]: 0,
-            [`${Table.PRODUCTS}.status`]: status || 'A',
           },
           skip,
           limit,
@@ -826,7 +978,14 @@ export class ProductService {
           });
           productItem['image'] = image;
         }
-        return { totalProducts: count ? count[0]?.total : 0, products };
+        return {
+          products,
+          paging: {
+            currentPage: page,
+            pageSize: limit,
+            total: count ? count[0].total : 0,
+          },
+        };
       }
     }
 
@@ -835,10 +994,11 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productByCategoryJoiner,
       },
+
       where: categoriesListFlatten.map((categoryId) => ({
         ...filterCondition,
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-        [`${Table.PRODUCTS}.status`]: status || 'A',
+
         [`${Table.PRODUCTS}.parent_product_id`]: 0,
       })),
     });
@@ -850,10 +1010,13 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productByCategoryJoiner,
       },
+      orderBy: [
+        { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+      ],
       where: categoriesListFlatten.map((categoryId) => ({
         ...filterCondition,
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-        [`${Table.PRODUCTS}.status`]: status || 'A',
+
         [`${Table.PRODUCTS}.parent_product_id`]: 0,
       })),
 
@@ -881,7 +1044,15 @@ export class ProductService {
       productItem['image'] = image;
     }
 
-    return { totalProducts: count ? count[0]?.total : 0, products };
+    return {
+      products,
+      childrenCategory: homeChildrenCategory,
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count ? count[0].total : 0,
+      },
+    };
   }
 
   async getCategoriesListLevel1(categoryId: number): Promise<any> {
@@ -901,6 +1072,7 @@ export class ProductService {
           ...categoriesListLevel3,
           ...categoriesListLevel3ByLevel2,
         ];
+        categoriesListLevel2['children'] = categoriesListLevel3;
       }
     }
 
@@ -1011,6 +1183,7 @@ export class ProductService {
     }
 
     if (
+      data.children_products &&
       currentProduct.parent_product_id !== 0 &&
       data.children_products.length
     ) {
@@ -1020,6 +1193,7 @@ export class ProductService {
     // //update product
     const productData = this.productRepo.setData(data);
     let updatedProduct;
+
     if (Object.entries(productData).length) {
       updatedProduct = await this.productRepo.update(
         {
@@ -1038,6 +1212,7 @@ export class ProductService {
 
     // product descriptions
     const productDescriptionData = this.productDescriptionsRepo.setData(data);
+
     let updatedProductDescription = {};
     if (Object.entries(productDescriptionData).length) {
       updatedProductDescription = await this.productDescriptionsRepo.update(
@@ -1073,7 +1248,7 @@ export class ProductService {
 
     // Product features values and product group Features
 
-    if (data.product_features.length) {
+    if (data.product_features && data.product_features.length) {
       // delete all old product feature values by product id
       await this.productFeatureValueRepo.delete({
         product_id: result.product_id,
@@ -1146,24 +1321,28 @@ export class ProductService {
           where: { [`${Table.PRODUCTS}.parent_product_id`]: result.product_id },
         });
 
-        for (let childProduct of _childrenProductsList) {
-          let childCategory = await this.productCategoryRepo.update(
-            { product_id: childProduct.product_id },
-            {
-              category_id: result['category_id'],
-            },
-          );
+        if (_childrenProductsList.length) {
+          for (let childProduct of _childrenProductsList) {
+            let childCategory = await this.productCategoryRepo.update(
+              { product_id: childProduct.product_id },
+              {
+                category_id: result['category_id'],
+              },
+            );
 
-          childProduct = { ...childProduct, ...childCategory };
+            childProduct = { ...childProduct, ...childCategory };
 
-          childrenProductsList = _childrenProductsList.map(
-            (childProductItem) => {
-              if (childProductItem.product_id === childProduct['product_id']) {
-                return { ...childProductItem, ...childProduct };
-              }
-              return childProductItem;
-            },
-          );
+            childrenProductsList = _childrenProductsList.map(
+              (childProductItem) => {
+                if (
+                  childProductItem.product_id === childProduct['product_id']
+                ) {
+                  return { ...childProductItem, ...childProduct };
+                }
+                return childProductItem;
+              },
+            );
+          }
         }
       }
 
@@ -1198,134 +1377,139 @@ export class ProductService {
           },
         });
 
-        for (let childProduct of _childrenProductsList) {
-          let childGroup = await this.productVariationGroupProductsRepo.update(
-            { product_id: childProduct.product_id },
-            {
-              group_id: result['group_id'],
-            },
-          );
+        if (_childrenProductsList.length) {
+          for (let childProduct of _childrenProductsList) {
+            let childGroup =
+              await this.productVariationGroupProductsRepo.update(
+                { product_id: childProduct.product_id },
+                {
+                  group_id: result['group_id'],
+                },
+              );
 
-          childProduct = { ...childProduct, ...childGroup };
+            childProduct = { ...childProduct, ...childGroup };
 
-          childrenProductsList = _childrenProductsList.map(
-            (childProductItem) => {
-              if (childProductItem.product_id === childProduct['product_id']) {
-                return { ...childProductItem, ...childProduct };
-              }
-              return childProductItem;
-            },
-          );
+            childrenProductsList = _childrenProductsList.map(
+              (childProductItem) => {
+                if (
+                  childProductItem.product_id === childProduct['product_id']
+                ) {
+                  return { ...childProductItem, ...childProduct };
+                }
+                return childProductItem;
+              },
+            );
+          }
         }
       }
 
-      if (data.children_products.length) {
+      if (data.children_products && data.children_products.length) {
         const prefixCode = result.product_code
           .replace(/[0-9]+/g, '')
           .toUpperCase();
         const subfixCode = result.product_code.replace(/[a-zA-Z]+/g, '');
 
-        if (data.children_products.length) {
-          for (let [i, productItem] of data.children_products.entries()) {
-            let childProductDigitCode = +subfixCode + i + 1;
-            let childProductCode =
-              productItem.product_code || prefixCode + childProductDigitCode;
+        for (let [i, productItem] of data.children_products.entries()) {
+          let childProductDigitCode = +subfixCode + i + 1;
+          let childProductCode =
+            productItem.product_code || prefixCode + childProductDigitCode;
 
-            const checkProductExist = await this.productRepo.findOne({
-              product_code: childProductCode,
-            });
+          const checkProductExist = await this.productRepo.findOne({
+            product_code: childProductCode,
+          });
 
-            if (checkProductExist) {
-              childProductCode =
-                prefixCode + uuid().replace(/-/g, '').toUpperCase();
-            }
-
-            // product for child
-
-            const childProductData = this.productRepo.setData({
-              ...result,
-              productItem,
-            });
-            delete childProductData['product_id'];
-            const newChildProductItem = await this.productRepo.create({
-              ...childProductData,
-              product_code: childProductCode,
-              parent_product_id: result.product_id,
-              created_at: convertToMySQLDateTime(),
-              display_at: productItem.display_at
-                ? convertToMySQLDateTime(new Date(productItem.display_at))
-                : convertToMySQLDateTime(),
-            });
-
-            // product description for child
-            const childProductDescriptionData =
-              this.productDescriptionsRepo.setData({
-                ...result,
-                ...productItem,
-              });
-            delete childProductDescriptionData['product_description_id'];
-            const newChildProductDescription =
-              await this.productDescriptionsRepo.create({
-                ...childProductDescriptionData,
-                product_id: newChildProductItem.product_id,
-              });
-
-            // product price for child
-            const childProductPriceData = this.productPriceRepo.setData({
-              ...result,
-              ...productItem,
-            });
-            delete childProductPriceData['product_price_id'];
-            const newChildProductPrice = await this.productPriceRepo.create({
-              ...childProductPriceData,
-              product_id: newChildProductItem.product_id,
-            });
-
-            // price Sale for child
-            const childProductSaleData = this.productSaleRepo.setData({
-              ...result,
-              ...productItem,
-            });
-            delete childProductData['product_sale_id'];
-            const newChildProductSale: ProductSalesEntity =
-              await this.productSaleRepo.create({
-                ...childProductSaleData,
-                product_id: newChildProductItem.product_id,
-              });
-
-            // product category
-
-            const newChildProductCategory =
-              await this.productCategoryRepo.create({
-                category_id: result['category_id'],
-                product_id: newChildProductItem.product_id,
-              });
-
-            // insert product into group
-            await this.productVariationGroupProductsRepo.create({
-              product_id: newChildProductItem.product_id,
-              group_id: result.group_id,
-              parent_product_id: result.product_id,
-            });
-
-            if (productItem.product_features) {
-              await this.createProductFeatures(
-                productItem.product_features,
-                newChildProductItem.product_id,
-                result.group_id,
-              );
-            }
-            childrenProductsList = [
-              ...childrenProductsList,
-              {
-                ...newChildProductItem,
-                ...newChildProductDescription,
-                ...newChildProductPrice,
-                ...newChildProductSale,
-                ...newChildProductCategory,
-              },
-            ];
+          if (checkProductExist) {
+            childProductCode =
+              prefixCode + uuid().replace(/-/g, '').toUpperCase();
           }
+
+          // product for child
+
+          const childProductData = this.productRepo.setData({
+            ...result,
+            productItem,
+          });
+
+          delete childProductData['product_id'];
+          const newChildProductItem = await this.productRepo.create({
+            ...childProductData,
+            product_code: childProductCode,
+            parent_product_id: result.product_id,
+            created_at: convertToMySQLDateTime(),
+            display_at: productItem.display_at
+              ? convertToMySQLDateTime(new Date(productItem.display_at))
+              : convertToMySQLDateTime(),
+          });
+
+          // product description for child
+          const childProductDescriptionData =
+            this.productDescriptionsRepo.setData({
+              ...result,
+              ...productItem,
+            });
+          delete childProductDescriptionData['product_description_id'];
+          const newChildProductDescription =
+            await this.productDescriptionsRepo.create({
+              ...childProductDescriptionData,
+              product_id: newChildProductItem.product_id,
+            });
+
+          // product price for child
+          const childProductPriceData = this.productPriceRepo.setData({
+            ...result,
+            ...productItem,
+          });
+          delete childProductPriceData['product_price_id'];
+          const newChildProductPrice = await this.productPriceRepo.create({
+            ...childProductPriceData,
+            product_id: newChildProductItem.product_id,
+          });
+
+          // price Sale for child
+          const childProductSaleData = this.productSaleRepo.setData({
+            ...result,
+            ...productItem,
+          });
+          delete childProductData['product_sale_id'];
+          const newChildProductSale: ProductSalesEntity =
+            await this.productSaleRepo.create({
+              ...childProductSaleData,
+              product_id: newChildProductItem.product_id,
+            });
+
+          // product category
+
+          const newChildProductCategory = await this.productCategoryRepo.create(
+            {
+              category_id: result['category_id'],
+              product_id: newChildProductItem.product_id,
+            },
+          );
+
+          // insert product into group
+          await this.productVariationGroupProductsRepo.create({
+            product_id: newChildProductItem.product_id,
+            group_id: result.group_id,
+            parent_product_id: result.product_id,
+          });
+
+          if (productItem.product_features) {
+            await this.createProductFeatures(
+              productItem.product_features,
+              newChildProductItem.product_id,
+              result.group_id,
+            );
+          }
+          childrenProductsList = [
+            ...childrenProductsList,
+            {
+              ...newChildProductItem,
+              ...newChildProductDescription,
+              ...newChildProductPrice,
+              ...newChildProductSale,
+              ...newChildProductCategory,
+            },
+          ];
         }
 
         result['children_products'] = childrenProductsList;

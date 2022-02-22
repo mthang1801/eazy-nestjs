@@ -29,6 +29,7 @@ import { ProductsModule } from './products.module';
 
 import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
+import { QueueModule } from './queue.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -56,6 +57,7 @@ import { ProductFeaturesModule } from './productFeatures.module';
     ProductsModule,
     CustomerModule,
     ProductFeaturesModule,
+    QueueModule,
   ],
   providers: [
     {
