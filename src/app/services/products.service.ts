@@ -94,28 +94,28 @@ export class ProductService {
   async create(data: CreateProductDto): Promise<any> {
     // check unique key
     let { code, product_code, group_id, parent_product_id } = data;
-    if (!group_id) {
-      if (code) {
-        const checkProductGroupExists =
-          await this.productVariationGroupRepo.findOne({
-            code: code.toUpperCase(),
-          });
+    // if (!group_id) {
+    //   if (code) {
+    //     const checkProductGroupExists =
+    //       await this.productVariationGroupRepo.findOne({
+    //         code: code.toUpperCase(),
+    //       });
 
-        if (checkProductGroupExists) {
-          throw new HttpException(
-            'Code nhóm sản phẩm đã tồn tại, không thể tạo nhóm',
-            409,
-          );
-        }
-      }
-    } else {
-      const checkGroupIdExists = await this.productVariationGroupRepo.findOne({
-        group_id,
-      });
-      if (!checkGroupIdExists) {
-        throw new HttpException('Nhóm sản phẩm không tồn tại.', 404);
-      }
-    }
+    //     if (checkProductGroupExists) {
+    //       throw new HttpException(
+    //         'Code nhóm sản phẩm đã tồn tại, không thể tạo nhóm',
+    //         409,
+    //       );
+    //     }
+    //   }
+    // } else {
+    //   const checkGroupIdExists = await this.productVariationGroupRepo.findOne({
+    //     group_id,
+    //   });
+    //   if (!checkGroupIdExists) {
+    //     throw new HttpException('Nhóm sản phẩm không tồn tại.', 404);
+    //   }
+    // }
 
     const checkSlugExists = await this.productRepo.findOne({
       slug: convertToSlug(data.slug),
@@ -598,10 +598,11 @@ export class ProductService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
     });
+
     if (categoryByProduct) {
       if (categoryByProduct.id_path) {
-        for (let categoryId of categoryByProduct.id_path.split(',').reverse()) {
-          const categoryByProduct = await this.categoryRepo.findOne({
+        for (let categoryId of categoryByProduct.id_path.split('/').reverse()) {
+          const _categoryByProduct = await this.categoryRepo.findOne({
             select: ['*'],
             join: {
               [JoinTable.leftJoin]: {
@@ -613,7 +614,7 @@ export class ProductService {
             },
             where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
           });
-          listBreadCrums = [categoryByProduct, ...listBreadCrums];
+          listBreadCrums = [_categoryByProduct, ...listBreadCrums];
         }
       }
     }
@@ -889,6 +890,10 @@ export class ProductService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
     });
+
+    if (!category) {
+      throw new HttpException('Không tìm thấy danh mục sản phẩm.', 404);
+    }
 
     let categoriesList: { category_id: number }[] = [
       { category_id: category.category_id },
