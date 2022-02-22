@@ -13,10 +13,12 @@ export class DatabaseService {
     queryText: string,
     values: any[] = [],
   ): Promise<void> {
-    this.logger.debug(`Executing mutation: ${queryText} (${values})`);
+    this.logger.debug(
+      `Executing mutation: ${queryText.replace(/''/g, '')} (${values})`,
+    );
     return new Promise(async (resolve, reject) => {
       this.writePool
-        .query(queryText, values)
+        .query(queryText.replace(/''/g, ''), values)
         .then((result: any) => {
           resolve(result);
         })
@@ -27,10 +29,12 @@ export class DatabaseService {
     queryText: string,
     values: any[] = [],
   ): Promise<void> {
-    this.logger.debug(`Executing query: ${queryText} (${values})`);
+    this.logger.debug(
+      `Executing query: ${queryText.replace(/''/g, '')} (${values})`,
+    );
     return new Promise(async (resolve, reject) => {
       this.readPool
-        .query(queryText, values)
+        .query(queryText.replace(/''/g, ''), values)
         .then((result: any) => {
           resolve(result);
         })

@@ -37,6 +37,7 @@ export class CategoryService {
   ) {}
 
   async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
+    console.log(data);
     const categoryData = this.categoryRepository.setData(data);
     if (data.level > 1 && !data.parent_id) {
       throw new HttpException('Level lớn hơn 1 cần có parent_id', 400);
@@ -44,10 +45,10 @@ export class CategoryService {
 
     let idPath = '';
 
-    if (data.level === 2) {
+    if (data.level === 1) {
       idPath = `${data.parent_id}`;
     }
-    if (data.level === 3 && data.parent_id) {
+    if (data.level === 2 && data.parent_id) {
       let parentCategory = await this.categoryRepository.findById(
         data.parent_id,
       );
@@ -66,7 +67,7 @@ export class CategoryService {
     }
 
     let parentLevel;
-    if (data.parent_id > 0) {
+    if (data.parent_id) {
       parentLevel = await this.categoryRepository.findById(data.parent_id);
 
       if (!parentLevel) {
@@ -78,7 +79,8 @@ export class CategoryService {
       ...categoryData,
       id_path: idPath,
       slug: convertToSlug(data.slug),
-      level: data.parent_id ? parentLevel.level + 1 : 1,
+      parent_id: data.parent_id === 0 ? null : data.parent_id,
+      level: data.parent_id ? parentLevel.level + 1 : 0,
       display_at: convertToMySQLDateTime(
         categoryData['display_at']
           ? new Date(categoryData['display_at'])
@@ -151,10 +153,10 @@ export class CategoryService {
 
     let idPath = '';
 
-    if (data.level === 2) {
+    if (data.level === 1) {
       idPath = `${data.parent_id}`;
     }
-    if (data.level === 3 && data.parent_id) {
+    if (data.level === 2 && data.parent_id) {
       let parentCategory = await this.categoryRepository.findById(
         data.parent_id,
       );
@@ -387,6 +389,10 @@ export class CategoryService {
   async getList(params): Promise<ICategoryResult[]> {
     // ignore page and limit
     let { page, limit, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    let skip = (page - 1) * limit;
+
     let filterCondition = {};
 
     for (let [key, val] of Object.entries(others)) {
@@ -397,7 +403,7 @@ export class CategoryService {
       }
     }
 
-    const categoriesListLevel1 = await this.categoryRepository.find({
+    const categoriesListLevel0 = await this.categoryRepository.find({
       select: [`*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -407,11 +413,15 @@ export class CategoryService {
           },
         },
       },
-      where: { [`${Table.CATEGORIES}.level`]: 1 },
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
+      skip,
+      limit,
     });
 
-    for (let categoryLevel1Item of categoriesListLevel1) {
-      let categoriesListLevel2 = await this.categoryRepository.find({
+    console.log(categoriesListLevel0);
+
+    for (let categoryLevel0Item of categoriesListLevel0) {
+      let categoriesListLevel1 = await this.categoryRepository.find({
         select: [`*`],
         join: {
           [JoinTable.leftJoin]: {
@@ -422,13 +432,13 @@ export class CategoryService {
           },
         },
         where: {
-          [`${Table.CATEGORIES}.level`]: 2,
-          parent_id: categoryLevel1Item.category_id,
+          [`${Table.CATEGORIES}.level`]: 1,
+          parent_id: categoryLevel0Item.category_id,
         },
       });
 
-      for (let categoryLevel2Item of categoriesListLevel2) {
-        let categoriesListLevel3 = await this.categoryRepository.find({
+      for (let categoryLevel1Item of categoriesListLevel1) {
+        let categoriesListLevel2 = await this.categoryRepository.find({
           select: ['*'],
           join: {
             [JoinTable.leftJoin]: {
@@ -439,18 +449,18 @@ export class CategoryService {
             },
           },
           where: {
-            [`${Table.CATEGORIES}.level`]: 3,
-            parent_id: categoryLevel2Item.category_id,
+            [`${Table.CATEGORIES}.level`]: 2,
+            parent_id: categoryLevel1Item.category_id,
           },
         });
 
-        categoryLevel2Item.children = categoriesListLevel3;
+        categoryLevel1Item.children = categoriesListLevel2;
       }
 
-      categoryLevel1Item.children = categoriesListLevel2;
+      categoryLevel0Item.children = categoriesListLevel1;
     }
 
-    return categoriesListLevel1;
+    return categoriesListLevel0;
   }
 
   async get(id: number): Promise<ICategoryResult> {

@@ -69,7 +69,7 @@ class ProductVariant {
   @IsNotEmpty()
   variant: string = '';
 
-  @IsNotEmpty()
+  @IsOptional()
   variant_code: number = 0;
 
   @IsOptional()

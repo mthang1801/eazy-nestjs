@@ -59,7 +59,7 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
-import { Equal } from '../../database/find-options/operators';
+import { Equal, IsNull } from '../../database/find-options/operators';
 import { v4 as uuid } from 'uuid';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { convertToSlug } from '../../utils/helper';
@@ -95,16 +95,18 @@ export class ProductService {
     // check unique key
     let { code, product_code, group_id, parent_product_id } = data;
     if (!group_id) {
-      const checkProductGroupExists =
-        await this.productVariationGroupRepo.findOne({
-          code: code.toUpperCase(),
-        });
+      if (code) {
+        const checkProductGroupExists =
+          await this.productVariationGroupRepo.findOne({
+            code: code.toUpperCase(),
+          });
 
-      if (checkProductGroupExists) {
-        throw new HttpException(
-          'Code nhóm sản phẩm đã tồn tại, không thể tạo nhóm',
-          409,
-        );
+        if (checkProductGroupExists) {
+          throw new HttpException(
+            'Code nhóm sản phẩm đã tồn tại, không thể tạo nhóm',
+            409,
+          );
+        }
       }
     } else {
       const checkGroupIdExists = await this.productVariationGroupRepo.findOne({
@@ -580,10 +582,44 @@ export class ProductService {
       },
     });
 
-    console.log(product);
     product['images'] = productImages;
 
-    return product;
+    let listBreadCrums = [];
+    // Get categories breadcrum
+    const categoryByProduct = await this.categoryRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: 'category_id',
+            rootJoin: 'category_id',
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
+    });
+    if (categoryByProduct) {
+      if (categoryByProduct.id_path) {
+        for (let categoryId of categoryByProduct.id_path.split(',').reverse()) {
+          const categoryByProduct = await this.categoryRepo.findOne({
+            select: ['*'],
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.CATEGORY_DESCRIPTIONS]: {
+                  fieldJoin: 'category_id',
+                  rootJoin: 'category_id',
+                },
+              },
+            },
+            where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
+          });
+          listBreadCrums = [categoryByProduct, ...listBreadCrums];
+        }
+      }
+    }
+    listBreadCrums = [...listBreadCrums, categoryByProduct];
+
+    return { ...product, breadCrum: listBreadCrums };
   }
 
   async getList(params: any): Promise<any> {
@@ -862,14 +898,14 @@ export class ProductService {
     let homeChildrenCategory = [];
 
     switch (category.level) {
-      case 1:
+      case 0:
         const categoriesListLevel1 = await this.getCategoriesListLevel1(
           categoryId,
         );
         categoriesList = [...categoriesList, ...categoriesListLevel1];
         homeChildrenCategoryId = [...categoriesListLevel1];
         break;
-      case 2:
+      case 1:
         categoriesList = [
           ...categoriesList,
           ...(await this.getCategoriesListLevel2(categoryId)),
@@ -1083,7 +1119,7 @@ export class ProductService {
   async getCategoriesListLevel1(categoryId: number): Promise<any> {
     let categoriesListLevel2 = await this.categoryRepo.find({
       select: ['category_id'],
-      where: { parent_id: categoryId, level: 2 },
+      where: { parent_id: categoryId, level: 1 },
     });
 
     let categoriesListLevel3 = [];
@@ -1107,7 +1143,7 @@ export class ProductService {
   async getCategoriesListLevel2(categoryId: number): Promise<any> {
     return this.categoryRepo.find({
       select: ['category_id'],
-      where: { parent_id: categoryId, level: 3 },
+      where: { parent_id: categoryId, level: 2 },
     });
   }
 
