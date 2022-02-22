@@ -45,7 +45,7 @@ export class CategoryController extends BaseController {
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const createdCategory = await this.service.create(categoryDto);
+    const createdCategory = await this.service.itgCreate(categoryDto);
     return this.responseSuccess(res, createdCategory);
   }
 

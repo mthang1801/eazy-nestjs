@@ -40,10 +40,10 @@ export class BaseRepositorty<T> {
 
     for (let [key, val] of Object.entries(data)) {
       if (this._tableProps.includes(key)) {
-        if (/_at/.test(key)) {
-          dataObject[key] = convertToMySQLDateTime(new Date(val.toString()));
-          continue;
-        }
+        // if (/_at/.test(key)) {
+        //   dataObject[key] = convertToMySQLDateTime(new Date(val.toString()));
+        //   continue;
+        // }
         dataObject[key] = typeof val === 'string' ? val.trim() : val;
       }
     }

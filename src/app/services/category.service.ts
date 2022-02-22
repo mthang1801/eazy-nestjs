@@ -1,7 +1,11 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
-import { convertToMySQLDateTime, convertToSlug } from '../../utils/helper';
+import {
+  convertToMySQLDateTime,
+  convertToSlug,
+  removeVietnameseTones,
+} from '../../utils/helper';
 import { CreateCategoryDto } from '../dto/category/create-category.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
@@ -134,6 +138,55 @@ export class CategoryService {
     }
 
     // Add category_id to product, working with ddv_products_categories table
+
+    return result;
+  }
+
+  async itgCreate(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
+    console.log();
+    const categoryData = this.categoryRepository.setData(data);
+    const slug = data['category']
+      ? convertToSlug(removeVietnameseTones(data.category))
+      : '';
+
+    let idPath = '';
+
+    if (data.level === 2) {
+      idPath = `${data.parent_id}`;
+    }
+    if (data.level === 3 && data.parent_id) {
+      let parentCategory = await this.categoryRepository.findById(
+        data.parent_id,
+      );
+      if (parentCategory) {
+        let grandParentCategory = await this.categoryRepository.findById(
+          parentCategory.parent_id,
+        );
+        idPath = `${grandParentCategory.category_id}/${parentCategory.category_id}`;
+      }
+    }
+
+    let result = await this.categoryRepository.create({
+      ...categoryData,
+      id_path: idPath,
+      slug,
+      display_at: convertToMySQLDateTime(
+        categoryData['display_at']
+          ? new Date(categoryData['display_at'])
+          : new Date(),
+      ),
+      created_at: convertToMySQLDateTime(),
+    });
+
+    const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
+
+    const createdCategoryDescription: CategoryDescriptionEntity =
+      await this.categoryDescriptionRepo.create({
+        category_id: result.category_id,
+        ...categoryDescriptionData,
+      });
+
+    result = { ...result, ...createdCategoryDescription };
 
     return result;
   }

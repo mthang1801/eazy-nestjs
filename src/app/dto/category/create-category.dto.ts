@@ -49,7 +49,7 @@ export class CreateCategoryDto {
   @IsOptional()
   selected_views: string = '';
 
-  @IsNotEmpty()
+  @IsOptional()
   slug: string = '';
 
   @IsOptional()
@@ -70,7 +70,7 @@ export class CreateCategoryDto {
   @IsNotEmpty({ message: 'Tên danh mục là bắt buộc' })
   category: string = '';
 
-  @IsNotEmpty({ message: 'description là bắt buộc' })
+  @IsOptional()
   description: string = '';
 
   @IsOptional()
@@ -79,7 +79,7 @@ export class CreateCategoryDto {
   @IsOptional()
   meta_description: string = '';
 
-  @IsNotEmpty()
+  @IsOptional()
   page_title: string = '';
 
   @IsOptional()

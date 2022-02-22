@@ -25,38 +25,30 @@ export class UpdateProductDto {
   approved: string;
 
   @IsOptional()
-  @Min(0, { message: 'list_price Không được nhỏ hơn 0' })
   list_price: number;
 
   @IsOptional()
-  @Min(0, { message: 'amount Không được nhỏ hơn 0' })
   amount: number;
 
   @IsOptional()
-  @Min(0, { message: 'weight Không được nhỏ hơn 0' })
   weight: number;
 
   @IsOptional()
-  @Min(0, { message: 'length Không được nhỏ hơn 0' })
   length: number;
 
   @IsOptional()
-  @Min(0, { message: 'width Không được nhỏ hơn 0' })
   width: number;
 
   @IsOptional()
-  @Min(0, { message: 'height Không được nhỏ hơn 0' })
   height: number;
 
   @IsOptional()
   tax_ids: string;
 
   @IsOptional()
-  @Min(0, { message: 'shipping_freight Không được nhỏ hơn 0' })
   shipping_freight: number;
 
   @IsOptional()
-  @Min(0, { message: 'low_avail_limit Không được nhỏ hơn 0' })
   low_avail_limit: number;
 
   @IsOptional()
@@ -195,28 +187,22 @@ export class UpdateProductDto {
   // Product price
 
   @IsOptional()
-  @Min(0, { message: 'price Không được nhỏ hơn 0' })
   price: number;
 
   @IsOptional()
-  @Min(0, { message: 'collect_price Không được nhỏ hơn 0' })
   collect_price: number; //Giá thu gom
 
   @IsOptional()
-  @Min(0, { message: 'whole_price price Không được nhỏ hơn 0' })
   whole_price: number; //Giá bản sỉ
 
   @IsOptional()
-  @Min(0, { message: 'buy_price Không được nhỏ hơn 0' })
   buy_price: number;
 
   @IsOptional()
-  @Min(0, { message: 'percentage_discount Không được nhỏ hơn 0' })
   @Max(100, { message: 'percentage_discount Không vượt quá 100' })
   percentage_discount: number;
 
   @IsOptional()
-  @Min(0, { message: 'lower_limit Không được nhỏ hơn 0' })
   lower_limit: number;
 
   @IsOptional()
