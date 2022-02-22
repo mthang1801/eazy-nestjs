@@ -2,7 +2,7 @@ export class CategoryEntity {
   category_id: number = 0;
   parent_id: number = 0;
   id_path: string = '';
-  level: number = 1;
+  level: number = 0;
   company_id: number = 0;
   usergroup_ids: string = '';
   status: string = 'A';

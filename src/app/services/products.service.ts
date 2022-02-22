@@ -64,6 +64,7 @@ import { v4 as uuid } from 'uuid';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { convertToSlug } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
+import { CreateProductV2Dto } from '../dto/product/create-product.v2.dto';
 @Injectable()
 export class ProductService {
   constructor(
@@ -412,6 +413,30 @@ export class ProductService {
     }
 
     return result;
+  }
+
+  async createV2(data: CreateProductV2Dto): Promise<any> {
+    // Tạo mới sản phẩm :
+    // 1. Mỗi sản phẩm sẽ có nhiều màu sắc -> sản phẩm con sẽ có màu sắc tương tự
+    // a. Nếu không có sản phẩm cha
+    //   - Sản phẩm gốc sẽ làm sản phẩm cha, và tạo nhóm sản phẩm
+    // b. Nếu không có sản phẩm cha và không có sản phẩm con -> sản phẩm này là độc lập (group_id = 0 )
+    // c. Nếu có sản phẩm cha -> Thêm sản phẩm mới, kèm theo sản phẩm con ( nếu có ) vào trong nhóm chứa sản phẩm cha
+    // Kiểm tra product_code tồn tại
+    const productCodeExist = await this.productRepo.findOne({
+      product_code: data.product_code,
+    });
+    if (productCodeExist) {
+      throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
+    }
+
+    if (data.children_products.length) {
+      for (let childProduct of data.children_products) {
+        if (childProduct.product_code) {
+          const productChildCodeExist = await this;
+        }
+      }
+    }
   }
 
   async createProductFeatures(

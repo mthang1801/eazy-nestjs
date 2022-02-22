@@ -70,6 +70,9 @@ class ProductVariant {
   @IsOptional()
   variant_id: number;
 
+  @IsOptional()
+  variant_code: number;
+
   @IsNotEmpty()
   variant: string;
 

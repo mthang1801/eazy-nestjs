@@ -2,13 +2,13 @@ import { IsNotEmpty, IsOptional, IsIn, Min } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsOptional()
-  parent_id: number = 0;
+  parent_id: number = 0 || null;
 
   @IsOptional()
   id_path: string = '';
 
   @IsOptional()
-  level: number = 1;
+  level: number = 0;
 
   @IsOptional()
   company_id: number = 0;

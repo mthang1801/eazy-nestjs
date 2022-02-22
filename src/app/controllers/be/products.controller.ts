@@ -15,6 +15,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateProductDto } from '../../dto/product/update-product.dto';
 import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
+import { CreateProductV2Dto } from '../../dto/product/create-product.v2.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -26,6 +27,15 @@ export class ProductsController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.create(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/v2')
+  async createV2(
+    @Body() data: CreateProductV2Dto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.createV2(data);
     return this.responseSuccess(res, result);
   }
 
