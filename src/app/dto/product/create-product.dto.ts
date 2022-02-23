@@ -50,16 +50,9 @@ export class CreateProductDto {
 
   @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
-  @IsIn(['P', 'S', 'A'], {
-    message: 'product_type chỉ chứa 1 ký tự và giá trị có thể là P,S,A',
-  })
   product_type: string = 'P';
 
   @IsOptional()
-  @IsIn(['A', 'B', 'C', 'D'], {
-    message:
-      'product_status chỉ chứa 1 ký tự và giá trị có thể là A (new),B (like new), C(used), D(demo)',
-  })
   product_status: string = 'A';
 
   @IsOptional()

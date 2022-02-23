@@ -24,6 +24,7 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
+import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
 
 @Injectable()
 export class CategoryService {
@@ -37,7 +38,6 @@ export class CategoryService {
   ) {}
 
   async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
-    console.log(data);
     const categoryData = this.categoryRepository.setData(data);
     if (data.level > 1 && !data.parent_id) {
       throw new HttpException('Level lớn hơn 1 cần có parent_id', 400);
@@ -142,6 +142,73 @@ export class CategoryService {
     // Add category_id to product, working with ddv_products_categories table
 
     return result;
+  }
+
+  async createV2(data: CreateCategoryV2Dto): Promise<any> {
+    const checkSlugExist = await this.categoryRepository.findOne({
+      slug: convertToSlug(data.slug),
+    });
+
+    if (checkSlugExist) {
+      throw new HttpException('Đường dẫn đã tồn tại.', 409);
+    }
+    let idPaths = '';
+    let level = 0;
+    if (data.parent_id) {
+      const checkParentExist = await this.categoryRepository.findById(
+        data.parent_id,
+      );
+      if (!checkParentExist) {
+        throw new HttpException(
+          `Không tìm thấy danh mục có parent_id là ${data.parent_id}`,
+          404,
+        );
+      }
+      let getResult = await this.findAncestor(data.parent_id);
+      console.log(getResult);
+    }
+
+    // const createdCategory = await this.categoryRepository.create({
+    //   ...categoryData,
+    //   id_path: idPaths,
+    //   slug: convertToSlug(data.slug),
+    //   parent_id: data.parent_id === 0 ? null : data.parent_id,
+    //   level: data.parent_id ? parentLevel.level + 1 : 0,
+    //   display_at: convertToMySQLDateTime(
+    //     categoryData['display_at']
+    //       ? new Date(categoryData['display_at'])
+    //       : new Date(),
+    //   ),
+    //   created_at: convertToMySQLDateTime(),
+    // });
+
+    // let result = { ...createdCategory };
+
+    // const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
+
+    // const createdCategoryDescription: CategoryDescriptionEntity =
+    //   await this.categoryDescriptionRepo.create({
+    //     category_id: createdCategory.category_id,
+    //     ...categoryDescriptionData,
+    //   });
+
+    // result = { ...result, ...createdCategoryDescription };
+
+    // return result;
+  }
+
+  async findAncestor(parentId: number, idPaths = '', level = 0) {
+    const parent = await this.categoryRepository.findById(parentId);
+    idPaths = idPaths
+      ? `${parent.category_id}/${idPaths}`
+      : `${parent.category_id}`;
+    level = Math.max(level, parent.level);
+    if (!parent.parent_id) {
+      return { idPaths, level };
+    }
+
+    let result = await this.findAncestor(parent.parent_id, idPaths, level);
+    return { idPaths: result.idPaths, level: result.level };
   }
 
   async itgCreate(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {

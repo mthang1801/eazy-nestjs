@@ -19,6 +19,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 import { ProductService } from 'src/app/services/products.service';
+import { CreateCategoryV2Dto } from 'src/app/dto/category/create-category.v2.dto';
 
 /**
  * Controller for Category
@@ -45,8 +46,17 @@ export class CategoryController extends BaseController {
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const createdCategory = await this.service.create(categoryDto);
-    return this.responseSuccess(res, createdCategory);
+    const result = await this.service.create(categoryDto);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/v2')
+  async createV2(
+    @Body() categoryDto: CreateCategoryV2Dto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.createV2(categoryDto);
+    return this.responseSuccess(res, result);
   }
 
   /**

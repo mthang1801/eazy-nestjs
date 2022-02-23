@@ -124,20 +124,9 @@ export class ProductService {
       throw new HttpException('Slug đã tồn tại, không thể tạo sp mới', 409);
     }
 
-    const findWhiteSpace = /\s/g;
-    if (findWhiteSpace.test(data.product_code)) {
-      throw new HttpException('Mã sản phẩm không được chứa khoảng trắng', 400);
-    }
-
     if (data.children_products.length) {
       for (let productItem of data.children_products) {
         if (productItem.product_code) {
-          if (findWhiteSpace.test(productItem.product_code)) {
-            throw new HttpException(
-              'Mã sản phẩm không được chứa khoảng trắng',
-              400,
-            );
-          }
           const checkProductCodeExists = await this.productRepo.findOne({
             product_code: productItem.product_code.toUpperCase(),
           });
