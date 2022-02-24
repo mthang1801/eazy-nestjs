@@ -1,6 +1,9 @@
 import { IsOptional } from 'class-validator';
 export class SyncProductDto {
   @IsOptional()
+  product_id: number = 0;
+
+  @IsOptional()
   product: string = '';
 
   @IsOptional()
