@@ -19,7 +19,7 @@ import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.ent
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 import * as _ from 'lodash';
-import { productFeatures } from '../../database/constant/productFeatures';
+import { productFeatures as productFeaturesData } from '../../database/constant/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 @Injectable()
 export class ProductFeatureService {
@@ -98,6 +98,11 @@ export class ProductFeatureService {
   }
 
   async getList(params): Promise<IProductFeaturesResponse[]> {
+    const data = productFeaturesData;
+    for (let dataItem of data) {
+      await this.syncData(dataItem);
+    }
+
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;

@@ -79,6 +79,9 @@ export class SyncProductDto {
 }
 
 class ProductFeature {
+  @IsOptional()
   feature_code: string;
+
+  @IsOptional()
   variant_code: string;
 }

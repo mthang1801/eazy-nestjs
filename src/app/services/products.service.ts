@@ -1764,12 +1764,7 @@ export class ProductService {
         const productFeature = await this.productFeaturesRepo.findOne({
           feature_code,
         });
-        if (!productFeature) {
-          throw new HttpException(
-            `Không tìm thấy thuộc tính sản phẩm có feature_code = ${feature_code}`,
-            404,
-          );
-        }
+
         const productFeatureVariant =
           await this.productFeatureVariantRepo.findOne({
             select: ['*'],
@@ -1786,23 +1781,19 @@ export class ProductService {
             },
           });
 
-        if (!productFeatureVariant) {
-          throw new HttpException(
-            `Không tìm thấy thuộc tính sản phẩm có variant_code = ${variant_code}`,
-            404,
-          );
-        }
         const productFeatureValueData = {
-          feature_id: productFeature.feature_id,
-          variant_id: productFeatureVariant.variant_id,
-          feature_code: feature_code,
-          variant_code: variant_code,
+          feature_id: productFeature ? productFeature.feature_id : null,
+          variant_id: productFeatureVariant
+            ? productFeatureVariant?.variant_id
+            : null,
+          feature_code: productFeature ? feature_code : null,
+          variant_code: productFeatureVariant ? variant_code : null,
           product_id: result.product_id,
-          value: isNaN(+productFeatureVariant.variant * 1)
-            ? productFeatureVariant.variant
+          value: isNaN(+productFeatureVariant?.variant * 1)
+            ? productFeatureVariant?.variant
             : '',
-          value_int: !isNaN(+productFeatureVariant.variant * 1)
-            ? +productFeatureVariant.variant
+          value_int: !isNaN(+productFeatureVariant?.variant * 1)
+            ? +productFeatureVariant?.variant
             : 0,
         };
 

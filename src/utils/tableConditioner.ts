@@ -1,5 +1,5 @@
 import { Table } from 'src/database/enums';
-import { Equal, Not } from 'src/database/find-options/operators';
+import { Equal, Like, Not } from 'src/database/find-options/operators';
 
 export const productsFamilyFilterConditioner = (product) =>
   product.parent_product_id === 0
@@ -31,3 +31,21 @@ export const productsGroupFilterConditioner = (product) =>
         [`${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`]:
           product.group_id,
       };
+
+export const userSearchByNameEmailPhone = (val, filterCondition) => {
+  if (Object.entries(filterCondition).length) {
+    return [
+      { [`${Table.USERS}.lastname`]: Like(val), ...filterCondition },
+      { [`${Table.USERS}.firstname`]: Like(val), ...filterCondition },
+      { [`${Table.USERS}.email`]: Like(val), ...filterCondition },
+      { [`${Table.USERS}.phone`]: Like(val), ...filterCondition },
+    ];
+  }
+
+  return [
+    { [`${Table.USERS}.lastname`]: Like(val) },
+    { [`${Table.USERS}.firstname`]: Like(val) },
+    { [`${Table.USERS}.email`]: Like(val) },
+    { [`${Table.USERS}.phone`]: Like(val) },
+  ];
+};

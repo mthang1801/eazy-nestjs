@@ -91,22 +91,4 @@ export class UsergroupsController extends BaseController {
     const result = await this.service.update(id, data);
     return this.responseSuccess(res, result);
   }
-
-  /**
-   * Delete usergroup by usergroup_id
-   * @param id
-   * @param res
-   * @returns
-   */
-  @Delete(':id')
-  //@UseGuards(AuthGuard)
-  async delete(
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.delete(id);
-    return result
-      ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công')
-      : this.responseNotFound(res, 'Xoá dữ liệu không thành công.');
-  }
 }

@@ -125,6 +125,7 @@ export class AuthService {
       b_firstname: firstname,
       b_lastname: lastname,
       b_phone: phone,
+      profile_name: `${firstname} ${lastname}`,
     });
 
     // Create a new record at ddv_user_data
