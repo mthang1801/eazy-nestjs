@@ -4,7 +4,7 @@ export class SyncProductDto {
   product: string = '';
 
   @IsOptional()
-  productStatus: string = '';
+  product_status: string = '';
 
   @IsOptional()
   tax_name: string = '';
