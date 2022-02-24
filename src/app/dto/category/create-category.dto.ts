@@ -1,8 +1,11 @@
-import { IsNotEmpty, IsOptional, IsIn, Min } from 'class-validator';
+import { IsOptional, IsIn, Min } from 'class-validator';
 
 export class CreateCategoryDto {
   @IsOptional()
-  parent_id: number | null;
+  category_id: number;
+
+  @IsOptional()
+  parent_id: null | number = 0;
 
   @IsOptional()
   id_path: string = '';
@@ -67,7 +70,7 @@ export class CreateCategoryDto {
   @IsOptional()
   lang_code: string = 'vi';
 
-  @IsNotEmpty({ message: 'Tên danh mục là bắt buộc' })
+  @IsOptional({ message: 'Tên danh mục là bắt buộc' })
   category: string = '';
 
   @IsOptional()

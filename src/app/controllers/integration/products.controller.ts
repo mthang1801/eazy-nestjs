@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CreateProductDto } from 'src/app/dto/product/create-product.dto';
+import { SyncProductDto } from 'src/app/dto/product/sync-product.dto';
 import { UpdateProductDto } from 'src/app/dto/product/update-product.dto';
 import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
 import { IResponse } from 'src/app/interfaces/response.interface';
@@ -24,10 +25,10 @@ export class ProductIntegrationController extends BaseController {
 
   @Post()
   async create(
-    @Body() data: CreateProductDto,
+    @Body() data: SyncProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.create(data);
+    const result = await this.service.syncData(data);
     return this.responseSuccess(res, result);
   }
 

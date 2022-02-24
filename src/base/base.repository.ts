@@ -82,6 +82,26 @@ export class BaseRepositorty<T> {
   }
 
   /**
+   * Create new record
+   * @param params
+   * @returns
+   */
+  async createSync(params: any): Promise<any> {
+    this.logger.log('=============== create ================');
+
+    if (Array.isArray(params) || typeof params !== 'object') {
+      throw new HttpException(
+        'Tham số truyền vào phải là một Object',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let sql = `INSERT INTO ${this.table} SET ? `;
+
+    await this.databaseService.executeQueryWritePool(sql, params);
+  }
+
+  /**
    * Show one record by primary key id
    * @param id
    * @returns

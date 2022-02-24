@@ -25,7 +25,7 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
-
+import { data as categoryData } from '../../database/constant/category';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -259,6 +259,33 @@ export class CategoryService {
 
     return result;
   }
+
+  // async syncData(): Promise<any> {
+  //   let categoryListData: any = categoryData;
+  //   for (let categoryItem of categoryListData) {
+  //     const categoryObjData = {
+  //       ...new CategoryEntity(),
+  //       ...this.categoryRepository.setData(categoryItem),
+  //       display_at: categoryItem.display_at
+  //         ? convertToMySQLDateTime(categoryItem.display_at)
+  //         : convertToMySQLDateTime(),
+  //     };
+
+  //     const newCategoryData = await this.categoryRepository.create(
+  //       categoryObjData,
+  //     );
+
+  //     const categoryObjDescData = {
+  //       ...new CategoryDescriptionEntity(),
+  //       ...this.categoryDescriptionRepo.setData(categoryItem),
+  //     };
+
+  //     await this.categoryDescriptionRepo.create({
+  //       category_id: categoryItem.category_id,
+  //       ...categoryObjDescData,
+  //     });
+  //   }
+  // }
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
     const oldCategoryData = await this.categoryRepository.findOne({

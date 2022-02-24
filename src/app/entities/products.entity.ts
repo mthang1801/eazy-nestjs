@@ -1,3 +1,5 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class ProductsEntity {
   product_id: number = 0;
   parent_product_id: number = 0;
@@ -46,6 +48,6 @@ export class ProductsEntity {
   shipping_params: string = '';
   facebook_obj_type: string = '';
   buy_now_url: string = '';
-  created_at: Date = new Date();
-  display_at: Date = new Date();
+  created_at: string = convertToMySQLDateTime();
+  display_at: string = convertToMySQLDateTime();
 }

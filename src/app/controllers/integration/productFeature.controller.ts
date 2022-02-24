@@ -15,6 +15,7 @@ import { Response } from 'express';
 import { IResponse } from '../../interfaces/response.interface';
 import { ProductFeatureService } from 'src/app/services/productFeature.service';
 import { UpdateProductFeatureDto } from 'src/app/dto/productFeatures/update-productFeatures.dto';
+import { SyncProductFeatureDto } from '../../dto/productFeatures/sync-productFeature.dto';
 
 @Controller('/itg/v1/product-features')
 export class ProductFeatureController extends BaseController {
@@ -23,11 +24,11 @@ export class ProductFeatureController extends BaseController {
   }
   @Post()
   async create(
-    @Body() data: CreateProductFeatureDto,
+    @Body() data: SyncProductFeatureDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.create(data);
-    return this.responseSuccess(res, result);
+    const result = await this.service.syncData(data);
+    return this.responseSuccess(res, result, 'Sync hoàn tất');
   }
 
   @Get()

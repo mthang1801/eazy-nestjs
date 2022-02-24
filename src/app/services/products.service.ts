@@ -65,6 +65,9 @@ import { ProductVariationGroupProductsEntity } from '../entities/productVariatio
 import { convertToSlug } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
 import { CreateProductV2Dto } from '../dto/product/create-product.v2.dto';
+import { SyncProductDto } from '../dto/product/sync-product.dto';
+import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
+import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 @Injectable()
 export class ProductService {
   constructor(
@@ -87,6 +90,7 @@ export class ProductService {
     private productFeaturesRepo: ProductFeaturesRepository<ProductFeatureEntity>,
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
+    private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
@@ -1706,6 +1710,106 @@ export class ProductService {
         images: [...result.images, { ...newImage, ...newImageLink }],
       };
     }
+    return result;
+  }
+
+  async syncData(data: SyncProductDto): Promise<any> {
+    // set product
+    const productData = {
+      ...new ProductsEntity(),
+      ...this.productRepo.setData(data),
+    };
+
+    let result = await this.productRepo.create({ ...productData });
+
+    // set product description
+    const productDescData = {
+      ...new ProductDescriptionsEntity(),
+      ...this.productDescriptionsRepo.setData(data),
+    };
+
+    const newProductsDesc = await this.productDescriptionsRepo.create({
+      ...productDescData,
+      product_id: result.product_id,
+    });
+
+    result = { ...result, ...newProductsDesc };
+
+    //price
+    const productPriceData = {
+      ...new ProductPricesEntity(),
+      ...this.productPriceRepo.setData(data),
+    };
+    const newProductPrice = await this.productPriceRepo.create({
+      ...productPriceData,
+      product_id: result.product_id,
+    });
+
+    result = { ...result, ...newProductPrice };
+
+    //sale
+    const productSale = {
+      ...new ProductSalesEntity(),
+      ...this.productSaleRepo.setData(data),
+    };
+    const newProductSale = await this.productSaleRepo.create({
+      ...productSale,
+      product_id: result.product_id,
+    });
+
+    result = { ...result, ...newProductSale };
+
+    if (data.product_features.length) {
+      for (let { feature_code, variant_code } of data.product_features) {
+        const productFeature = await this.productFeaturesRepo.findOne({
+          feature_code,
+        });
+        if (!productFeature) {
+          throw new HttpException(
+            `Không tìm thấy thuộc tính sản phẩm có feature_code = ${feature_code}`,
+            404,
+          );
+        }
+        const productFeatureVariant =
+          await this.productFeatureVariantRepo.findOne({
+            select: ['*'],
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+                  fieldJoin: 'variant_id',
+                  rootJoin: 'variant_id',
+                },
+              },
+            },
+            where: {
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+            },
+          });
+
+        if (!productFeatureVariant) {
+          throw new HttpException(
+            `Không tìm thấy thuộc tính sản phẩm có variant_code = ${variant_code}`,
+            404,
+          );
+        }
+        const productFeatureValueData = {
+          feature_id: productFeature.feature_id,
+          variant_id: productFeatureVariant.variant_id,
+          feature_code: feature_code,
+          variant_code: variant_code,
+          product_id: result.product_id,
+          value: isNaN(+productFeatureVariant.variant * 1)
+            ? productFeatureVariant.variant
+            : '',
+          value_int: !isNaN(+productFeatureVariant.variant * 1)
+            ? +productFeatureVariant.variant
+            : 0,
+        };
+
+        await this.productFeatureValueRepo.create(productFeatureValueData);
+      }
+    }
+
     return result;
   }
 }

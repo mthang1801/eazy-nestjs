@@ -19,6 +19,8 @@ import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.ent
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 import * as _ from 'lodash';
+import { productFeatures } from '../../database/constant/productFeatures';
+import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -151,6 +153,54 @@ export class ProductFeatureService {
     }
 
     return productFeatures;
+  }
+
+  async syncData(productFeature: SyncProductFeatureDto) {
+    const productFeatureData = {
+      ...new ProductFeatureEntity(),
+      ...this.productFeaturesRepo.setData(productFeature),
+    };
+    if (!productFeatureData.feature_id) {
+      delete productFeatureData.feature_id;
+    }
+    const newProductFeature = await this.productFeaturesRepo.create(
+      productFeatureData,
+    );
+
+    let result = { ...newProductFeature };
+
+    const productFeatureDescData = {
+      ...new ProductFeatureDescriptionEntity(),
+      ...this.productFeatureDescriptionRepo.setData(productFeature),
+    };
+
+    await this.productFeatureDescriptionRepo.create({
+      ...productFeatureDescData,
+      feature_id: result.feature_id,
+    });
+
+    if (productFeature?.feature_values?.length) {
+      for (let featureVariant of productFeature.feature_values) {
+        const productFeatureVariantData = {
+          ...new ProductFeatureVariantEntity(),
+          ...this.productFeatureVariantsRepo.setData(featureVariant),
+        };
+        const newVariant = await this.productFeatureVariantsRepo.create({
+          ...productFeatureVariantData,
+          feature_id: result.feature_id,
+        });
+
+        const productFeatureVariantDescData = {
+          ...new ProductFeatureVariantDescriptionEntity(),
+          ...this.productFeatureVariantDescriptionRepo.setData(featureVariant),
+        };
+
+        await this.productFeatureVariantDescriptionRepo.create({
+          ...productFeatureVariantDescData,
+          variant_id: newVariant.variant_id,
+        });
+      }
+    }
   }
 
   async getById(id: number): Promise<IProductFeaturesResponse> {
