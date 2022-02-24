@@ -68,4 +68,8 @@ export enum Table {
   ORDER_DATA = 'ddv_order_data',
   ORDER_DETAILS = 'ddv_order_details',
   ORDER_TRANSACTIONS = 'ddv_order_transactions',
+
+  //============== Store ==============
+  STORE_LOCATIONS = 'ddv_store_locations',
+  STORE_LOCATION_DESCRIPTIONS = 'ddv_store_location_descriptions',
 }

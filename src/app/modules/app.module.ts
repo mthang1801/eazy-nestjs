@@ -30,6 +30,7 @@ import { ProductsModule } from './products.module';
 import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
 import { QueueModule } from './queue.module';
+import { StoreModule } from './store.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -57,6 +58,7 @@ import { QueueModule } from './queue.module';
     ProductsModule,
     CustomerModule,
     ProductFeaturesModule,
+    StoreModule,
     QueueModule,
   ],
   providers: [

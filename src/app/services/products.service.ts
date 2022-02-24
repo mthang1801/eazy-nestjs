@@ -1832,12 +1832,13 @@ export class ProductService {
     // set product description
     const productDescData = this.productDescriptionsRepo.setData(data);
 
-    if (Object.entries(productData).length) {
-      const newProductsDesc = await this.productDescriptionsRepo.update(
+    if (Object.entries(productDescData).length) {
+      const updatedProductsDesc = await this.productDescriptionsRepo.update(
         { product_id: result.product_id },
         productDescData,
       );
-      result = { ...result, ...newProductsDesc };
+      result = { ...result, ...updatedProductsDesc };
+      console.log(1841, result);
     }
 
     //price
@@ -1863,7 +1864,7 @@ export class ProductService {
       result = { ...result, ...newProductSale };
     }
 
-    if (data.product_features.length) {
+    if (data?.product_features?.length) {
       await this.productFeatureValueRepo.delete({
         product_id: result.product_id,
       });
