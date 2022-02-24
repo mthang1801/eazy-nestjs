@@ -10,7 +10,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { CreateProductDto } from 'src/app/dto/product/create-product.dto';
-import { SyncProductDto } from 'src/app/dto/product/sync-product.dto';
 import { UpdateProductDto } from 'src/app/dto/product/update-product.dto';
 import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
 import { IResponse } from 'src/app/interfaces/response.interface';
@@ -24,21 +23,24 @@ export class ProductIntegrationController extends BaseController {
   }
 
   @Post()
-  async create(
-    @Body() data: SyncProductDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
+  async create(@Body() data, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.syncData(data);
     return this.responseSuccess(res, result);
   }
 
+  @Get('/sync')
+  async callSync(@Res() res: Response): Promise<IResponse> {
+    await this.service.callSync();
+    return this.responseSuccess(res, null, 'Đồng bộ thành công');
+  }
+
   @Put(':sku')
-  async update(
+  async syncUpdate(
     @Param('sku') sku: string,
-    @Body() data: UpdateProductDto,
+    @Body() data,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(sku, data);
+    const result = await this.service.syncUpdate(sku, data);
     return this.responseSuccess(res, result);
   }
 
