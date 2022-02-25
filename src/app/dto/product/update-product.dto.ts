@@ -224,7 +224,7 @@ export class UpdateProductDto {
 
   // product group
   @IsOptional()
-  parent_product_id: string;
+  parent_product_id: number;
 
   @IsOptional()
   group_id: number;
@@ -244,7 +244,7 @@ class ProductFeatureValueDto {
   feature_id: number;
 
   @IsNotEmpty()
-  product_id: string;
+  product_id: number;
 
   @IsNotEmpty()
   variant_id: number;

@@ -7,7 +7,7 @@ import {
 import { Type } from 'class-transformer';
 class Product {
   @IsNotEmpty()
-  product_id: string;
+  product_id: number;
 
   @IsNotEmpty()
   amount: number;

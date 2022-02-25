@@ -1,6 +1,6 @@
 export class ProductDescriptionsEntity {
   product_description_id: number = 0;
-  product_id: string = '0';
+  product_id: number = 0;
   lang_code: string = '';
   product: string = '';
   shortname: string = '';

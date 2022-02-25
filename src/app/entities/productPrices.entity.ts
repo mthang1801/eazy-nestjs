@@ -1,5 +1,5 @@
 export class ProductPricesEntity {
-  product_id: string = '0';
+  product_id: number = 0;
   price: number = 0;
   buy_price: number = 0;
   collect_price: number = 0;

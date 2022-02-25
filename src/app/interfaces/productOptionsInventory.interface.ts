@@ -1,6 +1,6 @@
 export interface IProductOptionsInventory {
   product_inventory_id: number;
-  product_id: string;
+  product_id: number;
   product_code: string;
   combination_hash: number;
   combination: string;

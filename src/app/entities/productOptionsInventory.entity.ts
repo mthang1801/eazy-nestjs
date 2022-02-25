@@ -1,6 +1,6 @@
 export class ProductOptionsInventoryEntity {
   product_inventory_id: number = 0;
-  product_id: string = '0';
+  product_id: number = 0;
   product_code: string = '';
   combination_hash: number = 0;
   combination: string = '';
