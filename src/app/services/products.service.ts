@@ -1813,6 +1813,11 @@ export class ProductService {
       }
     }
 
+    if (data?.combo_items?.length) {
+      for (let productItem of data.combo_items) {
+        console.log(productItem);
+      }
+    }
     return result;
   }
 

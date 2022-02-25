@@ -51,10 +51,19 @@ export class UsergroupsController extends BaseController {
    * @param params
    * @returns
    */
-  @Get()
+  @Get('users')
   //@UseGuards(AuthGuard)
+  async getUserLists(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getUserLists(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const result = await this.service.getList(params);
+    const result = await this.service.getList(res);
     return this.responseSuccess(res, result);
   }
 

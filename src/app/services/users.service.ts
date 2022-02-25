@@ -65,8 +65,33 @@ export class UsersService {
     return user;
   }
 
-  async getById(id: number): Promise<UserEntity> {
-    const user: UserEntity = await this.userRepository.findOne({ user_id: id });
+  async getById(id: number): Promise<any> {
+    const user = await this.userRepository.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.USER_GROUP_LINKS]: {
+            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+            rootJoin: `${Table.USERS}.user_id`,
+          },
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+          },
+          [Table.STORE_LOCATIONS]: {
+            fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+            rootJoin: `${Table.USERS}.store_id`,
+          },
+          [Table.STORE_LOCATION_DESCRIPTIONS]: {
+            fieldJoin: `${Table.STORE_LOCATION_DESCRIPTIONS}.store_location_id`,
+            rootJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+          },
+        },
+      },
+      where: { [`${Table.USERS}.user_id`]: id },
+    });
+
+    console.log(user);
     if (!user) {
       throw new HttpException(
         'Người dùng không tồn tại.',
@@ -324,10 +349,11 @@ export class UsersService {
     return updatedProfile;
   }
   async updateProfilebyAdmin(id, data) {
-    const user = {
+    let userData = {
       ...this.userRepository.setData(data),
     };
-    let _user = await this.userRepository.update(id, user);
+    let _user = await this.userRepository.update(id, userData);
+    let result = { ..._user };
     const userProfile = {
       ...this.userProfileRepository.setData(data),
     };
@@ -335,6 +361,7 @@ export class UsersService {
       id,
       userProfile,
     );
-    return user;
+    result = { ...result, ..._userProfile };
+    return result;
   }
 }

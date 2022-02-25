@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   Res,
+  Param,
 } from '@nestjs/common';
 import { UserUpdateDto } from '../../dto/user/update-user.dto';
 import { UsersService } from '../../services/users.service';
@@ -43,9 +44,13 @@ export class UsersController extends BaseController {
     res.render('otp-auth');
   }
 
-  @Get('/find/:id')
-  async getById(@Req() req, @Res() res): Promise<IResponse> {
-    const user = await this.service.getById(req.params.id);
-    return this.responseSuccess(res, { userData: user });
+  @Get('/:id')
+  async getById(
+    @Param('id') id: number,
+
+    @Res() res,
+  ): Promise<IResponse> {
+    const result = await this.service.getById(id);
+    return this.responseSuccess(res, result);
   }
 }

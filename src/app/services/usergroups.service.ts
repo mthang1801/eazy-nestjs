@@ -63,7 +63,7 @@ export class UserGroupsService {
     return userGroup;
   }
 
-  async getList(params): Promise<any> {
+  async getUserLists(params): Promise<any> {
     let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 4;
@@ -148,33 +148,47 @@ export class UserGroupsService {
     };
   }
 
-  async update(id: number, data: UpdateUserGroupsDto): Promise<IUserGroup> {
-    let userGroup = await this.userGroupRepo.findById(id);
-    if (!userGroup) {
-      throw new HttpException(
-        'Không tìm thấy usergroup phù hợp',
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const userGroupData = this.userGroupRepo.setData(data);
-
-    if (Object.entries(userGroupData).length) {
-      userGroup = await this.userGroupRepo.update(id, userGroupData);
-    }
-
-    const userGroupDescriptionData =
-      this.userGroupDescriptionRepo.setData(data);
-
-    let userGroupDescription = await this.userGroupDescriptionRepo.findOne({
-      usergroup_id: id,
+  async getList(params) {
+    return this.userGroupRepo.find({
+      select: ['*'],
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: 'usergroup_id',
+            rootJoin: 'usergroup_id',
+          },
+        },
+      },
     });
-    if (userGroupDescription) {
-      userGroupDescription = await this.userGroupDescriptionRepo.update(
-        userGroupDescription.list_id,
-        userGroupDescriptionData,
-      );
+  }
+
+  async update(id: number, data: UpdateUserGroupsDto): Promise<any> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new HttpException('Người dùng không tồn tại trong hệ thống.', 404);
     }
 
-    return { ...userGroup, ...userGroupDescription };
+    const userUpdateData = this.userRepository.setData(data);
+    let result: any = { ...user };
+    if (Object.entries(userUpdateData).length) {
+      const updatedUser = await this.userRepository.update(
+        { user_id: result.user_id },
+        userUpdateData,
+      );
+
+      result = { ...result, ...updatedUser };
+    }
+
+    const userGroupLinkData = this.userGroupLinksRepo.setData(data);
+
+    if (Object.entries(userGroupLinkData).length) {
+      const updatedUserGroupLink = await this.userGroupLinksRepo.update(
+        { user_id: result.user_id },
+        userGroupLinkData,
+      );
+      result = { ...result, ...updatedUserGroupLink };
+    }
+
+    return result;
   }
 }

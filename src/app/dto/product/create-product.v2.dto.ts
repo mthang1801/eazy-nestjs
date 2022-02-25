@@ -55,7 +55,7 @@ export class CreateProductV2Dto {
   @IsIn(['P', 'S', 'A'], {
     message: 'product_type chỉ chứa 1 ký tự và giá trị có thể là P,S,A',
   })
-  product_type: string = 'P';
+  product_type: number = 1;
 
   @IsOptional()
   @IsIn(['A', 'B', 'C', 'D'], {
@@ -140,7 +140,7 @@ export class CreateProductV2Dto {
   code: string = '';
 
   @IsOptional()
-  parent_product_id: null | string = '';
+  parent_product_id: null | number = 0;
 
   @IsOptional()
   purpose: string = '';

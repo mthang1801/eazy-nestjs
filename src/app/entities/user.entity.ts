@@ -7,6 +7,7 @@ export class UserEntity {
   referer: string = '';
   is_root: string = '';
   company_id: number = 0;
+  store_id: number = 0;
   last_login: number = 0;
   created_at: Date = new Date();
   password: string = '';

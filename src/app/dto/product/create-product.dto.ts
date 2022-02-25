@@ -50,7 +50,7 @@ export class CreateProductDto {
 
   @IsOptional()
   @MaxLength(1, { message: 'Product type chỉ chứa 1 ký tự' })
-  product_type: string = 'P';
+  product_type: number = 1;
 
   @IsOptional()
   product_status: string = 'A';
@@ -128,7 +128,7 @@ export class CreateProductDto {
   code: string = '';
 
   @IsOptional()
-  parent_product_id: null | string = '';
+  parent_product_id: null | number = 0;
 
   @IsOptional()
   purpose: string = '';

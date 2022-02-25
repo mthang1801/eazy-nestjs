@@ -8,6 +8,7 @@ export class UserGeneralInfoEntity {
   referer: string;
   is_root: string;
   company_id: number;
+  store_id: number;
   last_login: number;
   created_at: Date;
   password: string;

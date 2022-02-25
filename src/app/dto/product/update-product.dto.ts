@@ -8,7 +8,7 @@ export class UpdateProductDto {
   barcode: string;
 
   @IsOptional()
-  product_type: string;
+  product_type: number;
 
   @IsOptional()
   product_status: string;

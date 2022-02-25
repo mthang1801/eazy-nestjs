@@ -263,6 +263,7 @@ export class BaseRepositorty<T> {
 
     const updatedUser =
       typeof id === 'object' ? await this.findOne(id) : await this.findById(id);
+
     return updatedUser;
   }
 

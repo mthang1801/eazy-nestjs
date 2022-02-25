@@ -43,7 +43,7 @@ export class UserGroupLinkService {
     let filterCondition = {};
     if (typeof others === 'object' && Object.entries(others).length)
       for (let [key, val] of Object.entries(others)) {
-        if (this.userGroupLinksRepo.userGroupLinkProps.includes(key)) {
+        if (this.userGroupLinksRepo.tableProps.includes(key)) {
           filterCondition[`${Table.USER_GROUP_LINKS}.${key}`] = Like(val);
           continue;
         }
