@@ -61,8 +61,8 @@ export class UserGroupPrivilegeController extends BaseController {
    */
   @Get()
   //@UseGuards(AuthGuard)
-  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const listDataRes = await this.service.getList(params);
+  async getList(@Res() res: Response): Promise<IResponse> {
+    const listDataRes = await this.service.getList();
     return this.responseSuccess(res, listDataRes);
   }
 
@@ -82,23 +82,5 @@ export class UserGroupPrivilegeController extends BaseController {
   ): Promise<IResponse> {
     const newUserGroupPrivilege = await this.service.update(id, data);
     return this.responseSuccess(res, newUserGroupPrivilege);
-  }
-
-  /**
-   * Delete a record at ddv_usergroup_privileges with param privilege_id
-   * @param id privilege_id
-   * @param res
-   * @returns
-   */
-  @Delete(':id')
-  //@UseGuards(AuthGuard)
-  async delete(
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const boolRes = await this.service.delete(id);
-    return boolRes
-      ? this.responseSuccess(res, null, 'Xoá dữ liệu thành công.')
-      : this.responseNotFound(res, `Xoá không thành công.`);
   }
 }

@@ -165,7 +165,6 @@ export class CategoryService {
         );
       }
       let getResult = await this.findAncestor(data.parent_id);
-      console.log(getResult);
     }
 
     // const createdCategory = await this.categoryRepository.create({
@@ -212,7 +211,6 @@ export class CategoryService {
   }
 
   async itgCreate(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
-    console.log();
     const categoryData = this.categoryRepository.setData(data);
     const slug = data['category']
       ? convertToSlug(removeVietnameseTones(data.category))
@@ -530,7 +528,6 @@ export class CategoryService {
       });
       if (categoriesListLevel1.length) {
         for (let categoryLevel1Item of categoriesListLevel1) {
-          console.log(categoryLevel1Item.category_id, categoryLevel1Item);
           let categoriesListLevel2 = await this.categoryRepository.find({
             select: [`*, ${Table.CATEGORIES}.*`],
             join: {

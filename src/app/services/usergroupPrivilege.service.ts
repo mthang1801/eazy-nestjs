@@ -80,27 +80,7 @@ export class UserGroupsPrivilegeService {
     return userGroupPrivilege;
   }
 
-  async getList(params): Promise<IUserGroupPrivilege[]> {
-    let { page, limit, ...others } = params;
-    page = +page || 1;
-    limit = +limit || 9999;
-    let skip = (page - 1) * limit;
-    let filterCondition = {};
-
-    if (others && typeof others === 'object' && Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        filterCondition[`${Table.USER_GROUP_PRIVILEGES}.${key}`] = Like(val);
-      }
-    }
-    let userGroupPrivilegeData = await this.userGroupPrivilegeRepo.find({
-      select: ['*'],
-      where: filterCondition,
-      skip,
-      limit,
-    });
-
-    return userGroupPrivilegeData;
-  }
+  async getList(): Promise<any> {}
 
   async update(
     id: number,

@@ -23,17 +23,14 @@ export class ProductFeatureController extends BaseController {
     super();
   }
   @Post()
-  async create(
-    @Body() data: SyncProductFeatureDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.syncData(data);
+  async create(@Body() data, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.createSync(data);
     return this.responseSuccess(res, result, 'Sync hoàn tất');
   }
 
   @Get()
-  async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getList(params);
+  async callSync(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.callSync();
     return this.responseSuccess(res, result);
   }
 

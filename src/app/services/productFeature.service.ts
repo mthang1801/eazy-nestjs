@@ -98,11 +98,6 @@ export class ProductFeatureService {
   }
 
   async getList(params): Promise<IProductFeaturesResponse[]> {
-    const data = productFeaturesData;
-    for (let dataItem of data) {
-      await this.syncData(dataItem);
-    }
-
     let { page, limit, ...others } = params;
     page = +page || 1;
     limit = +limit || 9999;
@@ -160,7 +155,7 @@ export class ProductFeatureService {
     return productFeatures;
   }
 
-  async syncData(productFeature: SyncProductFeatureDto) {
+  async createSync(productFeature: SyncProductFeatureDto) {
     const productFeatureData = {
       ...new ProductFeatureEntity(),
       ...this.productFeaturesRepo.setData(productFeature),
@@ -469,6 +464,12 @@ export class ProductFeatureService {
         'Giá trị thuộc tính đang chứa sản phẩm, không thể xoá.',
         409,
       );
+    }
+  }
+
+  async callSync() {
+    for (let dataItem of productFeaturesData) {
+      await this.createSync(dataItem);
     }
   }
 }

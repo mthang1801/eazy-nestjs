@@ -1711,14 +1711,15 @@ export class ProductService {
     return result;
   }
 
-  async syncData(data): Promise<any> {
+  async createSync(data): Promise<any> {
     // set product
     const productData = {
       ...new ProductsEntity(),
       ...this.productRepo.setData(data),
     };
 
-    let result = await this.productRepo.create({ ...productData });
+    let result =
+      (await this.productRepo.createSync({ ...productData })) || productData;
 
     // set product description
     const productDescData = {
@@ -1726,36 +1727,49 @@ export class ProductService {
       ...this.productDescriptionsRepo.setData(data),
     };
 
-    const newProductsDesc = await this.productDescriptionsRepo.create({
+    const newProductsDesc = await this.productDescriptionsRepo.createSync({
       ...productDescData,
       product_id: result.product_id,
     });
 
-    result = { ...result, ...newProductsDesc };
+    result = { ...result, ...productDescData };
 
     //price
     const productPriceData = {
       ...new ProductPricesEntity(),
       ...this.productPriceRepo.setData(data),
     };
-    const newProductPrice = await this.productPriceRepo.create({
+    const newProductPrice = await this.productPriceRepo.createSync({
       ...productPriceData,
       product_id: result.product_id,
     });
 
-    result = { ...result, ...newProductPrice };
+    result = { ...result, ...productPriceData };
 
     //sale
     const productSale = {
       ...new ProductSalesEntity(),
       ...this.productSaleRepo.setData(data),
     };
-    const newProductSale = await this.productSaleRepo.create({
+    const newProductSale = await this.productSaleRepo.createSync({
       ...productSale,
       product_id: result.product_id,
     });
 
-    result = { ...result, ...newProductSale };
+    result = { ...result, ...productSale };
+
+    // category
+    const productCategoryData = {
+      ...new ProductsCategoriesEntity(),
+      ...this.productCategoryRepo.setData(data),
+    };
+
+    await this.productCategoryRepo.createSync({
+      ...productCategoryData,
+      product_id: result.product_id,
+    });
+
+    result = { ...result, ...productCategoryData };
 
     if (data.product_features.length) {
       for (let { feature_code, variant_code } of data.product_features) {
@@ -1795,7 +1809,7 @@ export class ProductService {
             : 0,
         };
 
-        await this.productFeatureValueRepo.create(productFeatureValueData);
+        await this.productFeatureValueRepo.createSync(productFeatureValueData);
       }
     }
 
@@ -1806,7 +1820,7 @@ export class ProductService {
     const productsList = productsData;
 
     for (let productItem of productsList) {
-      await this.syncData(productItem);
+      await this.createSync(productItem);
     }
   }
 

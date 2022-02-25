@@ -24,7 +24,7 @@ export class ProductIntegrationController extends BaseController {
 
   @Post()
   async create(@Body() data, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.syncData(data);
+    const result = await this.service.createSync(data);
     return this.responseSuccess(res, result);
   }
 
