@@ -482,7 +482,7 @@ export class CategoryService {
 
   async getList(params): Promise<ICategoryResult[]> {
     // ignore page and limit
-    let { page, limit, ...others } = params;
+    let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 100;
     let skip = (page - 1) * limit;
@@ -533,9 +533,17 @@ export class CategoryService {
           console.log(categoryLevel1Item.category_id, categoryLevel1Item);
           let categoriesListLevel2 = await this.categoryRepository.find({
             select: [`*, ${Table.CATEGORIES}.*`],
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.CATEGORY_DESCRIPTIONS]: {
+                  fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+                  rootJoin: `${Table.CATEGORIES}.category_id`,
+                },
+              },
+            },
             where: {
-              [`${Table.CATEGORIES}.parent_id`]: categoryLevel1Item.category_id,
               [`${Table.CATEGORIES}.level`]: 2,
+              parent_id: categoryLevel1Item.category_id,
             },
           });
           categoryLevel1Item.children = categoriesListLevel2;

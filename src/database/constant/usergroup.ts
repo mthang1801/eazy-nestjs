@@ -1,1 +1,1 @@
-export const customers_id = [];
+export const customer_ids = [24];
