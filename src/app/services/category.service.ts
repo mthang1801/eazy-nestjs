@@ -484,7 +484,7 @@ export class CategoryService {
     // ignore page and limit
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 20;
+    limit = +limit || 100;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
