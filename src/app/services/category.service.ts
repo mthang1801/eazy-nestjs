@@ -498,7 +498,7 @@ export class CategoryService {
     }
 
     const categoriesListLevel0 = await this.categoryRepository.find({
-      select: [`*`],
+      select: [`*, ${Table.CATEGORIES}.*`],
       join: {
         [JoinTable.leftJoin]: {
           [Table.CATEGORY_DESCRIPTIONS]: {
