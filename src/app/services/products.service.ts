@@ -68,6 +68,7 @@ import { CreateProductV2Dto } from '../dto/product/create-product.v2.dto';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 import { productsData } from 'src/database/constant/product';
+import { comboData } from 'src/database/constant/combo';
 @Injectable()
 export class ProductService {
   constructor(
@@ -1712,6 +1713,13 @@ export class ProductService {
   }
 
   async createSync(data): Promise<any> {
+    if (data.product_id) {
+      let product = await this.productRepo.findById(data.product_id);
+
+      if (product) {
+        return this.syncUpdate(product.product_code, data);
+      }
+    }
     // set product
     const productData = {
       ...new ProductsEntity(),
@@ -1771,7 +1779,7 @@ export class ProductService {
 
     result = { ...result, ...productCategoryData };
 
-    if (data.product_features.length) {
+    if (data?.product_features?.length) {
       for (let { feature_code, variant_code } of data.product_features) {
         const productFeature = await this.productFeaturesRepo.findOne({
           feature_code,
@@ -1814,16 +1822,43 @@ export class ProductService {
     }
 
     if (data?.combo_items?.length) {
+      // Nếu là SP combo, tạo group
+      let productGroup = await this.productVariationGroupRepo.create({
+        code: uuid().replace(/-/g, ''),
+        created_at: convertToMySQLDateTime(),
+        updated_at: convertToMySQLDateTime(),
+      });
+
+      let newGroupProducts =
+        await this.productVariationGroupProductsRepo.create({
+          product_id: result.product_id,
+          parent_product_id: null,
+          group_id: productGroup.group_id,
+          quantity: 0,
+          note: '',
+        });
+
+      result['combo_items'] = [];
+
       for (let productItem of data.combo_items) {
-        console.log(productItem);
+        const newGroupProductItem =
+          await this.productVariationGroupProductsRepo.create({
+            product_id: productItem?.product_id,
+            parent_product_id: productItem.product_combo_id,
+            group_id: productGroup.group_id,
+            quantity: productItem.quantity || 1,
+            note: productItem.id,
+          });
+        result['combo_items'].push(newGroupProductItem);
       }
     }
     return result;
   }
 
   async callSync(): Promise<void> {
-    const productsList = productsData;
-
+    // const productsList = productsData;
+    const productsList = _.shuffle([...productsData, ...comboData]);
+    console.log(productsList);
     for (let productItem of productsList) {
       await this.createSync(productItem);
     }
