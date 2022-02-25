@@ -512,11 +512,9 @@ export class CategoryService {
       limit,
     });
 
-    console.log(categoriesListLevel0);
-
     for (let categoryLevel0Item of categoriesListLevel0) {
       let categoriesListLevel1 = await this.categoryRepository.find({
-        select: [`*`],
+        select: [`*, ${Table.CATEGORIES}.*`],
         join: {
           [JoinTable.leftJoin]: {
             [Table.CATEGORY_DESCRIPTIONS]: {
@@ -530,25 +528,17 @@ export class CategoryService {
           parent_id: categoryLevel0Item.category_id,
         },
       });
-
-      for (let categoryLevel1Item of categoriesListLevel1) {
-        let categoriesListLevel2 = await this.categoryRepository.find({
-          select: ['*'],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.CATEGORY_DESCRIPTIONS]: {
-                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
+      if (categoriesListLevel1.length) {
+        for (let categoryLevel1Item of categoriesListLevel1) {
+          console.log(categoryLevel1Item.category_id, categoryLevel1Item);
+          let categoriesListLevel2 = await this.categoryRepository.find({
+            select: [`*, ${Table.CATEGORIES}.*`],
+            where: {
+              [`${Table.CATEGORIES}.parent_id`]: categoryLevel1Item.category_id,
             },
-          },
-          where: {
-            [`${Table.CATEGORIES}.level`]: 2,
-            parent_id: categoryLevel1Item.category_id,
-          },
-        });
-
-        categoryLevel1Item.children = categoriesListLevel2;
+          });
+          categoryLevel1Item.children = categoriesListLevel2;
+        }
       }
 
       categoryLevel0Item.children = categoriesListLevel1;

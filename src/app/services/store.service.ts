@@ -4,7 +4,7 @@ import { StoreLocationRepository } from '../repositories/storeLocation.repositor
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { StoreLocationDescriptionsRepository } from '../repositories/storeLocationDescriptions.repository';
 import { StoreLocationDescriptionEntity } from '../entities/storeLocationDescription.entity';
-import { storesData } from 'src/database/constant/stores';
+
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { Table } from '../../database/enums/tables.enum';
 
