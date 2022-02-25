@@ -535,6 +535,7 @@ export class CategoryService {
             select: [`*, ${Table.CATEGORIES}.*`],
             where: {
               [`${Table.CATEGORIES}.parent_id`]: categoryLevel1Item.category_id,
+              [`${Table.CATEGORIES}.level`]: 2,
             },
           });
           categoryLevel1Item.children = categoriesListLevel2;
