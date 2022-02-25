@@ -68,4 +68,8 @@ export enum PrimaryKeys {
   ddv_order_data = 'order_data_id',
   ddv_order_details = 'item_id',
   ddv_order_transactions = 'payment_id',
+
+  //============== Store ==============
+  ddv_store_locations = 'store_location_id',
+  ddv_store_location_descriptions = 'store_location_description_id',
 }

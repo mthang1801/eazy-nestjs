@@ -328,6 +328,7 @@ export class DatabaseCollection {
       Object.entries(arrayFields[i]).forEach(([field, val], j) => {
         let value = val['value'] || val;
         let operator = val['operator'] || '=';
+
         if (typeof val !== 'object') {
           if (Object.entries(arrayFields[i]).length > 1) {
             if (j === 0) {
@@ -362,12 +363,16 @@ export class DatabaseCollection {
               }
             }
           } else {
-            if (j === 0) {
-              this.orAndWhere(field, operator, value, 'first');
-            } else if (j === Object.entries(arrayFields[i]).length - 1) {
-              this.orAndWhere(field, operator, value, 'last');
+            if (Object.entries(arrayFields[i]).length > 1) {
+              if (j === 0) {
+                this.orAndWhere(field, operator, value, 'first');
+              } else if (j === Object.entries(arrayFields[i]).length - 1) {
+                this.orAndWhere(field, operator, value, 'last');
+              } else {
+                this.orAndWhere(field, operator, value, 'middle');
+              }
             } else {
-              this.orAndWhere(field, operator, value, 'middle');
+              this.orWhere(field, operator, value);
             }
           }
         }
