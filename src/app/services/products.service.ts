@@ -1748,7 +1748,8 @@ export class ProductService {
       ...new ProductPricesEntity(),
       ...this.productPriceRepo.setData(data),
     };
-    const newProductPrice = await this.productPriceRepo.createSync({
+
+    await this.productPriceRepo.createSync({
       ...productPriceData,
       product_id: result.product_id,
     });
@@ -1760,7 +1761,8 @@ export class ProductService {
       ...new ProductSalesEntity(),
       ...this.productSaleRepo.setData(data),
     };
-    const newProductSale = await this.productSaleRepo.createSync({
+
+    await this.productSaleRepo.createSync({
       ...productSale,
       product_id: result.product_id,
     });
@@ -1826,18 +1828,18 @@ export class ProductService {
       // Nếu là SP combo, tạo group
       let productGroup = await this.productVariationGroupRepo.create({
         code: uuid().replace(/-/g, ''),
+        product_root_id: result.product_id,
         created_at: convertToMySQLDateTime(),
         updated_at: convertToMySQLDateTime(),
       });
 
-      let newGroupProducts =
-        await this.productVariationGroupProductsRepo.create({
-          product_id: result.product_id,
-          parent_product_id: null,
-          group_id: productGroup.group_id,
-          quantity: 0,
-          note: '',
-        });
+      await this.productVariationGroupProductsRepo.create({
+        product_id: result.product_id,
+        parent_product_id: null,
+        group_id: productGroup.group_id,
+        quantity: 0,
+        note: '',
+      });
 
       result['combo_items'] = [];
 
