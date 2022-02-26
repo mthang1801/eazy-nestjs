@@ -644,7 +644,7 @@ export const productsData = [
     ],
   },
   {
-    product_id: '50000179',
+    product_id: '02aabfee-12b5-4b5d-bb90-49c219b72155',
     product: 'Thang Test SP 16 - Đỏ - Likenew',
     product_status: 'A',
     tax_name: '- Đỏ - Likenew',
@@ -684,7 +684,7 @@ export const productsData = [
     ],
   },
   {
-    product_id: '50000180',
+    product_id: '02c60539-062e-491b-95a5-65ce9fad4cf4',
     product: 'Thang Test SP 16 - Đỏ - test tình trạng',
     product_status: 'A',
     tax_name: '- Đỏ - test tình trạng',

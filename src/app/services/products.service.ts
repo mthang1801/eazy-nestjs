@@ -1578,12 +1578,8 @@ export class ProductService {
   async callSync(): Promise<void> {
     // const productsList = productsData;
     const productsList = _.shuffle([...productsData, ...comboData]);
-    await fs.writeFile(
-      'src/database/constant/products.json',
-      JSON.stringify(productsList),
-      'utf-8',
-    );
     for (let productItem of productsList) {
+      console.log(productItem);
       await this.createSync(productItem);
     }
   }

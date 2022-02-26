@@ -1,6 +1,6 @@
 export class ProductOptionsEntity {
   option_id: number = 0;
-  product_id: number = 0;
+  product_id: string = '0';
   company_id: number = 0;
   option_type: string = 'S';
   inventory: string = 'Y';

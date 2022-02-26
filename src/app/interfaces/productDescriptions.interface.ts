@@ -1,6 +1,6 @@
 export interface IProductDescription {
   product_description_id: number;
-  product_id: number;
+  product_id: string;
   lang_code: string;
   product: string;
   shortname: string;

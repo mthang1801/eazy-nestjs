@@ -1,6 +1,6 @@
 export interface IProductOptions {
   option_id: number;
-  product_id: number;
+  product_id: string;
   company_id: number;
   option_type: string;
   inventory: string;

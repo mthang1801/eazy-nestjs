@@ -1,5 +1,5 @@
 export interface IProductPrices {
-  product_id: number;
+  product_id: string;
   price: number;
   percentage_discount: number;
   lower_limit: number;

@@ -15,7 +15,7 @@ export class DatabaseService {
     values: any[] = [],
   ): Promise<void> {
     let sqlQuery = formatQueryString(queryText);
-    this.logger.warn(`Executing mutation: ${sqlQuery}`);
+    this.logger.verbose(`Executing mutation: ${sqlQuery}`);
     return new Promise(async (resolve, reject) => {
       this.writePool
         .query(sqlQuery, values)
@@ -30,7 +30,7 @@ export class DatabaseService {
     values: any[] = [],
   ): Promise<void> {
     let sqlQuery = formatQueryString(queryText);
-    this.logger.log(`Executing query: ${sqlQuery}`);
+    this.logger.debug(`Executing query: ${sqlQuery}`);
     return new Promise(async (resolve, reject) => {
       this.readPool
         .query(sqlQuery, values)

@@ -128,7 +128,7 @@ export class CreateProductDto {
   code: string = '';
 
   @IsOptional()
-  parent_product_id: null | number = 0;
+  parent_product_id: null | string;
 
   @IsOptional()
   purpose: string = '';
