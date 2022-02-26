@@ -313,4 +313,12 @@ export class BaseRepositorty<T> {
     }
     return true;
   }
+
+  async readExec(queryString: string): Promise<any> {
+    return this.databaseService.executeQueryReadPool(queryString);
+  }
+
+  async writeExec(queryString: string, params: any = null): Promise<any> {
+    return this.databaseService.executeQueryWritePool(queryString, params);
+  }
 }

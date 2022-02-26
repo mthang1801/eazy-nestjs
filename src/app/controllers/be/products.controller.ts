@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -72,5 +73,11 @@ export class ProductsController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.updateImage(sku, data);
     return this.responseSuccess(res, result);
+  }
+
+  @Delete('/clear')
+  async delete(@Res() res: Response): Promise<IResponse> {
+    await this.service.clearAll();
+    return this.responseSuccess(res, null, 'Clear thành công');
   }
 }

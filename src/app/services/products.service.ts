@@ -69,6 +69,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
+import * as fs from 'fs/promises';
 @Injectable()
 export class ProductService {
   constructor(
@@ -1858,7 +1859,11 @@ export class ProductService {
   async callSync(): Promise<void> {
     // const productsList = productsData;
     const productsList = _.shuffle([...productsData, ...comboData]);
-    console.log(productsList);
+    await fs.writeFile(
+      'src/database/constant/products.json',
+      JSON.stringify(productsList),
+      'utf-8',
+    );
     for (let productItem of productsList) {
       await this.createSync(productItem);
     }
@@ -1965,5 +1970,30 @@ export class ProductService {
     }
 
     return result;
+  }
+
+  async clearAll() {
+    await this.productRepo.writeExec(`TRUNCATE TABLE ${Table.PRODUCTS}`);
+    await this.productCategoryRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCTS_CATEGORIES}`,
+    );
+    await this.productDescriptionsRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_DESCRIPTION}`,
+    );
+    await this.productSaleRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_SALES}`,
+    );
+    await this.productPriceRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_PRICES}`,
+    );
+    await this.productFeatureValueRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_FEATURE_VALUES}`,
+    );
+    await this.productVariationGroupRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUPS}`,
+    );
+    await this.productVariationGroupProductsRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
+    );
   }
 }
