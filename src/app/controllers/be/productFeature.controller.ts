@@ -55,12 +55,9 @@ export class ProductFeatureController extends BaseController {
     return this.responseSuccess(res, result, message);
   }
 
-  @Delete(':id')
-  async deleteVariant(
-    @Param('id') variantId: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    await this.service.deleteVariant(variantId);
-    return this.responseSuccess(res, null, 'Xoá thành công');
+  @Delete()
+  async clearAll(@Res() res: Response): Promise<IResponse> {
+    await this.service.clearAll();
+    return this.responseSuccess(res, null, 'Clear thành công.');
   }
 }

@@ -153,6 +153,56 @@ export class ProductService {
         }
       }
     }
+
+    //============ Product group features =============
+    // Đồng bộ thuộc tính SP
+    // Lấy Danh sách các group -> group products -> lấy danh sách các SP trong group -> Lấy danh sách các feature trong product feature values
+    let groupLists = await this.productVariationGroupRepo.find({
+      select: ['group_id'],
+    });
+
+    for (let { group_id } of groupLists) {
+      const productMembersList =
+        await this.productVariationGroupProductsRepo.find({
+          select: ['product_id'],
+          where: { group_id },
+        });
+      for (let { product_id } of productMembersList) {
+        // Kiểm tra features theo product_id trong product_feature_values
+        const featuresList = await this.productFeatureValueRepo.find({
+          select: ['feature_id'],
+          where: { product_id },
+        });
+
+        // Đưa vào product group features
+        if (featuresList.length) {
+          // Kiểm tra xem trong product_group_features với group_id đã tồn tại feature_id này hay chưa
+          let featuresListInGroup =
+            await this.productVariationGroupFeatureRepo.find({
+              select: ['feature_id'],
+              where: { group_id },
+            });
+
+          for (let { feature_id } of featuresList) {
+            if (!feature_id) {
+              continue;
+            }
+
+            // Nếu trong group features không tìm thấy thì sẽ thêm feature này vào group, ngược lại bỏ qua
+            if (
+              !featuresListInGroup.some(
+                ({ feature_id: featureId }) => featureId === feature_id,
+              )
+            ) {
+              await this.productVariationGroupFeatureRepo.createSync({
+                feature_id,
+                group_id,
+              });
+            }
+          }
+        }
+      }
+    }
   }
 
   async createProductFeatures(
@@ -1579,7 +1629,6 @@ export class ProductService {
     // const productsList = productsData;
     const productsList = _.shuffle([...productsData, ...comboData]);
     for (let productItem of productsList) {
-      console.log(productItem);
       await this.createSync(productItem);
     }
   }
@@ -1612,7 +1661,6 @@ export class ProductService {
         productDescData,
       );
       result = { ...result, ...updatedProductsDesc };
-      console.log(1841, result);
     }
 
     //price
@@ -1709,6 +1757,9 @@ export class ProductService {
     );
     await this.productVariationGroupProductsRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
+    );
+    await this.productVariationGroupFeatureRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
     );
   }
 }

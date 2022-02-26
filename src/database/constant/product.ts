@@ -92,8 +92,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -194,8 +194,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -234,8 +234,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -274,7 +274,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -314,7 +314,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -354,8 +354,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -394,8 +394,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -434,7 +434,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -474,7 +474,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -514,8 +514,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -554,8 +554,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -594,7 +594,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -634,7 +634,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -644,7 +644,7 @@ export const productsData = [
     ],
   },
   {
-    product_id: '02aabfee-12b5-4b5d-bb90-49c219b72155',
+    product_id: '50000179',
     product: 'Thang Test SP 16 - Đỏ - Likenew',
     product_status: 'A',
     tax_name: '- Đỏ - Likenew',
@@ -674,8 +674,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -684,7 +684,7 @@ export const productsData = [
     ],
   },
   {
-    product_id: '02c60539-062e-491b-95a5-65ce9fad4cf4',
+    product_id: '50000180',
     product: 'Thang Test SP 16 - Đỏ - test tình trạng',
     product_status: 'A',
     tax_name: '- Đỏ - test tình trạng',
@@ -714,8 +714,8 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
-        variant_code: 1331993,
+        feature_code: 34,
+        variant_code: 1331992,
       },
       {
         feature_code: 13,
@@ -754,7 +754,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {
@@ -794,7 +794,7 @@ export const productsData = [
     height: 0,
     product_features: [
       {
-        feature_code: 35,
+        feature_code: 34,
         variant_code: 1331994,
       },
       {

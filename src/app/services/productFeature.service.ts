@@ -38,16 +38,8 @@ export class ProductFeatureService {
     // create a new record on feature and feature_description
     const productFeatureData = this.productFeaturesRepo.setData(data);
 
-    const featureCodeExists = await this.productFeaturesRepo.findOne({
-      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
-    });
-    if (featureCodeExists) {
-      throw new HttpException('feature code đã tồn tại', 404);
-    }
-
     const newFeature = await this.productFeaturesRepo.create({
       ...productFeatureData,
-      feature_code: data.feature_code.replace(/\s+/g, '-').toLowerCase(),
     });
 
     let result = { ...newFeature };
@@ -100,7 +92,7 @@ export class ProductFeatureService {
   async getList(params): Promise<IProductFeaturesResponse[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     const skip = (page - 1) * limit;
 
     let filterCondition = {};
@@ -450,21 +442,19 @@ export class ProductFeatureService {
     };
   }
 
-  async deleteVariant(variantId: number): Promise<void> {
-    const checkProductFeatureVariantExist =
-      await this.productFeatureVariantsRepo.findOne({ variant_id: variantId });
-    if (!checkProductFeatureVariantExist) {
-      throw new HttpException('Không tìm giá trị thấy thuộc tính', 404);
-    }
-    const checkProductFeatureValues =
-      await this.productFeatureValuesRepo.findOne({ variant_id: variantId });
-
-    if (checkProductFeatureValues) {
-      throw new HttpException(
-        'Giá trị thuộc tính đang chứa sản phẩm, không thể xoá.',
-        409,
-      );
-    }
+  async clearAll() {
+    await this.productFeaturesRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_FEATURES}`,
+    );
+    await this.productFeatureDescriptionRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_FEATURE_DESCRIPTIONS}`,
+    );
+    await this.productFeatureVariantsRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_FEATURES_VARIANTS}`,
+    );
+    await this.productFeatureVariantDescriptionRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}`,
+    );
   }
 
   async callSync() {
