@@ -22,22 +22,11 @@ export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
     super();
   }
-  @Post()
-  async create(
-    @Body() data: CreateProductDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.create(data);
-    return this.responseSuccess(res, result);
-  }
 
-  @Post('/v2')
-  async createV2(
-    @Body() data: CreateProductV2Dto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.createV2(data);
-    return this.responseSuccess(res, result);
+  @Post('/sync')
+  async syncProductsIntoGroup(@Res() res: Response): Promise<IResponse> {
+    await this.service.syncProductsIntoGroup();
+    return this.responseSuccess(res, null, 'Đồng bộ sản phẩm nhóm thành công.');
   }
 
   @Get()

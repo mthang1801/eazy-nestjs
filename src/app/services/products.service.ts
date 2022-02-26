@@ -70,6 +70,7 @@ import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.e
 import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
 import * as fs from 'fs/promises';
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -97,338 +98,58 @@ export class ProductService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
 
-  async create(data: CreateProductDto): Promise<any> {
-    // check unique key
-    let { code, product_code, group_id, parent_product_id } = data;
-    // if (!group_id) {
-    //   if (code) {
-    //     const checkProductGroupExists =
-    //       await this.productVariationGroupRepo.findOne({
-    //         code: code.toUpperCase(),
-    //       });
+  async syncProductsIntoGroup(): Promise<void> {
+    //===========Product group, product group product =============
 
-    //     if (checkProductGroupExists) {
-    //       throw new HttpException(
-    //         'Code nhóm sản phẩm đã tồn tại, không thể tạo nhóm',
-    //         409,
-    //       );
-    //     }
-    //   }
-    // } else {
-    //   const checkGroupIdExists = await this.productVariationGroupRepo.findOne({
-    //     group_id,
-    //   });
-    //   if (!checkGroupIdExists) {
-    //     throw new HttpException('Nhóm sản phẩm không tồn tại.', 404);
-    //   }
-    // }
-
-    const checkSlugExists = await this.productRepo.findOne({
-      slug: convertToSlug(data.slug),
-    });
-    if (checkSlugExists) {
-      throw new HttpException('Slug đã tồn tại, không thể tạo sp mới', 409);
-    }
-
-    if (data.children_products.length) {
-      for (let productItem of data.children_products) {
-        if (productItem.product_code) {
-          const checkProductCodeExists = await this.productRepo.findOne({
-            product_code: productItem.product_code.toUpperCase(),
-          });
-          if (checkProductCodeExists) {
-            throw new HttpException(
-              `Mã sản phẩm ${productItem.product_code} đã tồn tại`,
-              409,
-            );
-          }
-        }
-      }
-    }
-
-    // product code
-    const productCode = data.product_code;
-
-    const prefixCode = productCode.replace(/[0-9]+/g, '').toUpperCase();
-    const subfixCode = productCode.replace(/[a-zA-Z]+/g, '');
-
-    const checkProductCodeExists = await this.productRepo.findOne({
-      product_code: data.product_code.toUpperCase(),
-    });
-    if (checkProductCodeExists) {
-      throw new HttpException(
-        'Product code đã tồn tại, không thể tạo nhóm',
-        409,
-      );
-    }
-
-    // Check parent product
-    if (data.parent_product_id) {
-      const checkParentProductIsParent =
-        await this.productVariationGroupProductsRepo.findOne({
-          product_id: data.parent_product_id,
-        });
-      if (checkParentProductIsParent.parent_product_id !== 0) {
-        throw new HttpException('Sản phẩm cha không phù hợp.', 400);
-      }
-    }
-
-    const productData = this.productRepo.setData(data);
-    const newProductItem: ProductsEntity = await this.productRepo.create({
-      ...productData,
-      slug: convertToSlug(data.slug),
-      product_code: productCode.toUpperCase(),
-      created_at: convertToMySQLDateTime(),
+    // Lấy danh sách các sản phẩm cha (bao gồm SP cấu hình)
+    const parentProductsList = await this.productRepo.find({
+      select: ['*'],
+      where: { [`${Table.PRODUCTS}.parent_product_id`]: IsNull() },
     });
 
-    let result = { ...newProductItem };
-
-    // Mô tả sp
-    const productDescriptionData = this.productDescriptionsRepo.setData(data);
-    const newProductDescription = await this.productDescriptionsRepo.create({
-      product_id: newProductItem.product_id,
-      ...productDescriptionData,
-    });
-
-    result = { ...result, ...newProductDescription };
-
-    // Price
-    const productPriceData = this.productPriceRepo.setData(data);
-    const newProductPrice: ProductPricesEntity =
-      await this.productPriceRepo.create({
-        product_id: newProductItem.product_id,
-        ...productPriceData,
+    // Kiểm tra xem các parent này đã tạo group hay chưa, nếu đã tạo rồi thì bỏ qua, nếu chưa thì sẽ tạo mới
+    for (let parentProductItem of parentProductsList) {
+      const productGroup = await this.productVariationGroupRepo.findOne({
+        product_root_id: parentProductItem.product_id,
       });
-
-    result = { ...result, ...newProductPrice };
-
-    // Sale
-    const productSaleData = this.productSaleRepo.setData(data);
-    const newProductSale: ProductSalesEntity =
-      await this.productSaleRepo.create({
-        product_id: newProductItem.product_id,
-        ...productSaleData,
-      });
-
-    result = { ...result, ...newProductSale };
-
-    // ----- Product category -----
-
-    const productCategoryData = this.productCategoryRepo.setData(data);
-    const newProductCategory = await this.productCategoryRepo.create({
-      ...productCategoryData,
-      product_id: newProductItem.product_id,
-    });
-
-    result = { ...result, ...newProductCategory };
-
-    // ----- Product groups -----
-
-    // If group_id exists, add product to group
-    let productGroupProductData =
-      this.productVariationGroupProductsRepo.setData(data);
-
-    let groupProduct;
-    if (parent_product_id) {
-      groupProduct = await this.productVariationGroupProductsRepo.findOne({
-        product_id: parent_product_id,
-      });
-
-      group_id = groupProduct.group_id;
-
-      const newGroupProduct =
-        await this.productVariationGroupProductsRepo.create({
-          product_id: result.product_id,
-          group_id: groupProduct.group_id,
-          parent_product_id: result.parent_product_id,
-        });
-
-      result = { ...result, ...newGroupProduct };
-    }
-
-    if (!groupProduct) {
-      if (group_id) {
-        const productVariationGroupProduct =
-          await this.productVariationGroupProductsRepo.create({
-            product_id: newProductItem.product_id,
-            ...productGroupProductData,
-          });
-
-        result = { ...result, ...productVariationGroupProduct };
-      } else {
-        if (!code) {
-          code = Date.now().toString();
-        }
-
-        const newProductGroup: ProductVariationGroupsEntity =
-          await this.productVariationGroupRepo.create({
-            code: code.toUpperCase(),
-            created_at: convertToMySQLDateTime(),
-            updated_at: convertToMySQLDateTime(),
-          });
-
-        group_id = newProductGroup.group_id;
-
-        const productVariationGroupProduct =
-          await this.productVariationGroupProductsRepo.create({
-            ...productGroupProductData,
-            product_id: newProductItem.product_id,
-            group_id: newProductGroup.group_id,
-          });
-
-        result = {
-          ...result,
-          ...newProductGroup,
-          ...productVariationGroupProduct,
-        };
-      }
-    }
-
-    // Product features values and product group Features
-    const { product_features, purpose } = data;
-
-    if (product_features.length) {
-      await this.createProductFeatures(
-        product_features,
-        newProductItem.product_id,
-        result['group_id'],
-        purpose,
-      );
-    }
-
-    // Create children products with auto ge
-    let childrenProductsList = [];
-
-    if (data.children_products.length) {
-      for (let [i, productItem] of data.children_products.entries()) {
-        let childProductDigitCode = +subfixCode + i + 1;
-        let childProductCode =
-          productItem.product_code || prefixCode + childProductDigitCode;
-
-        const checkProductCode = await this.productRepo.findOne({
-          product_code: childProductCode,
-        });
-
-        if (checkProductCode) {
-          childProductCode =
-            prefixCode + uuid().replace(/-/g, '').toUpperCase();
-        }
-
-        // product for child
-        const childProductData = this.productRepo.setData({
-          ...result,
-          ...productItem,
-        });
-        delete childProductData['product_id'];
-
-        const newChildProductItem = await this.productRepo.create({
-          ...childProductData,
-          product_code: childProductCode,
-          parent_product_id: result.parent_product_id
-            ? result.parent_product_id
-            : result.product_id,
+      if (!productGroup) {
+        const newProductGroup = await this.productVariationGroupRepo.create({
+          code: uuid().replace(/-/g, ''),
+          product_root_id: parentProductItem.product_id,
           created_at: convertToMySQLDateTime(),
-          display_at: data.display_at
-            ? convertToMySQLDateTime(new Date(data.display_at))
-            : convertToMySQLDateTime(),
+          updated_at: convertToMySQLDateTime(),
         });
-
-        // product description for child
-        const childProductDescription = this.productDescriptionsRepo.setData({
-          ...result,
-          ...productItem,
-        });
-        const newChildProductDescription =
-          await this.productDescriptionsRepo.create({
-            ...childProductDescription,
-            product_id: newChildProductItem.product_id,
-          });
-
-        // product price for child
-        const childProductPriceData = this.productPriceRepo.setData({
-          ...result,
-          ...productItem,
-        });
-        const newChildProductPrice = await this.productPriceRepo.create({
-          ...childProductPriceData,
-          product_id: newChildProductItem.product_id,
-        });
-
-        // price Sale for child
-        const childProductSaleData = this.productSaleRepo.setData({
-          ...result,
-          ...productItem,
-        });
-        const newChildProductSale: ProductSalesEntity =
-          await this.productSaleRepo.create({
-            ...childProductSaleData,
-            product_id: newChildProductItem.product_id,
-          });
-
-        // product category
-        const childCategoryData = this.productCategoryRepo.setData({
-          ...result,
-          ...productItem,
-        });
-        const newChildProductCategory = await this.productCategoryRepo.create({
-          ...childCategoryData,
-          product_id: newChildProductItem.product_id,
-        });
-
-        // insert product into group
-        const childVairationProductGroup =
-          await this.productVariationGroupProductsRepo.create({
-            ...productGroupProductData,
-            product_id: newChildProductItem.product_id,
-            group_id: result['group_id'],
-            parent_product_id: result.parent_product_id
-              ? result.parent_product_id
-              : result.product_id,
-          });
-
-        if (productItem.product_features) {
-          await this.createProductFeatures(
-            productItem.product_features,
-            newChildProductItem.product_id,
-            result['group_id'],
-            productItem.purpose,
-          );
-        }
-        childrenProductsList.push({
-          ...newChildProductItem,
-          ...newChildProductDescription,
-          ...newChildProductPrice,
-          ...newChildProductSale,
-          ...newChildProductCategory,
-          ...childVairationProductGroup,
+        await this.productVariationGroupProductsRepo.createSync({
+          product_id: parentProductItem.product_id,
+          parent_product_id: parentProductItem.parent_product_id,
+          group_id: newProductGroup.group_id,
         });
       }
-
-      result['children_products'] = childrenProductsList;
     }
 
-    return result;
-  }
-
-  async createV2(data: CreateProductV2Dto): Promise<any> {
-    // Tạo mới sản phẩm :
-    // 1. Mỗi sản phẩm sẽ có nhiều màu sắc -> sản phẩm con sẽ có màu sắc tương tự
-    // a. Nếu không có sản phẩm cha
-    //   - Sản phẩm gốc sẽ làm sản phẩm cha, và tạo nhóm sản phẩm
-    // b. Nếu không có sản phẩm cha và không có sản phẩm con -> sản phẩm này là độc lập (group_id = 0 )
-    // c. Nếu có sản phẩm cha -> Thêm sản phẩm mới, kèm theo sản phẩm con ( nếu có ) vào trong nhóm chứa sản phẩm cha
-    // Kiểm tra product_code tồn tại
-    const productCodeExist = await this.productRepo.findOne({
-      product_code: data.product_code,
+    // Tìm ds các SP con, sau đó tim group chưa SP cha, kiểm tra SP con đã chứa trong đó hay chưa, nếu chưa thì thêm vào
+    const childrenProductsList = await this.productRepo.find({
+      select: ['*'],
+      where: { [`${Table.PRODUCTS}.parent_product_id`]: Not(IsNull()) },
     });
-    if (productCodeExist) {
-      throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
-    }
-
-    if (data.children_products.length) {
-      for (let childProduct of data.children_products) {
-        if (childProduct.product_code) {
-          const productChildCodeExist = await this;
+    for (let childProduct of childrenProductsList) {
+      // Kiểm tra nhóm của parent product đã tồn tại hay chưa, nếu tồn tại rồi thì đưa vào trong, nếu chưa thì bỏ qua
+      const parentProductGroup = await this.productVariationGroupRepo.findOne({
+        product_root_id: childProduct.parent_product_id,
+      });
+      if (parentProductGroup) {
+        // Kiểm tra SP con đã nằm trong group product của SP cha hay chưa, nếu chưa thì thêm, nếu có bỏ qua
+        const childProductGroupProduct =
+          await this.productVariationGroupProductsRepo.findOne({
+            group_id: parentProductGroup.group_id,
+            product_id: childProduct.product_id,
+          });
+        if (!childProductGroupProduct) {
+          await this.productVariationGroupProductsRepo.createSync({
+            group_id: parentProductGroup.group_id,
+            parent_product_id: childProduct.parent_product_id,
+            product_id: childProduct.product_id,
+          });
         }
       }
     }
@@ -741,7 +462,7 @@ export class ProductService {
                 [`${Table.PRODUCTS}.parent_product_id`]: 0,
               },
           orderBy: [
-            { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+            { field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC },
           ],
           skip,
           limit,
@@ -812,9 +533,7 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productJoiner,
       },
-      orderBy: [
-        { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
-      ],
+      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
       where: search
         ? [
             {
@@ -999,7 +718,7 @@ export class ProductService {
             [JoinTable.leftJoin]: productByCategoryJoiner,
           },
           orderBy: [
-            { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
+            { field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC },
           ],
           where: {
             [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
@@ -1069,9 +788,7 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productByCategoryJoiner,
       },
-      orderBy: [
-        { field: `${Table.PRODUCTS}.created_at`, sort_by: SortBy.DESC },
-      ],
+      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
       where: categoriesListFlatten.map((categoryId) => ({
         ...filterCondition,
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,

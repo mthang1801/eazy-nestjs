@@ -221,7 +221,7 @@ export class DatabaseCollection {
 
   orAndWhere(field, operation, value, pos_cond): void {
     if (field != '') {
-      if (operation == 'LIKE') {
+      if (operation.toUpperCase() == 'LIKE') {
         value = `'%${value}%'`;
       } else {
         value = `'${value}'`;
@@ -252,16 +252,16 @@ export class DatabaseCollection {
       this.arrayCondition.push(condition);
     }
   }
-  orderBy(sortArray: { field: string; sort_by: SortBy }[]): void {
+  orderBy(sortArray: { field: string; sortBy: SortBy }[]): void {
     if (sortArray.length) {
       let sortString = '';
       for (let i = 0; i < sortArray.length; i++) {
-        const { field, sort_by } = sortArray[i];
+        const { field, sortBy } = sortArray[i];
         if (i === 0) {
-          sortString += ` ${field} ${sort_by}`;
+          sortString += ` ${field} ${sortBy}`;
           continue;
         }
-        sortString += `, ${field} ${sort_by}`;
+        sortString += `, ${field} ${sortBy}`;
       }
       this.sortString = sortString;
     }

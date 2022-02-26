@@ -68,18 +68,27 @@ export function Any<T>(arr: T[]): {
   return { operator: 'ANY', value: arr };
 }
 
-export function IsNull<T>(): {
-  operator: string;
-} {
-  return { operator: 'ISNULL' };
+export function IsNull() {
+  return { operator: 'IS', value: 'NULL' };
 }
 
-export function Not<T>(cb: { operator: string; value?: string }): {
+export function Not(cb: { operator: string; value?: string }): {
   operator: string;
   value?: string;
 } {
+  let operatorRes = '';
+  switch (cb.operator) {
+    case 'IS':
+      operatorRes = 'IS NOT';
+      break;
+    case '=':
+      operatorRes = '!==';
+      break;
+    default:
+      operatorRes = `NOT ${cb.operator}`;
+  }
   return {
-    operator: cb.operator === '=' ? `!=` : `NOT ${cb.operator}`,
+    operator: operatorRes,
     value: cb.value,
   };
 }

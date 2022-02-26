@@ -92,3 +92,12 @@ export const removeVietnameseTones = (str) => {
   );
   return str.toLowerCase();
 };
+
+export const formatQueryString = (queryString: string) => {
+  let result = queryString;
+  if (/'NULL'/i.test(queryString)) {
+    result = result.replace(/'NULL'/gi, 'NULL');
+  }
+
+  return result;
+};

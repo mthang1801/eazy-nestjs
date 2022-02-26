@@ -1,5 +1,6 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Pool } from 'mysql2/promise';
+import { formatQueryString } from 'src/utils/helper';
 import { DatabasePool } from './enums/databasePool.enum';
 @Injectable()
 export class DatabaseService {
@@ -13,10 +14,11 @@ export class DatabaseService {
     queryText: string,
     values: any[] = [],
   ): Promise<void> {
-    this.logger.warn(`Executing mutation: ${queryText} (${values})`);
+    let sqlQuery = formatQueryString(queryText);
+    this.logger.warn(`Executing mutation: ${sqlQuery}`);
     return new Promise(async (resolve, reject) => {
       this.writePool
-        .query(queryText, values)
+        .query(sqlQuery, values)
         .then((result: any) => {
           resolve(result);
         })
@@ -27,10 +29,11 @@ export class DatabaseService {
     queryText: string,
     values: any[] = [],
   ): Promise<void> {
-    this.logger.log(`Executing query: ${queryText} (${values})`);
+    let sqlQuery = formatQueryString(queryText);
+    this.logger.log(`Executing query: ${sqlQuery}`);
     return new Promise(async (resolve, reject) => {
       this.readPool
-        .query(queryText, values)
+        .query(sqlQuery, values)
         .then((result: any) => {
           resolve(result);
         })
