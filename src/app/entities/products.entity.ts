@@ -2,7 +2,7 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 
 export class ProductsEntity {
   product_id: string = '0';
-  parent_product_id: null | string;
+  parent_product_id: null | string = '';
   product_code: string = '';
   barcode: string = '';
   product_type: number = 1;

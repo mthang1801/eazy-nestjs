@@ -121,3 +121,31 @@ export const productJoiner = {
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
 };
+
+export const productGroupJoiner = {
+  [Table.PRODUCT_VARIATION_GROUP_FEATURES]: {
+    fieldJoin: `${Table.PRODUCT_VARIATION_GROUP_FEATURES}.group_id`,
+    rootJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
+  },
+  [Table.PRODUCT_VARIATION_GROUP_PRODUCTS]: {
+    fieldJoin: `${Table.PRODUCT_VARIATION_GROUPS}.group_id`,
+    rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.group_id`,
+  },
+  [Table.PRODUCTS_CATEGORIES]: {
+    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    rootJoin: `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.product_id`,
+  },
+  [Table.PRODUCTS]: {
+    fieldJoin: `${Table.PRODUCTS}.product_id`,
+    rootJoin: `${Table.PRODUCT_VARIATION_GROUPS}.product_root_id`,
+  },
+
+  [Table.PRODUCT_DESCRIPTION]: {
+    fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+  [Table.PRODUCT_PRICES]: {
+    fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+};

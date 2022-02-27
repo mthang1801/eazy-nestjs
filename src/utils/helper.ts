@@ -101,3 +101,5 @@ export const formatQueryString = (queryString: string) => {
 
   return result;
 };
+
+export const MaxLimit = 9999999999999;

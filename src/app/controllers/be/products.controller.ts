@@ -16,19 +16,30 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateProductDto } from '../../dto/product/update-product.dto';
 import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
-import { CreateProductV2Dto } from '../../dto/product/create-product.v2.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
     super();
   }
 
+  /**
+   * Sync products, join products into group, groups products and groups features
+   * @param res
+   * @returns
+   */
   @Post('/sync')
   async syncProductsIntoGroup(@Res() res: Response): Promise<IResponse> {
     await this.service.syncProductsIntoGroup();
     return this.responseSuccess(res, null, 'Đồng bộ sản phẩm nhóm thành công.');
   }
 
+  /**
+   * Get products list
+   * params includes page, limit, features are fields in database
+   * @param params
+   * @param res
+   * @returns
+   */
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.getList(params);

@@ -1,6 +1,9 @@
-import { IsIn, IsOptional, IsNotEmpty, Min, Max } from 'class-validator';
+import { IsIn, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class UpdateProductDto {
+  @IsOptional()
+  product: string;
+
   @IsOptional()
   product_code: string;
 
@@ -8,27 +11,66 @@ export class UpdateProductDto {
   barcode: string;
 
   @IsOptional()
+  tax_name: string;
+
+  @IsOptional()
+  tax_ids: string;
+
+  @IsOptional()
+  list_price: number; // Giá niêm yết
+
+  @IsOptional()
+  price: number; // Giá bán lẻ
+
+  @IsOptional()
+  collect_price: number = 0; //Giá thu gom
+
+  @IsOptional()
+  whole_price: number = 0; //Giá bản sỉ
+
+  @IsOptional()
+  product_features: ProductFeatureDto[];
+
+  @IsOptional()
+  product_status: string; // Tình trạng
+
+  @IsOptional()
+  @IsIn(['1', '2', '3', '4'])
   product_type: number;
 
   @IsOptional()
-  product_status: string;
-
-  @IsOptional({ message: 'Trạng thái hiển thị chỉ có thể là A hoặc D' })
   @IsIn(['A', 'D'])
-  status: string;
+  status: string; // Trạng thái hiển thị
 
   @IsOptional()
-  company_id: number;
-
-  @IsOptional({ message: 'Chỉ có thể Y hoặc N' })
-  @IsIn(['Y', 'N'])
-  approved: string;
+  display_at: string;
 
   @IsOptional()
-  list_price: number;
+  category_id: number;
 
   @IsOptional()
-  amount: number;
+  parent_product_id: null | string;
+
+  @IsOptional()
+  quantity: number;
+
+  @IsOptional()
+  slug: string;
+
+  @IsOptional()
+  promo_text: string;
+
+  @IsOptional()
+  short_description: string;
+
+  @IsOptional()
+  page_title: string;
+
+  @IsOptional()
+  meta_description: string;
+
+  @IsOptional()
+  alias: string;
 
   @IsOptional()
   weight: number;
@@ -37,224 +79,19 @@ export class UpdateProductDto {
   length: number;
 
   @IsOptional()
-  width: number;
-
-  @IsOptional()
   height: number;
 
   @IsOptional()
-  tax_ids: string;
-
-  @IsOptional()
-  shipping_freight: number;
-
-  @IsOptional()
-  low_avail_limit: number;
-
-  @IsOptional()
-  usergroup_ids: string;
-
-  @IsOptional({ message: 'is_edp chỉ có thể Y hoặc N' })
-  @IsIn(['Y', 'N'])
-  is_edp: string;
-
-  @IsOptional()
-  @IsOptional({ message: 'edp_shipping chỉ có thể Y hoặc N' })
-  edp_shipping: string;
-
-  @IsOptional()
-  unlimited_download: string;
-
-  @IsOptional()
-  tracking: string;
-
-  @IsOptional()
-  @IsOptional({ message: 'free_shipping chỉ có thể Y hoặc N' })
-  free_shipping: string;
-
-  @IsOptional()
-  zero_price_action: string;
-
-  @IsOptional()
-  is_pbp: string;
-
-  @IsOptional()
-  is_op: string;
-
-  @IsOptional()
-  is_oper: string;
-
-  @IsOptional()
-  is_returnable: string;
-
-  @IsOptional()
-  return_period: number;
-
-  @IsOptional()
-  avail_since: number;
-
-  @IsOptional()
-  out_of_stock_actions: string;
-
-  @IsOptional()
-  localization: string;
-
-  @IsOptional()
-  min_qty: number;
-
-  @IsOptional()
-  max_qty: number;
-
-  @IsOptional()
-  qty_step: number;
-
-  @IsOptional()
-  list_qty_count: number;
-
-  @IsOptional()
-  tax_name: string;
-
-  @IsOptional()
-  slug: string;
-
-  @IsOptional()
-  age_verification: string;
-
-  @IsOptional()
-  age_limit: number;
-
-  @IsOptional()
-  options_type: string;
-
-  @IsOptional()
-  exceptions_type: string;
-
-  @IsOptional()
-  details_layout: string;
-
-  @IsOptional()
-  shipping_params: string;
-
-  @IsOptional()
-  facebook_obj_type: string;
-
-  @IsOptional()
-  buy_now_url: string;
-
-  // product description
-
-  @IsOptional()
-  lang_code: string;
-
-  @IsOptional()
-  product: string;
-
-  @IsOptional()
-  shortname: string;
-
-  @IsOptional()
-  alias: string;
-
-  @IsOptional()
-  short_description: string;
-
-  @IsOptional()
-  full_description: string;
-
-  @IsOptional()
-  meta_keywords: string;
-
-  @IsOptional()
-  meta_description: string;
-
-  @IsOptional()
-  search_words: string;
-
-  @IsOptional()
-  page_title: string;
-
-  @IsOptional()
-  age_warning_message: string;
-
-  @IsOptional()
-  promo_text: string;
-
-  // product sales
-
-  @IsOptional()
-  sale_amount: number;
-
-  // Product price
-
-  @IsOptional()
-  price: number;
-
-  @IsOptional()
-  collect_price: number; //Giá thu gom
-
-  @IsOptional()
-  whole_price: number; //Giá bản sỉ
-
-  @IsOptional()
-  buy_price: number;
-
-  @IsOptional()
-  @Max(100, { message: 'percentage_discount Không vượt quá 100' })
-  percentage_discount: number;
-
-  @IsOptional()
-  lower_limit: number;
-
-  @IsOptional()
-  usergroup_id: number;
-
-  // product category
-
-  @IsOptional()
-  category_id: number;
-
-  @IsOptional()
-  link_type: string;
-
-  @IsOptional()
-  position: number;
-
-  @IsOptional()
-  category_position: number;
-
-  // product group
-  @IsOptional()
-  parent_product_id: null | string;
-
-  @IsOptional()
-  group_id: number;
-
-  @IsOptional()
-  product_features: ProductFeatureValueDto[];
-
-  @IsOptional()
-  display_at: Date;
+  width: number;
 
   @IsOptional()
   children_products: UpdateProductDto[];
 }
 
-class ProductFeatureValueDto {
+class ProductFeatureDto {
   @IsNotEmpty()
-  feature_id: number;
-
-  @IsNotEmpty()
-  product_id: string;
+  feature_code: string;
 
   @IsNotEmpty()
-  variant_id: number;
-
-  @IsOptional()
-  value: string;
-
-  @IsOptional()
-  value_int: number;
-
-  @IsOptional()
-  lang_code: string;
+  variant_code: string;
 }

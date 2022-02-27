@@ -276,6 +276,7 @@ export class DatabaseCollection {
       this.orCondition(objFields);
       return;
     }
+
     // Object us considered as AND operator, so we will connect with andOrWhere each other
     this.andCondition(objFields);
   }
@@ -284,33 +285,38 @@ export class DatabaseCollection {
     Object.entries(objFields).forEach(([field, val], i) => {
       let value = val;
       let operator = '=';
+
       if (typeof val !== 'object') {
         this.andWhere(field, operator, val);
       } else if (typeof val === 'object') {
         if (Array.isArray(val)) {
-          for (let j = 0; j < val.length; j++) {
-            let subValue = val[j];
-            let subOperator = '=';
-            if (typeof subValue !== 'object') {
-              if (j === 0) {
-                this.andOrWhere(field, subOperator, subValue, 'first');
-              } else if (j === val.length - 1) {
-                this.andOrWhere(field, subOperator, subValue, 'last');
-              } else {
-                this.andOrWhere(field, subOperator, subValue, 'middle');
-              }
-            } else if (
-              typeof subValue === 'object' &&
-              !Array.isArray(subValue)
-            ) {
-              subValue = val[j]['value'];
-              subOperator = val[j]['operator'];
-              if (j === 0) {
-                this.andOrWhere(field, subOperator, subValue, 'first');
-              } else if (j === val.length - 1) {
-                this.andOrWhere(field, subOperator, subValue, 'last');
-              } else {
-                this.andOrWhere(field, subOperator, subValue, 'middle');
+          if (val.length === 1) {
+            this.andWhere(field, operator, val[0]);
+          } else {
+            for (let j = 0; j < val.length; j++) {
+              let subValue = val[j];
+              let subOperator = '=';
+              if (typeof subValue !== 'object') {
+                if (j === 0) {
+                  this.andOrWhere(field, subOperator, subValue, 'first');
+                } else if (j === val.length - 1) {
+                  this.andOrWhere(field, subOperator, subValue, 'last');
+                } else {
+                  this.andOrWhere(field, subOperator, subValue, 'middle');
+                }
+              } else if (
+                typeof subValue === 'object' &&
+                !Array.isArray(subValue)
+              ) {
+                subValue = val[j]['value'];
+                subOperator = val[j]['operator'];
+                if (j === 0) {
+                  this.andOrWhere(field, subOperator, subValue, 'first');
+                } else if (j === val.length - 1) {
+                  this.andOrWhere(field, subOperator, subValue, 'last');
+                } else {
+                  this.andOrWhere(field, subOperator, subValue, 'middle');
+                }
               }
             }
           }
