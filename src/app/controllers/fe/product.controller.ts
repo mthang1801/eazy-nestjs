@@ -10,12 +10,12 @@ export class ProductsController extends BaseController {
     super();
   }
 
-  @Get(':id')
+  @Get(':slug')
   async get(
-    @Param('id') identifier: number | string,
+    @Param('slug') slug: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.get(identifier);
+    const result = await this.service.getBySlug(slug);
     return this.responseSuccess(res, result);
   }
 
