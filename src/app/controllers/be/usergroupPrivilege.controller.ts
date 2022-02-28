@@ -9,6 +9,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { UserGroupsPrivilegeService } from '../../services/usergroupPrivilege.service';
@@ -60,9 +61,9 @@ export class UserGroupPrivilegeController extends BaseController {
    * @returns
    */
   @Get()
-  //@UseGuards(AuthGuard)
-  async getList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getList();
+  @UseGuards(AuthGuard)
+  async getList(@Res() res: Response, @Req() req): Promise<IResponse> {
+    const result = await this.service.getList(req.user);
     return this.responseSuccess(res, result);
   }
 

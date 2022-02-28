@@ -41,47 +41,48 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token đã hết hạn.', 408);
     }
 
-    // Compare privilege with user menu
-    let {
-      method,
-      route: { path },
-    } = req;
-
     req.user = user;
-    const menu = user['menu'];
 
-    let isAllowed = false;
-    if (menu && menu?.length) {
-      for (let menuItem of menu) {
-        if (
-          menuItem.privilege === path &&
-          menuItem.method.toUpperCase() === method.toUpperCase()
-        ) {
-          isAllowed = true;
-          break;
-        }
-        if (menuItem.children && menuItem.children.length) {
-          for (let childMenuItem of menuItem.children) {
-            if (
-              childMenuItem.privilege === path &&
-              childMenuItem.method.toUpperCase() === method.toUpperCase()
-            ) {
-              isAllowed = true;
-              break;
-            }
-          }
-        }
-        if (isAllowed) {
-          break;
-        }
-      }
-    }
-    if (!isAllowed) {
-      throw new HttpException(
-        'Không thể truy cập vào đường dẫn này.',
-        HttpStatus.FORBIDDEN,
-      );
-    }
+    // Compare privilege with user menu
+    // let {
+    //   method,
+    //   route: { path },
+    // } = req;
+
+    // const menu = user['menu'];
+
+    // let isAllowed = false;
+    // if (menu && menu?.length) {
+    //   for (let menuItem of menu) {
+    //     if (
+    //       menuItem.privilege === path &&
+    //       menuItem.method.toUpperCase() === method.toUpperCase()
+    //     ) {
+    //       isAllowed = true;
+    //       break;
+    //     }
+    //     if (menuItem.children && menuItem.children.length) {
+    //       for (let childMenuItem of menuItem.children) {
+    //         if (
+    //           childMenuItem.privilege === path &&
+    //           childMenuItem.method.toUpperCase() === method.toUpperCase()
+    //         ) {
+    //           isAllowed = true;
+    //           break;
+    //         }
+    //       }
+    //     }
+    //     if (isAllowed) {
+    //       break;
+    //     }
+    //   }
+    // }
+    // if (!isAllowed) {
+    //   throw new HttpException(
+    //     'Không thể truy cập vào đường dẫn này.',
+    //     HttpStatus.FORBIDDEN,
+    //   );
+    // }
 
     return true;
   }

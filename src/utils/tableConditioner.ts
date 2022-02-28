@@ -49,3 +49,17 @@ export const userSearchByNameEmailPhone = (val, filterCondition) => {
     { [`${Table.USERS}.phone`]: Like(val) },
   ];
 };
+
+export const userGroupSearchByNameCode = (search, filterCondition) => {
+  if (!search && !Object.entries(filterCondition).length) return;
+  if (!search && Object.entries(filterCondition).length) {
+    return filterCondition;
+  }
+  return [
+    {
+      ...filterCondition,
+      [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search),
+    },
+    { ...filterCondition, [`${Table.USER_GROUPS}.code`]: Like(search) },
+  ];
+};

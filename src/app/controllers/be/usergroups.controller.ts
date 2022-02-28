@@ -9,6 +9,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
 } from '@nestjs/common';
 
 import { UserGroupsService } from '../../services/usergroups.service';
@@ -62,8 +63,13 @@ export class UsergroupsController extends BaseController {
   }
 
   @Get()
-  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const result = await this.service.getList(res);
+  @UseGuards(AuthGuard)
+  async getList(
+    @Res() res: Response,
+    @Req() req,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getList(req.user, params);
     return this.responseSuccess(res, result);
   }
 

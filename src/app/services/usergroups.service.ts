@@ -19,9 +19,15 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
-import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
+import {
+  userGroupSearchByNameCode,
+  userSearchByNameEmailPhone,
+} from 'src/utils/tableConditioner';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
+import { SortBy } from '../../database/enums/sortBy.enum';
+import { PrivilegeRepository } from '../repositories/privilege.repository';
+import { PrivilegeEntity } from '../entities/privilege.entity';
 
 @Injectable()
 export class UserGroupsService {
@@ -32,6 +38,7 @@ export class UserGroupsService {
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
+    private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
@@ -45,8 +52,9 @@ export class UserGroupsService {
     const userGroupData = {
       ...new UserGroupEntity(),
       ...this.userGroupRepo.setData(data),
+      code: data.code.toUpperCase().trim(),
     };
-    console.log(userGroupData);
+
     const newUserGroup = await this.userGroupRepo.create(userGroupData);
     let result = { ...newUserGroup };
 
@@ -91,6 +99,7 @@ export class UserGroupsService {
     let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 4;
+
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
@@ -172,18 +181,63 @@ export class UserGroupsService {
     };
   }
 
-  async getList(params) {
-    return this.userGroupRepo.find({
+  async getList(user, params) {
+    let { page, limit, search, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    let skip = (page - 1) * limit;
+
+    console.log(page, limit);
+
+    let filterConditions = {};
+    if (Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.userGroupRepo.tableProps.includes(key)) {
+          filterConditions[`${Table.USER_GROUPS}.${key}`] = Like(val);
+          continue;
+        }
+        if (this.userGroupDescriptionRepo.tableProps.includes(key)) {
+          filterConditions[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] =
+            Like(val);
+        }
+      }
+    }
+    let count = await this.userGroupRepo.find({
+      select: [`COUNT(DISTINCT(${Table.USER_GROUPS}.usergroup_id)) as total`],
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.USER_GROUP_DESCRIPTIONS]: {
+            fieldJoin: `usergroup_id`,
+            rootJoin: `usergroup_id`,
+          },
+        },
+      },
+      where: userGroupSearchByNameCode(search, filterConditions),
+    });
+
+    let userGroupsList = await this.userGroupRepo.find({
       select: ['*'],
       join: {
         [JoinTable.innerJoin]: {
           [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: 'usergroup_id',
-            rootJoin: 'usergroup_id',
+            fieldJoin: `usergroup_id`,
+            rootJoin: `usergroup_id`,
           },
         },
       },
+      where: userGroupSearchByNameCode(search, filterConditions),
+      skip,
+      limit,
     });
+
+    return {
+      usergroups: userGroupsList,
+      paging: {
+        total: count.length ? count[0].total : 0,
+        pageSize: limit,
+        currentPage: page,
+      },
+    };
   }
 
   async update(id: number, data: UpdateUserGroupsDto): Promise<any> {
