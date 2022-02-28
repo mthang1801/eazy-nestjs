@@ -482,8 +482,19 @@ export class ProductService {
           });
           productInfoDetail['features'] = features;
           product['children_products'] = product['children_products']
-            ? [...product['children_products'], productInfoDetail]
-            : [productInfoDetail];
+            ? [
+                ...product['children_products'],
+                {
+                  ...productInfoDetail,
+                  product: productInfoDetail.product.split('-')[1].trim(),
+                },
+              ]
+            : [
+                {
+                  ...productInfoDetail,
+                  product: productInfoDetail.product.split('-')[1].trim(),
+                },
+              ];
         }
         // Lấy các SP liên quan
         if (
@@ -974,6 +985,7 @@ export class ProductService {
             `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
             `${Table.PRODUCTS}.*`,
             `${Table.PRODUCT_DESCRIPTION}.*`,
+            `${Table.PRODUCT_PRICES}.*`,
           ],
           join: {
             [JoinTable.rightJoin]: productGroupJoiner,
@@ -1028,6 +1040,7 @@ export class ProductService {
           `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
           `${Table.PRODUCTS}.*`,
           `${Table.PRODUCT_DESCRIPTION}.*`,
+          `${Table.PRODUCT_PRICES}.*`,
         ],
         join: {
           [JoinTable.rightJoin]: productGroupJoiner,

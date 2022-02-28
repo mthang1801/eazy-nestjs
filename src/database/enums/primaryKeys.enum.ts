@@ -9,8 +9,9 @@ export enum PrimaryKeys {
   //============== User group ==============
   ddv_usergroup_descriptions = 'list_id',
   ddv_usergroup_links = 'link_id',
-  ddv_usergroup_privileges = 'privilege_id',
+  ddv_usergroup_privileges = 'usergroup_privilege_id',
   ddv_usergroups = 'usergroup_id',
+  ddv_privileges = 'privilege_id',
 
   //============== Banner ==============
   ddv_banners = 'banner_id',

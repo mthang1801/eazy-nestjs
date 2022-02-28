@@ -1,18 +1,18 @@
-import { IsOptional } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsNotEmpty,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateUserGroupsDto {
-  @IsOptional()
-  status: string = 'A';
+  @IsNotEmpty()
+  code: string = '';
 
-  @IsOptional()
-  type: string;
-
-  @IsOptional()
-  company_id: number = 0;
-
-  @IsOptional()
+  @IsNotEmpty()
   usergroup: string = '';
 
-  @IsOptional()
-  lang_code: string = 'vi';
+  @ArrayNotEmpty()
+  privileges: number[];
 }

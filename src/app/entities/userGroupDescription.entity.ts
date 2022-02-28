@@ -1,5 +1,4 @@
 export class UserGroupDescriptionEntity {
-  usergroup_id: number = 0;
-  lang_code: string = '';
+  lang_code: string = 'vi';
   usergroup: string = '';
 }

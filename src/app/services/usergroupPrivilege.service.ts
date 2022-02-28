@@ -8,20 +8,24 @@ import { Like } from '../../database/find-options/operators';
 import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from '../dto/usergroups/update-usergroupPrivilege.dto';
 import { IUserGroupPrivilege } from '../interfaces/usergroupPrivilege.interface';
+import { PrivilegeRepository } from '../repositories/privilege.repository';
+import { PrivilegeEntity } from '../entities/privilege.entity';
 
 @Injectable()
 export class UserGroupsPrivilegeService {
   constructor(
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
+    private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
   ) {}
 
-  async create(
-    data: CreateUserGroupPrivilegeDto,
-  ): Promise<IUserGroupPrivilege> {
-    const newUserGroupPrivilege = await this.userGroupPrivilegeRepo.create(
-      data,
-    );
-    return newUserGroupPrivilege;
+  async create(data: CreateUserGroupPrivilegeDto): Promise<void> {
+    let usergroup_id = 23;
+    for (let i = 1; i <= 46; i++) {
+      await this.userGroupPrivilegeRepo.create({
+        usergroup_id,
+        privilege_id: i,
+      });
+    }
   }
 
   async getListByUserGroupId(

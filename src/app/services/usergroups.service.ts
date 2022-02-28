@@ -20,6 +20,8 @@ import { UserEntity } from '../entities/user.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
+import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
+import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
 
 @Injectable()
 export class UserGroupsService {
@@ -29,22 +31,44 @@ export class UserGroupsService {
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
+    private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
   ) {}
 
-  async create(data: CreateUserGroupsDto): Promise<IUserGroup> {
-    const userGroupData = this.userGroupRepo.setData(data);
-
-    const userGroup = await this.userGroupRepo.create(userGroupData);
-
-    const userGroupDescriptionData =
-      this.userGroupDescriptionRepo.setData(data);
-
-    const userGroupDescription = await this.userGroupDescriptionRepo.create({
-      usergroup_id: userGroup.usergroup_id,
-      ...userGroupDescriptionData,
+  async create(data: CreateUserGroupsDto): Promise<any> {
+    const checkCode = await this.userGroupRepo.findOne({
+      code: data.code.toUpperCase(),
     });
+    if (checkCode) {
+      throw new HttpException('Mã sản phẩm đã tồn tại', 409);
+    }
 
-    return { ...userGroup, ...userGroupDescription };
+    const userGroupData = {
+      ...new UserGroupEntity(),
+      ...this.userGroupRepo.setData(data),
+    };
+    console.log(userGroupData);
+    const newUserGroup = await this.userGroupRepo.create(userGroupData);
+    let result = { ...newUserGroup };
+
+    const userGroupDescData = {
+      ...new UserGroupDescriptionEntity(),
+      ...this.userGroupDescriptionRepo.setData(data),
+    };
+    console.log(userGroupDescData);
+    const newUserGroupDesc = await this.userGroupDescriptionRepo.create({
+      ...userGroupDescData,
+      usergroup_id: result.usergroup_id,
+    });
+    result = { ...result, ...newUserGroupDesc };
+
+    for (let privilegeId of data.privileges) {
+      await this.userGroupPrivilegeRepo.createSync({
+        privilege_id: privilegeId,
+        usergroup_id: newUserGroup.usergroup_id,
+      });
+    }
+
+    return result;
   }
 
   async getByUserGroupId(id: number): Promise<IUserGroup> {
