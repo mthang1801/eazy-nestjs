@@ -14,23 +14,12 @@ import { UsersService } from '../../services/users.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
+import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
+import { Response } from 'express';
 @Controller('/be/v1/users')
 export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
     super();
-  }
-
-  //@UseGuards(AuthGuard)
-  @Put()
-  async update(
-    @Body() userUpdateDto: UserUpdateDto,
-    @Req() req,
-    @Res() res,
-  ): Promise<IResponse> {
-    const { user_id } = req.user;
-    const updatedUser = await this.service.update(user_id, userUpdateDto);
-
-    return this.responseSuccess(res, updatedUser);
   }
 
   @Get()
@@ -51,6 +40,17 @@ export class UsersController extends BaseController {
     @Res() res,
   ): Promise<IResponse> {
     const result = await this.service.getById(id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard)
+  async update(
+    @Param('id') id: number,
+    @Body() data: UpdateUserGroupsDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.update(id, data);
     return this.responseSuccess(res, result);
   }
 }

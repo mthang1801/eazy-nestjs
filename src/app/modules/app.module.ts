@@ -31,6 +31,7 @@ import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
 import { QueueModule } from './queue.module';
 import { StoreModule } from './store.module';
+import { UserSystemModule } from './userSystem.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,6 +41,7 @@ import { StoreModule } from './store.module';
     }),
     AuthModule,
     UsersModule,
+    UserSystemModule,
     MailModule,
     DatabaseModule,
     LoggerModule,

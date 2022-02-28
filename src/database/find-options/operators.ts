@@ -82,7 +82,7 @@ export function Not(cb: { operator: string; value?: string }): {
       operatorRes = 'IS NOT';
       break;
     case '=':
-      operatorRes = '!==';
+      operatorRes = '!=';
       break;
     default:
       operatorRes = `NOT ${cb.operator}`;

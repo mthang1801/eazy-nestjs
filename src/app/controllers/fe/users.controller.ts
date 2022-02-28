@@ -19,25 +19,6 @@ export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
     super();
   }
-  /**
-   *
-   * @param userUpdateDto
-   * @param req
-   * @param res
-   * @returns
-   */
-  //@UseGuards(AuthGuard)
-  @Put()
-  async update(
-    @Body() userUpdateDto: UserUpdateDto,
-    @Req() req,
-    @Res() res,
-  ): Promise<IResponse> {
-    const { user_id } = req.user;
-    const updatedUser = await this.service.update(user_id, userUpdateDto);
-
-    return this.responseSuccess(res, updatedUser);
-  }
 
   /**
    * get my profile

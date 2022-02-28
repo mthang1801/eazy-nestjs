@@ -46,22 +46,6 @@ export class UsergroupsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  /**
-   * get All User, using query params to filter such as page, limit, status, lang_code, type...
-   * @param res
-   * @param params
-   * @returns
-   */
-  @Get('users')
-  //@UseGuards(AuthGuard)
-  async getUserLists(
-    @Res() res: Response,
-    @Query() params,
-  ): Promise<IResponse> {
-    const result = await this.service.getUserLists(params);
-    return this.responseSuccess(res, result);
-  }
-
   @Get()
   @UseGuards(AuthGuard)
   async getList(
@@ -97,7 +81,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Put(':id')
-  //@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() data: UpdateUserGroupsDto,
