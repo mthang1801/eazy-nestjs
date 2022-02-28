@@ -50,10 +50,20 @@ export const userSearchByNameEmailPhone = (val, filterCondition) => {
   ];
 };
 
-export const userGroupSearchByNameCode = (search, filterCondition) => {
-  if (!search && !Object.entries(filterCondition).length) return;
+export const userGroupSearchByNameCode = (
+  search = '',
+  filterCondition = {},
+) => {
+  if (!search && !Object.entries(filterCondition).length)
+    return filterCondition;
   if (!search && Object.entries(filterCondition).length) {
     return filterCondition;
+  }
+  if (search && !Object.entries(filterCondition).length) {
+    return [
+      { [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search) },
+      { [`${Table.USER_GROUPS}.code`]: Like(search) },
+    ];
   }
   return [
     {
@@ -61,5 +71,31 @@ export const userGroupSearchByNameCode = (search, filterCondition) => {
       [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search),
     },
     { ...filterCondition, [`${Table.USER_GROUPS}.code`]: Like(search) },
+  ];
+};
+
+export const productsListsSearchFilter = (
+  search = '',
+  filterCondition = {},
+) => {
+  if (!search && !Object.entries(filterCondition).length)
+    return filterCondition;
+  if (!search && Object.entries(filterCondition).length) {
+    return filterCondition;
+  }
+  if (search && Object.entries(filterCondition).length) {
+    return [
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+      { [`${Table.PRODUCTS}.barcode`]: Like(search) },
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+    ];
+  }
+  return [
+    {
+      ...filterCondition,
+      [`${Table.PRODUCTS}.product_code`]: Like(search),
+    },
+    { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
+    { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
   ];
 };

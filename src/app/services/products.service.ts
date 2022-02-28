@@ -72,6 +72,7 @@ import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.e
 import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
 import * as fs from 'fs/promises';
+import { productsListsSearchFilter } from '../../utils/tableConditioner';
 
 @Injectable()
 export class ProductService {
@@ -595,244 +596,82 @@ export class ProductService {
     let skip = (page - 1) * limit;
 
     let products = [];
-    let count;
     let filterCondition = {};
-    let isContinued = true;
 
     if (Object.entries(others).length) {
       for (let [key, val] of Object.entries(others)) {
+        if (this.productRepo.tableProps.includes(key)) {
+          filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
+          continue;
+        }
         if (this.productDescriptionsRepo.tableProps.includes(key)) {
           filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
         }
-        if (this.productRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
-        }
-      }
-
-      for (let [key, val] of Object.entries(others)) {
-        const getFeatureByKey = await this.productFeaturesRepo.findOne({
-          feature_code: key,
-        });
-
-        const getVariantByVal = await this.productFeatureValueRepo.findOne({
-          value: val,
-        });
-
-        if (!getFeatureByKey || !getVariantByVal) continue;
-
-        isContinued = false;
-
-        count = await this.productRepo.find({
-          select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
-          join: {
-            [JoinTable.leftJoin]: productByCategoryJoiner,
-          },
-          where: search
-            ? [
-                {
-                  ...filterCondition,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                    getFeatureByKey.feature_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                    getVariantByVal.variant_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                    (productItem) => productItem.product_id,
-                  ),
-                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
-                  [`${Table.PRODUCTS}.product_code`]: Like(search),
-                },
-                {
-                  ...filterCondition,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                    getFeatureByKey.feature_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                    getVariantByVal.variant_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                    (productItem) => productItem.product_id,
-                  ),
-                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
-                  [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
-                },
-              ]
-            : {
-                ...filterCondition,
-                [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                  getFeatureByKey.feature_id,
-                [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                  getVariantByVal.variant_id,
-                [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                  (productItem) => productItem.product_id,
-                ),
-                [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              },
-        });
-
-        products = await this.productRepo.find({
-          select: [
-            `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
-          ],
-          join: {
-            [JoinTable.leftJoin]: productByCategoryJoiner,
-          },
-          where: search
-            ? [
-                {
-                  ...filterCondition,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                    getFeatureByKey.feature_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                    getVariantByVal.variant_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                    (productItem) => productItem.product_id,
-                  ),
-                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
-                  [`${Table.PRODUCTS}.product_code`]: Like(search),
-                },
-                {
-                  ...filterCondition,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                    getFeatureByKey.feature_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                    getVariantByVal.variant_id,
-                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                    (productItem) => productItem.product_id,
-                  ),
-                  [`${Table.PRODUCTS}.parent_product_id`]: 0,
-                  [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
-                },
-              ]
-            : {
-                ...filterCondition,
-                [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]:
-                  getFeatureByKey.feature_id,
-                [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]:
-                  getVariantByVal.variant_id,
-                [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: products.map(
-                  (productItem) => productItem.product_id,
-                ),
-                [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              },
-          orderBy: [
-            { field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC },
-          ],
-          skip,
-          limit,
-        });
-      }
-
-      if (!isContinued) {
-        // get a representative image
-        for (let productItem of products) {
-          const image = await this.imageLinkRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.IMAGE]: {
-                  fieldJoin: `${Table.IMAGE}.image_id`,
-                  rootJoin: `${Table.IMAGE_LINK}.image_id`,
-                },
-              },
-            },
-            where: {
-              object_id: productItem.product_id,
-              object_type: ImageObjectType.PRODUCT,
-              position: 0,
-            },
-          });
-          productItem['image'] = image;
-        }
-
-        return {
-          products,
-          paging: {
-            currentPage: page,
-            pageSize: limit,
-            total: count ? count[0].total : 0,
-          },
-        };
       }
     }
-
-    count = await this.productRepo.find({
+    let count = await this.productRepo.find({
       select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
       join: {
-        [JoinTable.leftJoin]: productJoiner,
-      },
-      where: search
-        ? [
-            {
-              ...filterCondition,
-              [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              [`${Table.PRODUCTS}.product_code`]: Like(search),
-            },
-            {
-              ...filterCondition,
-              [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
-            },
-          ]
-        : {
-            ...filterCondition,
-            [`${Table.PRODUCTS}.parent_product_id`]: 0,
+        [JoinTable.innerJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: 'product_id',
+            rootJoin: 'product_id',
           },
+        },
+      },
+      where: productsListsSearchFilter(search, filterCondition),
     });
 
-    products = await this.productRepo.find({
-      select: [
-        `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCT_PRICES}.*`,
-      ],
+    let productLists = await this.productRepo.find({
+      select: ['*'],
       join: {
-        [JoinTable.leftJoin]: productJoiner,
+        [JoinTable.innerJoin]: productJoiner,
       },
-      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
-      where: search
-        ? [
-            {
-              ...filterCondition,
-              [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              [`${Table.PRODUCTS}.product_code`]: Like(search),
-            },
-            {
-              ...filterCondition,
-              [`${Table.PRODUCTS}.parent_product_id`]: 0,
-              [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
-            },
-          ]
-        : {
-            ...filterCondition,
-            [`${Table.PRODUCTS}.parent_product_id`]: 0,
-          },
+      where: productsListsSearchFilter(search, filterCondition),
       skip,
       limit,
     });
 
-    for (let productItem of products) {
-      // get a representative image
-      const image = await this.imageLinkRepo.findOne({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.IMAGE]: {
-              fieldJoin: `${Table.IMAGE}.image_id`,
-              rootJoin: `${Table.IMAGE_LINK}.image_id`,
-            },
-          },
-        },
-        where: {
-          object_id: productItem.product_id,
-          object_type: ImageObjectType.PRODUCT,
-          position: 0,
-        },
+    // determine product type and  get Image
+    for (let productItem of productLists) {
+      if (
+        !productItem.parent_product_id &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productItem['productType'] = 1; //Sản phẩm cha
+      } else if (
+        !productItem.parent_product_id &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productItem['productType'] = 2; // Sản phẩm con
+      } else if (productItem.product_type == 3) {
+        productItem['productType'] = 3; //SP combo
+      } else {
+        productItem['productType'] = 4; // SP độc lập
+      }
+
+      productItem['image'] = null;
+
+      const productImage = await this.imageLinkRepo.findOne({
+        object_id: productItem.product_id,
+        object_type: ImageObjectType.PRODUCT,
       });
-      productItem['image'] = image;
+
+      if (productImage) {
+        const image = await this.imageRepo.findOne({
+          image_id: productImage.image_id,
+          position: 0,
+        });
+        productItem['image'] = image;
+      }
     }
 
     return {
-      products,
+      products: productLists,
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count ? count[0].total : 0,
+        total: count.length ? count[0].total : 0,
       },
     };
   }
