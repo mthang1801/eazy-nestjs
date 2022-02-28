@@ -19,6 +19,7 @@ import { Like, Not, Equal } from '../../database/find-options/operators';
 import { JoinTable } from 'src/database/enums';
 import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
 import { customer_ids } from 'src/database/constant/usergroup';
+import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 
 @Injectable()
 export class UserSystemService {
@@ -121,7 +122,7 @@ export class UserSystemService {
     };
   }
 
-  async update(id: number, data: UpdateUserGroupsDto): Promise<any> {
+  async update(id: number, data: UpdateUserSystemDto): Promise<any> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new HttpException('Người dùng không tồn tại trong hệ thống.', 404);

@@ -81,7 +81,7 @@ export class UsergroupsController extends BaseController {
    * @returns
    */
   @Put(':id')
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() data: UpdateUserGroupsDto,

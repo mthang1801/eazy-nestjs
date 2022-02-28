@@ -2,17 +2,14 @@ import { IsOptional } from 'class-validator';
 
 export class UpdateUserGroupsDto {
   @IsOptional()
-  firstname: string;
+  usergroup: string;
 
   @IsOptional()
-  lastname: string;
+  code: string;
 
   @IsOptional()
   status: string;
 
   @IsOptional()
-  usergroup_id: number;
-
-  @IsOptional()
-  store_id: number;
+  privileges: number[];
 }

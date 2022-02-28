@@ -13,6 +13,9 @@ export class CreateUserGroupsDto {
   @IsNotEmpty()
   usergroup: string = '';
 
+  @IsOptional()
+  status: string = 'A';
+
   @ArrayNotEmpty()
   privileges: number[];
 }

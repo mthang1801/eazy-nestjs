@@ -62,7 +62,7 @@ export class UserGroupsService {
       ...new UserGroupDescriptionEntity(),
       ...this.userGroupDescriptionRepo.setData(data),
     };
-    console.log(userGroupDescData);
+
     const newUserGroupDesc = await this.userGroupDescriptionRepo.create({
       ...userGroupDescData,
       usergroup_id: result.usergroup_id,
@@ -174,31 +174,67 @@ export class UserGroupsService {
     };
   }
 
-  async update(id: number, data: UpdateUserGroupsDto): Promise<any> {
-    const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new HttpException('Người dùng không tồn tại trong hệ thống.', 404);
+  async update(usergroup_id: number, data: UpdateUserGroupsDto): Promise<any> {
+    const currentUserGroup = await this.userGroupRepo.findOne({
+      usergroup_id,
+    });
+
+    if (!currentUserGroup) {
+      throw new HttpException('Không tìm thấy usergroup', 404);
     }
 
-    const userUpdateData = this.userRepository.setData(data);
-    let result: any = { ...user };
-    if (Object.entries(userUpdateData).length) {
-      const updatedUser = await this.userRepository.update(
-        { user_id: result.user_id },
-        userUpdateData,
+    let result = { ...currentUserGroup };
+
+    const userGroupData = this.userGroupRepo.setData(data);
+    if (Object.entries(userGroupData).length) {
+      const updatedUserGroup = await this.userGroupRepo.update(
+        { usergroup_id },
+        userGroupData,
       );
 
-      result = { ...result, ...updatedUser };
+      result = { ...result, ...updatedUserGroup };
     }
 
-    const userGroupLinkData = this.userGroupLinksRepo.setData(data);
-
-    if (Object.entries(userGroupLinkData).length) {
-      const updatedUserGroupLink = await this.userGroupLinksRepo.update(
-        { user_id: result.user_id },
-        userGroupLinkData,
+    const userGroupDescData = this.userGroupDescriptionRepo.setData(data);
+    if (Object.entries(userGroupData).length) {
+      const updatedUserGroupDesc = await this.userGroupDescriptionRepo.update(
+        { usergroup_id },
+        userGroupDescData,
       );
-      result = { ...result, ...updatedUserGroupLink };
+      result = { ...result, ...updatedUserGroupDesc };
+    }
+
+    await this.userGroupPrivilegeRepo.delete({ usergroup_id });
+
+    if (data.privileges.length) {
+      for (let privilegeId of data.privileges) {
+        let privilege = await this.privilegeRepo.findOne({
+          privilege_id: privilegeId,
+        });
+        // find parent
+        if (privilege.level === 1) {
+          let parentPrivilege = await this.privilegeRepo.findOne({
+            privilege_id: privilege.parent_id,
+          });
+          if (parentPrivilege) {
+            let parentUsergroupPrivilegeExist =
+              await this.userGroupPrivilegeRepo.findOne({
+                privilege_id: parentPrivilege.privilege_id,
+                usergroup_id: currentUserGroup.usergroup_id,
+              });
+            if (!parentUsergroupPrivilegeExist) {
+              await this.userGroupPrivilegeRepo.createSync({
+                privilege_id: parentPrivilege.privilege_id,
+                usergroup_id: currentUserGroup.usergroup_id,
+              });
+            }
+          }
+        }
+        await this.userGroupPrivilegeRepo.createSync({
+          privilege_id: privilegeId,
+          usergroup_id: currentUserGroup.usergroup_id,
+        });
+      }
     }
 
     return result;
