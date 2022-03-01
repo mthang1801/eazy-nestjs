@@ -673,7 +673,6 @@ export class ProductService {
       if (productImage) {
         const image = await this.imageRepo.findOne({
           image_id: productImage.image_id,
-          position: 0,
         });
         productItem['image'] = image;
       }
