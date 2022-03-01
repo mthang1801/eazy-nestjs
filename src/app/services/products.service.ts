@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, HttpService } from '@nestjs/common';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { ProductOptionsInventoryEntity } from '../entities/productOptionsInventory.entity';
 import { ProductPointPriceEntity } from '../entities/productPointPrices.entity';
@@ -71,8 +71,12 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
+import axios from 'axios';
+import * as FormData from 'form-data';
+import { data } from '../../database/constant/category';
+
 import {
   categorySelector,
   productFeatureValuesSelector,
@@ -268,131 +272,14 @@ export class ProductService {
   async get(identifier: number | string): Promise<any> {
     // get Product item
     let product = await this.productRepo.findOne({
-      select: [
-        `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        `${Table.PRODUCTS}.*`,
-        `${Table.PRODUCT_DESCRIPTION}.*`,
-        `${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}.parent_product_id`,
-        `${Table.PRODUCT_PRICES}.*`,
-        `${Table.PRODUCTS_CATEGORIES}.category_id`,
-      ],
-      join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: [
-        { [`${Table.PRODUCTS}.product_id`]: identifier },
-        { [`${Table.PRODUCTS}.product_code`]: identifier },
-      ],
+      select: ['slug'],
+      where: [{ product_id: identifier }, { product_code: identifier }],
     });
 
     if (!product) {
-      throw new HttpException('Sản phẩm không tồn tại', 404);
+      throw new HttpException('Không tìm thấy sp', 404);
     }
-    // get features of product
-    const productFeatures = await this.productFeatureValueRepo.find({
-      select: ['*'],
-      join: { [JoinTable.leftJoin]: productFeaturesJoiner },
-      where: {
-        [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
-      },
-    });
-
-    product['features'] = productFeatures;
-
-    // filter condition base on family
-
-    const productsFamily = await this.productRepo.find({
-      select: [`DISTINCT(${Table.PRODUCTS}.product_id)`, `${Table.PRODUCTS}.*`],
-      join: productFullJoiner,
-      where: productsFamilyFilterConditioner(product),
-    });
-
-    if (productsFamily.length) {
-      for (let productItem of productsFamily) {
-        const productFeatures = await this.productFeatureValueRepo.find({
-          select: ['*'],
-          join: { [JoinTable.leftJoin]: productFeaturesJoiner },
-          where: {
-            [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]:
-              productItem.product_id,
-          },
-        });
-        productItem['features'] = productFeatures;
-      }
-    }
-
-    product['products_family'] = productsFamily.filter(
-      (productsFamilyItem) =>
-        productsFamilyItem.product_id !== product.product_id,
-    );
-
-    if (product.group_id) {
-      const productsGroup = await this.productRepo.find({
-        select: [
-          `DISTINCT(${Table.PRODUCTS}.product_id)`,
-          `${Table.PRODUCTS}.*`,
-        ],
-        join: { [JoinTable.leftJoin]: productFullJoiner },
-        where: productsGroupFilterConditioner(product),
-      });
-
-      product['products_group'] = productsGroup;
-    }
-
-    // get images
-    const productImages = await this.imageLinkRepo.find({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.IMAGE]: {
-            fieldJoin: `${Table.IMAGE}.image_id`,
-            rootJoin: `${Table.IMAGE_LINK}.image_id`,
-          },
-        },
-      },
-      where: {
-        object_id: product.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      },
-    });
-
-    product['images'] = productImages;
-
-    let listBreadCrums = [];
-    // Get categories breadcrum
-    const categoryByProduct = await this.categoryRepo.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: 'category_id',
-            rootJoin: 'category_id',
-          },
-        },
-      },
-      where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
-    });
-
-    if (categoryByProduct) {
-      if (categoryByProduct.id_path) {
-        for (let categoryId of categoryByProduct.id_path.split('/').reverse()) {
-          const _categoryByProduct = await this.categoryRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.CATEGORY_DESCRIPTIONS]: {
-                  fieldJoin: 'category_id',
-                  rootJoin: 'category_id',
-                },
-              },
-            },
-            where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
-          });
-          listBreadCrums = [_categoryByProduct, ...listBreadCrums];
-        }
-      }
-    }
-    listBreadCrums = [...listBreadCrums, categoryByProduct];
-
-    return { ...product, breadCrum: listBreadCrums };
+    return this.getBySlug(product.slug);
   }
 
   async getBySlug(slug: string): Promise<any> {
@@ -437,12 +324,10 @@ export class ProductService {
         [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
       },
     });
-    console.log(437, features);
 
     if (features.length) {
       product['features'] = features;
     }
-    console.log(product);
 
     // Tìm nhóm chứa SP
     // SP combo
@@ -498,18 +383,36 @@ export class ProductService {
           });
           productInfoDetail['features'] = features;
 
+          const productImages = await this.imageLinkRepo.find({
+            select: ['image_id'],
+            where: {
+              object_id: productInfoDetail.product_id,
+              object_type: ImageObjectType.PRODUCT,
+            },
+          });
+          if (productImages.length) {
+            for (let productImageItem of productImages) {
+              const image = await this.imageRepo.findById(
+                productImageItem.image_id,
+              );
+              productInfoDetail['images'] = productInfoDetail['images']
+                ? [...productInfoDetail['images'], image]
+                : [image];
+            }
+          }
+
           product['children_products'] = product['children_products']
             ? [
                 ...product['children_products'],
                 {
                   ...productInfoDetail,
-                  product: productInfoDetail.product.split('-')[1].trim(),
+                  product: productInfoDetail.product?.split('-')[1]?.trim(),
                 },
               ]
             : [
                 {
                   ...productInfoDetail,
-                  product: productInfoDetail.product.split('-')[1].trim(),
+                  product: productInfoDetail.product?.split('-')[1]?.trim(),
                 },
               ];
         }
@@ -942,7 +845,18 @@ export class ProductService {
     };
   }
 
-  async update(sku: string, data: UpdateProductDto) {
+  async update(sku: string, data) {
+    console.log(data);
+    // const _data = await axios({
+    //   method: 'post',
+    //   url: 'http://mb.viendidong.com/core-api/v1/files/website',
+    //   headers: { 'Content-Type': 'multipart/form-data' },
+    //   data: {
+    //     files: images,
+    //   },
+    // // });
+    // console.log(_data);
+
     // Filter Exception
     const currentProduct = await this.productRepo.findOne({
       product_code: sku,
@@ -958,34 +872,171 @@ export class ProductService {
     if (data.product_code) {
       const product = await this.productRepo.findOne({
         product_code: data.product_code,
+        product_id: Not(Equal(result.product_id)),
       });
       if (product) {
         throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
       }
     }
 
-    if (data.slug && data.slug !== currentProduct.slug) {
+    if (data.slug && data.slug !== result.slug) {
       const product = await this.productRepo.findOne({
         slug: data.slug,
+        product_id: Not(Equal(result.product_id)),
       });
-      if (product.product_id !== currentProduct.slug) {
+
+      if (product) {
         throw new HttpException('Slug đã tồn tại', 409);
       }
     }
 
-    // Nếu data có parent_product_id, cần kiểm tra SP hiện tại có phải là SP cha hay không
-    if (data.parent_product_id) {
-      if (!result.parent_product_id) {
-        const productGroup = await this.productVariationGroupRepo.findOne({
-          product_root_id: result.product_id,
+    // Update thông tin cơ bản của SP
+
+    // Update product
+    const productData = this.productRepo.setData(data);
+    if (Object.entries(productData).length) {
+      const updatedProduct = await this.productRepo.update(
+        { product_id: result.product_id },
+        productData,
+      );
+      result = { ...result, ...updatedProduct };
+    }
+
+    // Update product description
+    const productDescData = this.productDescriptionsRepo.setData(data);
+    if (Object.entries(productDescData).length) {
+      const updatedProductDesc = await this.productDescriptionsRepo.update(
+        { product_id: result.product_id },
+        productDescData,
+      );
+      result = { ...result, ...updatedProductDesc };
+    }
+
+    // Update product price
+    const productPriceData = this.productPriceRepo.setData(data);
+    if (Object.entries(productPriceData).length) {
+      const updatedProductPrice = await this.productPriceRepo.update(
+        { product_id: result.product_id },
+        productPriceData,
+      );
+      result = { ...result, ...updatedProductPrice };
+    }
+
+    // Update product sale
+    const productSaleData = this.productSaleRepo.setData(data);
+    if (Object.entries(productSaleData).length) {
+      const updatedProductSale = await this.productSaleRepo.update(
+        { product_id: result.product_id },
+        productSaleData,
+      );
+      result = { ...result, ...updatedProductSale };
+    }
+
+    // Update product category
+    const productCategoryData = this.productCategoryRepo.setData(data);
+    if (Object.entries(productCategoryData).length) {
+      const updatedProductCategory = await this.productCategoryRepo.update(
+        { product_id: result.product_id },
+        productCategoryData,
+      );
+      result = { ...result, ...updatedProductCategory };
+    }
+
+    // if (data.images.length) {
+    //   // delete old images
+    //   let oldImages = await this.imageLinkRepo.find({
+    //     select: ['image_id'],
+    //     where: {
+    //       object_id: result.product_id,
+    //       object_type: ImageObjectType.PRODUCT,
+    //     },
+    //   });
+    //   if (oldImages.length) {
+    //     for (let { image_id } of oldImages) {
+    //       await this.imageLinkRepo.delete({
+    //         object_id: result.product_id,
+    //         image_id,
+    //       });
+    //       await this.imageRepo.delete({ image_id });
+    //     }
+    //   }
+
+    //   for (let image of data.images) {
+    //     const newImage = await this.imageRepo.create({ image_path: image });
+    //     const newProductImageLink = await this.imageLinkRepo.create({
+    //       object_id: result.product_id,
+    //       object_type: ImageObjectType.PRODUCT,
+    //       image_id: newImage.image_id,
+    //     });
+    //     result['images'] = result['images']
+    //       ? [...result['images'], { ...newProductImageLink, ...newImage }]
+    //       : [{ ...newProductImageLink, ...newImage }];
+    //   }
+    // }
+
+    if (data?.product_features?.length) {
+      const oldFeatrures = await this.productFeatureValueRepo.find({
+        where: { product_id: result.product_id },
+      });
+      if (oldFeatrures.length) {
+        for (let oldFeatureItem of oldFeatrures) {
+          await this.productFeatureValueRepo.delete({
+            feature_value_id: oldFeatureItem.feature_value_id,
+          });
+        }
+      }
+      console.log(data.product_features);
+      for (let { feature_code, variant_code } of data.product_features) {
+        const productFeature = await this.productFeaturesRepo.findOne({
+          feature_code,
         });
+
+        const productFeatureVariant =
+          await this.productFeatureVariantRepo.findOne({
+            select: ['*'],
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+                  fieldJoin: 'variant_id',
+                  rootJoin: 'variant_id',
+                },
+              },
+            },
+            where: {
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+            },
+          });
+
+        const productFeatureValueData = {
+          feature_id: productFeature ? productFeature.feature_id : null,
+          variant_id: productFeatureVariant
+            ? productFeatureVariant?.variant_id
+            : null,
+          feature_code: productFeature ? feature_code : null,
+          variant_code: productFeatureVariant ? variant_code : null,
+          product_id: result.product_id,
+          value: isNaN(+productFeatureVariant?.variant * 1)
+            ? productFeatureVariant?.variant
+            : '',
+          value_int: !isNaN(+productFeatureVariant?.variant * 1)
+            ? +productFeatureVariant?.variant
+            : 0,
+        };
+
+        const newFeatureValue = await this.productFeatureValueRepo.create(
+          productFeatureValueData,
+        );
+
+        result['features'] = result['features']
+          ? [...result['features'], newFeatureValue]
+          : [newFeatureValue];
       }
     }
 
-    // Update product
+    return result;
   }
 
-  async updateImage(sku: string, data: UpdateImageDto): Promise<any> {
+  async updateImage(sku: string, data): Promise<any> {
     const currentProduct = await this.productRepo.findOne({
       select: [
         '*',
@@ -1204,8 +1255,8 @@ export class ProductService {
 
   async callSync(): Promise<void> {
     await this.clearAll();
-    const productsList = _.shuffle([...productsData, ...comboData]);
-    for (let productItem of productsList) {
+
+    for (let productItem of productsData) {
       await this.createSync(productItem);
     }
     await this.syncProductsIntoGroup();
@@ -1339,5 +1390,25 @@ export class ProductService {
     await this.productVariationGroupFeatureRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
     );
+  }
+
+  async uploadImage(images) {
+    let data = new FormData();
+    for (let image of images) {
+      data.append('files', fs.createReadStream(image.path));
+    }
+    var config: any = {
+      method: 'post',
+      url: 'http://mb.viendidong.com/core-api/v1/files/website',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+
+        ...data.getHeaders(),
+      },
+      data: data,
+    };
+    const response = await axios(config);
+    const result = response.data.data;
+    return result;
   }
 }

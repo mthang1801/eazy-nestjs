@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { HttpModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth.module';
 import { UsersModule } from './users.module';
@@ -32,12 +32,18 @@ import { ProductFeaturesModule } from './productFeatures.module';
 import { QueueModule } from './queue.module';
 import { StoreModule } from './store.module';
 import { UserSystemModule } from './userSystem.module';
+import { MulterModule } from '@nestjs/platform-express';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       load: [appConfig, databaseConfig, authConfig, mailConfig],
+    }),
+    MulterModule.registerAsync({
+      useFactory: () => ({
+        dest: './uploads',
+      }),
     }),
     AuthModule,
     UsersModule,

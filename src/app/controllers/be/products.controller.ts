@@ -8,6 +8,8 @@ import {
   Put,
   Query,
   Res,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
@@ -16,6 +18,12 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateProductDto } from '../../dto/product/update-product.dto';
 import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
+import {
+  AnyFilesInterceptor,
+  FileInterceptor,
+  FilesInterceptor,
+} from '@nestjs/platform-express';
+import * as multer from 'multer';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -56,9 +64,11 @@ export class ProductsController extends BaseController {
   }
 
   @Put(':sku')
+  // @UseInterceptors(AnyFilesInterceptor())
   async update(
     @Param('sku') sku: string,
-    @Body() data: UpdateProductDto,
+    @Body() data,
+    // @UploadedFiles() images: Array<Express.Multer.File>,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.update(sku, data);
@@ -68,14 +78,36 @@ export class ProductsController extends BaseController {
   @Post('/:sku/images')
   async updateImage(
     @Param('sku') sku: string,
-    @Body() data: UpdateImageDto,
+    @Body() data,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.updateImage(sku, data);
     return this.responseSuccess(res, result);
   }
 
-  @Post('upload')
+  @Post('upload-images')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadImage(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Res() res: Response,
+  ) {
+    console.log(files);
+    const result = await this.service.uploadImage(files);
+    return this.responseSuccess(res, result);
+  }
+
   @Delete('/clear')
   async delete(@Res() res: Response): Promise<IResponse> {
     await this.service.clearAll();

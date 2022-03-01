@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module, forwardRef, HttpModule } from '@nestjs/common';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductService } from '../services/products.service';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
