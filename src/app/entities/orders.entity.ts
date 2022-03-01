@@ -1,5 +1,5 @@
 export class OrderEntity {
-  order_id: number = 0;
+  order_id: null | string;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;

@@ -19,6 +19,8 @@ import { Like, Not, Equal } from '../../database/find-options/operators';
 import { JoinTable } from 'src/database/enums';
 import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
+import { userJoiner } from 'src/utils/joinTable';
+import { customer_type } from '../../database/constant/customer';
 
 @Injectable()
 export class UserSystemService {
@@ -86,7 +88,7 @@ export class UserSystemService {
         : filterCondition,
     });
 
-    const userGroups = await this.userRepository.find({
+    const users = await this.userRepository.find({
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -112,13 +114,33 @@ export class UserSystemService {
     });
 
     return {
-      userGroups,
+      users,
       paging: {
         currentPage: page,
         pageSize: limit,
         total: count ? count[0].total : 0,
       },
     };
+  }
+
+  async getById(id): Promise<any> {
+    const user = await this.userRepository.findOne({
+      select: ['*'],
+      join: userJoiner,
+      where: {
+        [`${Table.USERS}.user_id`]: id,
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('Không tìm thấy người dùng', 404);
+    }
+
+    if (customer_type.includes(user.user_type)) {
+      throw new HttpException('người dùng không phải nhân viên hệ thống', 400);
+    }
+
+    return user;
   }
 
   async update(id: number, data: UpdateUserSystemDto): Promise<any> {

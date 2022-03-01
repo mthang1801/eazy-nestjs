@@ -73,7 +73,10 @@ import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
 import * as fs from 'fs/promises';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
-import { productFeatureValuesSelector } from 'src/utils/tableSelector';
+import {
+  categorySelector,
+  productFeatureValuesSelector,
+} from 'src/utils/tableSelector';
 
 @Injectable()
 export class ProductService {
@@ -434,10 +437,12 @@ export class ProductService {
         [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
       },
     });
+    console.log(437, features);
 
     if (features.length) {
       product['features'] = features;
     }
+    console.log(product);
 
     // Tìm nhóm chứa SP
     // SP combo
@@ -690,7 +695,7 @@ export class ProductService {
 
   async childrenCategories(categoryId, categoriesList = []) {
     let categories = await this.categoryRepo.find({
-      select: [`${Table.CATEGORIES}.category_id`, 'level', 'category', 'slug'],
+      select: categorySelector,
       join: {
         [JoinTable.leftJoin]: {
           [Table.CATEGORY_DESCRIPTIONS]: {
@@ -725,7 +730,7 @@ export class ProductService {
   ): Promise<any> {
     // Kiểm tra sự tồn tại của category
     const category = await this.categoryRepo.findOne({
-      select: ['*'],
+      select: categorySelector,
       join: {
         [JoinTable.leftJoin]: {
           [Table.CATEGORY_DESCRIPTIONS]: {
@@ -926,13 +931,14 @@ export class ProductService {
       }
     }
     return {
+      currentCategory: category,
+      childrenCategories: categoriesListByLevel,
       products: productsList,
       paging: {
         currentPage: page,
         pageSize: limit,
         total: count[0]?.total,
       },
-      childrenCategories: categoriesListByLevel,
     };
   }
 

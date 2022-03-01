@@ -8,3 +8,10 @@ export const productFeatureValuesSelector = [
   `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.description`,
   'variant',
 ];
+
+export const categorySelector = [
+  `${Table.CATEGORIES}.category_id`,
+  'level',
+  'category',
+  'slug',
+];

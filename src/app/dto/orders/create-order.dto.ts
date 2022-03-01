@@ -17,7 +17,32 @@ class Product {
 }
 export class OrderCreateDTO {
   @IsOptional()
+  b_firstname: string;
+
+  @IsOptional()
+  b_lastname: string;
+
+  @IsOptional()
+  b_address: string;
+
+  @IsOptional()
+  b_city: string;
+
+  @IsOptional()
+  b_county: string;
+
+  @IsOptional()
+  b_state: string;
+  @IsOptional()
+  b_country: string;
+  @IsOptional()
+  b_zipcode: string;
+  @IsOptional()
+  b_phone: string;
+
+  @IsOptional()
   is_parent_order: string;
+
   @IsOptional()
   parent_order_id: number;
   @IsOptional()
@@ -52,26 +77,7 @@ export class OrderCreateDTO {
   lastname: string;
   @IsOptional()
   company: string;
-  @IsOptional()
-  b_firstname: string;
-  @IsOptional()
-  b_lastname: string;
-  @IsOptional()
-  b_address: string;
-  @IsOptional()
-  b_address_2: string;
-  @IsOptional()
-  b_city: string;
-  @IsOptional()
-  b_county: string;
-  @IsOptional()
-  b_state: string;
-  @IsOptional()
-  b_country: string;
-  @IsOptional()
-  b_zipcode: string;
-  @IsOptional()
-  b_phone: string;
+
   @IsOptional()
   s_firstname: string;
   @IsOptional()

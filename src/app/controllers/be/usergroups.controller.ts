@@ -24,7 +24,7 @@ import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dt
  * User groups controllers
  * @author MvThang
  */
-@Controller('/be/v1/usergroups')
+@Controller('/be/v1/user-groups')
 export class UsergroupsController extends BaseController {
   constructor(private readonly service: UserGroupsService) {
     super();

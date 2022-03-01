@@ -38,6 +38,13 @@ export class UserSystemController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get(':id')
+  //@UseGuards(AuthGuard)
+  async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getById(id);
+    return this.responseSuccess(res, result);
+  }
+
   @Put(':id')
   // @UseGuards(AuthGuard)
   async update(

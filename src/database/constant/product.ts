@@ -146,7 +146,16 @@ export const productsData = [
       'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
       'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
     ],
-    product_features: [],
+    product_features: [
+      {
+        feature_code: 34,
+        variant_code: 1331992,
+      },
+      {
+        feature_code: 13,
+        variant_code: 902209,
+      },
+    ],
   },
   {
     product_id: '50000173',

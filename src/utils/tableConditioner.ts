@@ -105,6 +105,13 @@ export const customersListSearchFilter = (
   search = '',
   filterConditions = {},
 ) => {
+  // let splitSearch = search.replace(/\s{2,}/, ' ').split(' ');
+  // let firstname: string = search;
+  // let lastname: string = search;
+  // if (splitSearch.length > 1) {
+  //   firstname = splitSearch.slice(0, -1);
+  //   lastname = splitSearch.slice(-1);
+  // }
   const arraySearch = [
     { [`${Table.USERS}.email`]: Like(search) },
     { [`${Table.USERS}.phone`]: Like(search) },
@@ -115,6 +122,7 @@ export const customersListSearchFilter = (
     ...filterConditions,
     [`${Table.USERS}.user_type`]: customer_type.map((type) => type),
   };
+  console.log(arraySearch);
   return searchFilterTemplate(search, filterConditions, arraySearch);
 };
 
@@ -128,10 +136,12 @@ const searchFilterTemplate = (
   if (!search && Object.entries(filterConditions).length) {
     return filterConditions;
   }
-  if (search && Object.entries(filterConditions).length) {
+  if (search && !Object.entries(filterConditions).length) {
     return [fieldsSearch.map((searchItem) => ({ ...searchItem }))];
   }
-  return [
-    fieldsSearch.map((searchItem) => ({ ...filterConditions, ...searchItem })),
-  ];
+
+  return fieldsSearch.map((searchItem) => ({
+    ...filterConditions,
+    ...searchItem,
+  }));
 };

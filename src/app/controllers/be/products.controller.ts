@@ -75,6 +75,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Post('upload')
   @Delete('/clear')
   async delete(@Res() res: Response): Promise<IResponse> {
     await this.service.clearAll();
