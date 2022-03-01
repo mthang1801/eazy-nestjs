@@ -73,6 +73,7 @@ import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
 import * as fs from 'fs/promises';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
+import { productFeatureValuesSelector } from 'src/utils/tableSelector';
 
 @Injectable()
 export class ProductService {
@@ -418,8 +419,24 @@ export class ProductService {
         const image = await this.imageRepo.findOne({
           image_id: productImage.image_id,
         });
-        product['images'] = [...product['images'], ...image];
+        product['images'] = product['images']
+          ? [...product['images'], image]
+          : [image];
       }
+    }
+
+    let features = await this.productFeatureValueRepo.find({
+      select: productFeatureValuesSelector,
+      join: {
+        [JoinTable.rightJoin]: productFeaturesJoiner,
+      },
+      where: {
+        [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product.product_id,
+      },
+    });
+
+    if (features.length) {
+      product['features'] = features;
     }
 
     // Tìm nhóm chứa SP
@@ -465,14 +482,7 @@ export class ProductService {
         // Lấy các SP con
         if (product.product_id === productInfoDetail.parent_product_id) {
           let features = await this.productFeatureValueRepo.find({
-            select: [
-              `${Table.PRODUCT_FEATURE_VALUES}.feature_code`,
-              `${Table.PRODUCT_FEATURE_VALUES}.feature_id`,
-              `${Table.PRODUCT_FEATURE_VALUES}.variant_code`,
-              `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
-              `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.description`,
-              'variant',
-            ],
+            select: productFeatureValuesSelector,
             join: {
               [JoinTable.rightJoin]: productFeaturesJoiner,
             },
@@ -482,6 +492,7 @@ export class ProductService {
             },
           });
           productInfoDetail['features'] = features;
+
           product['children_products'] = product['children_products']
             ? [
                 ...product['children_products'],
@@ -552,9 +563,11 @@ export class ProductService {
     });
 
     const categoriesList = await this.parentCategories(currentCategory);
+    const parentCategories = categoriesList.slice(1);
 
     return {
-      categories: categoriesList,
+      currentCategory: categoriesList[0],
+      parentCategories,
       product,
     };
   }
