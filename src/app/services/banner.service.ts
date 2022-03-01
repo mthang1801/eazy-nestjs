@@ -24,7 +24,7 @@ export class bannerService {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};

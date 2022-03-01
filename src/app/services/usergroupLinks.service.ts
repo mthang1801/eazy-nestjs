@@ -38,7 +38,7 @@ export class UserGroupLinkService {
   async getList(params: any): Promise<IUserGroupLinkExtend[]> {
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     const skip = (page - 1) * limit;
     let filterCondition = {};
     if (typeof others === 'object' && Object.entries(others).length)
@@ -89,7 +89,7 @@ export class UserGroupLinkService {
   ): Promise<IUserGroupLinkExtend[]> {
     let { page, limit } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     const skip = (page - 1) * limit;
 
     const userGroupLink = await this.userRepo.find({

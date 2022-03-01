@@ -18,7 +18,6 @@ import { Table } from '../../database/enums/tables.enum';
 import { Like, Not, Equal } from '../../database/find-options/operators';
 import { JoinTable } from 'src/database/enums';
 import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
-import { customer_ids } from 'src/database/constant/usergroup';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 
 @Injectable()
@@ -36,7 +35,7 @@ export class UserSystemService {
   async getUserLists(params): Promise<any> {
     let { page, limit, search, ...others } = params;
     page = +page || 1;
-    limit = +limit || 4;
+    limit = +limit || 10;
 
     let skip = (page - 1) * limit;
 

@@ -27,7 +27,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [],
   },
   {
@@ -58,7 +62,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [],
   },
   {
@@ -89,7 +97,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -129,7 +141,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [],
   },
   {
@@ -160,7 +176,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [],
   },
   {
@@ -191,7 +211,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -231,7 +255,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -271,7 +299,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -311,7 +343,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -351,7 +387,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -392,6 +432,10 @@ export const productsData = [
     length: 0,
     width: 0,
     height: 0,
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -431,7 +475,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -471,7 +519,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -511,7 +563,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -551,7 +607,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -591,7 +651,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -631,7 +695,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -671,7 +739,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -711,7 +783,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -751,7 +827,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -791,7 +871,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -831,7 +915,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -871,7 +959,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -911,7 +1003,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [
       {
         feature_code: 34,
@@ -951,7 +1047,11 @@ export const productsData = [
     weight: 0,
     length: 0,
     width: 0,
-    height: 0,
+
+    images: [
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/iphone-11-64gb-chinh-hang_3.jpg',
+      'https://cdn.didongviet.vn/pub/media/catalog/product//i/p/ip12.jpg',
+    ],
     product_features: [],
   },
 ];

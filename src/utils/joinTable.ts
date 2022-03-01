@@ -175,3 +175,12 @@ export const productInfoJoiner = {
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
 };
+
+export const userJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USER_PROFILES]: {
+      fieldJoin: 'user_id',
+      rootJoin: 'user_id',
+    },
+  },
+};

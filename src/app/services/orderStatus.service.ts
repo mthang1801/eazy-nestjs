@@ -16,20 +16,18 @@ import { Like } from 'typeorm';
 import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto';
 
 @Injectable()
-export class OrderStatusService{
+export class OrderStatusService {
   constructor(
     private repository: OrderStatusRepository<OrderStatusEntity>,
-    
+
     private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<OrderStatusDescriptionEntity>,
     private orderStatusDataRepo: OrderStatusDataRepository<OrderStatusDataEntity>,
-  ) {
-
-  }
+  ) {}
   async getList(params) {
     //=====Filter param
     let { page, limit, ...others } = params;
     page = +page || 1;
-    limit = +limit || 9999;
+    limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};

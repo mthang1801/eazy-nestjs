@@ -1,3 +1,4 @@
+import { customer_type } from 'src/database/constant/customer';
 import { Table } from 'src/database/enums';
 import { Equal, Like, Not } from 'src/database/find-options/operators';
 
@@ -97,5 +98,40 @@ export const productsListsSearchFilter = (
     },
     { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
     { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
+  ];
+};
+
+export const customersListSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  const arraySearch = [
+    { [`${Table.USERS}.email`]: Like(search) },
+    { [`${Table.USERS}.phone`]: Like(search) },
+    { [`${Table.USERS}.firstname`]: Like(search) },
+    { [`${Table.USERS}.lastname`]: Like(search) },
+  ];
+  filterConditions = {
+    ...filterConditions,
+    [`${Table.USERS}.user_type`]: customer_type.map((type) => type),
+  };
+  return searchFilterTemplate(search, filterConditions, arraySearch);
+};
+
+const searchFilterTemplate = (
+  search = '',
+  filterConditions = {},
+  fieldsSearch = [],
+) => {
+  if (!search && !Object.entries(filterConditions).length)
+    return filterConditions;
+  if (!search && Object.entries(filterConditions).length) {
+    return filterConditions;
+  }
+  if (search && Object.entries(filterConditions).length) {
+    return [fieldsSearch.map((searchItem) => ({ ...searchItem }))];
+  }
+  return [
+    fieldsSearch.map((searchItem) => ({ ...filterConditions, ...searchItem })),
   ];
 };
