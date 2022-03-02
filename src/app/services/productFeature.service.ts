@@ -411,6 +411,9 @@ export class ProductFeatureService {
         const newProductFeatureVariant =
           await this.productFeatureVariantsRepo.create({
             ...productFeatureVariantData,
+            variant_code:
+              productFeatureVariantData['variant_code'] ??
+              convertToSlug(removeVietnameseTones(variantItem['variant'])),
             feature_id: result['feature_id'],
           });
 
