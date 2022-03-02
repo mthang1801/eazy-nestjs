@@ -135,6 +135,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   ref_order_id: string = '0';
+
+  @IsOptional()
+  email: string = '';
 }
 
 class ProductOrder {
@@ -151,7 +154,7 @@ class ProductOrder {
   discount_type: number = 1;
 
   @IsOptional()
-  discount_amount: number = 0;
+  discount: number = 0;
 
   @IsOptional()
   product_type: number = 1;

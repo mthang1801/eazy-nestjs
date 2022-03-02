@@ -18,7 +18,7 @@ const orderSampleData = {
   warranty_note: 'Bao hanh 6 thang',
 
   discount_type: 1,
-  discount_amount: 0,
+  discount: 0,
 
   order_items: [
     {
@@ -70,7 +70,6 @@ const orderSampleData = {
   id_card: '23190280912',
 
   coupon_code: '2313213',
-  pay_credit_fee_type: 1,
   ref_order_id: 'null',
 };
 
@@ -134,7 +133,7 @@ const convertDataKeyToIntegrate = (data) => {
 
   itgData['installMoneyCode'] = data['installed_money_code']; //Mã trả góp
 
-  itgData['payCreditFeeType'] = data['pay_credit_fee_type']; //Hình thức trả phí khác
+  itgData['payCreditFeeType'] = data['pay_credit_type']; //Hình thức trả phí khác
 
   itgData['couponCode'] = data['coupon_code'] || ''; //Mã coupon
 
@@ -150,7 +149,7 @@ const convertDataKeyToIntegrate = (data) => {
 
   itgData['discountType'] = data['discount_type'] || 1; //
 
-  itgData['discountAmount'] = data['discount_amout'] || 0;
+  itgData['discountAmount'] = data['discount'] || 0;
 
   // Lấy danh sách Order Items
   for (let orderItem of data['order_items']) {

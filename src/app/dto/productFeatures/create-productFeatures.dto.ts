@@ -70,7 +70,7 @@ class ProductVariant {
   variant: string = '';
 
   @IsOptional()
-  variant_code: string = '0';
+  variant_code: string = '';
 
   @IsOptional()
   description: string = '';

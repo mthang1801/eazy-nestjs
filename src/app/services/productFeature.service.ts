@@ -21,6 +21,9 @@ import { ProductOptionVariantDescriptionEntity } from '../entities/productOption
 import * as _ from 'lodash';
 import { productFeatures as productFeaturesData } from '../../database/constant/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
+import { removeVietnameseTones } from 'src/utils/helper';
+import { convertToSlug } from '../../utils/helper';
+import { SortBy } from '../../database/enums/sortBy.enum';
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -65,6 +68,9 @@ export class ProductFeatureService {
         const newFeatureVariant: ProductFeatureVariantEntity =
           await this.productFeatureVariantsRepo.create({
             ...featureVariantData,
+            variant_code: featureVariantData['variant_code']
+              ? featureVariantData['variant_code']
+              : convertToSlug(removeVietnameseTones(feature_value.variant)),
             feature_id: newFeature.feature_id,
           });
 
@@ -117,6 +123,9 @@ export class ProductFeatureService {
           },
         },
       },
+      orderBy: [
+        { field: `${Table.PRODUCT_FEATURES}.feature_id`, sortBy: SortBy.DESC },
+      ],
       where: filterCondition,
       skip,
       limit,
