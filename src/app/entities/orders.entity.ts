@@ -1,3 +1,5 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class OrderEntity {
   order_id: null | string;
   is_parent_order: string = 'N';
@@ -8,6 +10,7 @@ export class OrderEntity {
   total: number = 0;
   subtotal: number = 0;
   discount: number = 0;
+  discount_type: number = 1;
   subtotal_discount: number = 0;
   payment_surcharge: number = 0;
   shipping_ids: string = '';
@@ -17,6 +20,7 @@ export class OrderEntity {
   timestamp: Date = new Date();
   status: string = 'O';
   notes: string = '';
+  gender: number = 0;
   details: string = '';
   promotions: string = '';
   promotion_ids: string = '';
@@ -52,6 +56,8 @@ export class OrderEntity {
   fax: string = '';
   url: string = '';
   email: string = '';
+  id_card: number = 0;
+  cash_account_id: number = 0;
   transfer_amount: number = 0;
   transfer_account_id: number = 0;
   transfer_ref_code: null | string = '';
@@ -64,6 +70,7 @@ export class OrderEntity {
   installed_money_account_id: number = 0;
   pay_credit_type: null | number = 0;
   payment_id: number = 0;
+  payment_status: number = 1;
   tax_exempt: string = '';
   lang_code: string = '';
   ip_address: string = '';
@@ -71,4 +78,7 @@ export class OrderEntity {
   validation_code: string = '';
   localization_id: number = 0;
   utm_source: number = 0;
+  ref_order_id: string = '0';
+  created_date: string = convertToMySQLDateTime();
+  updated_date: string = convertToMySQLDateTime();
 }

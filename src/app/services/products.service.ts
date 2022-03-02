@@ -273,6 +273,26 @@ export class ProductService {
     }
   }
 
+  async getParentsList() {
+    const products = await this.productRepo.find({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: 'product_id',
+            rootJoin: 'product_id',
+          },
+        },
+      },
+      where: {
+        parent_product_id: IsNull(),
+        product_type: [1, 2],
+      },
+    });
+
+    return products;
+  }
+
   async getProductDetails(product) {
     product['images'] = [];
     const productImages = await this.imageLinkRepo.find({
@@ -280,6 +300,7 @@ export class ProductService {
       where: {
         object_id: product.product_id,
         object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Saved,
       },
     });
 
@@ -339,7 +360,7 @@ export class ProductService {
         select: ['*'],
         where: { group_id: group.group_id },
       });
-
+      product['relevant_products'] = [{ ...product }];
       for (let productItem of productsInGroup) {
         const productInfoDetail = await this.productRepo.findOne({
           select: ['*'],
@@ -367,6 +388,7 @@ export class ProductService {
             where: {
               object_id: productInfoDetail.product_id,
               object_type: ImageObjectType.PRODUCT,
+              type: ImageType.Saved,
             },
           });
           if (productImages.length) {
@@ -416,6 +438,7 @@ export class ProductService {
             object_id: product.product_id,
             object_type: ImageObjectType.PRODUCT,
             position: 0,
+            type: ImageType.Saved,
           });
           if (productImage) {
             const image = await this.imageRepo.findOne({
@@ -462,7 +485,7 @@ export class ProductService {
   async get(identifier: number | string): Promise<any> {
     // get Product item
     let product = await this.productRepo.findOne({
-      select: ['*'],
+      select: ['*', `${Table.PRODUCT_DESCRIPTION}.*`],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -480,7 +503,7 @@ export class ProductService {
 
   async getBySlug(slug: string): Promise<any> {
     let product = await this.productRepo.findOne({
-      select: ['*'],
+      select: ['*', `${Table.PRODUCT_DESCRIPTION}.*`],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -591,6 +614,7 @@ export class ProductService {
       const productImage = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Saved,
       });
 
       if (productImage) {
@@ -839,6 +863,7 @@ export class ProductService {
       const productImage = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Saved,
       });
 
       if (productImage) {
@@ -957,7 +982,7 @@ export class ProductService {
           });
         }
       }
-      console.log(data.product_features);
+
       for (let { feature_code, variant_code } of data.product_features) {
         const productFeature = await this.productFeaturesRepo.findOne({
           feature_code,
@@ -1396,6 +1421,8 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
+
+    await this.deleteProductImage(sku);
 
     let data = new FormData();
     for (let image of images) {

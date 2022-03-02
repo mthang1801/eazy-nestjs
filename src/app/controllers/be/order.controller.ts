@@ -17,8 +17,9 @@ import { UpdateCustomerDTO } from 'src/app/dto/customer/update-customer.dto';
 import {} from '../../interfaces/response.interface';
 import { OrdersService } from 'src/app/services/orders.service';
 import { AuthGuard } from '../../../middlewares/be.auth';
-import { OrderCreateDTO } from 'src/app/dto/orders/create-order.dto';
+
 import { OrderUpdateDTO } from 'src/app/dto/orders/update-order.dto';
+import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 
 @Controller('/be/v1/orders')
 export class OrderController extends BaseController {
@@ -38,7 +39,7 @@ export class OrderController extends BaseController {
     return this.responseSuccess(res, result, `action return orders by id`);
   }
   @Post()
-  async create(@Res() res, @Body() body: OrderCreateDTO): Promise<IResponse> {
+  async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
     const result = await this.service.create(body);
     return this.responseSuccess(res, result, `action create an order`);
   }

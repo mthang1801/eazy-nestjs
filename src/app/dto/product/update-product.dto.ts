@@ -86,6 +86,8 @@ export class UpdateProductDto {
 
   @IsOptional()
   children_products: UpdateProductDto[];
+
+  images: string[];
 }
 
 class ProductFeatureDto {

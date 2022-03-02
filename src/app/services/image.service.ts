@@ -4,15 +4,14 @@ import { ImagesRepository } from '../repositories/image.repository';
 import { Table, JoinTable } from '../../database/enums/index';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImageType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 @Injectable()
-export class ImagesService  {
+export class ImagesService {
   constructor(
     private repository: ImagesRepository<ImagesEntity>,
-  
-    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
-  ) {
 
-  }
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+  ) {}
   async Create(data, object_id) {
     const imageTableData = {
       ...this.repository.setData(data),
