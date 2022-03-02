@@ -3,4 +3,5 @@ export interface IProductVariationGroupProducts {
   product_id: string;
   parent_product_id: null | number;
   group_id: number;
+  product_group_name: string;
 }
