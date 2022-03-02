@@ -74,7 +74,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 
 import * as fs from 'fs';
-import * as fsPromises from 'fs/promises';
+import * as fsExtra from 'fs-extra';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
@@ -1475,7 +1475,7 @@ export class ProductService {
 
     // delete files
     for (let image of images) {
-      await fsPromises.unlink(image.path);
+      await fsExtra.unlink(image.path);
     }
     return results;
   }
