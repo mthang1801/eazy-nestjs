@@ -21,6 +21,8 @@ import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 import { userJoiner } from 'src/utils/joinTable';
 import { customer_type } from '../../database/constant/customer';
+import { userSystemStoreJoiner } from '../../utils/joinTable';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class UserSystemService {
@@ -63,26 +65,11 @@ export class UserSystemService {
     }
 
     // Chắc chắn răng người dùng hiện tại không phải là Customer
-    filterCondition[`${Table.USERS}.user_type`] = Not(Equal('C'));
+    filterCondition[`${Table.USERS}.store_id`] = Not(Equal(0));
 
     const count = await this.userRepository.find({
       select: [`COUNT(DISTINCT(${Table.USERS}.user_id)) as total`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-        },
-      },
+      join: userSystemStoreJoiner,
       where: search
         ? userSearchByNameEmailPhone(search, filterCondition)
         : filterCondition,
@@ -90,25 +77,11 @@ export class UserSystemService {
 
     const users = await this.userRepository.find({
       select: ['*', `${Table.USERS}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_PROFILES]: {
-            fieldJoin: `${Table.USER_PROFILES}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-        },
-      },
+      join: userSystemStoreJoiner,
       where: search
         ? userSearchByNameEmailPhone(search, filterCondition)
         : filterCondition,
+      orderBy: [{ field: 'created_at', sortBy: SortBy.DESC }],
       skip,
       limit,
     });

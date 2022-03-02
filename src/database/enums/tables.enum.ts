@@ -11,7 +11,7 @@ export enum Table {
   USER_GROUP_PRIVILEGES = 'ddv_usergroup_privileges',
   USER_GROUP_DESCRIPTIONS = 'ddv_usergroup_descriptions',
   USER_GROUP_LINKS = 'ddv_usergroup_links',
-  PROVILEGES = 'ddv_privileges',
+  PRIVILEGES = 'ddv_privileges',
 
   //============== Category ==============
   CATEGORIES = 'ddv_categories',

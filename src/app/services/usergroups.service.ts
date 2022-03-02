@@ -10,7 +10,7 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
-import { Like } from '../../database/find-options/operators';
+import { Like, IsNull } from '../../database/find-options/operators';
 import { CreateUserGroupsDto } from '../dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
@@ -114,6 +114,46 @@ export class UserGroupsService {
       },
       where: { [`${Table.USER_GROUPS}.usergroup_id`]: id },
     });
+    if (!userGroup) {
+      throw new HttpException('Không tìm thấy nhóm người dùng', 404);
+    }
+    let parentPrivileges = await this.userGroupPrivilegeRepo.find({
+      select: ['*'],
+      join: {
+        [JoinTable.rightJoin]: {
+          [Table.PRIVILEGES]: {
+            fieldJoin: 'privilege_id',
+            rootJoin: 'privilege_id',
+          },
+        },
+      },
+      where: {
+        [`${Table.PRIVILEGES}.level`]: 0,
+        [`${Table.USER_GROUP_PRIVILEGES}.usergroup_id`]: userGroup.usergroup_id,
+      },
+    });
+
+    for (let parentPrivilegeItem of parentPrivileges) {
+      let childrenPrivilege = await this.userGroupPrivilegeRepo.find({
+        select: ['*'],
+        join: {
+          [JoinTable.rightJoin]: {
+            [Table.PRIVILEGES]: {
+              fieldJoin: 'privilege_id',
+              rootJoin: 'privilege_id',
+            },
+          },
+        },
+        where: {
+          [`${Table.PRIVILEGES}.level`]: 1,
+          [`${Table.USER_GROUP_PRIVILEGES}.usergroup_id`]:
+            userGroup.usergroup_id,
+          [`${Table.PRIVILEGES}.parent_id`]: parentPrivilegeItem.privilege_id,
+        },
+      });
+      parentPrivilegeItem['children'] = childrenPrivilege;
+    }
+    userGroup['privileges'] = parentPrivileges;
     return userGroup;
   }
 
@@ -211,11 +251,13 @@ export class UserGroupsService {
         let privilege = await this.privilegeRepo.findOne({
           privilege_id: privilegeId,
         });
+
         // find parent
-        if (privilege.level === 1) {
+        if (privilege && privilege.level === 1 && privilege.parent_id) {
           let parentPrivilege = await this.privilegeRepo.findOne({
             privilege_id: privilege.parent_id,
           });
+          console.log(parentPrivilege);
           if (parentPrivilege) {
             let parentUsergroupPrivilegeExist =
               await this.userGroupPrivilegeRepo.findOne({

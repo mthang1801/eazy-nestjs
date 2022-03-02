@@ -76,17 +76,17 @@ const orderSampleData = {
 const convertDataKeyToIntegrate = (data) => {
   let itgData = {};
 
-  itgData['storeId'] = data['store_id']; //Mã cửa hàng
+  itgData['storeId'] = data['store_id']; //Mã cửa hàng *
 
   itgData['orderSource'] = data['utm_source']; //Kênh đặt
 
   itgData['orderType'] = data['order_type']; //Loại đơn
 
-  itgData['status'] = data['status']; //Trạng thái đơn hàng
+  itgData['status'] = data['status']; //Trạng thái đơn hàng *
 
   itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
 
-  itgData['saleId'] = data['employee_id']; //Mã nhân viên
+  itgData['saleId'] = data['employee_id']; //Mã nhân viên *
 
   itgData['saleNote'] = data['internal_note']; //Ghi chú chăm sóc khách hàng
 
@@ -145,11 +145,11 @@ const convertDataKeyToIntegrate = (data) => {
 
   itgData['customerIdCard'] = data['id_card'] || ''; // CMND khách hàng
 
-  itgData['refOrderId'] = data['ref_order_id'] || '0'; //Ngày sinh khách hàng
+  itgData['refOrderId'] = data['ref_order_id'] || '0'; //Mã đơn hàng của đối tác
 
-  itgData['discountType'] = data['discount_type'] || 1; //
+  itgData['discountType'] = data['discount_type'] || 1; //Kiểu chiết khấu
 
-  itgData['discountAmount'] = data['discount'] || 0;
+  itgData['discountAmount'] = data['discount'] || 0; //Số tiền chiết khấu hoặc phần trăm
 
   // Lấy danh sách Order Items
   for (let orderItem of data['order_items']) {

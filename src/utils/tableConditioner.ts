@@ -97,7 +97,10 @@ export const productsListsSearchFilter = (
       [`${Table.PRODUCTS}.product_code`]: Like(search),
     },
     { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
-    { ...filterCondition, [`${Table.PRODUCTS}.barcode`]: Like(search) },
+    {
+      ...filterCondition,
+      [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search),
+    },
   ];
 };
 

@@ -1,7 +1,7 @@
 import { convertToMySQLDateTime } from 'src/utils/helper';
 
 export class OrderEntity {
-  order_id: null | string;
+  origin_order_id: null | string = '';
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;
@@ -17,7 +17,6 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  timestamp: Date = new Date();
   status: string = 'O';
   notes: string = '';
   gender: number = 0;

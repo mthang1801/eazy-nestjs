@@ -33,9 +33,9 @@ export function MoreThanOrEqual<T>(value: T): {
   return { operator: '>=', value };
 }
 
-export function Equal<T>(value: T): {
+export function Equal(value): {
   operator: string;
-  value: T;
+  value;
 } {
   return { operator: '=', value };
 }

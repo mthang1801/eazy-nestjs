@@ -138,6 +138,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   email: string = '';
+
+  @IsOptional()
+  origin_order_id: null | string = '';
 }
 
 class ProductOrder {
@@ -158,6 +161,9 @@ class ProductOrder {
 
   @IsOptional()
   product_type: number = 1;
+
+  @IsNotEmpty()
+  product_code: string = '';
 
   @IsOptional()
   imei_code: null | string;

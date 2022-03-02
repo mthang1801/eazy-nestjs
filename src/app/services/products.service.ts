@@ -1029,32 +1029,6 @@ export class ProductService {
       }
     }
 
-    let newImages = await this.imageLinkRepo.find({
-      select: ['*'],
-      where: {
-        object_id: result.product_id,
-        object_type: ImageObjectType.PRODUCT,
-        type: ImageType.Temporary_Save,
-      },
-    });
-    if (newImages.length) {
-      // delete old image
-      await this.imageLinkRepo.delete({
-        object_id: result.product_id,
-        object_type: ImageObjectType.PRODUCT,
-        type: ImageType.Saved,
-      });
-      //update new image
-      await this.imageLinkRepo.update(
-        {
-          object_id: result.product_id,
-          object_type: ImageObjectType.PRODUCT,
-          type: ImageType.Temporary_Save,
-        },
-        { type: ImageType.Saved },
-      );
-    }
-
     return result;
   }
 
@@ -1442,16 +1416,15 @@ export class ProductService {
 
     if (Array.isArray(results) && results?.length) {
       // xoá files tạm
-      let tempImages = await this.imageLinkRepo.find({
+      let oldImages = await this.imageLinkRepo.find({
         select: ['image_id'],
         where: {
           object_id: product.product_id,
           object_type: ImageObjectType.PRODUCT,
-          type: ImageType.Temporary_Save,
         },
       });
-      if (tempImages.length) {
-        for (let { image_id } of tempImages) {
+      if (oldImages.length) {
+        for (let { image_id } of oldImages) {
           await this.imageRepo.delete({ image_id });
         }
       }
@@ -1459,7 +1432,6 @@ export class ProductService {
       await this.imageLinkRepo.delete({
         object_id: product.product_id,
         object_type: `${ImageObjectType.PRODUCT}`,
-        type: ImageType.Temporary_Save,
       });
 
       for (let dataItem of results) {
@@ -1467,7 +1439,6 @@ export class ProductService {
         await this.imageLinkRepo.create({
           object_id: product.product_id,
           object_type: ImageObjectType.PRODUCT,
-          type: ImageType.Temporary_Save,
           image_id: newImage.image_id,
         });
       }

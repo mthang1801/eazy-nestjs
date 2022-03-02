@@ -100,7 +100,7 @@ export class UserGroupsPrivilegeService {
       select: ['*'],
       join: {
         [JoinTable.rightJoin]: {
-          [Table.PROVILEGES]: {
+          [Table.PRIVILEGES]: {
             fieldJoin: 'privilege_id',
             rootJoin: 'privilege_id',
           },

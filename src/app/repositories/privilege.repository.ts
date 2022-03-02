@@ -7,7 +7,7 @@ export class PrivilegeRepository<
 > extends BaseRepositorty<PrivilegeEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.PROVILEGES;
+    this.table = Table.PRIVILEGES;
     this.tableProps = Object.getOwnPropertyNames(new PrivilegeEntity());
   }
 }

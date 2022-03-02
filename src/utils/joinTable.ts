@@ -184,3 +184,28 @@ export const userJoiner = {
     },
   },
 };
+
+export const userSystemStoreJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USER_PROFILES]: {
+      fieldJoin: `${Table.USER_PROFILES}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+    [Table.USER_GROUP_LINKS]: {
+      fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+    [Table.USER_GROUP_DESCRIPTIONS]: {
+      fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+      rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
+    },
+    [Table.STORE_LOCATIONS]: {
+      fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+      rootJoin: `${Table.USERS}.store_id`,
+    },
+    [Table.STORE_LOCATION_DESCRIPTIONS]: {
+      fieldJoin: `${Table.STORE_LOCATION_DESCRIPTIONS}.store_location_id`,
+      rootJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+    },
+  },
+};
