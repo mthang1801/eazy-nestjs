@@ -64,11 +64,10 @@ export class ProductsController extends BaseController {
   }
 
   @Put(':sku')
-  // @UseInterceptors(AnyFilesInterceptor())
   async update(
     @Param('sku') sku: string,
     @Body() data,
-    // @UploadedFiles() images: Array<Express.Multer.File>,
+
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.update(sku, data);
@@ -85,7 +84,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('upload-images')
+  @Post('upload-images/:sku')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: multer.diskStorage({
@@ -99,13 +98,19 @@ export class ProductsController extends BaseController {
       }),
     }),
   )
-  async uploadImage(
+  async uploadImages(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Res() res: Response,
+    @Param('sku') sku: string,
   ) {
-    console.log(files);
-    const result = await this.service.uploadImage(files);
+    const result = await this.service.uploadImages(files, sku);
     return this.responseSuccess(res, result);
+  }
+
+  @Delete('images/:sku')
+  async deleteProductImage(@Param('sku') sku: string, @Res() res: Response) {
+    await this.service.deleteProductImage(sku);
+    return this.responseSuccess(res, null, 'Xoá hình ảnh thành công.');
   }
 
   @Delete('/clear')

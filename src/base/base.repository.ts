@@ -285,7 +285,7 @@ export class BaseRepositorty<T> {
             if (i === 0) {
               queryString += `${key} = ${val}`;
             } else {
-              queryString += ` OR ${key} = ${val}`;
+              queryString += ` OR ${key} = '${val}'`;
             }
           });
         }
@@ -294,7 +294,7 @@ export class BaseRepositorty<T> {
           if (i === 0) {
             queryString += `${key} = ${val}`;
           } else {
-            queryString += ` AND ${key} = ${val}`;
+            queryString += ` AND ${key} = '${val}'`;
           }
         });
       }

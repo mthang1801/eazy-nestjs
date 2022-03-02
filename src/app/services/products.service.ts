@@ -60,7 +60,10 @@ import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
-import { ImageObjectType } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
+import {
+  ImageObjectType,
+  ImageType,
+} from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { Equal, IsNull } from '../../database/find-options/operators';
 import { v4 as uuid } from 'uuid';
@@ -72,6 +75,7 @@ import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.e
 import { productsData } from 'src/database/constant/product';
 import { comboData } from 'src/database/constant/combo';
 import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
@@ -269,32 +273,7 @@ export class ProductService {
     }
   }
 
-  async get(identifier: number | string): Promise<any> {
-    // get Product item
-    let product = await this.productRepo.findOne({
-      select: ['slug'],
-      where: [{ product_id: identifier }, { product_code: identifier }],
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy sp', 404);
-    }
-    return this.getBySlug(product.slug);
-  }
-
-  async getBySlug(slug: string): Promise<any> {
-    let product = await this.productRepo.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: productFullJoiner,
-      },
-      where: { [`${Table.PRODUCTS}.slug`]: slug },
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy sản phẩm.', 404);
-    }
-    // Get product Image
+  async getProductDetails(product) {
     product['images'] = [];
     const productImages = await this.imageLinkRepo.find({
       select: ['image_id'],
@@ -478,6 +457,42 @@ export class ProductService {
       parentCategories,
       product,
     };
+  }
+
+  async get(identifier: number | string): Promise<any> {
+    // get Product item
+    let product = await this.productRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: productFullJoiner,
+      },
+      where: [
+        { [`${Table.PRODUCTS}.product_id`]: identifier },
+        { [`${Table.PRODUCTS}.product_code`]: identifier },
+      ],
+    });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy sp', 404);
+    }
+    return this.getProductDetails(product);
+  }
+
+  async getBySlug(slug: string): Promise<any> {
+    let product = await this.productRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: productFullJoiner,
+      },
+      where: { [`${Table.PRODUCTS}.slug`]: slug },
+    });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy sản phẩm.', 404);
+    }
+
+    // Get product Image
+    return this.getProductDetails(product);
   }
 
   async parentCategories(category, categoriesList = [{ ...category }]) {
@@ -1392,7 +1407,13 @@ export class ProductService {
     );
   }
 
-  async uploadImage(images) {
+  async uploadImages(images, sku) {
+    const product = await this.productRepo.findOne({ product_code: sku });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
     let data = new FormData();
     for (let image of images) {
       data.append('files', fs.createReadStream(image.path));
@@ -1402,13 +1423,77 @@ export class ProductService {
       url: 'http://mb.viendidong.com/core-api/v1/files/website',
       headers: {
         'Content-Type': 'multipart/form-data',
-
         ...data.getHeaders(),
       },
       data: data,
     };
+
     const response = await axios(config);
-    const result = response.data.data;
-    return result;
+    const results = response.data.data;
+
+    if (Array.isArray(results) && results?.length) {
+      // xoá files tạm
+      let tempImages = await this.imageLinkRepo.find({
+        select: ['image_id'],
+        where: {
+          object_id: product.product_id,
+          object_type: ImageObjectType.PRODUCT,
+          type: ImageType.Temporary_Save,
+        },
+      });
+      if (tempImages.length) {
+        for (let { image_id } of tempImages) {
+          await this.imageRepo.delete({ image_id });
+        }
+      }
+
+      await this.imageLinkRepo.delete({
+        object_id: product.product_id,
+        object_type: `${ImageObjectType.PRODUCT}`,
+        type: ImageType.Temporary_Save,
+      });
+
+      for (let dataItem of results) {
+        let newImage = await this.imageRepo.create({ image_path: dataItem });
+        await this.imageLinkRepo.create({
+          object_id: product.product_id,
+          object_type: ImageObjectType.PRODUCT,
+          type: ImageType.Temporary_Save,
+          image_id: newImage.image_id,
+        });
+      }
+    }
+
+    // delete files
+    for (let image of images) {
+      await fsPromises.unlink(image.path);
+    }
+    return results;
+  }
+
+  async deleteProductImage(sku: string): Promise<void> {
+    const product = await this.productRepo.findOne({ product_code: sku });
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+    const imagesList = await this.imageLinkRepo.find({
+      select: ['image_id'],
+      where: {
+        object_id: product.product_id,
+        object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Temporary_Save,
+      },
+    });
+
+    if (imagesList.length) {
+      for (let imageItem of imagesList) {
+        await this.imageRepo.delete({ image_id: imageItem.image_id });
+      }
+      await this.imageLinkRepo.delete({
+        object_id: product.product_id,
+        object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Temporary_Save,
+      });
+    }
   }
 }

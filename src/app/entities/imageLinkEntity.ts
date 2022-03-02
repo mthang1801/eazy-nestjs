@@ -3,6 +3,6 @@ export class ImagesLinksEntity {
   object_type: string = '';
   image_id: number = 0;
   detailed_id: number = 0;
-  type: string = '';
+  type: string = 'A';
   position: number = 0;
 }

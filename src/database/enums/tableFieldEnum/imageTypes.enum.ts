@@ -5,3 +5,8 @@ export enum ImageObjectType {
   USER = 'users',
   CATEGORY = 'categories',
 }
+
+export enum ImageType {
+  'Saved' = 'A',
+  'Temporary_Save' = 'B',
+}

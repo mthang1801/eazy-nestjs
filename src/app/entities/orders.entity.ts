@@ -11,7 +11,9 @@ export class OrderEntity {
   subtotal_discount: number = 0;
   payment_surcharge: number = 0;
   shipping_ids: string = '';
+  warranty_note: string = '';
   shipping_cost: number = 0;
+  disposit_amount: number = 0;
   timestamp: Date = new Date();
   status: string = 'O';
   notes: string = '';
@@ -50,6 +52,17 @@ export class OrderEntity {
   fax: string = '';
   url: string = '';
   email: string = '';
+  transfer_amount: number = 0;
+  transfer_account_id: number = 0;
+  transfer_ref_code: null | string = '';
+  credit_amount: number = 0;
+  credit_code: null | string = '';
+  credit_card_no: null | string = '';
+  credit_fee_account_id: number = 0;
+  installed_money_amount: number = 0;
+  installed_money_code: string = '';
+  installed_money_account_id: number = 0;
+  pay_credit_type: null | number = 0;
   payment_id: number = 0;
   tax_exempt: string = '';
   lang_code: string = '';
