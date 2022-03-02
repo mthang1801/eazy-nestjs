@@ -861,17 +861,6 @@ export class ProductService {
   }
 
   async update(sku: string, data) {
-    console.log(data);
-    // const _data = await axios({
-    //   method: 'post',
-    //   url: 'http://mb.viendidong.com/core-api/v1/files/website',
-    //   headers: { 'Content-Type': 'multipart/form-data' },
-    //   data: {
-    //     files: images,
-    //   },
-    // // });
-    // console.log(_data);
-
     // Filter Exception
     const currentProduct = await this.productRepo.findOne({
       product_code: sku,
@@ -957,38 +946,6 @@ export class ProductService {
       result = { ...result, ...updatedProductCategory };
     }
 
-    // if (data.images.length) {
-    //   // delete old images
-    //   let oldImages = await this.imageLinkRepo.find({
-    //     select: ['image_id'],
-    //     where: {
-    //       object_id: result.product_id,
-    //       object_type: ImageObjectType.PRODUCT,
-    //     },
-    //   });
-    //   if (oldImages.length) {
-    //     for (let { image_id } of oldImages) {
-    //       await this.imageLinkRepo.delete({
-    //         object_id: result.product_id,
-    //         image_id,
-    //       });
-    //       await this.imageRepo.delete({ image_id });
-    //     }
-    //   }
-
-    //   for (let image of data.images) {
-    //     const newImage = await this.imageRepo.create({ image_path: image });
-    //     const newProductImageLink = await this.imageLinkRepo.create({
-    //       object_id: result.product_id,
-    //       object_type: ImageObjectType.PRODUCT,
-    //       image_id: newImage.image_id,
-    //     });
-    //     result['images'] = result['images']
-    //       ? [...result['images'], { ...newProductImageLink, ...newImage }]
-    //       : [{ ...newProductImageLink, ...newImage }];
-    //   }
-    // }
-
     if (data?.product_features?.length) {
       const oldFeatrures = await this.productFeatureValueRepo.find({
         where: { product_id: result.product_id },
@@ -1046,6 +1003,32 @@ export class ProductService {
           ? [...result['features'], newFeatureValue]
           : [newFeatureValue];
       }
+    }
+
+    let newImages = await this.imageLinkRepo.find({
+      select: ['*'],
+      where: {
+        object_id: result.product_id,
+        object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Temporary_Save,
+      },
+    });
+    if (newImages.length) {
+      // delete old image
+      await this.imageLinkRepo.delete({
+        object_id: result.product_id,
+        object_type: ImageObjectType.PRODUCT,
+        type: ImageType.Saved,
+      });
+      //update new image
+      await this.imageLinkRepo.update(
+        {
+          object_id: result.product_id,
+          object_type: ImageObjectType.PRODUCT,
+          type: ImageType.Temporary_Save,
+        },
+        { type: ImageType.Saved },
+      );
     }
 
     return result;
