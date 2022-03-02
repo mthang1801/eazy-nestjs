@@ -72,8 +72,7 @@ import { convertToSlug, MaxLimit } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
-import { productsData } from 'src/database/constant/product';
-import { comboData } from 'src/database/constant/combo';
+
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import { productsListsSearchFilter } from '../../utils/tableConditioner';
@@ -1279,9 +1278,9 @@ export class ProductService {
   async callSync(): Promise<void> {
     await this.clearAll();
 
-    for (let productItem of productsData) {
-      await this.createSync(productItem);
-    }
+    // for (let productItem of productsData) {
+    //   await this.createSync(productItem);
+    // }
     await this.syncProductsIntoGroup();
   }
 
