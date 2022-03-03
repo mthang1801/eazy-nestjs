@@ -117,8 +117,6 @@ export const customersListSearchFilter = (
 };
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
-  console.log(filterConditions, fieldsSearch);
-
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
     return filterConditions;
   if (!fieldsSearch.length && Object.entries(filterConditions).length) {

@@ -33,11 +33,16 @@ export class CreateOrderDto {
   @IsOptional()
   notes: string; //Ghi chú khách hàng
 
-  @IsOptional()
-  store_id: number = 0;
+  @IsNotEmpty()
+  store_id: string;
 
   @IsOptional()
-  @IsIn(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'])
+  employee_id: number;
+
+  @IsNotEmpty()
+  user_id: number;
+
+  @IsNotEmpty()
   //Kênh đặt
   // 1. ZALO
   // 2. YOUTUBE
@@ -50,7 +55,7 @@ export class CreateOrderDto {
   // 9. E-COM
   // 10. TRỰC TIẾP – CỪA HÀNG
   // 11. NGUỒN KHÁC
-  utm_source: string;
+  utm_source: number;
 
   @IsOptional()
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
@@ -140,7 +145,28 @@ export class CreateOrderDto {
   email: string = '';
 
   @IsOptional()
-  origin_order_id: null | string = '';
+  is_sent_customer_address: number = 0;
+
+  @IsOptional()
+  s_firstname: string = '';
+
+  @IsOptional()
+  s_lastname: string = '';
+
+  @IsOptional()
+  s_city: string = '';
+
+  @IsOptional()
+  s_district: string = '';
+
+  @IsOptional()
+  s_ward: string = '';
+
+  @IsOptional()
+  s_address: string = '';
+
+  @IsOptional()
+  s_phone: string = '';
 }
 
 class ProductOrder {

@@ -293,6 +293,7 @@ export class ProductService {
   }
 
   async getProductDetails(product) {
+    let status = product['status'];
     product['images'] = [];
     const productImages = await this.imageLinkRepo.find({
       select: ['image_id'],
@@ -354,104 +355,109 @@ export class ProductService {
         select: ['*'],
         where: { product_id: product.product_id },
       });
-
-      let productsInGroup = await this.productVariationGroupProductsRepo.find({
-        select: ['*'],
-        where: { group_id: group.group_id },
-      });
-      product['relevant_products'] = [{ ...product }];
-
-      if (productsInGroup.length) {
-        for (let productItem of productsInGroup) {
-          let productInfoDetail = await this.productRepo.findOne({
+      if (group) {
+        let productsInGroup = await this.productVariationGroupProductsRepo.find(
+          {
             select: ['*'],
-            join: {
-              [JoinTable.innerJoin]: productInfoJoiner,
-            },
-            where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
-          });
+            where: { group_id: group.group_id },
+          },
+        );
+        product['relevant_products'] = [{ ...product }];
 
-          // Truyền thêm table product group vào product Detail
-          productInfoDetail = { ...productItem, ...productInfoDetail };
-
-          // Lấy các SP con
-          if (product.product_id === productInfoDetail.parent_product_id) {
-            let features = await this.productFeatureValueRepo.find({
-              select: productFeatureValuesSelector,
+        if (productsInGroup.length) {
+          for (let productItem of productsInGroup) {
+            let productInfoDetail = await this.productRepo.findOne({
+              select: ['*'],
               join: {
-                [JoinTable.rightJoin]: productFeaturesJoiner,
+                [JoinTable.innerJoin]: productInfoJoiner,
               },
               where: {
-                [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]:
-                  productInfoDetail.product_id,
+                [`${Table.PRODUCTS}.product_id`]: productItem.product_id,
               },
             });
-            productInfoDetail['features'] = features;
 
-            const productImages = await this.imageLinkRepo.find({
-              select: ['image_id'],
-              where: {
-                object_id: productInfoDetail.product_id,
-                object_type: ImageObjectType.PRODUCT,
-              },
-            });
-            if (productImages.length) {
-              for (let productImageItem of productImages) {
-                const image = await this.imageRepo.findById(
-                  productImageItem.image_id,
-                );
-                productInfoDetail['images'] = productInfoDetail['images']
-                  ? [...productInfoDetail['images'], image]
-                  : [image];
-              }
-            }
+            // Truyền thêm table product group vào product Detail
+            productInfoDetail = { ...productItem, ...productInfoDetail };
 
-            product['children_products'] = product['children_products']
-              ? [
-                  ...product['children_products'],
-                  {
-                    ...productInfoDetail,
-                    product: productInfoDetail.product?.split('-')[1]?.trim(),
-                  },
-                ]
-              : [
-                  {
-                    ...productInfoDetail,
-                    product: productInfoDetail.product?.split('-')[1]?.trim(),
-                  },
-                ];
-          }
-          // Lấy các SP liên quan
-          if (
-            productInfoDetail.product_id !== product.product_id &&
-            !productInfoDetail.parent_product_id //&&
-            // productInfoDetail.product_type != 1
-          ) {
-            product['relevant_products'] = product['relevant_products']
-              ? [...product['relevant_products'], productInfoDetail]
-              : [productInfoDetail];
-          }
-          // Lấy SP hoặc Phụ kiện đi kèm
-          if (
-            productInfoDetail.product_id !== product.product_id &&
-            !productInfoDetail.parent_product_id &&
-            productInfoDetail.product_type == 1
-          ) {
-            productInfoDetail['image'] = null;
-            const productImage = await this.imageLinkRepo.findOne({
-              object_id: product.product_id,
-              object_type: ImageObjectType.PRODUCT,
-              position: 0,
-            });
-            if (productImage) {
-              const image = await this.imageRepo.findOne({
-                image_id: productImage.image_id,
+            // Lấy các SP con
+            if (product.product_id === productInfoDetail.parent_product_id) {
+              let features = await this.productFeatureValueRepo.find({
+                select: productFeatureValuesSelector,
+                join: {
+                  [JoinTable.rightJoin]: productFeaturesJoiner,
+                },
+                where: {
+                  [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]:
+                    productInfoDetail.product_id,
+                },
               });
-              productInfoDetail['image'] = image;
+              productInfoDetail['features'] = features;
+
+              const productImages = await this.imageLinkRepo.find({
+                select: ['image_id'],
+                where: {
+                  object_id: productInfoDetail.product_id,
+                  object_type: ImageObjectType.PRODUCT,
+                },
+              });
+              if (productImages.length) {
+                for (let productImageItem of productImages) {
+                  const image = await this.imageRepo.findById(
+                    productImageItem.image_id,
+                  );
+                  productInfoDetail['images'] = productInfoDetail['images']
+                    ? [...productInfoDetail['images'], image]
+                    : [image];
+                }
+              }
+
+              product['children_products'] = product['children_products']
+                ? [
+                    ...product['children_products'],
+                    {
+                      ...productInfoDetail,
+                      product: productInfoDetail.product?.split('-')[1]?.trim(),
+                    },
+                  ]
+                : [
+                    {
+                      ...productInfoDetail,
+                      product: productInfoDetail.product?.split('-')[1]?.trim(),
+                    },
+                  ];
             }
-            product['accessory_products'] = product['accessory_products']
-              ? [...product['accessory_products'], productInfoDetail]
-              : [productInfoDetail];
+            // Lấy các SP liên quan
+            if (
+              productInfoDetail.product_id !== product.product_id &&
+              !productInfoDetail.parent_product_id //&&
+              // productInfoDetail.product_type != 1
+            ) {
+              product['relevant_products'] = product['relevant_products']
+                ? [...product['relevant_products'], productInfoDetail]
+                : [productInfoDetail];
+            }
+            // Lấy SP hoặc Phụ kiện đi kèm
+            if (
+              productInfoDetail.product_id !== product.product_id &&
+              !productInfoDetail.parent_product_id &&
+              productInfoDetail.product_type == 1
+            ) {
+              productInfoDetail['image'] = null;
+              const productImage = await this.imageLinkRepo.findOne({
+                object_id: product.product_id,
+                object_type: ImageObjectType.PRODUCT,
+                position: 0,
+              });
+              if (productImage) {
+                const image = await this.imageRepo.findOne({
+                  image_id: productImage.image_id,
+                });
+                productInfoDetail['image'] = image;
+              }
+              product['accessory_products'] = product['accessory_products']
+                ? [...product['accessory_products'], productInfoDetail]
+                : [productInfoDetail];
+            }
           }
         }
       }
@@ -479,6 +485,7 @@ export class ProductService {
     const categoriesList = await this.parentCategories(currentCategory);
     const parentCategories = categoriesList.slice(1);
 
+    product['status'] = status;
     return {
       currentCategory: categoriesList[0],
       parentCategories,
@@ -489,7 +496,11 @@ export class ProductService {
   async get(identifier: number | string): Promise<any> {
     // get Product item
     let product = await this.productRepo.findOne({
-      select: ['*', `${Table.PRODUCT_DESCRIPTION}.*`],
+      select: [
+        '*',
+        `${Table.PRODUCT_DESCRIPTION}.*`,
+        `${Table.PRODUCTS}.status`,
+      ],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -507,7 +518,11 @@ export class ProductService {
 
   async getBySlug(slug: string): Promise<any> {
     let product = await this.productRepo.findOne({
-      select: ['*', `${Table.PRODUCT_DESCRIPTION}.*`],
+      select: [
+        '*',
+        `${Table.PRODUCT_DESCRIPTION}.*`,
+        `${Table.PRODUCTS}.status`,
+      ],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -926,11 +941,13 @@ export class ProductService {
 
     // Update product
     const productData = this.productRepo.setData(data);
+
     if (Object.entries(productData).length) {
       const updatedProduct = await this.productRepo.update(
         { product_id: result.product_id },
         productData,
       );
+
       result = { ...result, ...updatedProduct };
     }
 

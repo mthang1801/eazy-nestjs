@@ -14,7 +14,8 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { OrderUpdateDTO } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
-
+import { convertDataToIntegrate } from 'src/database/constant/order';
+import axios from 'axios';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -189,6 +190,31 @@ export class OrdersService {
       }
     }
 
-    return result;
+    console.log(convertDataToIntegrate(result));
+
+    const config: any = {
+      method: 'POST',
+      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
+
+    const response = await axios(config);
+    let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+    if (response?.data?.data) {
+      const origin_order_id = response.data.data;
+      let updateOriginOrderId = await this.orderRepo.update(
+        { order_id: result.order_id },
+        { origin_order_id },
+      );
+
+      result = { ...result, ...updateOriginOrderId };
+
+      message = 'Đẩy đơn hàng đến appcore thành công';
+    }
+
+    return { result, message };
   }
 }

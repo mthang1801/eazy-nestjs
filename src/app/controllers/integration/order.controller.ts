@@ -18,47 +18,24 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { OrderStatusService } from 'src/app/services/orderStatus.service';
 import { OrderUpdateDTO } from 'src/app/dto/orders/update-order.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
+import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 
 /**
  * Controller for Category
  * @Author LongTRinh
  */
 //@UseGuards(AuthGuard)
-@Controller('/itg/v1/order')
+@Controller('/itg/v1/orders')
 export class OrderIntegrationController extends BaseController {
-  constructor(private orderservice: OrdersService, private orderStatusService: OrderStatusService,
+  constructor(
+    private service: OrdersService,
+    private orderStatusService: OrderStatusService,
   ) {
     super();
   }
-  /**
-   * Get all payments with query params such as : page, limit, status, position...
-   * @param res
-   * @param params
-   * @returns
-   */
-  @Put('/:id')
-  async update(
-    @Res() res,
-    @Param('id') id,
-    @Body() body: OrderUpdateDTO,
-  ): Promise<IResponse> {
-    const result = await this.orderservice.update(id, body);
-    return this.responseSuccess(res, result, `action update orders`);
+  @Post()
+  async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
+    const { result, message } = await this.service.create(body);
+    return this.responseSuccess(res, result, message);
   }
-
-  @Put('/status/:id')
-  @UsePipes(ValidationPipe)
-  async UpdateOrderStatus(
-    @Res() res,
-    @Body() body: OrderStatusUpdateDTO,
-    @Param('id') id,
-  ): Promise<IResponse> {
-    const order = await this.orderStatusService.update(id, body);
-    if (order === '422')
-      return this.optionalResponse(res, 422, 'Status and Type duplicated');
-    return this.responseSuccess(res, order);
-  }
-
-
-
 }

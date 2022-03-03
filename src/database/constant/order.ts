@@ -7,11 +7,11 @@ const orderSampleData = {
   b_ward: '11787',
   b_address: '123 Nguyễn Văn Linh',
   b_phone: '0939524499',
-
+  user_id: '100008754',
   notes:
     'Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, comes from a line in section 1.10.32.',
   store_id: 67107,
-  utm_source: '10',
+  utm_source: 10,
   order_type: 1,
   status: 1,
   payment_status: 1,
@@ -71,9 +71,18 @@ const orderSampleData = {
 
   coupon_code: '2313213',
   ref_order_id: 'null',
+
+  is_sent_customer_address: 0,
+  s_firstname: 'Nguyen hoang',
+  s_lastname: 'Giang',
+  s_address: '789/2A Co Giang',
+  s_phone: '0939333333',
+  s_city: '266',
+  s_district: '375',
+  s_ward: '11787',
 };
 
-const convertDataKeyToIntegrate = (data) => {
+export const convertDataToIntegrate = (data) => {
   let itgData = {};
 
   itgData['storeId'] = data['store_id']; //Mã cửa hàng *
@@ -85,6 +94,8 @@ const convertDataKeyToIntegrate = (data) => {
   itgData['status'] = data['status']; //Trạng thái đơn hàng *
 
   itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
+
+  itgData['customerId'] = data['user_id']; //Mã user *
 
   itgData['saleId'] = data['employee_id']; //Mã nhân viên *
 
@@ -151,6 +162,22 @@ const convertDataKeyToIntegrate = (data) => {
 
   itgData['discountAmount'] = data['discount'] || 0; //Số tiền chiết khấu hoặc phần trăm
 
+  itgData['isSentToCustomerAddress'] =
+    data['is_sent_customer_address'] === 0 ? false : true;
+
+  itgData['receivingFullName'] =
+    data['s_firstname'].trim() + ` ` + data['s_lastname'];
+
+  itgData['recevingPhone'] = data['s_phone'];
+
+  itgData['recevingCity'] = data['s_city'];
+
+  itgData['receivingDistrict'] = data['s_district'];
+
+  itgData['receivingWard'] = data['s_ward'];
+
+  itgData['receivingAddress'] = data['s_address'];
+
   // Lấy danh sách Order Items
   for (let orderItem of data['order_items']) {
     let cvOrderItem = {};
@@ -176,5 +203,5 @@ const convertDataKeyToIntegrate = (data) => {
       : [cvOrderItem];
   }
 
-  return itgData;
+  return JSON.stringify(itgData);
 };

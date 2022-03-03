@@ -1,12 +1,13 @@
 import { convertToMySQLDateTime } from 'src/utils/helper';
 
 export class OrderEntity {
-  origin_order_id: null | string = '';
+  origin_order_id: null | number = 0;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;
   issuer_id: number = 0;
   user_id: number = 0;
+  store_id: string = '0';
   total: number = 0;
   subtotal: number = 0;
   discount: number = 0;
@@ -38,6 +39,7 @@ export class OrderEntity {
   b_country: string = '';
   b_zipcode: string = '';
   b_phone: string = '';
+  is_sent_customer_address: number = 0;
   s_firstname: string = '';
   s_lastname: string = '';
   s_address: string = '';
