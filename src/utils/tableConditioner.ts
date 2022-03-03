@@ -79,11 +79,14 @@ export const productsListsSearchFilter = (
   search = '',
   filterConditions = {},
 ) => {
-  const arraySearch = [
-    { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-    { [`${Table.PRODUCTS}.barcode`]: Like(search) },
-    { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-  ];
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+      { [`${Table.PRODUCTS}.barcode`]: Like(search) },
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+    ];
+  }
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
@@ -95,13 +98,16 @@ export const customersListSearchFilter = (
   let splitSearchArr = search.replace(/\s{2,}/, ' ').split(' ');
   let firstName = splitSearchArr.slice(0, -1).join(' ').trim();
   let lastName = splitSearchArr.slice(-1)[0].trim();
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.USERS}.email`]: Like(search) },
+      { [`${Table.USERS}.phone`]: Like(search) },
+      { [`${Table.USERS}.firstname`]: Like(firstName) },
+      { [`${Table.USERS}.lastname`]: Like(lastName) },
+    ];
+  }
 
-  const arraySearch = [
-    { [`${Table.USERS}.email`]: Like(search) },
-    { [`${Table.USERS}.phone`]: Like(search) },
-    { [`${Table.USERS}.firstname`]: Like(firstName) },
-    { [`${Table.USERS}.lastname`]: Like(lastName) },
-  ];
   filterConditions = {
     ...filterConditions,
     [`${Table.USERS}.user_type`]: customer_type.map((type) => type),
@@ -119,7 +125,6 @@ const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
     return filterConditions;
   }
   if (fieldsSearch.length && !Object.entries(filterConditions).length) {
-    console.log(filterConditions, fieldsSearch);
     return fieldsSearch.map((searchItem) => ({ ...searchItem }));
   }
 
