@@ -1,5 +1,5 @@
 import { convertToMySQLDateTime } from 'src/utils/helper';
-
+import { v4 as uuid } from 'uuid';
 export class OrderEntity {
   origin_order_id: null | number = 0;
   is_parent_order: string = 'N';
@@ -18,7 +18,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: string = 'O';
+  status: number = 0;
   notes: string = '';
   gender: number = 0;
   details: string = '';
@@ -39,7 +39,7 @@ export class OrderEntity {
   b_country: string = '';
   b_zipcode: string = '';
   b_phone: string = '';
-  is_sent_customer_address: number = 0;
+  is_sent_customer_address: number = 1;
   s_firstname: string = '';
   s_lastname: string = '';
   s_address: string = '';
@@ -79,7 +79,7 @@ export class OrderEntity {
   validation_code: string = '';
   localization_id: number = 0;
   utm_source: number = 0;
-  ref_order_id: string = '0';
+  ref_order_id: string = uuid().replace(/-/g, '');
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();
 }

@@ -38,7 +38,7 @@ export class OrderIntegrationController extends BaseController {
     @Res() res,
     @Body() body: CreateOrderDto,
   ): Promise<IResponse> {
-    const { result, message } = await this.service.createSync(body);
+    const result = await this.service.createSync(body);
     return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
   }
 }

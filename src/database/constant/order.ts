@@ -72,7 +72,7 @@ const orderSampleData = {
   coupon_code: '2313213',
   ref_order_id: 'null',
 
-  is_sent_customer_address: 0,
+  is_sent_customer_address: 1,
   s_firstname: 'Nguyen hoang',
   s_lastname: 'Giang',
   s_address: '789/2A Co Giang',
@@ -219,7 +219,7 @@ export const convertDataToIntegrate = (data) => {
   }
 
   itgData['isSentToCustomerAddress'] =
-    data['is_sent_customer_address'] === 0 ? false : true; // có gửi địa chỉ khác hay ko
+    data['is_sent_customer_address'] == 0 ? false : true; // có gửi địa chỉ khác hay ko
 
   if (data['s_lastname']) {
     itgData['receivingFullName'] =

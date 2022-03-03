@@ -79,6 +79,7 @@ import { productsListsSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import { data } from '../../database/constant/category';
+import { DeleteProductImageDto } from '../dto/product/delete-productImage.dto';
 
 import {
   categorySelector,
@@ -355,6 +356,7 @@ export class ProductService {
         select: ['*'],
         where: { product_id: product.product_id },
       });
+
       if (group) {
         let productsInGroup = await this.productVariationGroupProductsRepo.find(
           {
@@ -362,7 +364,6 @@ export class ProductService {
             where: { group_id: group.group_id },
           },
         );
-        product['relevant_products'] = [{ ...product }];
 
         if (productsInGroup.length) {
           for (let productItem of productsInGroup) {
@@ -428,7 +429,6 @@ export class ProductService {
             }
             // Lấy các SP liên quan
             if (
-              productInfoDetail.product_id !== product.product_id &&
               !productInfoDetail.parent_product_id //&&
               // productInfoDetail.product_type != 1
             ) {
@@ -1053,66 +1053,6 @@ export class ProductService {
     return result;
   }
 
-  async updateImage(sku: string, data): Promise<any> {
-    const currentProduct = await this.productRepo.findOne({
-      select: [
-        '*',
-        `${Table.PRODUCTS}.*`,
-        `${Table.PRODUCT_DESCRIPTION}.*`,
-        `${Table.CATEGORY_DESCRIPTIONS}.* `,
-      ],
-      join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: {
-        [`${Table.PRODUCTS}.product_code`]: sku,
-      },
-    });
-
-    if (!currentProduct) {
-      throw new HttpException('Sản phẩm không tồn tại.', 404);
-    }
-
-    // Delete current image
-    const currentImages = await this.imageLinkRepo.find({
-      where: {
-        object_id: currentProduct.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      },
-    });
-
-    if (currentImages.length) {
-      for (let currentImageItem of currentImages) {
-        await this.imageLinkRepo.delete({
-          image_id: currentImageItem.image_id,
-        });
-
-        await this.imageRepo.delete({ image_id: currentImageItem.image_id });
-      }
-    }
-
-    let result = { ...currentProduct, images: [] };
-
-    // Create new images
-
-    for (let [i, imageItem] of data.images.entries()) {
-      const imageData = this.imageRepo.setData(imageItem);
-
-      const newImage = await this.imageRepo.create(imageData);
-
-      const newImageLink = await this.imageLinkRepo.create({
-        object_id: result['product_id'],
-        object_type: ImageObjectType.PRODUCT,
-        image_id: newImage.image_id,
-        position: i,
-      });
-
-      result = {
-        ...result,
-        images: [...result.images, { ...newImage, ...newImageLink }],
-      };
-    }
-    return result;
-  }
-
   async createSync(data): Promise<any> {
     if (data.product_id) {
       let product = await this.productRepo.findById(data.product_id);
@@ -1416,8 +1356,6 @@ export class ProductService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
-    await this.deleteProductImage(sku);
-
     let data = new FormData();
     for (let image of images) {
       data.append('files', fs.createReadStream(image.path));
@@ -1434,34 +1372,23 @@ export class ProductService {
 
     const response = await axios(config);
     const results = response.data.data;
-
-    if (Array.isArray(results) && results?.length) {
-      // xoá files cũ
-      let oldImages = await this.imageLinkRepo.find({
-        select: ['image_id'],
-        where: {
-          object_id: product.product_id,
-          object_type: ImageObjectType.PRODUCT,
-        },
-      });
-      if (oldImages.length) {
-        for (let { image_id } of oldImages) {
-          await this.imageRepo.delete({ image_id });
-        }
-      }
-
-      await this.imageLinkRepo.delete({
+    let { position: lastPositionImage } = await this.imageLinkRepo.findOne({
+      select: ['position'],
+      orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
+      where: {
         object_id: product.product_id,
-        object_type: `${ImageObjectType.PRODUCT}`,
-      });
-
+        object_type: ImageObjectType.PRODUCT,
+      },
+    });
+    let currentPosition = lastPositionImage ? lastPositionImage + 1 : 0;
+    if (Array.isArray(results) && results?.length) {
       for (let [i, dataItem] of results.entries()) {
         let newImage = await this.imageRepo.create({ image_path: dataItem });
         await this.imageLinkRepo.create({
           object_id: product.product_id,
           object_type: ImageObjectType.PRODUCT,
           image_id: newImage.image_id,
-          position: i,
+          position: currentPosition + i,
         });
       }
     }
@@ -1473,29 +1400,36 @@ export class ProductService {
     return results;
   }
 
-  async deleteProductImage(sku: string): Promise<void> {
+  async deleteProductImage(
+    sku: string,
+    data: DeleteProductImageDto,
+  ): Promise<string> {
     const product = await this.productRepo.findOne({ product_code: sku });
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
-    const imagesList = await this.imageLinkRepo.find({
-      select: ['image_id'],
-      where: {
-        object_id: product.product_id,
-        object_type: ImageObjectType.PRODUCT,
-        type: ImageType.Temporary_Save,
-      },
-    });
 
-    if (imagesList.length) {
-      for (let imageItem of imagesList) {
-        await this.imageRepo.delete({ image_id: imageItem.image_id });
-      }
-      await this.imageLinkRepo.delete({
+    let response: any = [];
+    for (let imageId of data.images_id) {
+      let result = true;
+      result = await this.imageLinkRepo.delete({
         object_id: product.product_id,
         object_type: ImageObjectType.PRODUCT,
-        type: ImageType.Temporary_Save,
+        image_id: imageId,
       });
+
+      result = (await this.imageRepo.delete({ image_id: imageId })) && result;
+
+      if (!result) {
+        response.push(imageId);
+      }
     }
+
+    if (response.length) {
+      return `[Warning]: Xoá không thành công những ảnh có id : ${response.join(
+        ', ',
+      )}`;
+    }
+    return 'Xoá ảnh thành công.';
   }
 }

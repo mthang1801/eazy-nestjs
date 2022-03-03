@@ -17,6 +17,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
+import { DeleteProductImageDto } from '../../dto/product/delete-productImage.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -73,16 +74,6 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/:sku/images')
-  async updateImage(
-    @Param('sku') sku: string,
-    @Body() data,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.updateImage(sku, data);
-    return this.responseSuccess(res, result);
-  }
-
   @Post('upload-images/:sku')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
@@ -106,10 +97,14 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
   }
 
-  @Delete('images/:sku')
-  async deleteProductImage(@Param('sku') sku: string, @Res() res: Response) {
-    await this.service.deleteProductImage(sku);
-    return this.responseSuccess(res, null, 'Xoá hình ảnh thành công.');
+  @Put('/:sku/delete-images')
+  async deleteProductImage(
+    @Param('sku') sku: string,
+    @Res() res: Response,
+    @Body() data: DeleteProductImageDto,
+  ) {
+    let message = await this.service.deleteProductImage(sku, data);
+    return this.responseSuccess(res, null, message);
   }
 
   @Delete('/clear')

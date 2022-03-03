@@ -7,49 +7,49 @@ import {
   ArrayNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
+import { v4 as uuid } from 'uuid';
 export class CreateOrderDto {
-  @IsNotEmpty()
+  @IsOptional()
   b_firstname: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_lastname: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_city: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_district: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_ward: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_address: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_phone: string;
 
   @IsOptional()
   notes: string; //Ghi chú khách hàng
 
-  @IsNotEmpty()
+  @IsOptional()
   store_id: number;
 
   @IsOptional()
   employee_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   user_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   utm_source: number;
 
   @IsOptional()
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
-  status: number = 1; //Trạng thái đơn hàng
+  status: number = 0; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
 
   @IsOptional()
   payment_status: number = 1;
@@ -127,13 +127,13 @@ export class CreateOrderDto {
   coupon_code: string = '';
 
   @IsOptional()
-  ref_order_id: string = '0';
+  ref_order_id: string = uuid().replace(/-/g, '');
 
   @IsOptional()
   email: string = '';
 
   @IsOptional()
-  is_sent_customer_address: number = 0;
+  is_sent_customer_address: number = 1;
 
   @IsOptional()
   s_firstname: string = '';
@@ -155,16 +155,22 @@ export class CreateOrderDto {
 
   @IsOptional()
   s_phone: string = '';
+
+  @IsOptional()
+  origin_order_id: number = 0;
 }
 
 class ProductOrder {
-  @IsNotEmpty()
+  @IsOptional()
+  origin_order_item_id: string;
+
+  @IsOptional()
   product_id: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   price: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   amount: number;
 
   @IsOptional()
@@ -176,7 +182,7 @@ class ProductOrder {
   @IsOptional()
   product_type: number = 1;
 
-  @IsNotEmpty()
+  @IsOptional()
   product_code: string = '';
 
   @IsOptional()

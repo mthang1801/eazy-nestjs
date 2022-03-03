@@ -169,14 +169,17 @@ export class OrdersService {
   }
 
   async create(data: CreateOrderDto) {
-    const orderData = { ...new OrderEntity(), ...this.orderRepo.setData(data) };
+    const orderData = {
+      ...new OrderEntity(),
+      ...this.orderRepo.setData(data),
+      status: 0,
+    };
 
     let result = await this.orderRepo.create(orderData);
     if (data.order_items.length) {
       for (let orderItem of data.order_items) {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
-
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
         };
 
@@ -205,7 +208,7 @@ export class OrdersService {
       const origin_order_id = response.data.data;
       let updateOriginOrderId = await this.orderRepo.update(
         { order_id: result.order_id },
-        { origin_order_id },
+        { origin_order_id, status: 1 },
       );
 
       result = { ...result, ...updateOriginOrderId };
@@ -217,7 +220,11 @@ export class OrdersService {
   }
 
   async createSync(data: CreateOrderDto) {
-    const orderData = { ...new OrderEntity(), ...this.orderRepo.setData(data) };
+    const orderData = {
+      ...new OrderEntity(),
+      ...this.orderRepo.setData(data),
+      status: 0,
+    };
 
     let result = await this.orderRepo.create(orderData);
     if (data.order_items.length) {
@@ -237,6 +244,7 @@ export class OrdersService {
           : [newOrderDetail];
       }
     }
+
     return result;
   }
 }

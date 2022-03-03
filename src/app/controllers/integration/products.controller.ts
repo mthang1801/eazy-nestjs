@@ -44,16 +44,6 @@ export class ProductIntegrationController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/:sku/images')
-  async updateImage(
-    @Param('sku') sku: string,
-    @Body() data: UpdateImageDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.updateImage(sku, data);
-    return this.responseSuccess(res, result);
-  }
-
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.getList(params);
