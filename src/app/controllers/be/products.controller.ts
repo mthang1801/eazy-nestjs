@@ -13,16 +13,9 @@ import {
 } from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
-import { CreateProductDto } from '../../dto/product/create-product.dto';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
-import { UpdateProductDto } from '../../dto/product/update-product.dto';
-import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
-import {
-  AnyFilesInterceptor,
-  FileInterceptor,
-  FilesInterceptor,
-} from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
@@ -110,7 +103,7 @@ export class ProductsController extends BaseController {
     @Param('sku') sku: string,
   ) {
     const result = await this.service.uploadImages(files, sku);
-    return this.responseSuccess(res, result);
+    return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
   }
 
   @Delete('images/:sku')

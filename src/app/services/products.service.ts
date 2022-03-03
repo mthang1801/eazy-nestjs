@@ -558,7 +558,6 @@ export class ProductService {
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
-    let products = [];
     let filterCondition = {};
 
     if (Object.entries(others).length) {
@@ -572,6 +571,7 @@ export class ProductService {
         }
       }
     }
+
     let count = await this.productRepo.find({
       select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
       join: {
@@ -590,6 +590,7 @@ export class ProductService {
       join: {
         [JoinTable.innerJoin]: productJoiner,
       },
+      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
       where: productsListsSearchFilter(search, filterCondition),
       skip,
       limit,

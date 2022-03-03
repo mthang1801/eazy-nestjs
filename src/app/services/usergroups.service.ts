@@ -257,7 +257,7 @@ export class UserGroupsService {
           let parentPrivilege = await this.privilegeRepo.findOne({
             privilege_id: privilege.parent_id,
           });
-          console.log(parentPrivilege);
+
           if (parentPrivilege) {
             let parentUsergroupPrivilegeExist =
               await this.userGroupPrivilegeRepo.findOne({
@@ -272,10 +272,12 @@ export class UserGroupsService {
             }
           }
         }
-        await this.userGroupPrivilegeRepo.createSync({
-          privilege_id: privilegeId,
-          usergroup_id: currentUserGroup.usergroup_id,
-        });
+        if (privilege) {
+          await this.userGroupPrivilegeRepo.createSync({
+            privilege_id: privilegeId,
+            usergroup_id: currentUserGroup.usergroup_id,
+          });
+        }
       }
     }
 

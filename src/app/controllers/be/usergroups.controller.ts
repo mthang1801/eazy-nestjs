@@ -70,7 +70,7 @@ export class UsergroupsController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.getByUserGroupId(id);
-    return this.responseSuccess(res, result, 'Cập nhật thành công.');
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -88,6 +88,6 @@ export class UsergroupsController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.update(id, data);
-    return this.responseSuccess(res, result);
+    return this.responseSuccess(res, result, 'Cập nhật thành công.');
   }
 }
