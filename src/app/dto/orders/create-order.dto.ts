@@ -34,7 +34,7 @@ export class CreateOrderDto {
   notes: string; //Ghi chú khách hàng
 
   @IsNotEmpty()
-  store_id: string;
+  store_id: number;
 
   @IsOptional()
   employee_id: number;
@@ -43,18 +43,6 @@ export class CreateOrderDto {
   user_id: number;
 
   @IsNotEmpty()
-  //Kênh đặt
-  // 1. ZALO
-  // 2. YOUTUBE
-  // 3. ORDER ONLINE
-  // 4. HOTLINE
-  // 5. ZALO
-  // 6. FACEBOOK
-  // 7. INSTAGRAM
-  // 8. WEBSITE DDV
-  // 9. E-COM
-  // 10. TRỰC TIẾP – CỪA HÀNG
-  // 11. NGUỒN KHÁC
   utm_source: number;
 
   @IsOptional()

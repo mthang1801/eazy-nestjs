@@ -190,8 +190,6 @@ export class OrdersService {
       }
     }
 
-    console.log(convertDataToIntegrate(result));
-
     const config: any = {
       method: 'POST',
       url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
@@ -216,5 +214,29 @@ export class OrdersService {
     }
 
     return { result, message };
+  }
+
+  async createSync(data: CreateOrderDto) {
+    const orderData = { ...new OrderEntity(), ...this.orderRepo.setData(data) };
+
+    let result = await this.orderRepo.create(orderData);
+    if (data.order_items.length) {
+      for (let orderItem of data.order_items) {
+        let orderDetailData = {
+          ...new OrderDetailsEntity(),
+
+          ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+        };
+
+        const newOrderDetail = await this.orderDetailRepo.create(
+          orderDetailData,
+        );
+
+        result['order_items'] = result['order_items']
+          ? [...result['order_items'], newOrderDetail]
+          : [newOrderDetail];
+      }
+    }
+    return result;
   }
 }

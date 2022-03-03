@@ -34,8 +34,11 @@ export class OrderIntegrationController extends BaseController {
     super();
   }
   @Post()
-  async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
-    const { result, message } = await this.service.create(body);
-    return this.responseSuccess(res, result, message);
+  async createSync(
+    @Res() res,
+    @Body() body: CreateOrderDto,
+  ): Promise<IResponse> {
+    const { result, message } = await this.service.createSync(body);
+    return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
   }
 }

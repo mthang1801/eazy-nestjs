@@ -87,19 +87,29 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['storeId'] = data['store_id']; //Mã cửa hàng *
 
-  itgData['orderSource'] = data['utm_source']; //Kênh đặt
+  itgData['orderSource'] = data['utm_source']; //Kênh đặt *
 
-  itgData['orderType'] = data['order_type']; //Loại đơn
+  if (data['order_type']) {
+    itgData['orderType'] = data['order_type']; //Loại đơn
+  }
 
-  itgData['status'] = data['status']; //Trạng thái đơn hàng *
+  if (data['status']) {
+    itgData['status'] = data['status']; //Trạng thái đơn hàng
+  }
 
-  itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
+  if (data['shipping_ids']) {
+    itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
+  }
 
   itgData['customerId'] = data['user_id']; //Mã user *
 
-  itgData['saleId'] = data['employee_id']; //Mã nhân viên *
+  if (data['employee_id']) {
+    itgData['saleId'] = data['employee_id']; //Mã nhân viên *
+  }
 
-  itgData['saleNote'] = data['internal_note']; //Ghi chú chăm sóc khách hàng
+  if (data['internal_note']) {
+    itgData['saleNote'] = data['internal_note']; //Ghi chú chăm sóc khách hàng
+  }
 
   itgData['customerMobile'] = data['b_phone']; // Số điện thoại khách hàng
 
@@ -114,70 +124,127 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['customerWardName'] = data['b_ward']; //Lấy id huyện
 
-  itgData['customerNote'] = data['note']; // Ghi chú khách hàng
+  if (data['note']) {
+    itgData['customerNote'] = data['note']; // Ghi chú khách hàng
+  }
 
-  itgData['shipFee'] = data['shipping_fee']; //Phí ship của hãng vận chuyển
+  if (data['shipping_fee']) {
+    itgData['shipFee'] = data['shipping_fee']; //Phí ship của hãng vận chuyển
+  }
 
-  itgData['customerShipFee'] = data['shipping_cost']; // Phí trả khách hàng phải trả
+  if (data['shipping_cost']) {
+    itgData['customerShipFee'] = data['shipping_cost']; // Phí trả khách hàng phải trả
+  }
 
-  itgData['depositAmount'] = data['disposit_amount']; // Tiền đặt cọc (Tiền mặt)
+  if (data['disposit_amount']) {
+    itgData['depositAmount'] = data['disposit_amount']; // Tiền đặt cọc (Tiền mặt)
+  }
 
-  itgData['cashAccountId'] = data['cash_account_id']; // Mã tài khoản tiền mặt
+  if (data['cash_account_id']) {
+    itgData['cashAccountId'] = data['cash_account_id']; // Mã tài khoản tiền mặt
+  }
 
-  itgData['transferAmount'] = data['transfer_amount']; // Tiền chuyển khoản
+  if (data['transfer_amount']) {
+    itgData['transferAmount'] = data['transfer_amount']; // Tiền chuyển khoản
+  }
 
-  itgData['transferAccountId'] = data['transfer_account_id']; //Mã tiền chuyển khoản
+  if (data['transfer_account_id']) {
+    itgData['transferAccountId'] = data['transfer_account_id']; //Mã tiền chuyển khoản
+  }
 
-  itgData['transferReferenceCode'] = data['transfer_ref_code']; // Mã chuyển khoản
+  if (data['transfer_ref_code']) {
+    itgData['transferReferenceCode'] = data['transfer_ref_code']; // Mã chuyển khoản
+  }
 
-  itgData['creditAmount'] = data['credit_amount']; // Tiền quẹt thẻ
+  if (data['credit_amount']) {
+    itgData['creditAmount'] = data['credit_amount']; // Tiền quẹt thẻ
+  }
 
-  itgData['creditAccountId'] = data['credit_account_id']; // Mã tài khoản quẹt thẻ
+  if (data['credit_account_id']) {
+    itgData['creditAccountId'] = data['credit_account_id']; // Mã tài khoản quẹt thẻ
+  }
 
-  itgData['creditCode'] = data['credit_code']; // Mã quẹt thẻ
+  if (data['credit_code']) {
+    itgData['creditCode'] = data['credit_code']; // Mã quẹt thẻ
+  }
 
-  itgData['creditCardNo'] = data['credit_card_no']; // Mã 4 số cuối của thẻ
+  if (data['credit_card_no']) {
+    itgData['creditCardNo'] = data['credit_card_no']; // Mã 4 số cuối của thẻ
+  }
 
-  itgData['installedMoneyAmount'] = data['installed_money_amount']; // Tiền trả góp
+  if (data['installed_money_amount']) {
+    itgData['installedMoneyAmount'] = data['installed_money_amount']; // Tiền trả góp
+  }
 
-  itgData['installMoneyAccountId'] = data['installed_money_account_id']; // Mã tài khoản trả góp
+  if (data['installed_money_account_id']) {
+    itgData['installMoneyAccountId'] = data['installed_money_account_id']; // Mã tài khoản trả góp
+  }
 
-  itgData['installMoneyCode'] = data['installed_money_code']; //Mã trả góp
+  if (data['installed_money_code']) {
+    itgData['installMoneyCode'] = data['installed_money_code']; //Mã trả góp
+  }
 
-  itgData['payCreditFeeType'] = data['pay_credit_type']; //Hình thức trả phí khác
+  if (data['pay_credit_type']) {
+    itgData['payCreditFeeType'] = data['pay_credit_type']; //Hình thức trả phí khác
+  }
 
-  itgData['couponCode'] = data['coupon_code'] || ''; //Mã coupon
+  if (data['coupon_code']) {
+    itgData['couponCode'] = data['coupon_code']; //Mã coupon
+  }
 
-  itgData['parnerPaymentStatus'] = data['payment_status'] || 1; //Trạng thái thanh toán
+  if (data['payment_status']) {
+    itgData['parnerPaymentStatus'] = data['payment_status']; //Trạng thái thanh toán
+  }
 
-  itgData['customerEmail'] = data['email'] || ''; //Địa chỉ email khách hàng
+  if (data['email']) {
+    itgData['customerEmail'] = data['email']; //Địa chỉ email khách hàng
+  }
 
-  itgData['customerGender'] = data['gender'] || 0; //Giới tính khách hàng
+  if (data['gender']) {
+    itgData['customerGender'] = data['gender']; //Giới tính khách hàng
+  }
 
-  itgData['customerIdCard'] = data['id_card'] || ''; // CMND khách hàng
+  if (data['id_card']) {
+    itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
+  }
 
-  itgData['refOrderId'] = data['ref_order_id'] || '0'; //Mã đơn hàng của đối tác
+  itgData['refOrderId'] = data['ref_order_id'] || '0'; //Mã đơn hàng của đối tác *
 
-  itgData['discountType'] = data['discount_type'] || 1; //Kiểu chiết khấu
+  if (data['discount_type']) {
+    itgData['discountType'] = data['discount_type'] || 1; //Kiểu chiết khấu
+  }
 
-  itgData['discountAmount'] = data['discount'] || 0; //Số tiền chiết khấu hoặc phần trăm
+  if (data['discount']) {
+    itgData['discountAmount'] = data['discount']; //Số tiền chiết khấu hoặc phần trăm
+  }
 
   itgData['isSentToCustomerAddress'] =
-    data['is_sent_customer_address'] === 0 ? false : true;
+    data['is_sent_customer_address'] === 0 ? false : true; // có gửi địa chỉ khác hay ko
 
-  itgData['receivingFullName'] =
-    data['s_firstname'].trim() + ` ` + data['s_lastname'];
+  if (data['s_lastname']) {
+    itgData['receivingFullName'] =
+      data['s_firstname'].trim() + ` ` + data['s_lastname']; // tên người nhận
+  }
 
-  itgData['recevingPhone'] = data['s_phone'];
+  if (data['s_phone']) {
+    itgData['recevingPhone'] = data['s_phone']; // sdt người nhận
+  }
 
-  itgData['recevingCity'] = data['s_city'];
+  if (data['s_city']) {
+    itgData['recevingCity'] = data['s_city']; // thành phố nhận
+  }
 
-  itgData['receivingDistrict'] = data['s_district'];
+  if (data['s_district']) {
+    itgData['receivingDistrict'] = data['s_district']; // quận nhận
+  }
 
-  itgData['receivingWard'] = data['s_ward'];
+  if (data['s_ward']) {
+    itgData['receivingWard'] = data['s_ward']; // phường nhận
+  }
 
-  itgData['receivingAddress'] = data['s_address'];
-
+  if (data['s_address']) {
+    itgData['receivingAddress'] = data['s_address']; // địa chỉ nhận hàng
+  }
   // Lấy danh sách Order Items
   for (let orderItem of data['order_items']) {
     let cvOrderItem = {};
@@ -188,15 +255,25 @@ export const convertDataToIntegrate = (data) => {
 
     cvOrderItem['quantity'] = orderItem['amount'];
 
-    cvOrderItem['discountAmount'] = orderItem['discount_amout'] || 0;
+    if (orderItem['discount_amout']) {
+      cvOrderItem['discountAmount'] = orderItem['discount_amout'];
+    }
 
-    cvOrderItem['productType'] = orderItem['product_type'] || 1;
+    if (orderItem['product_type']) {
+      cvOrderItem['productType'] = orderItem['product_type'];
+    }
 
-    cvOrderItem['imeiCode'] = orderItem['imei_code'] || '';
+    if (orderItem['imei_code']) {
+      cvOrderItem['imeiCode'] = orderItem['imei_code'];
+    }
 
-    cvOrderItem['repurchasePrice'] = orderItem['repurchase_price'] || 0;
+    if (orderItem['repurchase_price']) {
+      cvOrderItem['repurchasePrice'] = orderItem['repurchase_price'];
+    }
 
-    cvOrderItem['note'] = orderItem['note'] || '';
+    if (orderItem['note']) {
+      cvOrderItem['note'] = orderItem['note'];
+    }
 
     itgData['orderItems'] = itgData['orderItems']
       ? [...itgData['orderItems'], cvOrderItem]
