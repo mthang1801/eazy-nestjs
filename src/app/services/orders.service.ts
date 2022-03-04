@@ -37,7 +37,7 @@ export class OrdersService {
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: 0,
+      status: '0',
     };
 
     let result = await this.orderRepo.create(orderData);

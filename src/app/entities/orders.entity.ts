@@ -19,7 +19,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: number = 0;
+  status: string = '0';
   notes: string = '';
   gender: number = 0;
   details: string = '';

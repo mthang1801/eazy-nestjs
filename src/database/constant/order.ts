@@ -13,7 +13,7 @@ const orderSampleData = {
   store_id: 67107,
   utm_source: 10,
   order_type: 1,
-  status: 1,
+  status: '0',
   payment_status: 1,
   warranty_note: 'Bao hanh 6 thang',
 

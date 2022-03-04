@@ -10,7 +10,7 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { OrderIntegrationController } from '../controllers/integration/order.controller';
 import { OrderStatusModule } from './orderStatus.module';
-import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers';
+import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers.controller';
 import { UsersModule } from './users.module';
 @Module({
   controllers: [
