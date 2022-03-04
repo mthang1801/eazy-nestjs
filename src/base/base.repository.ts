@@ -45,9 +45,9 @@ export class BaseRepositorty<T> {
     }
 
     //Primiry keys is unique and db define
-    console.log(1, dataObject, this.table, PrimaryKeys[this.table]);
-    delete dataObject[PrimaryKeys[this.table]];
-    console.log(dataObject);
+
+    // delete dataObject[PrimaryKeys[this.table]];
+
     return dataObject;
   }
 
@@ -158,11 +158,18 @@ export class BaseRepositorty<T> {
    * @param options
    * @returns array
    */
-  async find(options: any): Promise<any[]> {
+  async find(options: any = {}): Promise<any[]> {
     this.logger.log('=============== FIND ================');
     const optionKeys = Object.keys(options);
-
     const collection = new DatabaseCollection(this.table);
+    // if (optionKeys.length === 0) {
+    //   collection['select']('*');
+    // } else if (
+    //   !optionKeys.some((key: any) => orderCmds.some(key.toLowerCase()))
+    // ) {
+    //   collection['where'](options);
+    // } else {
+
     for (let cmd of orderCmds) {
       if (optionKeys.includes(cmd)) {
         if (cmd === 'skip') {

@@ -59,14 +59,16 @@ export class DatabaseCollection {
     return this.stringSelect;
   }
 
-  select(arrayFields: string[]): string {
-    if (Array.isArray(arrayFields) && arrayFields.length) {
-      for (let i = 0; i < arrayFields.length; i++) {
+  select(fields: string[] | string): string {
+    if (typeof fields === 'string' && fields) {
+      this.stringSelect = `SELECT ${fields}`;
+    } else if (Array.isArray(fields) && fields.length) {
+      for (let i = 0; i < fields.length; i++) {
         if (i === 0) {
-          this.stringSelect = `SELECT ${arrayFields[i]}`;
+          this.stringSelect = `SELECT ${fields[i]}`;
           continue;
         }
-        this.stringSelect += `, ${arrayFields[i]}`;
+        this.stringSelect += `, ${fields[i]}`;
       }
     } else {
       this.stringSelect = `SELECT *`;

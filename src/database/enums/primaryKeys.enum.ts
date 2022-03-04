@@ -73,4 +73,9 @@ export enum PrimaryKeys {
   //============== Store ==============
   ddv_store_locations = 'store_location_id',
   ddv_store_location_descriptions = 'store_location_description_id',
+
+  //============== Locator =============
+  ddv_cities = 'id',
+  ddv_districts = 'id',
+  ddv_ward = 'id',
 }

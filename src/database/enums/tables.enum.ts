@@ -73,4 +73,9 @@ export enum Table {
   //============== Store ==============
   STORE_LOCATIONS = 'ddv_store_locations',
   STORE_LOCATION_DESCRIPTIONS = 'ddv_store_location_descriptions',
+
+  //============== Locator ===========
+  CITIES = 'ddv_cities',
+  DISTRICTS = 'ddv_districts',
+  WARDS = 'ddv_wards',
 }

@@ -33,6 +33,7 @@ import { QueueModule } from './queue.module';
 import { StoreModule } from './store.module';
 import { UserSystemModule } from './userSystem.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { LocatorModule } from './locator.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -68,6 +69,7 @@ import { MulterModule } from '@nestjs/platform-express';
     ProductFeaturesModule,
     StoreModule,
     QueueModule,
+    LocatorModule,
   ],
   providers: [
     {

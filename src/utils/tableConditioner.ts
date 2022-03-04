@@ -116,6 +116,18 @@ export const customersListSearchFilter = (
   return searchFilterTemplate(filterConditions, arraySearch);
 };
 
+export const orderSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.ORDERS}.origin_order_id`]: Like(search) },
+      { [`${Table.ORDERS}.order_id`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
     return filterConditions;

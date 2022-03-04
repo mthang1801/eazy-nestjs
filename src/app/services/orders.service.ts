@@ -4,9 +4,8 @@ import {
   HttpException,
 } from '@nestjs/common';
 
-import { Table, JoinTable } from '../../database/enums/index';
+import { Table, JoinTable, SortBy } from '../../database/enums/index';
 
-import { Like } from 'typeorm';
 import { UpdateCustomerDTO } from '../dto/customer/update-customer.dto';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { OrderEntity } from '../entities/orders.entity';
@@ -20,6 +19,10 @@ import { UpdateOrderDto } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
 import { convertDataToIntegrate } from 'src/database/constant/order';
 import axios from 'axios';
+import { UserRepository } from '../repositories/user.repository';
+import { UserEntity } from '../entities/user.entity';
+import { orderSearchFilter } from 'src/utils/tableConditioner';
+import { Like } from 'src/database/find-options/operators';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -27,6 +30,7 @@ export class OrdersService {
     private orderDetailRepo: OrderDetailsRepository<OrderDetailsEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
+    private userRepo: UserRepository<UserEntity>,
   ) {}
 
   async create(data: CreateOrderDto) {
@@ -53,40 +57,42 @@ export class OrdersService {
           : [newOrderDetail];
       }
     }
+    return result;
 
-    const config: any = {
-      method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: convertDataToIntegrate(result),
-    };
+    //============ Push data to Appcore ==================
+    // const config: any = {
+    //   method: 'POST',
+    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   data: convertDataToIntegrate(result),
+    // };
 
-    try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const origin_order_id = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
-          { order_id: result.order_id },
-          { origin_order_id, status: 1 },
-        );
+    // try {
+    //   const response = await axios(config);
+    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+    //   if (response?.data?.data) {
+    //     const origin_order_id = response.data.data;
+    //     let updateOriginOrderId = await this.orderRepo.update(
+    //       { order_id: result.order_id },
+    //       { origin_order_id, status: 1 },
+    //     );
 
-        result = { ...result, ...updateOriginOrderId };
+    //     result = { ...result, ...updateOriginOrderId };
 
-        message = 'Đẩy đơn hàng đến appcore thành công';
-      }
-      return { result, message };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data || error?.response?.data?.error || error.message
-        }`,
-        400,
-      );
-    }
+    //     message = 'Đẩy đơn hàng đến appcore thành công';
+    //   }
+    //   return { result, message };
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new HttpException(
+    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+    //       error?.response?.data || error?.response?.data?.error || error.message
+    //     }`,
+    //     400,
+    //   );
+    // }
   }
 
   async createSync(data: CreateOrderDto) {
@@ -203,5 +209,83 @@ export class OrdersService {
 
     order['order_items'] = orderItems;
     return order;
+  }
+
+  async getByCustomerId(customer_id: number, params) {
+    const customer = await this.userRepo.findOne({ user_id: customer_id });
+    if (!customer) {
+      throw new HttpException('Không tìm thấy khách hàng.', 404);
+    }
+
+    let filterConditions = { user_id: customer_id };
+    return this.getOrdersList(params, filterConditions);
+  }
+
+  async getList(params) {
+    return this.getOrdersList(params);
+  }
+
+  async getOrdersList(params, filterConditions = {}) {
+    let { page, limit, search, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 5;
+    let skip = (page - 1) * limit;
+
+    if (Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.orderRepo.tableProps.includes(key)) {
+          filterConditions[`${Table.ORDERS}.${key}`] = Like(val);
+          continue;
+        }
+      }
+    }
+
+    const ordersList = await this.orderRepo.find({
+      select: ['*'],
+      orderBy: [{ field: 'status', sortBy: SortBy.ASC }],
+      where: orderSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    const count = await this.orderRepo.find({
+      select: [`DISTINCT(COUNT(${Table.ORDERS}.order_id)) as total`],
+      where: orderSearchFilter(search, filterConditions),
+    });
+
+    return {
+      orders: ordersList,
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count.length ? count[0].total : 0,
+      },
+    };
+  }
+
+  async getOrderDetails(order_id: number) {
+    const order = await this.orderRepo.findOne({ order_id });
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+
+    const orderDetailsList = await this.orderDetailRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCTS]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+          },
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+          },
+        },
+      },
+      where: { [`${Table.ORDER_DETAILS}.order_id`]: order_id },
+    });
+
+    return orderDetailsList;
   }
 }

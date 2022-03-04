@@ -11,6 +11,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { OrderIntegrationController } from '../controllers/integration/order.controller';
 import { OrderStatusModule } from './orderStatus.module';
 import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers';
+import { UsersModule } from './users.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -36,6 +37,6 @@ import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.
     OrderDataRepository,
     UserProfileRepository,
   ],
-  imports: [OrderStatusModule],
+  imports: [OrderStatusModule, UsersModule],
 })
 export class OrdersModule {}
