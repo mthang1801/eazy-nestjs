@@ -8,12 +8,13 @@ import {
   Res,
 } from '@nestjs/common';
 import { UserUpdateDto } from '../../dto/user/update-user.dto';
-import { UserProfileDto } from '../../dto/user/update-userProfile.dto';
+import { UpdateUserProfileDto } from '../../dto/user/update-userProfile.dto';
 import { UsersService } from '../../services/users.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
-
+import { Param } from '@nestjs/common';
+import { Response } from 'express';
 @Controller('/fe/v1/users')
 export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
@@ -39,17 +40,13 @@ export class UsersController extends BaseController {
     return this.responseSuccess(res, { userData: user });
   }
 
-  @Put('/update-user-profile')
-  //@UseGuards(AuthGuard)
-  async updateUserProfile(
-    @Body() userProfileDto: UserProfileDto,
-    @Req() req,
-    @Res() res,
+  @Put('/profile/:id')
+  async updateProfile(
+    @Param('id') id: number,
+    @Body() data: UpdateUserProfileDto,
+    @Res() res: Response,
   ): Promise<IResponse> {
-    const updatedUserProfile = await this.service.updateProfile(
-      req.user.user_id,
-      userProfileDto,
-    );
-    return this.responseSuccess(res, { userProfile: updatedUserProfile });
+    const result = await this.service.updateProfile(id, data);
+    return this.responseSuccess(res, result, 'Cập nhật thành công.');
   }
 }

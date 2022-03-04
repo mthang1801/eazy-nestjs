@@ -44,6 +44,10 @@ export class BaseRepositorty<T> {
       }
     }
 
+    //Primiry keys is unique and db define
+    console.log(1, dataObject, this.table, PrimaryKeys[this.table]);
+    delete dataObject[PrimaryKeys[this.table]];
+    console.log(dataObject);
     return dataObject;
   }
 

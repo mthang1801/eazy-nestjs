@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  HttpException,
+} from '@nestjs/common';
 
 import { Table, JoinTable } from '../../database/enums/index';
 
@@ -12,7 +16,7 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
-import { OrderUpdateDTO } from '../dto/orders/update-order.dto';
+import { UpdateOrderDto } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
 import { convertDataToIntegrate } from 'src/database/constant/order';
 import axios from 'axios';
@@ -24,149 +28,6 @@ export class OrdersService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
   ) {}
-  async getList(params) {
-    //=====Filter param
-
-    const orders = this.orderRepo.find({
-      select: ['*'],
-
-      skip: 0,
-      limit: 9999,
-    });
-
-    const products = this.orderDetailRepo.find({
-      select: [`${Table.PRODUCT_DESCRIPTION}.*`, `${Table.ORDER_DETAILS}.*`],
-      join: {
-        [JoinTable.join]: {
-          [Table.PRODUCTS]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-        },
-      },
-      skip: 0,
-      limit: 9999,
-    });
-    const result = await Promise.all([products, orders]);
-    let _result = [];
-    result[1].forEach((ele) => {
-      _result.push({
-        ...ele,
-        products: result[0].filter(
-          (product) => product.order_id == ele.order_id,
-        ),
-      });
-    });
-    return _result;
-  }
-  async getById(id) {
-    const string = `${Table.ORDERS}.order_id`;
-    const string1 = `${Table.ORDER_DETAILS}.order_id`;
-    const orders = this.orderRepo.findOne({
-      select: ['*'],
-
-      skip: 0,
-      limit: 9999,
-      where: { [string]: id },
-    });
-    const products = this.orderDetailRepo.find({
-      select: [`${Table.PRODUCT_DESCRIPTION}.*`, `${Table.ORDER_DETAILS}.*`],
-      join: {
-        [JoinTable.join]: {
-          [Table.PRODUCTS]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-        },
-      },
-      where: { [string1]: id },
-
-      skip: 0,
-      limit: 9999,
-    });
-    const result = await Promise.all([products, orders]);
-    return { ...result[1], products: result[0] };
-  }
-  async update(id, data: OrderUpdateDTO) {
-    let total = 0;
-
-    if (data.products.length) {
-      const products = await this.productRepo.find({
-        select: [
-          `${Table.PRODUCTS}.product_id`,
-          `${Table.PRODUCTS}.product_code`,
-          `${Table.PRODUCTS}.list_price`,
-          `${Table.PRODUCTS}.amount`,
-        ],
-        where: data.products.map((ele) => {
-          return { product_id: ele.product_id };
-        }),
-
-        skip: 0,
-        limit: 9999,
-      });
-      data.products.map((ele) => {
-        products.map((item) => {
-          if (ele.product_id === item.product_id) {
-            total += ele.amount * item.list_price;
-            ele['price'] = item.list_price;
-            ele['product_code'] = item.product_code;
-          }
-        });
-      });
-      //=========|Delete all the previuos products|============
-      const product_detail = await this.orderDetailRepo.find({
-        select: [`item_id`],
-        where: { order_id: id },
-
-        skip: 0,
-        limit: 9999,
-      });
-      let arrPromise = [];
-      product_detail.forEach((ele) => {
-        arrPromise.push(this.orderDetailRepo.delete(ele.item_id));
-      });
-      await Promise.all(arrPromise);
-      //====re Create Product====///
-      let _orderdetail = [];
-      data.products.forEach((ele) => {
-        _orderdetail.push(
-          this.orderDetailRepo.create({ ...ele, order_id: id }),
-        );
-      });
-      await Promise.all(_orderdetail);
-    }
-
-    //=== update Order Tabe
-    const order = await this.orderRepo.findOne({
-      select: [
-        `${Table.ORDERS}.discount`,
-        `${Table.ORDERS}.total`,
-        `${Table.ORDERS}.subtotal`,
-      ],
-      where: { order_id: id },
-
-      skip: 0,
-      limit: 9999,
-    });
-
-    const orderData = {
-      ...this.orderRepo.setData(data),
-      total: data.products.length ? total : order.total,
-      subtotal: data.products.length ? total - order.discount : order.subtotal,
-    };
-
-    let _orderData = await this.orderRepo.update(id, orderData);
-    return _orderData;
-  }
 
   async create(data: CreateOrderDto) {
     const orderData = {
@@ -202,21 +63,30 @@ export class OrdersService {
       data: convertDataToIntegrate(result),
     };
 
-    const response = await axios(config);
-    let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-    if (response?.data?.data) {
-      const origin_order_id = response.data.data;
-      let updateOriginOrderId = await this.orderRepo.update(
-        { order_id: result.order_id },
-        { origin_order_id, status: 1 },
+    try {
+      const response = await axios(config);
+      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+      if (response?.data?.data) {
+        const origin_order_id = response.data.data;
+        let updateOriginOrderId = await this.orderRepo.update(
+          { order_id: result.order_id },
+          { origin_order_id, status: 1 },
+        );
+
+        result = { ...result, ...updateOriginOrderId };
+
+        message = 'Đẩy đơn hàng đến appcore thành công';
+      }
+      return { result, message };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data || error?.response?.data?.error || error.message
+        }`,
+        400,
       );
-
-      result = { ...result, ...updateOriginOrderId };
-
-      message = 'Đẩy đơn hàng đến appcore thành công';
     }
-
-    return { result, message };
   }
 
   async createSync(data: CreateOrderDto) {
@@ -246,5 +116,92 @@ export class OrdersService {
     }
 
     return result;
+  }
+
+  async update(id: number, data: UpdateOrderDto) {
+    const order = await this.orderRepo.findById(id);
+
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+    let result = { ...order };
+    const orderData = this.orderRepo.setData(data);
+    if (Object.entries(orderData).length) {
+      const updatedOrder = await this.orderRepo.update(
+        order.order_id,
+        orderData,
+      );
+      result = { ...result, ...updatedOrder };
+    }
+
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        const currentOrderItem = await this.orderDetailRepo.findById(
+          orderItem.item_id,
+        );
+
+        if (currentOrderItem && orderItem.is_deleted) {
+          result['order_items'] = result['order_items']
+            ? [...result['order_items'], orderItem]
+            : [orderItem];
+          await this.orderDetailRepo.delete({
+            item_id: orderItem.item_id,
+          });
+        }
+
+        // Nếu SP đơn hàng đã tồn tại thì update, nếu chưa có thì thêm, nếu is_deleted = true thì xoá
+        if (currentOrderItem) {
+          let orderItemData = this.orderDetailRepo.setData(orderItem);
+          const updatedOrderItem = await this.orderDetailRepo.update(
+            orderItem.item_id,
+            orderItemData,
+          );
+
+          result['order_items'] = result['order_items']
+            ? [...result['order_items'], updatedOrderItem]
+            : [updatedOrderItem];
+        } else {
+          let newOrderItemData = {
+            ...new OrderDetailsEntity(),
+            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+          };
+
+          const newOrderItem = await this.orderDetailRepo.create(
+            newOrderItemData,
+          );
+          result['order_items'] = result['order_items']
+            ? [...result['order_items'], newOrderItem]
+            : [newOrderItem];
+        }
+      }
+    }
+    return result;
+  }
+
+  async getByPhoneAndId(phone: string, order_id: number) {
+    const order = await this.orderRepo.findOne({ order_id, b_phone: phone });
+
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+
+    let orderItems = await this.orderDetailRepo.find({
+      select: [
+        `${Table.ORDER_DETAILS}.*`,
+        `${Table.PRODUCT_DESCRIPTION}.product`,
+      ],
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `${Table.ORDER_DETAILS}.product_id`,
+            rootJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+          },
+        },
+      },
+      where: { [`${Table.ORDER_DETAILS}.order_id`]: order.order_id },
+    });
+
+    order['order_items'] = orderItems;
+    return order;
   }
 }

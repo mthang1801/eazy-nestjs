@@ -16,7 +16,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
 import { OrdersService } from 'src/app/services/orders.service';
 import { OrderStatusService } from 'src/app/services/orderStatus.service';
-import { OrderUpdateDTO } from 'src/app/dto/orders/update-order.dto';
+import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 

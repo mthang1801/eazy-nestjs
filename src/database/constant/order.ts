@@ -94,7 +94,17 @@ export const convertDataToIntegrate = (data) => {
   }
 
   if (data['status']) {
-    itgData['status'] = data['status']; //Trạng thái đơn hàng
+    itgData['status'] = data['status'];
+    //Trạng thái đơn hàng,
+    // 0 : Đơn được tạo nhưng chưa hoạt động,
+    // 1. Đơn đã hoạt động, chờ xác nhận
+    // 2. Đã xác nhận
+    // 3. Đang chuẩn bị
+    // 4. Đang đóng gói
+    // 5. Đang vận chuyển
+    // 6. Không bắt máy
+    // 7. Thành công
+    // 8. Không thành công
   }
 
   if (data['shipping_ids']) {
@@ -249,30 +259,30 @@ export const convertDataToIntegrate = (data) => {
   for (let orderItem of data['order_items']) {
     let cvOrderItem = {};
 
-    cvOrderItem['productId'] = orderItem['product_id'];
+    cvOrderItem['productId'] = orderItem['product_id']; //Mã SP
 
-    cvOrderItem['productPrice'] = orderItem['price'];
+    cvOrderItem['productPrice'] = orderItem['price']; // Đơn giá SP
 
-    cvOrderItem['quantity'] = orderItem['amount'];
+    cvOrderItem['quantity'] = orderItem['amount']; //Số lượng
 
     if (orderItem['discount_amout']) {
-      cvOrderItem['discountAmount'] = orderItem['discount_amout'];
+      cvOrderItem['discountAmount'] = orderItem['discount_amout']; // Giảm giá
     }
 
     if (orderItem['product_type']) {
-      cvOrderItem['productType'] = orderItem['product_type'];
+      cvOrderItem['productType'] = orderItem['product_type']; //Loại SP
     }
 
     if (orderItem['imei_code']) {
-      cvOrderItem['imeiCode'] = orderItem['imei_code'];
+      cvOrderItem['imeiCode'] = orderItem['imei_code']; // Imei Code
     }
 
     if (orderItem['repurchase_price']) {
-      cvOrderItem['repurchasePrice'] = orderItem['repurchase_price'];
+      cvOrderItem['repurchasePrice'] = orderItem['repurchase_price']; // Giá mua lại
     }
 
     if (orderItem['note']) {
-      cvOrderItem['note'] = orderItem['note'];
+      cvOrderItem['note'] = orderItem['note']; // Ghi chú SP
     }
 
     itgData['orderItems'] = itgData['orderItems']

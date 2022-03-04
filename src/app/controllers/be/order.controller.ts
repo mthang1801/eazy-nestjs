@@ -18,7 +18,7 @@ import {} from '../../interfaces/response.interface';
 import { OrdersService } from 'src/app/services/orders.service';
 import { AuthGuard } from '../../../middlewares/be.auth';
 
-import { OrderUpdateDTO } from 'src/app/dto/orders/update-order.dto';
+import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 
 @Controller('/be/v1/orders')
@@ -26,18 +26,7 @@ export class OrderController extends BaseController {
   constructor(private service: OrdersService) {
     super();
   }
-  //@UseGuards(AuthGuard)
-  @Get()
-  async getList(@Res() res, @Param() param): Promise<IResponse> {
-    const result = await this.service.getList(param);
-    return this.responseSuccess(res, result, `action return all orders`);
-  }
-  @Get('/:id')
-  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const result = await this.service.getById(id);
 
-    return this.responseSuccess(res, result, `action return orders by id`);
-  }
   @Post()
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
     const { result, message } = await this.service.create(body);
@@ -47,9 +36,9 @@ export class OrderController extends BaseController {
   async update(
     @Res() res,
     @Param('id') id,
-    @Body() body: OrderUpdateDTO,
+    @Body() body: UpdateOrderDto,
   ): Promise<IResponse> {
     const result = await this.service.update(id, body);
-    return this.responseSuccess(res, result, `action update orders`);
+    return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 }

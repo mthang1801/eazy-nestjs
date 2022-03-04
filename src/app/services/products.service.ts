@@ -429,8 +429,8 @@ export class ProductService {
             }
             // Lấy các SP liên quan
             if (
-              !productInfoDetail.parent_product_id //&&
-              // productInfoDetail.product_type != 1
+              !productInfoDetail.parent_product_id &&
+              productInfoDetail.product_type != 1
             ) {
               product['relevant_products'] = product['relevant_products']
                 ? [...product['relevant_products'], productInfoDetail]
@@ -1211,7 +1211,7 @@ export class ProductService {
   }
 
   async callSync(): Promise<void> {
-    await this.clearAll();
+    // await this.clearAll();
 
     // for (let productItem of productsData) {
     //   await this.createSync(productItem);

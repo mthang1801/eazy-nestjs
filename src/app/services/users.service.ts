@@ -21,7 +21,7 @@ import { saltHashPassword } from '../../utils/cipherHelper';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import { UserProfileDto } from '../dto/user/update-userProfile.dto';
+import { UpdateUserProfileDto } from '../dto/user/update-userProfile.dto';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
@@ -108,6 +108,18 @@ export class UsersService {
 
   async createUserData(data: UserDataEntity): Promise<UserDataEntity> {
     return this.userDataRepository.create(data);
+  }
+
+  async updateProfile(id: number, data: UpdateUserProfileDto): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new HttpException('Không tìm thấy người dùng', 404);
+    }
+
+    const userProfileData = this.userProfileRepository.setData(data);
+    if (Object.entries(userProfileData).length) {
+      await this.userProfileRepository.update({ user_id: id }, userProfileData);
+    }
   }
 
   async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {
@@ -337,17 +349,6 @@ export class UsersService {
     return true;
   }
 
-  async updateProfile(
-    id: number,
-    userProfileDto: UserProfileDto,
-  ): Promise<UserProfileEntity> {
-    const updatedProfile = await this.userProfileRepository.update(
-      id,
-      userProfileDto,
-    );
-    updatedProfile['image'] = await this.getUserImage(updatedProfile.user_id);
-    return updatedProfile;
-  }
   async updateProfilebyAdmin(id, data) {
     let userData = {
       ...this.userRepository.setData(data),

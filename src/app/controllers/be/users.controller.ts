@@ -16,6 +16,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
 import { Response } from 'express';
+import { UpdateUserProfileDto } from '../../dto/user/update-userProfile.dto';
 @Controller('/be/v1/users')
 export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
@@ -43,11 +44,21 @@ export class UsersController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Put('/profile/:id')
+  async updateProfile(
+    @Param('id') id: number,
+    @Body() data: UpdateUserProfileDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.updateProfile(id, data);
+    return this.responseSuccess(res, '', 'Cập nhật thành công.');
+  }
+
   @Put(':id')
   @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
-    @Body() data: UpdateUserGroupsDto,
+    @Body() data,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.update(id, data);
