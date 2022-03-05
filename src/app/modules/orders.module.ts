@@ -10,8 +10,9 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { OrderIntegrationController } from '../controllers/integration/order.controller';
 import { OrderStatusModule } from './orderStatus.module';
-import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers.controller';
+import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers';
 import { UsersModule } from './users.module';
+import { StatusModule } from './status.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -37,6 +38,6 @@ import { UsersModule } from './users.module';
     OrderDataRepository,
     UserProfileRepository,
   ],
-  imports: [OrderStatusModule, UsersModule],
+  imports: [OrderStatusModule, UsersModule, StatusModule],
 })
 export class OrdersModule {}

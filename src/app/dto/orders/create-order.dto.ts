@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { v4 as uuid } from 'uuid';
+import { OrderStatus } from '../../../database/enums/status.enum';
 export class CreateOrderDto {
   @IsOptional()
   b_firstname: string;
@@ -49,7 +50,7 @@ export class CreateOrderDto {
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
-  status: string = '0'; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
+  status: string = OrderStatus.Failed; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
 
   @IsOptional()
   payment_status: number = 1;

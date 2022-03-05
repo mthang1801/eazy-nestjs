@@ -1370,34 +1370,49 @@ export class ProductService {
       data: data,
     };
 
-    const response = await axios(config);
-    const results = response.data.data;
-    let { position: lastPositionImage } = await this.imageLinkRepo.findOne({
-      select: ['position'],
-      orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
-      where: {
-        object_id: product.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      },
-    });
-    let currentPosition = lastPositionImage ? lastPositionImage + 1 : 0;
-    if (Array.isArray(results) && results?.length) {
-      for (let [i, dataItem] of results.entries()) {
-        let newImage = await this.imageRepo.create({ image_path: dataItem });
-        await this.imageLinkRepo.create({
+    try {
+      const response = await axios(config);
+      const results = response.data.data;
+      let { position: lastPositionImage } = await this.imageLinkRepo.findOne({
+        select: ['position'],
+        orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
+        where: {
           object_id: product.product_id,
           object_type: ImageObjectType.PRODUCT,
-          image_id: newImage.image_id,
-          position: currentPosition + i,
-        });
+        },
+      });
+      let currentPosition = lastPositionImage ? lastPositionImage + 1 : 0;
+      if (Array.isArray(results) && results?.length) {
+        for (let [i, dataItem] of results.entries()) {
+          let newImage = await this.imageRepo.create({ image_path: dataItem });
+          await this.imageLinkRepo.create({
+            object_id: product.product_id,
+            object_type: ImageObjectType.PRODUCT,
+            image_id: newImage.image_id,
+            position: currentPosition + i,
+          });
+        }
       }
-    }
 
-    // delete files
-    for (let image of images) {
-      await fsExtra.unlink(image.path);
+      // delete files
+      for (let image of images) {
+        await fsExtra.unlink(image.path);
+      }
+      return results;
+    } catch (error) {
+      // delete files
+      for (let image of images) {
+        await fsExtra.unlink(image.path);
+      }
+      throw new HttpException(
+        `Có lỗi xảy ra : ${
+          error?.response?.data?.message ||
+          error?.response?.data ||
+          error.message
+        }`,
+        error.response.status,
+      );
     }
-    return results;
   }
 
   async deleteProductImage(

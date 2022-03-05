@@ -1,5 +1,6 @@
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { v4 as uuid } from 'uuid';
+import { OrderStatus } from '../../database/enums/status.enum';
 export class OrderEntity {
   order_id: number = 0;
   origin_order_id: null | number = 0;
@@ -19,7 +20,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: string = '0';
+  status: string = OrderStatus.Failed;
   notes: string = '';
   gender: number = 0;
   details: string = '';

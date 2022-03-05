@@ -34,6 +34,7 @@ import { StoreModule } from './store.module';
 import { UserSystemModule } from './userSystem.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { LocatorModule } from './locator.module';
+import { StatusModule } from './status.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,6 +61,7 @@ import { LocatorModule } from './locator.module';
     UserGroupPrivilegeModule,
     CategoryModule,
     OrderStatusModule,
+    StatusModule,
     OrdersModule,
     PaymentModule,
     ImageModule,

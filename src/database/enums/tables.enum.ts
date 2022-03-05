@@ -63,6 +63,11 @@ export enum Table {
   ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',
   ORDER_STATUS_DATA = 'ddv_status_data',
 
+  //============== Status ===============
+  STATUS = 'ddv_statuses',
+  STATUS_DESCRIPTION = 'ddv_status_descriptions',
+  STATUS_DATA = 'ddv_status_data',
+
   //============== Order ==============
   ORDERS = 'ddv_orders',
   ORDER_DOCS = 'ddv_order_docs',

@@ -1,0 +1,9 @@
+export enum OrderStatus {
+  'Processed' = 'P',
+  'Complete' = 'C',
+  'Open' = 'O',
+  'Failed' = 'F',
+  'Declined' = 'D',
+  'Backordered' = 'B',
+  'Canceled' = 'I',
+}
