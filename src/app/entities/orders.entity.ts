@@ -1,5 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
-import { v4 as uuid } from 'uuid';
+import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
 import { OrderStatus } from '../../database/enums/status.enum';
 export class OrderEntity {
   order_id: number = 0;
@@ -81,7 +80,7 @@ export class OrderEntity {
   validation_code: string = '';
   localization_id: number = 0;
   utm_source: number = 0;
-  ref_order_id: string = uuid().replace(/-/g, '');
+  ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();
 }

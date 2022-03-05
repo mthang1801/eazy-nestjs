@@ -1,3 +1,5 @@
+import { v4 as uuid } from 'uuid';
+
 export const convertToMySQLDateTime = (DateTime = new Date()) =>
   new Date(new Date(DateTime).getTime() + 7 * 3600 * 1000)
     .toISOString()
@@ -24,6 +26,8 @@ export const preprocessUserResult = (user) => {
 
 export const generateOTPDigits = () =>
   Math.floor(100000 + Math.random() * 900000);
+
+export const generateRandomString = () => uuid().replace(/-/g, '');
 
 export const preprocessDatabaseBeforeResponse = (data) => {
   if (!data || (typeof data === 'object' && !Object.entries(data).length)) {

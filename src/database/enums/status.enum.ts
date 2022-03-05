@@ -7,3 +7,7 @@ export enum OrderStatus {
   'Backordered' = 'B',
   'Canceled' = 'I',
 }
+
+export enum StatusType {
+  'Order' = 'O',
+}

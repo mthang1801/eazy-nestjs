@@ -6,9 +6,8 @@ import {
   IsIn,
   ArrayNotEmpty,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { v4 as uuid } from 'uuid';
 import { OrderStatus } from '../../../database/enums/status.enum';
+import { generateRandomString } from 'src/utils/helper';
 export class CreateOrderDto {
   @IsOptional()
   b_firstname: string;
@@ -128,7 +127,7 @@ export class CreateOrderDto {
   coupon_code: string = '';
 
   @IsOptional()
-  ref_order_id: string = uuid().replace(/-/g, '');
+  ref_order_id: string = generateRandomString();
 
   @IsOptional()
   email: string = '';

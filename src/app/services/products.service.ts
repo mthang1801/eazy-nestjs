@@ -17,7 +17,7 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantsEntity } from '../entities/productOptionVariants.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
@@ -66,7 +66,6 @@ import {
 } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { Equal, IsNull } from '../../database/find-options/operators';
-import { v4 as uuid } from 'uuid';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { convertToSlug, MaxLimit } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
@@ -133,7 +132,7 @@ export class ProductService {
       });
       if (!productGroup) {
         const newProductGroup = await this.productVariationGroupRepo.create({
-          code: uuid().replace(/-/g, ''),
+          code: generateRandomString(),
           product_root_id: parentProductItem.product_id,
           created_at: convertToMySQLDateTime(),
           updated_at: convertToMySQLDateTime(),
@@ -1179,7 +1178,7 @@ export class ProductService {
     if (data?.combo_items?.length) {
       // Nếu là SP combo, tạo group
       let productGroup = await this.productVariationGroupRepo.create({
-        code: uuid().replace(/-/g, ''),
+        code: generateRandomString(),
         product_root_id: result.product_id,
         created_at: convertToMySQLDateTime(),
         updated_at: convertToMySQLDateTime(),

@@ -25,7 +25,8 @@ import { orderSearchFilter } from 'src/utils/tableConditioner';
 import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
-import { OrderStatus } from '../../database/enums/status.enum';
+import { OrderStatus, StatusType } from '../../database/enums/status.enum';
+import { statusJoiner } from '../../utils/joinTable';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -61,42 +62,42 @@ export class OrdersService {
           : [newOrderDetail];
       }
     }
-    // return result;
+    return result;
 
     //============ Push data to Appcore ==================
-    const config: any = {
-      method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: convertDataToIntegrate(result),
-    };
+    // const config: any = {
+    //   method: 'POST',
+    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   data: convertDataToIntegrate(result),
+    // };
 
-    try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const origin_order_id = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
-          { order_id: result.order_id },
-          { origin_order_id, status: OrderStatus.Open },
-        );
+    // try {
+    //   const response = await axios(config);
+    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+    //   if (response?.data?.data) {
+    //     const origin_order_id = response.data.data;
+    //     let updateOriginOrderId = await this.orderRepo.update(
+    //       { order_id: result.order_id },
+    //       { origin_order_id, status: OrderStatus.Open },
+    //     );
 
-        result = { ...result, ...updateOriginOrderId };
+    //     result = { ...result, ...updateOriginOrderId };
 
-        message = 'Đẩy đơn hàng đến appcore thành công';
-      }
-      return { result, message };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
-        400,
-      );
-    }
+    //     message = 'Đẩy đơn hàng đến appcore thành công';
+    //   }
+    //   return { result, message };
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new HttpException(
+    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+    //       error?.response?.data?.message || error.message
+    //     }`,
+    //     400,
+    //   );
+    // }
   }
 
   async createSync(data: CreateOrderDto) {
@@ -189,7 +190,25 @@ export class OrdersService {
   }
 
   async getByPhoneAndId(phone: string, order_id: number) {
-    const order = await this.orderRepo.findOne({ order_id, b_phone: phone });
+    const order = await this.orderRepo.findOne({
+      order_id,
+      b_phone: phone,
+    });
+
+    const status = await this.statusRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: statusJoiner,
+      },
+      where: {
+        [`${Table.STATUS}.status`]: order.status,
+        [`${Table.STATUS}.type`]: StatusType.Order,
+      },
+    });
+
+    if (status) {
+      order['status'] = status;
+    }
 
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
@@ -251,6 +270,23 @@ export class OrdersService {
       skip,
       limit,
     });
+
+    //Lấy thông tin trạng thái đơn hàng
+    for (let orderItem of ordersList) {
+      const status = await this.statusRepo.findOne({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: statusJoiner,
+        },
+        where: {
+          [`${Table.STATUS}.status`]: orderItem.status,
+          [`${Table.STATUS}.type`]: StatusType.Order,
+        },
+      });
+      if (status) {
+        orderItem['status'] = status;
+      }
+    }
 
     const count = await this.orderRepo.find({
       select: [`DISTINCT(COUNT(${Table.ORDERS}.order_id)) as total`],
