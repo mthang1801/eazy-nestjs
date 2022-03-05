@@ -3,12 +3,12 @@ import { UsersService } from '../services/users.service';
 import { UsersController as UsersControllerBe } from '../controllers/be/users.controller';
 import { UsersController as UsersControllerFe } from '../controllers/fe/users.controller';
 import { MailModule } from './mail.module';
-import { ConfigService, ConfigModule } from '@nestjs/config';
 import { UserGroupsModule } from './usergroups.module';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserMailingListRepository } from '../repositories/userMailingLists.repository';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 @Module({
   imports: [MailModule, UserGroupsModule],
   exports: [
@@ -17,6 +17,7 @@ import { UserMailingListRepository } from '../repositories/userMailingLists.repo
     UserProfileRepository,
     UserDataRepository,
     UserMailingListRepository,
+    UserLoyaltyRepository,
   ],
   providers: [
     UsersService,
@@ -24,6 +25,7 @@ import { UserMailingListRepository } from '../repositories/userMailingLists.repo
     UserProfileRepository,
     UserDataRepository,
     UserMailingListRepository,
+    UserLoyaltyRepository,
   ],
   controllers: [UsersControllerBe, UsersControllerFe],
 })

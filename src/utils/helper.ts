@@ -29,6 +29,16 @@ export const generateOTPDigits = () =>
 
 export const generateRandomString = () => uuid().replace(/-/g, '');
 
+export const generateRandomPassword = (length = 10) => {
+  let password = '';
+  let charset =
+    'abcdefghijklmnopqrstuvwxyz!@#$%^&ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  for (let i = 0; i < length; i++) {
+    password += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return password;
+};
+
 export const preprocessDatabaseBeforeResponse = (data) => {
   if (!data || (typeof data === 'object' && !Object.entries(data).length)) {
     return null;

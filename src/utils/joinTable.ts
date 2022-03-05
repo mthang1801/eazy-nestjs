@@ -220,3 +220,16 @@ export const statusJoiner = {
     rootJoin: `${Table.STATUS}.status_id`,
   },
 };
+
+export const orderJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.STORE_LOCATIONS]: {
+      fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+      rootJoin: `${Table.ORDERS}.store_id`,
+    },
+    [Table.STORE_LOCATION_DESCRIPTIONS]: {
+      fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
+      rootJoin: `${Table.ORDERS}.store_id`,
+    },
+  },
+};

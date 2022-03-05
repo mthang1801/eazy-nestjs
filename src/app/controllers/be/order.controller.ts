@@ -30,8 +30,8 @@ export class OrderController extends BaseController {
 
   @Post()
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
-    const { result, message } = await this.service.create(body);
-    return this.responseSuccess(res, result, message);
+    const result = await this.service.create(body);
+    return this.responseSuccess(res, result, 'Tạo thành công');
   }
 
   @Get()
@@ -48,6 +48,15 @@ export class OrderController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.update(ref_order_id, body);
     return this.responseSuccess(res, result, `Cập nhật thành công.`);
+  }
+
+  @Get('/:order_id')
+  async get(
+    @Res() res,
+    @Param('order_id') order_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getById(order_id);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/:order_id/order-details')

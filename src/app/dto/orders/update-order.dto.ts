@@ -49,7 +49,7 @@ export class UpdateOrderDto {
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
-  status: number = 0; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
+  status: string; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
 
   @IsOptional()
   payment_status: number = 1;
@@ -57,7 +57,7 @@ export class UpdateOrderDto {
   @IsOptional()
   warranty_note: string; //Ghi chú bảo hành
 
-  @ArrayNotEmpty()
+  @IsOptional()
   order_items: ProductOrder[];
 
   @IsOptional()

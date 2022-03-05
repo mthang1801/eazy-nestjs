@@ -110,15 +110,21 @@ export class UsersService {
     return this.userDataRepository.create(data);
   }
 
-  async updateProfile(id: number, data: UpdateUserProfileDto): Promise<void> {
-    const user = await this.userRepository.findById(id);
+  async updateProfile(
+    phone: string,
+    data: UpdateUserProfileDto,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({ phone });
     if (!user) {
       throw new HttpException('Không tìm thấy người dùng', 404);
     }
 
     const userProfileData = this.userProfileRepository.setData(data);
     if (Object.entries(userProfileData).length) {
-      await this.userProfileRepository.update({ user_id: id }, userProfileData);
+      await this.userProfileRepository.update(
+        { user_id: user.user_id },
+        userProfileData,
+      );
     }
   }
 

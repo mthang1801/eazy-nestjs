@@ -618,7 +618,7 @@ export class ProductService {
       ) {
         productItem['productType'] = 1; //Sản phẩm cha
       } else if (
-        !productItem.parent_product_id &&
+        productItem.parent_product_id &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 2; // Sản phẩm con

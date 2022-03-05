@@ -26,7 +26,7 @@ import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
 import { OrderStatus, StatusType } from '../../database/enums/status.enum';
-import { statusJoiner } from '../../utils/joinTable';
+import { orderJoiner, statusJoiner } from '../../utils/joinTable';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -45,22 +45,22 @@ export class OrdersService {
       status: OrderStatus.Failed,
     };
 
+    orderData['total'] = 0;
+    for (let orderItem of data.order_items) {
+      orderData['total'] += orderItem.price * orderItem.amount;
+    }
     let result = await this.orderRepo.create(orderData);
-    if (data.order_items.length) {
-      for (let orderItem of data.order_items) {
-        let orderDetailData = {
-          ...new OrderDetailsEntity(),
-          ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-        };
+    for (let orderItem of data.order_items) {
+      let orderDetailData = {
+        ...new OrderDetailsEntity(),
+        ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+      };
 
-        const newOrderDetail = await this.orderDetailRepo.create(
-          orderDetailData,
-        );
+      const newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
 
-        result['order_items'] = result['order_items']
-          ? [...result['order_items'], newOrderDetail]
-          : [newOrderDetail];
-      }
+      result['order_items'] = result['order_items']
+        ? [...result['order_items'], newOrderDetail]
+        : [newOrderDetail];
     }
     return result;
 
@@ -265,7 +265,7 @@ export class OrdersService {
 
     const ordersList = await this.orderRepo.find({
       select: ['*'],
-      orderBy: [{ field: 'status', sortBy: SortBy.ASC }],
+      join: orderJoiner,
       where: orderSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -301,6 +301,35 @@ export class OrdersService {
         total: count.length ? count[0].total : 0,
       },
     };
+  }
+  async getById(order_id: number) {
+    const order = await this.orderRepo.findOne({
+      select: '*',
+      join: orderJoiner,
+      where: { order_id },
+    });
+
+    const status = await this.statusRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: statusJoiner,
+      },
+      where: {
+        [`${Table.STATUS}.status`]: order.status,
+        [`${Table.STATUS}.type`]: StatusType.Order,
+      },
+    });
+
+    if (status) {
+      order['status'] = status;
+    }
+
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+    const orderDetails = await this.getOrderDetails(order_id);
+    order['order_items'] = orderDetails;
+    return order;
   }
 
   async getOrderDetails(order_id: number) {

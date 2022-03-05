@@ -95,16 +95,6 @@ export const convertDataToIntegrate = (data) => {
 
   if (data['status']) {
     itgData['status'] = data['status'];
-    //Trạng thái đơn hàng,
-    // 0 : Đơn được tạo nhưng chưa hoạt động,
-    // 1. Đơn đã hoạt động, chờ xác nhận
-    // 2. Đã xác nhận
-    // 3. Đang chuẩn bị
-    // 4. Đang đóng gói
-    // 5. Đang vận chuyển
-    // 6. Không bắt máy
-    // 7. Thành công
-    // 8. Không thành công
   }
 
   if (data['shipping_ids']) {

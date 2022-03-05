@@ -24,13 +24,14 @@ export class CustomerController extends BaseController {
 
     return this.responseSuccess(res, result, `action return all customer`);
   }
-  @Put('/:id')
+
+  @Put('/:phone')
   async update(
     @Res() res,
-    @Param('id') id,
+    @Param('phone') phone: string,
     @Body() body: UpdateCustomerDTO,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, body);
+    const result = await this.service.update(phone, body);
 
     return this.responseSuccess(res, result, `action update customer`);
   }

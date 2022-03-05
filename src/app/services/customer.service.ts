@@ -21,7 +21,12 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
-import { preprocessUserResult } from 'src/utils/helper';
+import { generateRandomPassword, preprocessUserResult } from 'src/utils/helper';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { convertToMySQLDateTime } from '../../utils/helper';
+import { saltHashPassword } from 'src/utils/cipherHelper';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class CustomerService {
@@ -31,6 +36,8 @@ export class CustomerService {
     private userProfileRepo: UserProfileRepository<UserProfileEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+    private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
+    private mailService: MailService,
   ) {}
 
   async getList(params) {
@@ -100,8 +107,55 @@ export class CustomerService {
     }
     return preprocessUserResult(user);
   }
-  async update(id, data: UpdateCustomerDTO) {
-    const users = await this.usersService.updateProfilebyAdmin(id, data);
-    return users;
+
+  async update(phone: string, data: UpdateCustomerDTO) {
+    const user = await this.userRepo.findOne({ phone });
+    if (!user) {
+      throw new HttpException('Không tìm thấy người dùng.', 404);
+    }
+    let result = { ...user };
+    const userData = this.userRepo.setData(data);
+    if (Object.entries(userData).length) {
+      const updatedUser = await this.userRepo.update({ phone }, userData);
+      result = { ...result, ...updatedUser };
+    }
+
+    const userProfileData = this.userProfileRepo.setData(data);
+    if (Object.entries(userProfileData).length) {
+      const updatedUserProfile = await this.userProfileRepo.update(
+        { user_id: result.user_id },
+        userProfileData,
+      );
+      result = { ...result, profile: updatedUserProfile };
+    }
+
+    if (data.loyalty_point) {
+      const userLoyal = await this.userRepo.findOne({ user_id: user.user_id });
+      if (!userLoyal) {
+        const newUserLoyal = await this.userLoyalRepo.create({
+          user_id: user.user_id,
+          loyalty_point: data.loyalty_point,
+          created_at: convertToMySQLDateTime(),
+          updated_at: convertToMySQLDateTime(),
+        });
+        result['loyalty'] = newUserLoyal;
+      } else {
+        const updatedUserLoyal = await this.userLoyalRepo.update(
+          {
+            user_id: user.user_id,
+          },
+          {
+            loyalty_point: data.loyalty_point,
+            updated_at: convertToMySQLDateTime(),
+          },
+        );
+        result['loyalty'] = updatedUserLoyal;
+      }
+    }
+  }
+
+  async generatePasswordAndSendMail() {
+    const randomPassword = generateRandomPassword();
+    const { passwordHash, salt } = saltHashPassword(randomPassword);
   }
 }
