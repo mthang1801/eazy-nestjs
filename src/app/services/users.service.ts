@@ -338,23 +338,6 @@ export class UsersService {
     return updatedUser;
   }
 
-  async restorePasswordByOTP(user_id: number, otp: number): Promise<boolean> {
-    const user = await this.userRepository.findById(user_id);
-
-    if (user.otp_incorrect_times > 2) {
-      throw new BadRequestException('Số lần nhập mã OTP vượt quá giới hạn');
-    }
-    if (user.otp !== otp) {
-      const otp_incorrect_times = user.otp_incorrect_times + 1;
-      await this.userRepository.update(user.user_id, {
-        otp_incorrect_times,
-      });
-
-      throw new BadRequestException('OTP không chính xác');
-    }
-    return true;
-  }
-
   async updateProfilebyAdmin(id, data) {
     let userData = {
       ...this.userRepository.setData(data),

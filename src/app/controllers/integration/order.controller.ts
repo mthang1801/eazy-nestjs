@@ -27,18 +27,23 @@ import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 //@UseGuards(AuthGuard)
 @Controller('/itg/v1/orders')
 export class OrderIntegrationController extends BaseController {
-  constructor(
-    private service: OrdersService,
-    private orderStatusService: OrderStatusService,
-  ) {
+  constructor(private service: OrdersService) {
     super();
   }
+
   @Post()
-  async createSync(
-    @Res() res,
-    @Body() body: CreateOrderDto,
-  ): Promise<IResponse> {
-    const result = await this.service.createSync(body);
+  async create(@Res() res, @Body() body): Promise<IResponse> {
+    const result = await this.service.itgCreate(body);
     return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
+  }
+
+  @Put('/:origin_order_id')
+  async update(
+    @Res() res: IResponse,
+    @Param('origin_order_id') origin_order_id: string,
+    data,
+  ): Promise<IResponse> {
+    await this.service.itgUpdate(origin_order_id, data);
+    return this.responseSuccess(res, '', 'Cập nhật thành công');
   }
 }

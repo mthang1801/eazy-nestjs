@@ -27,6 +27,8 @@ import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
 import { OrderStatus, StatusType } from '../../database/enums/status.enum';
 import { orderJoiner, statusJoiner } from '../../utils/joinTable';
+import { itgOrderFromAppcore } from 'src/utils/integrateFunctions';
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -100,19 +102,36 @@ export class OrdersService {
     // }
   }
 
-  async createSync(data: CreateOrderDto) {
+  async itgCreate(data) {
+    if (!data.origin_order_id) {
+      throw new HttpException(
+        "Dữ liệu cần id của đơn hàng, truyền vào với tham số 'origin_order_id'",
+        422,
+      );
+    }
+
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        if (!orderItem.origin_order_item_id) {
+          throw new HttpException(
+            "Mỗi đơn hàng chi tiết cần có id thể hiện qua 'orgin_order_item_id'",
+            422,
+          );
+        }
+      }
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: 0,
     };
 
     let result = await this.orderRepo.create(orderData);
+
     if (data.order_items.length) {
       for (let orderItem of data.order_items) {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
-
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
         };
 
@@ -123,6 +142,69 @@ export class OrdersService {
         result['order_items'] = result['order_items']
           ? [...result['order_items'], newOrderDetail]
           : [newOrderDetail];
+      }
+    }
+
+    return result;
+  }
+
+  async itgUpdate(origin_order_id: string, data) {
+    const order = await this.orderRepo.findOne({ origin_order_id });
+    if (!order) {
+      throw new HttpException(
+        `Không tìm thấy đơn hàng có id ${origin_order_id} được gửi từ AppCore`,
+        404,
+      );
+    }
+
+    let result = { ...order };
+
+    const orderData = this.orderRepo.setData(data);
+
+    if (Object.entries(orderData).length) {
+      const updatedData = await this.orderRepo.update(
+        { origin_order_id },
+        orderData,
+      );
+      result = { ...result, ...updatedData };
+    }
+
+    result['order_items'] = [];
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        //Nếu có params isDeleted thì xoá
+        if (orderItem.isDeleted) {
+          await this.orderDetailRepo.delete({
+            origin_order_item_id: orderItem.origin_order_item_id,
+          });
+          continue;
+        }
+
+        const currentOrderItem = await this.orderDetailRepo.findOne({
+          origin_order_item_id: orderItem.origin_order_item_id,
+        });
+
+        //Nếu có currentOrderItem thì update, ngược lại sẽ tạo mới
+        if (currentOrderItem) {
+          const orderItemData = await this.orderDetailRepo.setData(orderItem);
+          if (Object.entries(orderItemData).length) {
+            const updatedOrderItem = await this.orderDetailRepo.update(
+              { origin_order_item_id: orderItem.origin_order_item_id },
+              orderItemData,
+            );
+            result['order_items'] = [
+              ...result['order_items'],
+              updatedOrderItem,
+            ];
+          }
+        } else {
+          const orderItemData = {
+            ...new OrderDetailsEntity(),
+            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+          };
+          const newOrderItem = await this.orderDetailRepo.create(orderItemData);
+          result['order_items'] = [...result['order_items'], newOrderItem];
+        }
       }
     }
 
@@ -357,4 +439,6 @@ export class OrdersService {
 
     return orderDetailsList;
   }
+
+  async callCreateItg() {}
 }

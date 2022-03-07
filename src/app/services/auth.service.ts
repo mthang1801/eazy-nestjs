@@ -46,6 +46,8 @@ import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
 import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
 import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 
 @Injectable()
 export class AuthService {
@@ -59,6 +61,7 @@ export class AuthService {
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userRepository: UserRepository<UserEntity>,
+    private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
@@ -135,6 +138,13 @@ export class AuthService {
       data: '',
     });
 
+    //create a new record at ddv_user_loyalty
+    const newUserLoyalty = await this.userLoyaltyRepo.create({
+      user_id: user.user_id,
+      created_at: convertToMySQLDateTime(),
+      updated_at: convertToMySQLDateTime(),
+    });
+
     // Create a new record to user mailing list db and send email
     this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
   }
@@ -144,7 +154,7 @@ export class AuthService {
     const email = data['email'];
     const password = data['password'];
 
-    let user: UserGeneralInfoEntity = phone
+    let user = phone
       ? await this.userService.findUserAllInfo({ phone })
       : await this.userService.findUserAllInfo({ email });
 

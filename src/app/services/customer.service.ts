@@ -27,6 +27,10 @@ import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { convertToMySQLDateTime } from '../../utils/helper';
 import { saltHashPassword } from 'src/utils/cipherHelper';
 import { MailService } from './mail.service';
+import axios from 'axios';
+import { itgCustomerFromAppcore } from 'src/utils/integrateFunctions';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserDataEntity } from '../entities/userData.entity';
 
 @Injectable()
 export class CustomerService {
@@ -37,6 +41,8 @@ export class CustomerService {
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
+
     private mailService: MailService,
   ) {}
 
@@ -154,8 +160,66 @@ export class CustomerService {
     }
   }
 
-  async generatePasswordAndSendMail() {
-    const randomPassword = generateRandomPassword();
-    const { passwordHash, salt } = saltHashPassword(randomPassword);
+  async itgGet() {
+    try {
+      const response = await axios({
+        url: 'http://mb.viendidong.com/core-api/v1/customers',
+      });
+      const randomPassword = generateRandomPassword();
+      const { passwordHash, salt } = saltHashPassword(randomPassword);
+      const users = response.data.data;
+      for (let userItem of users) {
+        const itgUser = itgCustomerFromAppcore(userItem);
+        const userData = {
+          ...new UserEntity(),
+          ...this.userRepo.setData(itgUser),
+          password: passwordHash,
+          salt: salt,
+        };
+        console.log(userData);
+
+        const newUser = await this.userRepo.create(userData);
+        console.log(newUser);
+        let result = { ...newUser };
+
+        const userProfileData = {
+          ...new UserProfileEntity(),
+          ...this.userProfileRepo.setData(itgUser),
+          user_id: result.user_id,
+        };
+
+        const newUserProfile = await this.userProfileRepo.create(
+          userProfileData,
+        );
+
+        result = { ...result, profile: newUserProfile };
+
+        const userDataData = {
+          ...new UserDataEntity(),
+          ...this.userDataRepo.setData(itgUser),
+          user_id: result.user_id,
+        };
+
+        const newUserData = await this.userDataRepo.create(userDataData);
+
+        result = { ...result, data: newUserData };
+
+        const userLoyaltyData = {
+          ...new UserLoyaltyEntity(),
+          ...this.userLoyalRepo.setData(itgUser),
+          user_id: result.user_id,
+        };
+
+        const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
+
+        result = { ...result, loyalty: newUserLoyalty };
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra : ${error.response.data.message}`,
+        error.response.status_code,
+      );
+    }
   }
 }

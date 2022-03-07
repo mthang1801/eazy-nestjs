@@ -1,15 +1,16 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
 import { UserMenuEntity } from './userMenu.entity';
 export class UserEntity {
   user_id: number;
   status: string = 'A';
-  user_type: string = '';
-  user_login: string = '';
+  user_type: string = 'C';
+  user_login: string = 'SYSTEM';
   referer: string = '';
   is_root: string = '';
   company_id: number = 0;
   store_id: number = 0;
   last_login: number = 0;
-  created_at: Date = new Date();
+  created_at: string = convertToMySQLDateTime();
   password: string = '';
   salt: string = '';
   firstname: string = '';
@@ -21,16 +22,12 @@ export class UserEntity {
   url: string = '';
   tax_exempt: string = '';
   lang_code: string = 'vi';
-  birthday: Date = new Date();
-  purchase_timestamp_from: Date = new Date();
-  purchase_timestamp_to: Date = new Date();
+  birthday: string = convertToMySQLDateTime();
+  purchase_timestamp_from: string = convertToMySQLDateTime();
+  purchase_timestamp_to: string = convertToMySQLDateTime();
   responsible_email: string = '';
   last_passwords: string = '';
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
-  verify_token: string = '';
-  verify_token_exp: Date = new Date();
-  otp: number = 0;
-  otp_incorrect_times: number = 0;
 }

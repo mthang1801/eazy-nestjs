@@ -9,8 +9,8 @@ export class CustomerController extends BaseController {
     super();
   }
   @Get()
-  async syncRetrieveCustomer(@Res() res: Response): Promise<IResponse> {
-    await this.service.generatePasswordAndSendMail();
-    return this.responseSuccess(res, '', 'Synced');
+  async get(@Res() res: Response): Promise<IResponse> {
+    await this.service.itgGet();
+    return this.responseSuccess(res, '', 'Đồng bộ KH từ appcore thành công.');
   }
 }
