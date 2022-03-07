@@ -163,23 +163,24 @@ export class CustomerService {
   async itgGet() {
     try {
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/customers',
+        url: 'http://mb.viendidong.com/core-api/v1/customers?page=1',
       });
       const randomPassword = generateRandomPassword();
       const { passwordHash, salt } = saltHashPassword(randomPassword);
       const users = response.data.data;
+
       for (let userItem of users) {
         const itgUser = itgCustomerFromAppcore(userItem);
+
         const userData = {
           ...new UserEntity(),
           ...this.userRepo.setData(itgUser),
           password: passwordHash,
           salt: salt,
         };
-        console.log(userData);
 
         const newUser = await this.userRepo.create(userData);
-        console.log(newUser);
+
         let result = { ...newUser };
 
         const userProfileData = {
@@ -221,5 +222,53 @@ export class CustomerService {
         error.response.status_code,
       );
     }
+  }
+
+  async itgCreate(data) {
+    const randomPassword = generateRandomPassword();
+    const { passwordHash, salt } = saltHashPassword(randomPassword);
+    const itgUser = itgCustomerFromAppcore(data);
+
+    const userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(itgUser),
+      password: passwordHash,
+      salt: salt,
+    };
+
+    const newUser = await this.userRepo.create(userData);
+
+    let result = { ...newUser };
+
+    const userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(itgUser),
+      user_id: result.user_id,
+    };
+
+    const newUserProfile = await this.userProfileRepo.create(userProfileData);
+
+    result = { ...result, profile: newUserProfile };
+
+    const userDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(itgUser),
+      user_id: result.user_id,
+    };
+
+    const newUserData = await this.userDataRepo.create(userDataData);
+
+    result = { ...result, data: newUserData };
+
+    const userLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalRepo.setData(itgUser),
+      user_id: result.user_id,
+    };
+
+    const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
+
+    result = { ...result, loyalty: newUserLoyalty };
+    return result;
   }
 }

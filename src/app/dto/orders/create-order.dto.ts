@@ -158,6 +158,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   origin_order_id: number = 0;
+
+  @IsOptional()
+  transfer_code: string = '';
 }
 
 class ProductOrder {

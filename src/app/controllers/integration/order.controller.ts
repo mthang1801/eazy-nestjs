@@ -19,7 +19,7 @@ import { OrderStatusService } from 'src/app/services/orderStatus.service';
 import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
-
+import { Response } from 'express';
 /**
  * Controller for Category
  * @Author LongTRinh
@@ -31,15 +31,36 @@ export class OrderIntegrationController extends BaseController {
     super();
   }
 
+  @Get()
+  async getSync(@Res() res: Response): Promise<IResponse> {
+    await this.service.itgGet();
+    return this.responseSuccess(res, null, 'Đồng bộ đơn hàng thành công');
+  }
+
   @Post()
   async create(@Res() res, @Body() body): Promise<IResponse> {
     const result = await this.service.itgCreate(body);
     return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
   }
 
+  @Get('/:ref_order_id')
+  async get(@Res() res: Response, @Param('ref_order_id') ref_order_id: string) {
+    const result = await this.service.getByRefOrderId(ref_order_id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/create')
+  async createTest(
+    @Res() res,
+    @Body() body: CreateOrderDto,
+  ): Promise<IResponse> {
+    const result = await this.service.create(body);
+    return this.responseSuccess(res, result, 'Tạo thành công');
+  }
+
   @Put('/:origin_order_id')
   async update(
-    @Res() res: IResponse,
+    @Res() res: Response,
     @Param('origin_order_id') origin_order_id: string,
     data,
   ): Promise<IResponse> {

@@ -80,6 +80,7 @@ export class OrderEntity {
   validation_code: string = '';
   localization_id: number = 0;
   utm_source: number = 0;
+  transfer_code: string = '';
   ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();

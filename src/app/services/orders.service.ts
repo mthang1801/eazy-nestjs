@@ -28,6 +28,8 @@ import { StatusEntity } from '../entities/status.entity';
 import { OrderStatus, StatusType } from '../../database/enums/status.enum';
 import { orderJoiner, statusJoiner } from '../../utils/joinTable';
 import { itgOrderFromAppcore } from 'src/utils/integrateFunctions';
+import { StoreLocationRepository } from '../repositories/storeLocation.repository';
+import { StoreLocationEntity } from '../entities/storeLocation.entity';
 
 @Injectable()
 export class OrdersService {
@@ -38,6 +40,7 @@ export class OrdersService {
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userRepo: UserRepository<UserEntity>,
     private statusRepo: StatusRepository<StatusEntity>,
+    private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
   ) {}
 
   async create(data: CreateOrderDto) {
@@ -64,42 +67,57 @@ export class OrdersService {
         ? [...result['order_items'], newOrderDetail]
         : [newOrderDetail];
     }
-    return result;
 
     //============ Push data to Appcore ==================
-    // const config: any = {
-    //   method: 'POST',
-    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   data: convertDataToIntegrate(result),
-    // };
+    const config: any = {
+      method: 'POST',
+      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
 
-    // try {
-    //   const response = await axios(config);
-    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-    //   if (response?.data?.data) {
-    //     const origin_order_id = response.data.data;
-    //     let updateOriginOrderId = await this.orderRepo.update(
-    //       { order_id: result.order_id },
-    //       { origin_order_id, status: OrderStatus.Open },
-    //     );
+    try {
+      const response = await axios(config);
+      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+      if (response?.data?.data) {
+        const origin_order_id = response.data.data;
+        let updateOriginOrderId = await this.orderRepo.update(
+          { order_id: result.order_id },
+          { origin_order_id, status: OrderStatus.Open },
+        );
 
-    //     result = { ...result, ...updateOriginOrderId };
+        result = { ...result, ...updateOriginOrderId };
 
-    //     message = 'Đẩy đơn hàng đến appcore thành công';
-    //   }
-    //   return { result, message };
-    // } catch (error) {
-    //   console.log(error);
-    //   throw new HttpException(
-    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-    //       error?.response?.data?.message || error.message
-    //     }`,
-    //     400,
-    //   );
-    // }
+        message = 'Đẩy đơn hàng đến appcore thành công';
+      }
+      return { result, message };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
+  }
+
+  async itgGet() {
+    try {
+      const response = await axios({
+        url: 'http://mb.viendidong.com/core-api/v1/orders',
+      });
+      if (!response) {
+        throw new HttpException('không tìm thấy db', 404);
+      }
+      const data = response?.data?.data;
+      console.log(data);
+    } catch (error) {
+      console.log(error.response);
+      throw new HttpException('Có lỗi xảy ra', 422);
+    }
   }
 
   async itgCreate(data) {
@@ -384,6 +402,7 @@ export class OrdersService {
       },
     };
   }
+
   async getById(order_id: number) {
     const order = await this.orderRepo.findOne({
       select: '*',
@@ -414,14 +433,53 @@ export class OrdersService {
     return order;
   }
 
-  async getOrderDetails(order_id: number) {
-    const order = await this.orderRepo.findOne({ order_id });
+  async getByRefOrderId(ref_order_id: string) {
+    const order = await this.orderRepo.findOne({ ref_order_id });
     if (!order) {
-      throw new HttpException('Không tìm thấy đơn hàng', 404);
+      throw new HttpException('Đơn hàng không tồn tại', 404);
     }
 
-    const orderDetailsList = await this.orderDetailRepo.find({
-      select: '*',
+    return this.getOrderDetails(order);
+  }
+
+  async getOrderDetails(order) {
+    if (order.store_id) {
+      const store = await this.storeLocationRepo.findOne({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.STORE_LOCATION_DESCRIPTIONS]: {
+              fieldJoin: 'store_location_id',
+              rootJoin: 'store_location_id',
+            },
+          },
+        },
+        where: {
+          [`${Table.STORE_LOCATIONS}.store_location_id`]: order.store_id,
+        },
+      });
+      if (store) {
+        order['store'] = store;
+      }
+    }
+
+    const status = await this.statusRepo.findOne({
+      select: ['*'],
+      join: {
+        [JoinTable.leftJoin]: statusJoiner,
+      },
+      where: {
+        [`${Table.STATUS}.status`]: order.status,
+        [`${Table.STATUS}.type`]: StatusType.Order,
+      },
+    });
+
+    if (status) {
+      order['status'] = status;
+    }
+
+    const orderDetails = await this.orderDetailRepo.find({
+      select: `${Table.PRODUCTS}.slug, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
       join: {
         [JoinTable.leftJoin]: {
           [Table.PRODUCTS]: {
@@ -434,10 +492,13 @@ export class OrdersService {
           },
         },
       },
-      where: { [`${Table.ORDER_DETAILS}.order_id`]: order_id },
+      where: {
+        [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
+      },
     });
 
-    return orderDetailsList;
+    order['order_items'] = orderDetails;
+    return order;
   }
 
   async callCreateItg() {}

@@ -208,10 +208,10 @@ export const convertDataToIntegrate = (data) => {
     itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
   }
 
-  itgData['refOrderId'] = data['ref_order_id'] || '0'; //Mã đơn hàng của đối tác *
+  itgData['refOrderId'] = data['ref_order_id']; //Mã đơn hàng của đối tác *
 
   if (data['discount_type']) {
-    itgData['discountType'] = data['discount_type'] || 1; //Kiểu chiết khấu
+    itgData['discountType'] = data['discount_type']; //Kiểu chiết khấu
   }
 
   if (data['discount']) {

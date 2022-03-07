@@ -13,6 +13,7 @@ import { OrderStatusModule } from './orderStatus.module';
 import { OrdersController as OrdersControllerFE } from '../controllers/fe/order.controllers';
 import { UsersModule } from './users.module';
 import { StatusModule } from './status.module';
+import { StoreModule } from './store.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -38,6 +39,6 @@ import { StatusModule } from './status.module';
     OrderDataRepository,
     UserProfileRepository,
   ],
-  imports: [OrderStatusModule, UsersModule, StatusModule],
+  imports: [OrderStatusModule, UsersModule, StatusModule, StoreModule],
 })
 export class OrdersModule {}
