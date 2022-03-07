@@ -44,9 +44,9 @@ export class OrderController extends BaseController {
   async update(
     @Res() res,
     @Param('ref_order_id') ref_order_id,
-    @Body() body: UpdateOrderDto,
+    @Body() data,
   ): Promise<IResponse> {
-    const result = await this.service.update(ref_order_id, body);
+    const result = await this.service.update(ref_order_id, data);
     return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 
@@ -58,13 +58,4 @@ export class OrderController extends BaseController {
     const result = await this.service.getById(order_id);
     return this.responseSuccess(res, result);
   }
-
-  // @Get('/:order_id/order-details')
-  // async getOrderDetails(
-  //   @Param('order_id') order_id: number,
-  //   @Res() res: Response,
-  // ): Promise<IResponse> {
-  //   const result = await this.service.getOrderDetails(order_id);
-  //   return this.responseSuccess(res, result);
-  // }
 }

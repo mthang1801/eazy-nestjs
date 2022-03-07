@@ -6,7 +6,7 @@ import {
   IsIn,
   ArrayNotEmpty,
 } from 'class-validator';
-import { OrderStatus } from '../../../database/enums/status.enum';
+import { OrderStatusEnum } from '../../../database/enums/status.enum';
 import { generateRandomString } from 'src/utils/helper';
 export class CreateOrderDto {
   @IsOptional()
@@ -49,7 +49,7 @@ export class CreateOrderDto {
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
-  status: string = OrderStatus.Failed; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
+  status: string = OrderStatusEnum.Failed; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
 
   @IsOptional()
   payment_status: number = 1;
@@ -106,7 +106,7 @@ export class CreateOrderDto {
   credit_card_no: null | string;
 
   @IsOptional()
-  pay_credit_type: null | number;
+  pay_credit_type: null | number = 1;
 
   @IsOptional()
   installed_money_amount: number = 0;
@@ -161,6 +161,15 @@ export class CreateOrderDto {
 
   @IsOptional()
   transfer_code: string = '';
+
+  @IsOptional()
+  other_fees: number = 0;
+
+  @IsOptional()
+  transfer_no: number = 0;
+
+  @IsOptional()
+  transfer_bank: string = '';
 }
 
 class ProductOrder {
@@ -174,25 +183,10 @@ class ProductOrder {
   price: number;
 
   @IsOptional()
-  amount: number;
-
-  @IsOptional()
-  discount_type: number = 1;
-
-  @IsOptional()
-  discount: number = 0;
-
-  @IsOptional()
-  product_type: number = 1;
+  amount: number = 1;
 
   @IsOptional()
   product_code: string = '';
-
-  @IsOptional()
-  imei_code: null | string;
-
-  @IsOptional()
-  repurchase_price: number = 0;
 
   @IsOptional()
   is_gift_taken: null | number = 0;
@@ -204,5 +198,8 @@ class ProductOrder {
   note: string = '';
 
   @IsOptional()
-  gender: number = 0;
+  extra: string = '';
+
+  @IsOptional()
+  status: string = 'A';
 }

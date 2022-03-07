@@ -165,6 +165,12 @@ export class CreateProductDto {
 
   @IsOptional()
   children_products: CreateProductDto[] = [];
+
+  @IsOptional()
+  size: string = '';
+
+  @IsOptional()
+  color: string = '';
 }
 
 class ProductFeatureDto {

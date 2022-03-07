@@ -1,5 +1,5 @@
 import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
-import { OrderStatus } from '../../database/enums/status.enum';
+import { OrderStatusEnum } from '../../database/enums/status.enum';
 export class OrderEntity {
   order_id: number = 0;
   origin_order_id: null | number = 0;
@@ -19,7 +19,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: string = OrderStatus.Failed;
+  status: string = OrderStatusEnum.Failed;
   notes: string = '';
   gender: number = 0;
   details: string = '';
@@ -60,6 +60,8 @@ export class OrderEntity {
   email: string = '';
   id_card: number = 0;
   cash_account_id: number = 0;
+  transfer_no: number = 0;
+  transfer_bank: string = '';
   transfer_amount: number = 0;
   transfer_account_id: number = 0;
   transfer_ref_code: null | string = '';
@@ -70,7 +72,7 @@ export class OrderEntity {
   installed_money_amount: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;
-  pay_credit_type: null | number = 0;
+  pay_credit_type: null | number = 1;
   payment_id: number = 0;
   payment_status: number = 1;
   tax_exempt: string = '';
@@ -81,6 +83,7 @@ export class OrderEntity {
   localization_id: number = 0;
   utm_source: number = 0;
   transfer_code: string = '';
+  other_fees: number = 0;
   ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();

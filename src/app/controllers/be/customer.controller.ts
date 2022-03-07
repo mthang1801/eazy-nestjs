@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Body, Put, Res } from '@nestjs/common';
+import { Controller, Get, Param, Body, Put, Res, Post } from '@nestjs/common';
 import { CustomerService } from 'src/app/services/customer.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
@@ -12,6 +12,7 @@ export class CustomerController extends BaseController {
   constructor(private service: CustomerService) {
     super();
   }
+
   //@UseGuards(AuthGuard)
   @Get()
   async getList(@Res() res, @Query() params): Promise<IResponse> {

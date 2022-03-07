@@ -48,6 +48,8 @@ import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
+import { CustomerService } from './customer.service';
 
 @Injectable()
 export class AuthService {
@@ -65,6 +67,7 @@ export class AuthService {
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
+    private customerService: CustomerService,
   ) {}
 
   generateToken(user: UserEntity): string {
@@ -105,15 +108,7 @@ export class AuthService {
       created_at: convertToMySQLDateTime(),
     });
 
-    // After creating a new record, we need sent an email to activate
-
-    try {
-      await this.sendMailService(user);
-    } catch (error) {
-      // If sent email fail, a new record will be deleted immediately, the process below will be not performed
-      await this.userRepository.delete(user.user_id);
-      throw new HttpException(`Lỗi trong quá trình gửi email : ${error}`, 500);
-    }
+    let result = { ...user };
 
     //create a new record as customer position at ddv_usergroup_links
     const userGroupForCustomer: UserGroupEntity =
@@ -131,12 +126,16 @@ export class AuthService {
       profile_name: `${firstname} ${lastname}`,
     });
 
+    result = { ...result, ...newUserProfile };
+
     // Create a new record at ddv_user_data
     const newUserData = await this.userService.createUserData({
       user_id: user.user_id,
       type: '',
       data: '',
     });
+
+    result = { ...result, ...newUserData };
 
     //create a new record at ddv_user_loyalty
     const newUserLoyalty = await this.userLoyaltyRepo.create({
@@ -147,6 +146,8 @@ export class AuthService {
 
     // Create a new record to user mailing list db and send email
     this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
+
+    const itgUser = itgCustomerToAppcore(result);
   }
 
   async login(data: any): Promise<IResponseUserToken> {

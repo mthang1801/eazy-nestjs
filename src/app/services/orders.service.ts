@@ -25,11 +25,18 @@ import { orderSearchFilter } from 'src/utils/tableConditioner';
 import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
-import { OrderStatus, StatusType } from '../../database/enums/status.enum';
+import { OrderStatusEnum, StatusType } from '../../database/enums/status.enum';
 import { orderJoiner, statusJoiner } from '../../utils/joinTable';
 import { itgOrderFromAppcore } from 'src/utils/integrateFunctions';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
+import e from 'express';
+import { sortBy } from 'lodash';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 
 @Injectable()
 export class OrdersService {
@@ -41,24 +48,31 @@ export class OrdersService {
     private userRepo: UserRepository<UserEntity>,
     private statusRepo: StatusRepository<StatusEntity>,
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+    private imageRepo: ImagesRepository<ImagesEntity>,
   ) {}
 
   async create(data: CreateOrderDto) {
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: OrderStatus.Failed,
+      status: OrderStatusEnum.Failed,
     };
 
     orderData['total'] = 0;
     for (let orderItem of data.order_items) {
       orderData['total'] += orderItem.price * orderItem.amount;
     }
+
     let result = await this.orderRepo.create(orderData);
     for (let orderItem of data.order_items) {
       let orderDetailData = {
         ...new OrderDetailsEntity(),
-        ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+        ...this.orderDetailRepo.setData({
+          ...result,
+          ...orderItem,
+          status: 'A',
+        }),
       };
 
       const newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
@@ -69,6 +83,128 @@ export class OrdersService {
     }
 
     //============ Push data to Appcore ==================
+    // const config: any = {
+    //   method: 'POST',
+    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   data: convertDataToIntegrate(result),
+    // };
+
+    // try {
+    //   const response = await axios(config);
+    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+    //   if (response?.data?.data) {
+    //     const origin_order_id = response.data.data;
+    //     let updateOriginOrderId = await this.orderRepo.update(
+    //       { order_id: result.order_id },
+    //       { origin_order_id, status: OrderStatusEnum.Open },
+    //     );
+
+    //     result = { ...result, ...updateOriginOrderId };
+
+    //     message = 'Đẩy đơn hàng đến appcore thành công';
+    //   }
+    //   return { result, message };
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new HttpException(
+    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+    //       error?.response?.data?.message || error.message
+    //     }`,
+    //     400,
+    //   );
+    // }
+
+    return result;
+  }
+
+  async itgGet() {
+    try {
+      const response = await axios({
+        url: 'http://mb.viendidong.com/core-api/v1/orders?page=10',
+      });
+      if (!response) {
+        throw new HttpException('không tìm thấy db', 404);
+      }
+      const ordersData = response?.data?.data;
+
+      if (ordersData) {
+        for (let order of ordersData) {
+          const itgOrder = itgOrderFromAppcore(order);
+          const orderData = {
+            ...new OrderEntity(),
+            ...this.orderRepo.setData(itgOrder),
+          };
+          await this.orderRepo.createSync(orderData);
+
+          if (order?.orderItems?.length) {
+            for (let orderItem of order.orderItems) {
+              const itgOrderItem = {
+                ...new OrderDetailsEntity(),
+                ...this.orderDetailRepo.setData(orderItem),
+              };
+              await this.orderDetailRepo.createSync(itgOrderItem);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Có lỗi xảy ra', 422);
+    }
+  }
+
+  async itgCreate(data) {
+    // if (!data.origin_order_id) {
+    //   throw new HttpException(
+    //     "Dữ liệu cần id của đơn hàng, truyền vào với tham số 'origin_order_id'",
+    //     422,
+    //   );
+    // }
+
+    // if (data?.order_items?.length) {
+    //   for (let orderItem of data.order_items) {
+    //     if (!orderItem.origin_order_item_id) {
+    //       throw new HttpException(
+    //         "Mỗi đơn hàng chi tiết cần có id thể hiện qua 'orgin_order_item_id'",
+    //         422,
+    //       );
+    //     }
+    //   }
+    // }
+
+    const orderData = {
+      ...new OrderEntity(),
+      ...this.orderRepo.setData(data),
+    };
+
+    orderData['total'] = 0;
+    for (let orderItem of data.order_items) {
+      orderData['total'] += orderItem.price * orderItem.amount;
+    }
+
+    let result = await this.orderRepo.create(orderData);
+
+    if (data.order_items.length) {
+      for (let orderItem of data.order_items) {
+        let orderDetailData = {
+          ...new OrderDetailsEntity(),
+          ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+          status: 'A',
+        };
+
+        const newOrderDetail = await this.orderDetailRepo.create(
+          orderDetailData,
+        );
+
+        result['order_items'] = result['order_items']
+          ? [...result['order_items'], newOrderDetail]
+          : [newOrderDetail];
+      }
+    }
+
     const config: any = {
       method: 'POST',
       url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
@@ -85,7 +221,7 @@ export class OrdersService {
         const origin_order_id = response.data.data;
         let updateOriginOrderId = await this.orderRepo.update(
           { order_id: result.order_id },
-          { origin_order_id, status: OrderStatus.Open },
+          { origin_order_id, status: OrderStatusEnum.Open },
         );
 
         result = { ...result, ...updateOriginOrderId };
@@ -102,68 +238,6 @@ export class OrdersService {
         400,
       );
     }
-  }
-
-  async itgGet() {
-    try {
-      const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/orders',
-      });
-      if (!response) {
-        throw new HttpException('không tìm thấy db', 404);
-      }
-      const data = response?.data?.data;
-      console.log(data);
-    } catch (error) {
-      console.log(error.response);
-      throw new HttpException('Có lỗi xảy ra', 422);
-    }
-  }
-
-  async itgCreate(data) {
-    if (!data.origin_order_id) {
-      throw new HttpException(
-        "Dữ liệu cần id của đơn hàng, truyền vào với tham số 'origin_order_id'",
-        422,
-      );
-    }
-
-    if (data?.order_items?.length) {
-      for (let orderItem of data.order_items) {
-        if (!orderItem.origin_order_item_id) {
-          throw new HttpException(
-            "Mỗi đơn hàng chi tiết cần có id thể hiện qua 'orgin_order_item_id'",
-            422,
-          );
-        }
-      }
-    }
-
-    const orderData = {
-      ...new OrderEntity(),
-      ...this.orderRepo.setData(data),
-    };
-
-    let result = await this.orderRepo.create(orderData);
-
-    if (data.order_items.length) {
-      for (let orderItem of data.order_items) {
-        let orderDetailData = {
-          ...new OrderDetailsEntity(),
-          ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-        };
-
-        const newOrderDetail = await this.orderDetailRepo.create(
-          orderDetailData,
-        );
-
-        result['order_items'] = result['order_items']
-          ? [...result['order_items'], newOrderDetail]
-          : [newOrderDetail];
-      }
-    }
-
-    return result;
   }
 
   async itgUpdate(origin_order_id: string, data) {
@@ -188,32 +262,38 @@ export class OrdersService {
     }
 
     result['order_items'] = [];
+
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
-        //Nếu có params isDeleted thì xoá
-        if (orderItem.isDeleted) {
-          await this.orderDetailRepo.delete({
-            origin_order_item_id: orderItem.origin_order_item_id,
-          });
-          continue;
-        }
-
         const currentOrderItem = await this.orderDetailRepo.findOne({
           origin_order_item_id: orderItem.origin_order_item_id,
         });
 
         //Nếu có currentOrderItem thì update, ngược lại sẽ tạo mới
         if (currentOrderItem) {
-          const orderItemData = await this.orderDetailRepo.setData(orderItem);
-          if (Object.entries(orderItemData).length) {
+          if (orderItem.deleted) {
             const updatedOrderItem = await this.orderDetailRepo.update(
               { origin_order_item_id: orderItem.origin_order_item_id },
-              orderItemData,
+              { status: 'D' },
             );
             result['order_items'] = [
               ...result['order_items'],
               updatedOrderItem,
             ];
+          } else {
+            const orderItemData = await this.orderDetailRepo.setData({
+              ...orderItem,
+            });
+            if (Object.entries(orderItemData).length) {
+              const updatedOrderItem = await this.orderDetailRepo.update(
+                { origin_order_item_id: orderItem.origin_order_item_id },
+                orderItemData,
+              );
+              result['order_items'] = [
+                ...result['order_items'],
+                updatedOrderItem,
+              ];
+            }
           }
         } else {
           const orderItemData = {
@@ -229,17 +309,17 @@ export class OrdersService {
     return result;
   }
 
-  async update(ref_order_id: number, data: UpdateOrderDto) {
+  async update(ref_order_id: number, data) {
     const order = await this.orderRepo.findOne({ ref_order_id });
-
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
     let result = { ...order };
     const orderData = this.orderRepo.setData(data);
+
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
-        order.order_id,
+        { order_id: order.order_id },
         orderData,
       );
       result = { ...result, ...updatedOrder };
@@ -247,46 +327,46 @@ export class OrdersService {
 
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
-        const currentOrderItem = await this.orderDetailRepo.findById(
-          orderItem.item_id,
-        );
-
-        if (currentOrderItem && orderItem.is_deleted) {
-          result['order_items'] = result['order_items']
-            ? [...result['order_items'], orderItem]
-            : [orderItem];
-          await this.orderDetailRepo.delete({
+        if (orderItem.item_id) {
+          const currentOrderItem = await this.orderDetailRepo.findOne({
             item_id: orderItem.item_id,
           });
-        }
 
-        // Nếu SP đơn hàng đã tồn tại thì update, nếu chưa có thì thêm, nếu is_deleted = true thì xoá
-        if (currentOrderItem) {
-          let orderItemData = this.orderDetailRepo.setData(orderItem);
-          const updatedOrderItem = await this.orderDetailRepo.update(
-            orderItem.item_id,
-            orderItemData,
-          );
-
-          result['order_items'] = result['order_items']
-            ? [...result['order_items'], updatedOrderItem]
-            : [updatedOrderItem];
+          if (
+            currentOrderItem &&
+            currentOrderItem.order_id == result.order_id
+          ) {
+            const orderItemData = this.orderDetailRepo.setData({
+              ...orderItem,
+              status: 'A',
+            });
+            if (orderItem.deleted) {
+              await this.orderDetailRepo.update(
+                { item_id: orderItem.item_id },
+                { ...orderItemData, status: 'D' },
+              );
+            } else {
+              if (Object.entries(orderItemData).length) {
+                await this.orderDetailRepo.update(
+                  { item_id: orderItem.item_id },
+                  { ...orderItemData },
+                );
+              }
+            }
+          }
         } else {
-          let newOrderItemData = {
-            ...new OrderDetailsEntity(),
-            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-          };
-
-          const newOrderItem = await this.orderDetailRepo.create(
-            newOrderItemData,
-          );
-          result['order_items'] = result['order_items']
-            ? [...result['order_items'], newOrderItem]
-            : [newOrderItem];
+          if (orderItem) {
+            const newOrderItemData = {
+              ...new OrderDetailsEntity(),
+              ...this.orderDetailRepo.setData(orderItem),
+              order_id: result.order_id,
+              status: 'A',
+            };
+            await this.orderDetailRepo.create(newOrderItemData);
+          }
         }
       }
     }
-    return result;
   }
 
   async getByPhoneAndId(phone: string, order_id: number) {
@@ -295,43 +375,11 @@ export class OrdersService {
       b_phone: phone,
     });
 
-    const status = await this.statusRepo.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: statusJoiner,
-      },
-      where: {
-        [`${Table.STATUS}.status`]: order.status,
-        [`${Table.STATUS}.type`]: StatusType.Order,
-      },
-    });
-
-    if (status) {
-      order['status'] = status;
-    }
-
     if (!order) {
-      throw new HttpException('Không tìm thấy đơn hàng', 404);
+      throw new HttpException('Không tìm thấy đơn hàng.', 404);
     }
 
-    let orderItems = await this.orderDetailRepo.find({
-      select: [
-        `${Table.ORDER_DETAILS}.*`,
-        `${Table.PRODUCT_DESCRIPTION}.product`,
-      ],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.ORDER_DETAILS}.product_id`,
-            rootJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-          },
-        },
-      },
-      where: { [`${Table.ORDER_DETAILS}.order_id`]: order.order_id },
-    });
-
-    order['order_items'] = orderItems;
-    return order;
+    return this.getOrderDetails(order);
   }
 
   async getByCustomerId(customer_id: number, params) {
@@ -351,7 +399,7 @@ export class OrdersService {
   async getOrdersList(params, filterConditions = {}) {
     let { page, limit, search, ...others } = params;
     page = +page || 1;
-    limit = +limit || 5;
+    limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     if (Object.entries(others).length) {
@@ -364,12 +412,36 @@ export class OrdersService {
     }
 
     const ordersList = await this.orderRepo.find({
-      select: ['*'],
+      select: [`DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*`],
       join: orderJoiner,
-      where: orderSearchFilter(search, filterConditions),
+      orderBy: [{ field: `${Table.ORDERS}.order_id`, sortBy: SortBy.DESC }],
+      where: orderSearchFilter(search, { ...filterConditions }),
       skip,
       limit,
     });
+
+    // lấy địa chỉ
+    for (let orderItem of ordersList) {
+      if (orderItem.store_id) {
+        const store = await this.storeLocationRepo.findOne({
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                fieldJoin: 'store_location_id',
+                rootJoin: 'store_location_id',
+              },
+            },
+          },
+          where: {
+            [`${Table.STORE_LOCATIONS}.store_location_id`]: orderItem.store_id,
+          },
+        });
+        if (store) {
+          orderItem['store'] = store;
+        }
+      }
+    }
 
     //Lấy thông tin trạng thái đơn hàng
     for (let orderItem of ordersList) {
@@ -404,33 +476,9 @@ export class OrdersService {
   }
 
   async getById(order_id: number) {
-    const order = await this.orderRepo.findOne({
-      select: '*',
-      join: orderJoiner,
-      where: { order_id },
-    });
+    const order = await this.orderRepo.findOne({ order_id });
 
-    const status = await this.statusRepo.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: statusJoiner,
-      },
-      where: {
-        [`${Table.STATUS}.status`]: order.status,
-        [`${Table.STATUS}.type`]: StatusType.Order,
-      },
-    });
-
-    if (status) {
-      order['status'] = status;
-    }
-
-    if (!order) {
-      throw new HttpException('Không tìm thấy đơn hàng', 404);
-    }
-    const orderDetails = await this.getOrderDetails(order_id);
-    order['order_items'] = orderDetails;
-    return order;
+    return this.getOrderDetails(order);
   }
 
   async getByRefOrderId(ref_order_id: string) {
@@ -494,8 +542,24 @@ export class OrdersService {
       },
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
+        [`${Table.ORDER_DETAILS}.status`]: 'A',
       },
     });
+
+    if (orderDetails.length) {
+      for (let orderDetail of orderDetails) {
+        const productImage = await this.imageLinkRepo.findOne({
+          object_id: orderDetail.product_id,
+          object_type: ImageObjectType.PRODUCT,
+        });
+        if (productImage) {
+          let image = await this.imageRepo.findOne({
+            image_id: productImage.image_id,
+          });
+          orderDetail['image'] = image;
+        }
+      }
+    }
 
     order['order_items'] = orderDetails;
     return order;

@@ -12,6 +12,7 @@ import { ImageModule } from './image.module';
 import { MailModule } from './mail.module';
 import { UserGroupLinksModule } from './usergroupLinks.module';
 import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
+import { CustomerModule } from './customer.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
     UserGroupsModule,
     ImageModule,
     MailModule,
+    CustomerModule,
     UserGroupLinksModule,
     UserGroupPrivilegeModule,
     JwtModule.registerAsync({

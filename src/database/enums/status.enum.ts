@@ -1,4 +1,4 @@
-export enum OrderStatus {
+export enum OrderStatusEnum {
   'Processed' = 'P',
   'Complete' = 'C',
   'Open' = 'O',

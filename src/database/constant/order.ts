@@ -161,7 +161,7 @@ export const convertDataToIntegrate = (data) => {
   }
 
   if (data['credit_account_id']) {
-    itgData['creditAccountId'] = data['credit_account_id']; // Mã tài khoản quẹt thẻ
+    itgData['creditFeeAccountId'] = data['credit_account_id']; // Mã tài khoản quẹt thẻ
   }
 
   if (data['credit_code']) {

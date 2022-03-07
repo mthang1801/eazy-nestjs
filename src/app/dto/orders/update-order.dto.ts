@@ -161,7 +161,7 @@ export class UpdateOrderDto {
 }
 
 class ProductOrder {
-  @IsOptional()
+  @IsNotEmpty()
   item_id: number;
 
   @IsOptional()
@@ -169,9 +169,6 @@ class ProductOrder {
 
   @IsOptional()
   product_id: string;
-
-  @IsOptional()
-  is_deleted: boolean;
 
   @IsOptional()
   price: number;
@@ -192,9 +189,6 @@ class ProductOrder {
   product_code: string = '';
 
   @IsOptional()
-  imei_code: null | string;
-
-  @IsOptional()
   repurchase_price: number = 0;
 
   @IsOptional()
@@ -208,4 +202,7 @@ class ProductOrder {
 
   @IsOptional()
   gender: number = 0;
+
+  @IsOptional()
+  deleted: boolean;
 }
