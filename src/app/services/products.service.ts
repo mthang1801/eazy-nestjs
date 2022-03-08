@@ -67,7 +67,11 @@ import {
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { Equal, IsNull } from '../../database/find-options/operators';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
-import { convertToSlug, MaxLimit } from '../../utils/helper';
+import {
+  convertToSlug,
+  MaxLimit,
+  removeVietnameseTones,
+} from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
@@ -706,6 +710,32 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục sản phẩm.', 404);
     }
 
+    return this.getProductListByCategory(category, params);
+  }
+
+  async getProductsListByCategorySlug(slug: string, params) {
+    const category = await this.categoryRepo.findOne({
+      select: categorySelector,
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORIES}.category_id`,
+            rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.slug`]: slug },
+    });
+
+    if (!category) {
+      throw new HttpException('Không tìm thấy danh mục SP.', 404);
+    }
+
+    return this.getProductListByCategory(category, params);
+  }
+
+  async getProductListByCategory(category, params) {
+    let categoryId = category.category_id;
     let categoriesListByLevel = await this.childrenCategories(categoryId);
 
     categoriesListByLevel = _.orderBy(
@@ -761,7 +791,7 @@ export class ProductService {
 
     let productsList = [];
     let count;
-    console.log(filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`]);
+
     if (
       filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`] &&
       filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length
