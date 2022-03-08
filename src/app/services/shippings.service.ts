@@ -19,7 +19,7 @@ export class ShippingService {
     private shippingRepository: ShippingRepository<ShippingsEntity>,
     private shippingDescriptionRepo: ShippingDescriptionRepository<ShippingsDescriptionEntity>,
 
-    private shippingServiceDescriptionRepo:ShippingServiceDescriptionRepository<ShippingsServiceDescriptionEntity>,
+    private shippingServiceDescriptionRepo: ShippingServiceDescriptionRepository<ShippingsServiceDescriptionEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
   ) {}
 
@@ -28,30 +28,42 @@ export class ShippingService {
       ...this.shippingRepository.setData(data),
     };
     let _shipping = await this.shippingRepository.create(shipping);
-    const shippingDescription =  {
+    const shippingDescription = {
       ...this.shippingDescriptionRepo.setData(data),
-      shipping_id:_shipping.shipping_id
+      shipping_id: _shipping.shipping_id,
     };
-    let _shippingDes = await this.shippingDescriptionRepo.create(shippingDescription);
-    const shippingService ={
+    let _shippingDes = await this.shippingDescriptionRepo.create(
+      shippingDescription,
+    );
+    const shippingService = {
       ...this.shippingServiceRepo.setData(data),
-      shipping_id:_shipping.shipping_id,
+      shipping_id: _shipping.shipping_id,
       created_at: convertToMySQLDateTime(),
-      updated_at:convertToMySQLDateTime(),
-
-
-    }
-    let _shippingService =  await this.shippingServiceRepo.create(shippingService);
-    const shippingServiceDescription ={
-      ...this.shippingServiceDescriptionRepo.setData({...data,description: data.descriptionService,}),
-      service_id:_shippingService.service_id,
-      
-    } 
-    let _shippingServiceDescription =  await this.shippingServiceDescriptionRepo.create(shippingServiceDescription);
+      updated_at: convertToMySQLDateTime(),
+    };
+    let _shippingService = await this.shippingServiceRepo.create(
+      shippingService,
+    );
+    const shippingServiceDescription = {
+      ...this.shippingServiceDescriptionRepo.setData({
+        ...data,
+        description: data.descriptionService,
+      }),
+      service_id: _shippingService.service_id,
+    };
+    let _shippingServiceDescription =
+      await this.shippingServiceDescriptionRepo.create(
+        shippingServiceDescription,
+      );
     const result = await this.getById(_shipping.shipping_id);
     return result;
   }
-  async getList(): Promise<IShippingService[]> {
+
+  async getList(params) {
+    let { page, limit, q, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    let skip = (page - 1) * limit;
     const shipping = this.shippingRepository.find({
       select: ['*'],
       join: {
@@ -63,8 +75,8 @@ export class ShippingService {
         },
       },
 
-      skip: 0,
-      limit: 30,
+      skip,
+      limit,
     });
     const service = this.shippingServiceRepo.find({
       select: ['*'],
@@ -77,8 +89,8 @@ export class ShippingService {
         },
       },
 
-      skip: 0,
-      limit: 30,
+      skip,
+      limit,
     });
     const result = await Promise.all([shipping, service]);
     let _result = [];
@@ -129,38 +141,50 @@ export class ShippingService {
     const result = await Promise.all([shipping, service]);
     return { ...result[0], service: result[1] };
   }
-  async update(id,data: ShippingCreateDTO) {
+  async update(id, data: ShippingCreateDTO) {
     const shipping = {
       ...this.shippingRepository.setData(data),
     };
-    let _shipping = await this.shippingRepository.update(id,shipping);
-    const shippingDescription =  {
+    let _shipping = await this.shippingRepository.update(id, shipping);
+    const shippingDescription = {
       ...this.shippingDescriptionRepo.setData(data),
-      shipping_id:id
+      shipping_id: id,
     };
-  
-    let _shippingDes = await this.shippingDescriptionRepo.update(id,shippingDescription);
-    const serviceid = await this.shippingServiceRepo.findOne({ select: ['*'],
-    where: { shipping_id: id },})
 
-    if (!serviceid){
+    let _shippingDes = await this.shippingDescriptionRepo.update(
+      id,
+      shippingDescription,
+    );
+    const serviceid = await this.shippingServiceRepo.findOne({
+      select: ['*'],
+      where: { shipping_id: id },
+    });
+
+    if (!serviceid) {
       return _shipping;
     }
-    const shippingService ={
+    const shippingService = {
       ...this.shippingServiceRepo.setData(data),
-      updated_at:convertToMySQLDateTime(),
+      updated_at: convertToMySQLDateTime(),
+    };
 
-
-    }
-    
-    let _shippingService =  await this.shippingServiceRepo.update(serviceid.service_id,shippingService);
-    const shippingServiceDescription ={
-      ...this.shippingServiceDescriptionRepo.setData({...data,description: data.descriptionService,}),
-      service_id:_shippingService.service_id,
-      
-    } 
-    let _shippingServiceDescription =  await this.shippingServiceDescriptionRepo.update(serviceid.service_id,shippingServiceDescription);
+    let _shippingService = await this.shippingServiceRepo.update(
+      serviceid.service_id,
+      shippingService,
+    );
+    const shippingServiceDescription = {
+      ...this.shippingServiceDescriptionRepo.setData({
+        ...data,
+        description: data.descriptionService,
+      }),
+      service_id: _shippingService.service_id,
+    };
+    let _shippingServiceDescription =
+      await this.shippingServiceDescriptionRepo.update(
+        serviceid.service_id,
+        shippingServiceDescription,
+      );
     const result = await this.getById(id);
-    return result
+    return result;
   }
 }

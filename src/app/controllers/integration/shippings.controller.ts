@@ -17,6 +17,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/fe.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
+import { Query } from '@nestjs/common';
 //@UseGuards(AuthGuard)
 @Controller('/itg/v1/shipping')
 export class ShippingController extends BaseController {
@@ -25,8 +26,8 @@ export class ShippingController extends BaseController {
   }
 
   @Get()
-  async getList(@Res() res): Promise<IResponse> {
-    const result = await this.service.getList();
+  async getList(@Res() res, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 

@@ -10,6 +10,7 @@ import {
   ValidationPipe,
   UseGuards,
   Res,
+  Query,
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
@@ -18,7 +19,7 @@ import { AuthGuard } from '../../../middlewares/be.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
 import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
 import { UpdateCreateDTO } from 'src/app/dto/shipping/update-shipping.dto';
-import { identity } from 'rxjs';
+
 //@UseGuards(AuthGuard)
 @Controller('/be/v1/shippings')
 export class ShippingController extends BaseController {
@@ -27,8 +28,8 @@ export class ShippingController extends BaseController {
   }
 
   @Get()
-  async getList(@Res() res): Promise<IResponse> {
-    const result = await this.service.getList();
+  async getList(@Res() res, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
   @Get('/:id')

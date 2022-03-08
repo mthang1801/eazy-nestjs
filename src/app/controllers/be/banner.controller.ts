@@ -10,6 +10,8 @@ import {
   ValidationPipe,
   UseGuards,
   Res,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { bannerService } from '../../services/banner.service';
 import { BaseController } from '../../../base/base.controllers';
@@ -21,6 +23,9 @@ import { updateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
 import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
 import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto';
 import { CreateBannerDto } from 'src/app/dto/banner/create-banner.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
+import { Response } from 'express';
 @Controller('/be/v1/banner')
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
@@ -53,6 +58,37 @@ export class bannerController extends BaseController {
   async create(@Res() res, @Body() body: CreateBannerDto): Promise<IResponse> {
     const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
+  }
+
+  /**
+   * Upload product image
+   * @param files
+   * @param res
+   * @param sku
+   * @returns
+   */
+
+  @Post('upload-images/:id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadImages(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Res() res: Response,
+    @Param('id') id: string,
+  ) {
+    const result = await this.service.uploadImages(files, id);
+    return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
   }
 
   @Put('/:id')

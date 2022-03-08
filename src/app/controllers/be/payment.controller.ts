@@ -17,6 +17,7 @@ import { AuthGuard } from '../../../middlewares/be.auth';
 import { PaymentService } from 'src/app/services/payment.service';
 import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
+import { Query } from '@nestjs/common';
 /**
  * Controller for Category
  * @Author TrinhLong
@@ -34,7 +35,7 @@ export class PaymentController extends BaseController {
    * @returns
    */
   @Get()
-  async getList(@Res() res, @Param() params): Promise<IResponse> {
+  async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }

@@ -24,7 +24,7 @@ export class ProductIntegrationController extends BaseController {
 
   @Post()
   async create(@Body() data, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.createSync(data);
+    const result = await this.service.itgCreate(data);
     return this.responseSuccess(res, result);
   }
 
@@ -40,7 +40,7 @@ export class ProductIntegrationController extends BaseController {
     @Body() data,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.syncUpdate(sku, data);
+    const result = await this.service.itgUpdate(sku, data);
     return this.responseSuccess(res, result);
   }
 

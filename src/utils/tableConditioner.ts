@@ -154,3 +154,21 @@ export const searchStatusFilter = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const paymentFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const shippingFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.SHIPPINGS_DESCRIPTION}.shipping`]: Like(search) },
+      { [`${Table.SHIPPINGS_DESCRIPTION}.delivery_time`]: Like(search) },
+      { [`${Table.SHIPPINGS_DESCRIPTION}.description`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

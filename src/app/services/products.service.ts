@@ -1093,12 +1093,12 @@ export class ProductService {
     return result;
   }
 
-  async createSync(data): Promise<any> {
+  async itgCreate(data): Promise<any> {
     if (data.product_id) {
       let product = await this.productRepo.findById(data.product_id);
 
       if (product) {
-        return this.syncUpdate(product.product_code, data);
+        return this.itgUpdate(product.product_code, data);
       }
     }
     // set product
@@ -1259,7 +1259,7 @@ export class ProductService {
     await this.syncProductsIntoGroup();
   }
 
-  async syncUpdate(sku, data): Promise<any> {
+  async itgUpdate(sku, data): Promise<any> {
     const product = await this.productRepo.findOne({ product_code: sku });
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -1412,17 +1412,20 @@ export class ProductService {
 
     try {
       const response = await axios(config);
-      const results = response.data.data;
-      let { position: lastPositionImage } = await this.imageLinkRepo.findOne({
-        select: ['position'],
-        orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
-        where: {
-          object_id: product.product_id,
-          object_type: ImageObjectType.PRODUCT,
-        },
-      });
-      let currentPosition = lastPositionImage ? lastPositionImage + 1 : 0;
+      const results = response?.data?.data;
+
       if (Array.isArray(results) && results?.length) {
+        let imageLink = await this.imageLinkRepo.findOne({
+          select: ['position'],
+          orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
+          where: {
+            object_id: product.product_id,
+            object_type: ImageObjectType.PRODUCT,
+          },
+        });
+
+        let currentPosition = imageLink ? imageLink.position + 1 : 0;
+
         for (let [i, dataItem] of results.entries()) {
           let newImage = await this.imageRepo.create({ image_path: dataItem });
           await this.imageLinkRepo.create({
@@ -1440,10 +1443,12 @@ export class ProductService {
       }
       return results;
     } catch (error) {
+      console.log(error);
       // delete files
       for (let image of images) {
         await fsExtra.unlink(image.path);
       }
+
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||

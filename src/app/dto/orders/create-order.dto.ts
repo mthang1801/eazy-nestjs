@@ -170,6 +170,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   transfer_bank: string = '';
+
+  @IsOptional()
+  total: number = 0;
 }
 
 class ProductOrder {

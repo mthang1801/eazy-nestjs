@@ -1,9 +1,13 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  HttpException,
+} from '@nestjs/common';
 import { BannerEntity } from '../entities/banner.entity';
 import { BannerRepository } from '../repositories/banner.repository';
 
 import { ImagesService } from './image.service';
-import { Table, JoinTable } from '../../database/enums/index';
+import { Table, JoinTable, SortBy } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
@@ -12,13 +16,23 @@ import { updateBannerDTO } from '../dto/banner/update-banner.dto';
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
 import { CreateBannerDto } from '../dto/banner/create-banner.dto';
-
+import * as fs from 'fs';
+import * as fsExtra from 'fs-extra';
+import axios from 'axios';
+import * as FormData from 'form-data';
+import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 @Injectable()
 export class bannerService {
   constructor(
     private bannerRepo: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
+    private imageRepo: ImagesRepository<ImagesEntity>,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
   async getList(params): Promise<IBannerResult[]> {
     //=====Filter param
@@ -137,5 +151,68 @@ export class bannerService {
   }
   async updateBannerById(banner_id, images_id, body): Promise<any> {
     return this.imageService.Update(body, banner_id, images_id);
+  }
+
+  async uploadImages(images, id) {
+    try {
+      const banner = await this.bannerRepo.findById(id);
+      if (!banner) {
+        throw new HttpException('Không tìm thấy banner', 404);
+      }
+
+      let data = new FormData();
+      for (let image of images) {
+        data.append('files', fs.createReadStream(image.path));
+      }
+
+      var config: any = {
+        method: 'post',
+        url: 'http://mb.viendidong.com/core-api/v1/files/website',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...data.getHeaders(),
+        },
+        data: data,
+      };
+
+      const response = await axios(config);
+
+      const results = response?.data?.data;
+
+      if (Array.isArray(results) && results?.length) {
+        let imageLink = await this.imageLinkRepo.findOne({
+          select: ['position'],
+          orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
+          where: {
+            object_id: id,
+            object_type: ImageObjectType.BANNER,
+          },
+        });
+
+        let currentPosition = imageLink ? imageLink.position + 1 : 0;
+
+        for (let [i, dataItem] of results.entries()) {
+          let newImage = await this.imageRepo.create({ image_path: dataItem });
+          await this.imageLinkRepo.create({
+            object_id: id,
+            object_type: ImageObjectType.BANNER,
+            image_id: newImage.image_id,
+            position: currentPosition + i,
+          });
+        }
+      }
+
+      // delete files
+      for (let image of images) {
+        await fsExtra.unlink(image.path);
+      }
+
+      return results;
+    } catch (error) {
+      for (let image of images) {
+        await fsExtra.unlink(image.path);
+      }
+      throw new HttpException(error.response, error.status);
+    }
   }
 }
