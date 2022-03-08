@@ -46,6 +46,9 @@ export class UpdateOrderDto {
   utm_source: number;
 
   @IsOptional()
+  total: number;
+
+  @IsOptional()
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()

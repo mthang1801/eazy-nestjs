@@ -120,6 +120,95 @@ export class OrdersService {
     return result;
   }
 
+  async update(order_id: number, data) {
+    const order = await this.orderRepo.findById(order_id);
+
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+    let result = { ...order };
+    const orderData = this.orderRepo.setData(data);
+
+    if (Object.entries(orderData).length) {
+      const updatedOrder = await this.orderRepo.update(
+        { order_id: order.order_id },
+        orderData,
+      );
+      result = { ...result, ...updatedOrder };
+    }
+
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        if (!orderItem.product_id && !orderItem.item_id) continue;
+
+        if (orderItem.item_id) {
+          const currentOrderItem = await this.orderDetailRepo.findOne({
+            where: [{ item_id: orderItem.item_id }],
+          });
+
+          if (
+            currentOrderItem &&
+            currentOrderItem.order_id == result.order_id
+          ) {
+            const orderItemData = this.orderDetailRepo.setData({
+              ...orderItem,
+              status: 'A',
+            });
+            if (orderItem.deleted) {
+              console.log(orderItem);
+              await this.orderDetailRepo.update(
+                { item_id: orderItem.item_id },
+                { ...orderItemData, status: 'D' },
+              );
+            } else {
+              if (Object.entries(orderItemData).length) {
+                await this.orderDetailRepo.update(
+                  { item_id: orderItem.item_id },
+                  { ...orderItemData },
+                );
+              }
+            }
+          }
+        } else {
+          const currentOrderItem = await this.orderDetailRepo.findOne({
+            product_id: orderItem.product_id,
+            order_id: result.order_id,
+          });
+
+          if (currentOrderItem) {
+            const orderItemData = this.orderDetailRepo.setData({
+              ...orderItem,
+              status: 'A',
+            });
+
+            if (orderItem.deleted) {
+              await this.orderDetailRepo.update(
+                { item_id: currentOrderItem.item_id },
+                { ...orderItemData, status: 'D' },
+              );
+            } else {
+              if (Object.entries(orderItemData).length) {
+                await this.orderDetailRepo.update(
+                  { item_id: currentOrderItem.item_id },
+                  { ...orderItemData },
+                );
+              }
+            }
+            continue;
+          }
+
+          const newOrderItemData = {
+            ...new OrderDetailsEntity(),
+            ...this.orderDetailRepo.setData(orderItem),
+            order_id: result.order_id,
+            status: 'A',
+          };
+          await this.orderDetailRepo.create(newOrderItemData);
+        }
+      }
+    }
+  }
+
   async itgGet() {
     try {
       const response = await axios({
@@ -307,66 +396,6 @@ export class OrdersService {
     }
 
     return result;
-  }
-
-  async update(ref_order_id: number, data) {
-    const order = await this.orderRepo.findOne({ ref_order_id });
-    if (!order) {
-      throw new HttpException('Không tìm thấy đơn hàng', 404);
-    }
-    let result = { ...order };
-    const orderData = this.orderRepo.setData(data);
-
-    if (Object.entries(orderData).length) {
-      const updatedOrder = await this.orderRepo.update(
-        { order_id: order.order_id },
-        orderData,
-      );
-      result = { ...result, ...updatedOrder };
-    }
-
-    if (data?.order_items?.length) {
-      for (let orderItem of data.order_items) {
-        if (orderItem.item_id) {
-          const currentOrderItem = await this.orderDetailRepo.findOne({
-            item_id: orderItem.item_id,
-          });
-
-          if (
-            currentOrderItem &&
-            currentOrderItem.order_id == result.order_id
-          ) {
-            const orderItemData = this.orderDetailRepo.setData({
-              ...orderItem,
-              status: 'A',
-            });
-            if (orderItem.deleted) {
-              await this.orderDetailRepo.update(
-                { item_id: orderItem.item_id },
-                { ...orderItemData, status: 'D' },
-              );
-            } else {
-              if (Object.entries(orderItemData).length) {
-                await this.orderDetailRepo.update(
-                  { item_id: orderItem.item_id },
-                  { ...orderItemData },
-                );
-              }
-            }
-          }
-        } else {
-          if (orderItem) {
-            const newOrderItemData = {
-              ...new OrderDetailsEntity(),
-              ...this.orderDetailRepo.setData(orderItem),
-              order_id: result.order_id,
-              status: 'A',
-            };
-            await this.orderDetailRepo.create(newOrderItemData);
-          }
-        }
-      }
-    }
   }
 
   async getByPhoneAndId(phone: string, order_id: number) {

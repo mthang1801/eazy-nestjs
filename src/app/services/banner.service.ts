@@ -8,15 +8,15 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { Like } from 'typeorm';
-import { bannerCreateDTO } from '../dto/banner/create-banner.dto';
 import { updateBannerDTO } from '../dto/banner/update-banner.dto';
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
+import { CreateBannerDto } from '../dto/banner/create-banner.dto';
 
 @Injectable()
 export class bannerService {
   constructor(
-    private repository: BannerRepository<BannerEntity>,
+    private bannerRepo: BannerRepository<BannerEntity>,
     private bannerDescriptionRepo: BannerDescriptionsRepository<BannerDescriptionsEntity>,
     private imageService: ImagesService,
   ) {}
@@ -30,7 +30,7 @@ export class bannerService {
     let filterCondition = {};
     if (others && typeof others === 'object' && Object.entries(others).length) {
       for (let [key, val] of Object.entries(others)) {
-        if (this.repository.tableProps.includes(key)) {
+        if (this.bannerRepo.tableProps.includes(key)) {
           filterCondition[`${Table.BANNER}.${key}`] = Like(val);
         } else {
           filterCondition[`${Table.BANNER_DESCRIPTIONS}.${key}`] = Like(val);
@@ -38,7 +38,7 @@ export class bannerService {
       }
     }
     //===
-    const banner = this.repository.find({
+    const banner = this.bannerRepo.find({
       select: ['*'],
       join: {
         [JoinTable.join]: {
@@ -69,7 +69,7 @@ export class bannerService {
   }
   async getById(id): Promise<IBannerResult> {
     const string = `${Table.BANNER}.banner_id`;
-    const banner = this.repository.findOne({
+    const banner = this.bannerRepo.findOne({
       select: ['*'],
       where: { [string]: id },
       join: {
@@ -91,37 +91,26 @@ export class bannerService {
 
     return { ...result[1], images: result[0] };
   }
-  async create(data: bannerCreateDTO): Promise<IBannerResult> {
-    ///==========================|Add to ddve_banner table|==============
-    const bannerTableData = {
-      ...this.repository.setData(data),
-      created_at: convertToMySQLDateTime(),
+
+  async create(data: CreateBannerDto) {
+    const bannerData = {
+      ...new BannerEntity(),
+      ...this.bannerRepo.setData(data),
     };
-    let _banner = await this.repository.create(bannerTableData);
 
-    //===========================|Add to ddve_banner description|======
-
-    const bannerDescriptionTableData = {
-      banner_id: _banner.banner_id,
-      ...this.bannerDescriptionRepo.setData(data),
+    const bannerDescData = {
+      ...new BannerDescriptionsEntity(),
+      ...this.bannerRepo.setData(data),
     };
-    let _banner_description = await this.bannerDescriptionRepo.create(
-      bannerDescriptionTableData,
-    );
-
-    //===========================|Add to ddve_images |=============================
-    await this.imageService.Create(data, _banner.banner_id);
-    //===========================|Add to ddve_images_links|=============================
-
-    return _banner;
   }
+
   async update(data: updateBannerDTO, id: string): Promise<any> {
     //===================|Update ddve_banner table|===================
     const bannerTableData = {
-      ...this.repository.setData(data),
+      ...this.bannerRepo.setData(data),
     };
 
-    let _banner = this.repository.update(+id, bannerTableData);
+    let _banner = this.bannerRepo.update(+id, bannerTableData);
     //===========================|Add to ddve_banner description|======
 
     const bannerDescriptionTableData = {

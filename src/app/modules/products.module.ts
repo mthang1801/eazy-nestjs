@@ -23,6 +23,7 @@ import { ProductFeatureDescriptionsRepository } from '../repositories/productFea
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
 import { ProductIntegrationController } from '../controllers/integration/products.controller';
+import { StoreModule } from './store.module';
 
 @Module({
   imports: [forwardRef(() => CategoryModule)],

@@ -19,6 +19,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/:id/product-stocks')
+  async getProductsStocks(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductsStocks(id);
+    return this.responseSuccess(res, result);
+  }
+
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.getList(params);

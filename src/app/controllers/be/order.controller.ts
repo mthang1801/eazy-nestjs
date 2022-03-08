@@ -40,13 +40,13 @@ export class OrderController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put('/:ref_order_id')
+  @Put('/:order_id')
   async update(
     @Res() res,
-    @Param('ref_order_id') ref_order_id,
-    @Body() data,
+    @Param('order_id') order_id,
+    @Body() data: UpdateOrderDto,
   ): Promise<IResponse> {
-    const result = await this.service.update(ref_order_id, data);
+    const result = await this.service.update(order_id, data);
     return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 

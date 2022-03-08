@@ -88,6 +88,10 @@ import {
   categorySelector,
   productFeatureValuesSelector,
 } from 'src/utils/tableSelector';
+import { StoreLocationRepository } from '../repositories/storeLocation.repository';
+import { StoreLocationDescriptionEntity } from '../entities/storeLocationDescription.entity';
+import { StoreLocationDescriptionsRepository } from '../repositories/storeLocationDescriptions.repository';
+import { StoreLocationEntity } from '../entities/storeLocation.entity';
 
 @Injectable()
 export class ProductService {
@@ -114,6 +118,8 @@ export class ProductService {
     private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+    private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
+    private storeDescRepo: StoreLocationDescriptionsRepository<StoreLocationDescriptionEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -489,6 +495,11 @@ export class ProductService {
     const parentCategories = categoriesList.slice(1);
 
     product['status'] = status;
+
+    // const stocks = await this.getProductsStocks(product.product_id);
+
+    // product['stocks'] = stocks;
+
     return {
       currentCategory: categoriesList[0],
       parentCategories,
@@ -1475,5 +1486,40 @@ export class ProductService {
       )}`;
     }
     return 'Xoá ảnh thành công.';
+  }
+
+  async getProductsStocks(id: string) {
+    let response = await axios({
+      url: `http://mb.viendidong.com/core-api/v1/product-stocks/product/${id}`,
+    });
+    const productsStocks = response?.data?.data;
+    let result = [];
+    if (
+      productsStocks &&
+      typeof productsStocks === 'object' &&
+      Object.entries(productsStocks).length
+    ) {
+      for (let [key, val] of Object.entries(productsStocks)) {
+        const store = await this.storeRepo.findOne({
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                fieldJoin: 'store_location_id',
+                rootJoin: 'store_location_id',
+              },
+            },
+          },
+          where: {
+            [`${Table.STORE_LOCATIONS}.store_location_id`]: key,
+          },
+        });
+        if (typeof val === 'object') {
+          result = [...result, { ...val, store }];
+        }
+      }
+    }
+
+    return result;
   }
 }

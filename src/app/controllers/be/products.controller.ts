@@ -63,6 +63,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/:id/product-stocks')
+  async getProductsStocks(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductsStocks(id);
+    return this.responseSuccess(res, result);
+  }
+
   @Put(':sku')
   async update(
     @Param('sku') sku: string,
@@ -74,6 +83,13 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  /**
+   * Upload product image
+   * @param files
+   * @param res
+   * @param sku
+   * @returns
+   */
   @Post('upload-images/:sku')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
