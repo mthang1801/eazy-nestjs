@@ -246,11 +246,11 @@ export class CustomerService {
   async itgCreate(data) {
     const randomPassword = generateRandomPassword();
     const { passwordHash, salt } = saltHashPassword(randomPassword);
-    const itgUser = itgCustomerFromAppcore(data);
+    console.log(data);
 
     const userData = {
       ...new UserEntity(),
-      ...this.userRepo.setData(itgUser),
+      ...this.userRepo.setData(data),
       password: passwordHash,
       salt: salt,
     };
@@ -261,7 +261,7 @@ export class CustomerService {
 
     const userProfileData = {
       ...new UserProfileEntity(),
-      ...this.userProfileRepo.setData(itgUser),
+      ...this.userProfileRepo.setData(data),
       user_id: result.user_id,
     };
 
@@ -271,7 +271,7 @@ export class CustomerService {
 
     const userDataData = {
       ...new UserDataEntity(),
-      ...this.userDataRepo.setData(itgUser),
+      ...this.userDataRepo.setData(data),
       user_id: result.user_id,
     };
 
@@ -281,7 +281,7 @@ export class CustomerService {
 
     const userLoyaltyData = {
       ...new UserLoyaltyEntity(),
-      ...this.userLoyalRepo.setData(itgUser),
+      ...this.userLoyalRepo.setData(data),
       user_id: result.user_id,
     };
 

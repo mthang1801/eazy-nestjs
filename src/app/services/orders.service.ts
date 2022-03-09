@@ -245,6 +245,29 @@ export class OrdersService {
   }
 
   async itgCreate(data) {
+    if (!data.origin_order_id) {
+      throw new HttpException('Mã đơn hàng không được trống', 422);
+    }
+    const order = await this.orderRepo.findOne({
+      origin_order_id: data.origin_order_id,
+    });
+    if (order) {
+      throw new HttpException(
+        'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
+        409,
+      );
+    }
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        const orderDetail = await this.orderDetailRepo.findOne({
+          origin_order_item_id: orderItem.origin_order_item_id,
+        });
+        if (orderDetail) {
+          throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
+        }
+      }
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),

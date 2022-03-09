@@ -142,6 +142,8 @@ export const itgCustomerFromAppcore = (cData) => {
   return data;
 };
 
+export const itgCreateCustomerFromAppcore = () => {};
+
 export const itgCustomerToAppcore = (data) => {
   const dataMapping = new Map([
     ['fullName', 'fullName'],
