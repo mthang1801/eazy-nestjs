@@ -288,6 +288,101 @@ export class CustomerService {
     const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
 
     result = { ...result, loyalty: newUserLoyalty };
+
+    if (data['image_path']) {
+      const customerImage = await this.imageRepo.create({
+        image_path: data['image_path'],
+      });
+      if (customerImage) {
+        const customerImageLink = await this.imageLinkRepo.create({
+          object_id: result.user_id,
+          object_type: ImageObjectType.USER,
+          image_id: customerImage.image_id,
+        });
+
+        result = {
+          ...result,
+          avatar: { ...customerImage, ...customerImageLink },
+        };
+      }
+    }
+
+    return result;
+  }
+
+  async itgUpdate(referrer, data) {
+    const user = await this.userRepo.findOne({ referer: referrer });
+
+    if (!user) {
+      throw new HttpException('Không tìm thấy user trong hệ thống.', 404);
+    }
+
+    let result = { ...user };
+
+    const userData = this.userDataRepo.setData(data);
+    delete userData['referer'];
+    if (Object.entries(userData).length) {
+      const updatedUser = await this.userRepo.update(
+        { user_id: result.user_id },
+        userData,
+      );
+      result = { ...updatedUser };
+    }
+
+    const userProfileData = this.userProfileRepo.setData(data);
+    if (Object.entries(userProfileData).length) {
+      const updatedUserProfile = await this.userRepo.update(
+        { user_id: result.user_id },
+        userProfileData,
+      );
+      result = { ...result, ...updatedUserProfile };
+    }
+
+    const userDataData = this.userDataRepo.setData(data);
+    if (Object.entries(userDataData).length) {
+      const updatedUserData = await this.userDataRepo.update(
+        { user_id: result.user_id },
+        userDataData,
+      );
+      result = { ...result, ...updatedUserData };
+    }
+
+    const userLoyaltyData = this.userLoyalRepo.setData(data);
+    if (Object.entries(userDataData).length) {
+      const updatedUserLoyalty = await this.userLoyalRepo.update(
+        { user_id: result.user_id },
+        userLoyaltyData,
+      );
+      result = { ...result, ...updatedUserLoyalty };
+    }
+
+    if (data['image_path']) {
+      const oldAvatar = await this.imageLinkRepo.findOne({
+        object_id: result.user_id,
+        object_type: ImageObjectType.USER,
+      });
+      if (oldAvatar) {
+        await this.imageLinkRepo.delete({ pair_id: oldAvatar.pair_id });
+        await this.imageRepo.delete({ image_id: oldAvatar.image_id });
+      }
+
+      const customerImage = await this.imageRepo.create({
+        image_path: data['image_path'],
+      });
+      if (customerImage) {
+        const customerImageLink = await this.imageLinkRepo.create({
+          object_id: result.user_id,
+          object_type: ImageObjectType.USER,
+          image_id: customerImage.image_id,
+        });
+
+        result = {
+          ...result,
+          avatar: { ...customerImage, ...customerImageLink },
+        };
+      }
+    }
+
     return result;
   }
 }

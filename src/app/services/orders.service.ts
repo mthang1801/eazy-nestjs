@@ -37,6 +37,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+import { data } from '../../database/constant/category';
 
 @Injectable()
 export class OrdersService {
@@ -246,33 +247,10 @@ export class OrdersService {
   }
 
   async itgCreate(data) {
-    // if (!data.origin_order_id) {
-    //   throw new HttpException(
-    //     "Dữ liệu cần id của đơn hàng, truyền vào với tham số 'origin_order_id'",
-    //     422,
-    //   );
-    // }
-
-    // if (data?.order_items?.length) {
-    //   for (let orderItem of data.order_items) {
-    //     if (!orderItem.origin_order_item_id) {
-    //       throw new HttpException(
-    //         "Mỗi đơn hàng chi tiết cần có id thể hiện qua 'orgin_order_item_id'",
-    //         422,
-    //       );
-    //     }
-    //   }
-    // }
-
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
     };
-
-    orderData['total'] = 0;
-    for (let orderItem of data.order_items) {
-      orderData['total'] += orderItem.price * orderItem.amount;
-    }
 
     let result = await this.orderRepo.create(orderData);
 
@@ -281,7 +259,6 @@ export class OrdersService {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-          status: 'A',
         };
 
         const newOrderDetail = await this.orderDetailRepo.create(
@@ -292,40 +269,6 @@ export class OrdersService {
           ? [...result['order_items'], newOrderDetail]
           : [newOrderDetail];
       }
-    }
-
-    const config: any = {
-      method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: convertDataToIntegrate(result),
-    };
-
-    try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const origin_order_id = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
-          { order_id: result.order_id },
-          { origin_order_id, status: OrderStatusEnum.Open },
-        );
-
-        result = { ...result, ...updateOriginOrderId };
-
-        message = 'Đẩy đơn hàng đến appcore thành công';
-      }
-      return { result, message };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
-        400,
-      );
     }
   }
 

@@ -496,10 +496,6 @@ export class ProductService {
 
     product['status'] = status;
 
-    // const stocks = await this.getProductsStocks(product.product_id);
-
-    // product['stocks'] = stocks;
-
     return {
       currentCategory: categoriesList[0],
       parentCategories,

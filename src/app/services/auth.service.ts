@@ -150,6 +150,10 @@ export class AuthService {
     const itgUser = itgCustomerToAppcore(result);
   }
 
+  async pushNewUserToAppCore(user) {
+    const itgUser = itgCustomerToAppcore(user);
+  }
+
   async login(data: any): Promise<IResponseUserToken> {
     const phone = data['phone'];
     const email = data['email'];
