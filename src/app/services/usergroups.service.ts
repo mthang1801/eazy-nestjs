@@ -19,10 +19,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
-import {
-  userGroupSearchByNameCode,
-  userSearchByNameEmailPhone,
-} from 'src/utils/tableConditioner';
+import { userGroupSearchByNameCode } from 'src/utils/tableConditioner';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';

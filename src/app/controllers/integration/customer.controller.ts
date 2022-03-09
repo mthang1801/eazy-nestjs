@@ -10,8 +10,16 @@ export class CustomerController extends BaseController {
   }
   @Get()
   async get(@Res() res: Response): Promise<IResponse> {
-    await this.service.itgGet();
-    return this.responseSuccess(res, '', 'Đồng bộ KH từ appcore thành công.');
+    const logs = await this.service.itgGet();
+    let result = null;
+    if (logs.length) {
+      result = `Người dùng có đã tồn tại : ${logs.join(', ')}`;
+    }
+    return this.responseSuccess(
+      res,
+      result,
+      'Đồng bộ KH từ appcore thành công.',
+    );
   }
 
   @Post()

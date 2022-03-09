@@ -31,6 +31,10 @@ import axios from 'axios';
 import { itgCustomerFromAppcore } from 'src/utils/integrateFunctions';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
+import {
+  UserStatusEnum,
+  UserTypeEnum,
+} from 'src/database/enums/tableFieldEnum/user.enum';
 
 @Injectable()
 export class CustomerService {
@@ -42,8 +46,6 @@ export class CustomerService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
-
-    private mailService: MailService,
   ) {}
 
   async getList(params) {
@@ -96,11 +98,14 @@ export class CustomerService {
       join: userJoiner,
       where: {
         [`${Table.USERS}.user_id`]: id,
-        [`${Table.USERS}.user_type`]: customer_type.map((type) => type),
       },
     });
     if (!user) {
       throw new HttpException('Không tìm thấy customer', 404);
+    }
+
+    if (user.user_type !== UserTypeEnum.Customer) {
+      throw new HttpException('Người dùng không phải là khách hàng.', 409);
     }
 
     const userImage = await this.imageLinkRepo.findOne({
@@ -163,20 +168,30 @@ export class CustomerService {
   async itgGet() {
     try {
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/customers?page=1',
+        url: 'http://mb.viendidong.com/core-api/v1/customers?page=4',
       });
       const randomPassword = generateRandomPassword();
       const { passwordHash, salt } = saltHashPassword(randomPassword);
       const users = response.data.data;
-
+      let logsUserExist = [];
       for (let userItem of users) {
         const itgUser = itgCustomerFromAppcore(userItem);
+
+        const checkUserExist = await this.userRepo.findOne({
+          referer: userItem.id,
+        });
+        if (checkUserExist) {
+          logsUserExist.push(userItem.id);
+          continue;
+        }
 
         const userData = {
           ...new UserEntity(),
           ...this.userRepo.setData(itgUser),
           password: passwordHash,
           salt: salt,
+          user_type: UserTypeEnum.Customer,
+          status: UserStatusEnum.Deactive,
         };
 
         const newUser = await this.userRepo.create(userData);
@@ -195,6 +210,8 @@ export class CustomerService {
 
         result = { ...result, profile: newUserProfile };
 
+        // user_data
+        let _data = itgUser;
         const userDataData = {
           ...new UserDataEntity(),
           ...this.userDataRepo.setData(itgUser),
@@ -215,6 +232,8 @@ export class CustomerService {
 
         result = { ...result, loyalty: newUserLoyalty };
       }
+
+      return logsUserExist;
     } catch (error) {
       console.log(error);
       throw new HttpException(

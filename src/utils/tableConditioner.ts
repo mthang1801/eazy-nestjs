@@ -1,5 +1,6 @@
 import { customer_type } from 'src/database/constant/customer';
 import { Table } from 'src/database/enums';
+import { UserTypeEnum } from 'src/database/enums/tableFieldEnum/user.enum';
 import { Equal, Like, Not } from 'src/database/find-options/operators';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
@@ -49,22 +50,24 @@ export const productsGroupFilterConditioner = (product) =>
           product.group_id,
       };
 
-export const userSearchByNameEmailPhone = (val, filterCondition) => {
-  if (Object.entries(filterCondition).length) {
-    return [
-      { [`${Table.USERS}.lastname`]: Like(val), ...filterCondition },
-      { [`${Table.USERS}.firstname`]: Like(val), ...filterCondition },
-      { [`${Table.USERS}.email`]: Like(val), ...filterCondition },
-      { [`${Table.USERS}.phone`]: Like(val), ...filterCondition },
+export const userSystemSearchFilter = (search = '', filterConditions = {}) => {
+  let splitSearchArr = search.replace(/\s{2,}/, ' ').split(' ');
+  let firstName = splitSearchArr.slice(0, -1).join(' ').trim();
+  let lastName = splitSearchArr.slice(-1)[0].trim();
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.USERS}.lastname`]: Like(firstName) },
+      { [`${Table.USERS}.firstname`]: Like(lastName) },
+      { [`${Table.USERS}.email`]: Like(search) },
+      { [`${Table.USERS}.phone`]: Like(search) },
     ];
   }
-
-  return [
-    { [`${Table.USERS}.lastname`]: Like(val) },
-    { [`${Table.USERS}.firstname`]: Like(val) },
-    { [`${Table.USERS}.email`]: Like(val) },
-    { [`${Table.USERS}.phone`]: Like(val) },
-  ];
+  filterConditions = {
+    ...filterConditions,
+    user_type: Not(Equal(UserTypeEnum.Customer)),
+  };
+  return searchFilterTemplate(filterConditions, arraySearch);
 };
 
 export const userGroupSearchByNameCode = (
@@ -126,7 +129,7 @@ export const customersListSearchFilter = (
 
   filterConditions = {
     ...filterConditions,
-    [`${Table.USERS}.user_type`]: customer_type.map((type) => type),
+    [`${Table.USERS}.user_type`]: UserTypeEnum.Customer,
   };
 
   return searchFilterTemplate(filterConditions, arraySearch);

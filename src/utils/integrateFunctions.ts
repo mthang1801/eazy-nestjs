@@ -103,10 +103,11 @@ export const itgCustomerFromAppcore = (cData) => {
     ['cityName', 'b_city'],
     ['districtName', 'b_district'],
     ['address', 'b_address'],
-    ['deleted', 'status'],
     ['createdAt', 'created_at'],
     ['updatedAt', 'updated_at'],
     ['id', 'referer'],
+    ['type', 'type'],
+    ['', 'data'],
   ]);
   let data = {};
   for (let [core, app] of dataMap) {
@@ -118,8 +119,16 @@ export const itgCustomerFromAppcore = (cData) => {
       data[app] = convertToMySQLDateTime(new Date(cData[core]));
       continue;
     }
-    if (core === 'deleted') {
-      data[app] = cData[core] === true ? 'D' : 'B';
+    if (app === 'data') {
+      data[app] = JSON.stringify({
+        note: cData['note'],
+        totalBuyedAmount: cData['totalBuyedAmount'],
+        totalBuyedNo: cData['totalBuyedNo'],
+        lastedBuyedAt: cData['lastedBuyedAt'],
+        indentifyCardFrontUrl: cData['indentifyCardFrontUrl'],
+        indentifyCardBackUrl: cData['indentifyCardBackUrl'],
+        indentifyNo: cData['indentifyNo'],
+      });
       continue;
     }
 

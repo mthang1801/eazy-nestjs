@@ -17,7 +17,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
 import { Like, Not, Equal } from '../../database/find-options/operators';
 import { JoinTable } from 'src/database/enums';
-import { userSearchByNameEmailPhone } from 'src/utils/tableConditioner';
+import { userSystemSearchFilter } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 import { userJoiner } from 'src/utils/joinTable';
 import { customer_type } from '../../database/constant/customer';
@@ -64,23 +64,16 @@ export class UserSystemService {
       }
     }
 
-    // Chắc chắn răng người dùng hiện tại không phải là Customer
-    filterCondition[`${Table.USERS}.store_id`] = Not(Equal(0));
-
     const count = await this.userRepository.find({
       select: [`COUNT(DISTINCT(${Table.USERS}.user_id)) as total`],
       join: userSystemStoreJoiner,
-      where: search
-        ? userSearchByNameEmailPhone(search, filterCondition)
-        : filterCondition,
+      where: userSystemSearchFilter(search, filterCondition),
     });
 
     const users = await this.userRepository.find({
       select: ['*', `${Table.USERS}.*`],
       join: userSystemStoreJoiner,
-      where: search
-        ? userSearchByNameEmailPhone(search, filterCondition)
-        : filterCondition,
+      where: userSystemSearchFilter(search, filterCondition),
       orderBy: [{ field: 'created_at', sortBy: SortBy.DESC }],
       skip,
       limit,
