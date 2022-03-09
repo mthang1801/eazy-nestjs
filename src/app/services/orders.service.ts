@@ -84,41 +84,39 @@ export class OrdersService {
     }
 
     //============ Push data to Appcore ==================
-    // const config: any = {
-    //   method: 'POST',
-    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   data: convertDataToIntegrate(result),
-    // };
+    const config: any = {
+      method: 'POST',
+      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
 
-    // try {
-    //   const response = await axios(config);
-    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-    //   if (response?.data?.data) {
-    //     const origin_order_id = response.data.data;
-    //     let updateOriginOrderId = await this.orderRepo.update(
-    //       { order_id: result.order_id },
-    //       { origin_order_id, status: OrderStatusEnum.Open },
-    //     );
+    try {
+      const response = await axios(config);
+      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+      if (response?.data?.data) {
+        const origin_order_id = response.data.data;
+        let updateOriginOrderId = await this.orderRepo.update(
+          { order_id: result.order_id },
+          { origin_order_id, status: OrderStatusEnum.Open },
+        );
 
-    //     result = { ...result, ...updateOriginOrderId };
+        result = { ...result, ...updateOriginOrderId };
 
-    //     message = 'Đẩy đơn hàng đến appcore thành công';
-    //   }
-    //   return { result, message };
-    // } catch (error) {
-    //   console.log(error);
-    //   throw new HttpException(
-    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-    //       error?.response?.data?.message || error.message
-    //     }`,
-    //     400,
-    //   );
-    // }
-
-    return result;
+        message = 'Đẩy đơn hàng đến appcore thành công';
+      }
+      return { result, message };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
   }
 
   async update(order_id: number, data) {
@@ -252,6 +250,11 @@ export class OrdersService {
       ...this.orderRepo.setData(data),
     };
 
+    orderData['total'] = 0;
+    for (let orderItem of data.order_items) {
+      orderData['total'] += orderItem.price * orderItem.amount;
+    }
+
     let result = await this.orderRepo.create(orderData);
 
     if (data.order_items.length) {
@@ -270,6 +273,7 @@ export class OrdersService {
           : [newOrderDetail];
       }
     }
+    return result;
   }
 
   async itgUpdate(origin_order_id: string, data) {
