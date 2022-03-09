@@ -246,7 +246,21 @@ export class CustomerService {
   async itgCreate(data) {
     const randomPassword = generateRandomPassword();
     const { passwordHash, salt } = saltHashPassword(randomPassword);
-    console.log(data);
+    if (!data.phone) {
+      throw new HttpException('Số điện thoại là bắt buộc', 422);
+    }
+
+    const user = await this.userRepo.findOne({ phone: data.phone });
+    if (user) {
+      throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
+    }
+
+    if (data.email) {
+      const userEmail = await this.userRepo.findOne({ email: data.email });
+      if (userEmail) {
+        throw new HttpException('Email đã tồn tại', 409);
+      }
+    }
 
     const userData = {
       ...new UserEntity(),
@@ -315,6 +329,20 @@ export class CustomerService {
 
     if (!user) {
       throw new HttpException('Không tìm thấy user trong hệ thống.', 404);
+    }
+
+    if (data.phone && user.phone !== data.phone) {
+      const userPhone = await this.userRepo.findOne({ phone: data.phone });
+      if (userPhone) {
+        throw new HttpException('Số điện thoại đã tồn tại', 409);
+      }
+    }
+
+    if (data.email && user.email !== data.email) {
+      const userEmail = await this.userRepo.findOne({ email: data.email });
+      if (userEmail) {
+        throw new HttpException('Email đã tồn tại', 409);
+      }
     }
 
     let result = { ...user };
