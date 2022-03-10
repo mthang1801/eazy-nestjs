@@ -92,6 +92,7 @@ import { StoreLocationRepository } from '../repositories/storeLocation.repositor
 import { StoreLocationDescriptionEntity } from '../entities/storeLocationDescription.entity';
 import { StoreLocationDescriptionsRepository } from '../repositories/storeLocationDescriptions.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
+import { productsData } from 'src/database/constant/product';
 
 @Injectable()
 export class ProductService {
@@ -377,7 +378,11 @@ export class ProductService {
         if (productsInGroup.length) {
           for (let productItem of productsInGroup) {
             let productInfoDetail = await this.productRepo.findOne({
-              select: ['*'],
+              select: [
+                '*',
+                `${Table.PRODUCT_DESCRIPTION}.*`,
+                `${Table.PRODUCTS}.status`,
+              ],
               join: {
                 [JoinTable.innerJoin]: productInfoJoiner,
               },
@@ -426,13 +431,11 @@ export class ProductService {
                     ...product['children_products'],
                     {
                       ...productInfoDetail,
-                      product: productInfoDetail.product?.split('-')[1]?.trim(),
                     },
                   ]
                 : [
                     {
                       ...productInfoDetail,
-                      product: productInfoDetail.product?.split('-')[1]?.trim(),
                     },
                   ];
             }
@@ -509,6 +512,7 @@ export class ProductService {
 
   async get(identifier: number | string): Promise<any> {
     // get Product item
+
     let product = await this.productRepo.findOne({
       select: [
         '*',
@@ -1251,11 +1255,11 @@ export class ProductService {
   }
 
   async callSync(): Promise<void> {
-    // await this.clearAll();
+    await this.clearAll();
 
-    // for (let productItem of productsData) {
-    //   await this.createSync(productItem);
-    // }
+    for (let productItem of productsData) {
+      await this.itgCreate(productItem);
+    }
     await this.syncProductsIntoGroup();
   }
 
