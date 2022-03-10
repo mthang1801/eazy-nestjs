@@ -94,7 +94,7 @@ import { StoreLocationDescriptionsRepository } from '../repositories/storeLocati
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { GroupProductStatusEnum } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ProductGroupTypeEnum } from 'src/database/enums/tableFieldEnum/productGroupType.enum';
-import { productsData } from 'src/database/constant/product';
+// import { productsData } from 'src/database/constant/product';
 
 @Injectable()
 export class ProductService {
