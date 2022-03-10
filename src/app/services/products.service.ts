@@ -94,7 +94,7 @@ import { StoreLocationDescriptionsRepository } from '../repositories/storeLocati
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { GroupProductStatusEnum } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ProductGroupTypeEnum } from 'src/database/enums/tableFieldEnum/productGroupType.enum';
-// import { productsData } from 'src/database/constant/product';
+import { productsData } from 'src/database/constant/product';
 
 @Injectable()
 export class ProductService {
@@ -231,6 +231,10 @@ export class ProductService {
         }
       }
     }
+
+    await this.moveParentChildenProductsIntoAnotherGroup(50000178, 9, '128GB');
+    await this.moveParentChildenProductsIntoAnotherGroup(50000183, 9);
+    await this.moveParentChildenProductsIntoAnotherGroup(50000184, 9, '256GB');
   }
 
   async createProductFeatures(
@@ -403,9 +407,13 @@ export class ProductService {
     let listCategories = [];
     if (category_id) {
       listCategories = await this.childrenCategories(category_id);
+
       if (listCategories.length) {
-        listCategories = listCategories.map(({ cateogry_id }) => category_id);
+        listCategories = listCategories.map(({ category_id }) => category_id);
       }
+
+      console.log(listCategories);
+      listCategories = [category_id, ...listCategories];
     }
 
     let count = await this.productRepo.find({
@@ -413,14 +421,12 @@ export class ProductService {
       join: {
         [JoinTable.innerJoin]: productJoiner,
       },
-      where: [
-        {
-          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-            (categoryId) => categoryId,
-          ),
-        },
-        productsListsSearchFilter(search, filterCondition),
-      ],
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+          (categoryId) => categoryId,
+        ),
+        ...productsListsSearchFilter(search, filterCondition),
+      },
     });
 
     let productLists = await this.productRepo.find({
@@ -429,14 +435,13 @@ export class ProductService {
         [JoinTable.innerJoin]: productJoiner,
       },
       orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
-      where: [
-        {
-          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-            (categoryId) => categoryId,
-          ),
-        },
-        productsListsSearchFilter(search, filterCondition),
-      ],
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+          (categoryId) => categoryId,
+        ),
+
+        ...productsListsSearchFilter(search, filterCondition),
+      },
       skip,
       limit,
     });
@@ -575,6 +580,7 @@ export class ProductService {
       +categoryId,
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
+    console.log(576, categoriesList);
 
     let { page, limit, search, ...others } = params;
 
@@ -702,9 +708,6 @@ export class ProductService {
             (categoryId) => categoryId,
           ),
         },
-        [`${Table.PRODUCTS}.product_id`]: productsList.map(
-          ({ product_id }) => product_id,
-        ),
         [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
       });
 
@@ -724,9 +727,6 @@ export class ProductService {
           ),
           [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
         },
-        [`${Table.PRODUCTS}.product_id`]: productsList.map(
-          ({ product_id }) => product_id,
-        ),
         [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
         skip,
         limit,
@@ -747,6 +747,7 @@ export class ProductService {
         productItem['image'] = image;
       }
     }
+
     return {
       currentCategory: category,
       childrenCategories: categoriesListByLevel,
@@ -1070,14 +1071,10 @@ export class ProductService {
   async callSync(): Promise<void> {
     await this.clearAll();
 
-    // for (let productItem of productsData) {
-    //   await this.itgCreate(productItem);
-    // }
+    for (let productItem of productsData) {
+      await this.itgCreate(productItem);
+    }
     await this.syncProductsIntoGroup();
-    await this.moveParentChildenProductsIntoAnotherGroup(50000178, 6, '128GB');
-    await this.moveParentChildenProductsIntoAnotherGroup(50000183, 6);
-    await this.moveParentChildenProductsIntoAnotherGroup(50000184, 6, '256GB');
-    await this.moveParentChildenProductsIntoAnotherGroup(50000189, 6, '512GB');
   }
 
   async itgUpdate(sku, data): Promise<any> {
