@@ -1171,7 +1171,7 @@ export const productsData = [
     whole_price: 17990000,
     list_price: 17990000,
     collect_price: 17990000,
-    product_code: 'CMH215iP457321',
+    product_code: 'CMH215iP4573232131',
     product_type: '2',
     combo_amount: 2,
     barcode: '2000098722066',

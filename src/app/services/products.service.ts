@@ -94,7 +94,7 @@ import { StoreLocationDescriptionsRepository } from '../repositories/storeLocati
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { GroupProductStatusEnum } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ProductGroupTypeEnum } from 'src/database/enums/tableFieldEnum/productGroupType.enum';
-// import { productsData } from 'src/database/constant/product';
+import { productsData } from 'src/database/constant/product';
 
 @Injectable()
 export class ProductService {
@@ -1071,9 +1071,9 @@ export class ProductService {
   async callSync(): Promise<void> {
     await this.clearAll();
 
-    // for (let productItem of productsData) {
-    //   await this.itgCreate(productItem);
-    // }
+    for (let productItem of productsData) {
+      await this.itgCreate(productItem);
+    }
     await this.syncProductsIntoGroup();
   }
 
@@ -1473,13 +1473,11 @@ export class ProductService {
                     ...product['children_products'],
                     {
                       ...productInfoDetail,
-                      product: productInfoDetail.product?.split('-')[1]?.trim(),
                     },
                   ]
                 : [
                     {
                       ...productInfoDetail,
-                      product: productInfoDetail.product?.split('-')[1]?.trim(),
                     },
                   ];
             }
