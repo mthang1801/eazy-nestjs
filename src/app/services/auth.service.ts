@@ -111,7 +111,7 @@ export class AuthService {
     let result = { ...user };
 
     //create a new record as customer position at ddv_usergroup_links
-    const userGroupForCustomer: UserGroupEntity =
+    const userGroupForCustomer =
       await this.userGroupLinksService.createUserGroupLinkPosition(
         user.user_id,
         UserGroupTypeEnum.Customer,

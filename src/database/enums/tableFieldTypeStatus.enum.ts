@@ -22,3 +22,8 @@ export enum ImageObjectType {
   USER = 'users',
   CATEGORY = 'categories',
 }
+
+export enum GroupProductStatusEnum {
+  'Active' = 'A',
+  'Deactive' = 'D',
+}

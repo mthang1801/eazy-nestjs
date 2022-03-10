@@ -257,6 +257,7 @@ export class OrdersService {
         409,
       );
     }
+
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
         const orderDetail = await this.orderDetailRepo.findOne({

@@ -262,11 +262,16 @@ export class CustomerService {
       }
     }
 
+    if (data['birthday']) {
+      data['birthday'] = convertToMySQLDateTime(new Date(data['birthday']));
+    }
+
     const userData = {
       ...new UserEntity(),
       ...this.userRepo.setData(data),
       password: passwordHash,
       salt: salt,
+      status: UserStatusEnum.Deactive,
     };
 
     const newUser = await this.userRepo.create(userData);
@@ -347,7 +352,11 @@ export class CustomerService {
 
     let result = { ...user };
 
-    const userData = this.userDataRepo.setData(data);
+    if (data['birthday']) {
+      data['birthday'] = convertToMySQLDateTime(new Date(data['birthday']));
+    }
+
+    const userData = this.userRepo.setData(data);
     delete userData['referer'];
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
@@ -359,7 +368,7 @@ export class CustomerService {
 
     const userProfileData = this.userProfileRepo.setData(data);
     if (Object.entries(userProfileData).length) {
-      const updatedUserProfile = await this.userRepo.update(
+      const updatedUserProfile = await this.userProfileRepo.update(
         { user_id: result.user_id },
         userProfileData,
       );
@@ -367,6 +376,7 @@ export class CustomerService {
     }
 
     const userDataData = this.userDataRepo.setData(data);
+
     if (Object.entries(userDataData).length) {
       const updatedUserData = await this.userDataRepo.update(
         { user_id: result.user_id },
@@ -376,7 +386,8 @@ export class CustomerService {
     }
 
     const userLoyaltyData = this.userLoyalRepo.setData(data);
-    if (Object.entries(userDataData).length) {
+
+    if (Object.entries(userLoyaltyData).length) {
       const updatedUserLoyalty = await this.userLoyalRepo.update(
         { user_id: result.user_id },
         userLoyaltyData,
