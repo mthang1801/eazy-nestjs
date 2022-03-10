@@ -1052,9 +1052,9 @@ export class ProductService {
   async callSync(): Promise<void> {
     await this.clearAll();
 
-    for (let productItem of productsData) {
-      await this.itgCreate(productItem);
-    }
+    // for (let productItem of productsData) {
+    //   await this.itgCreate(productItem);
+    // }
     await this.syncProductsIntoGroup();
     await this.moveParentChildenProductsIntoAnotherGroup(50000178, 6, '128GB');
     await this.moveParentChildenProductsIntoAnotherGroup(50000183, 6);
