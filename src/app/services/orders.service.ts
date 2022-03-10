@@ -38,6 +38,7 @@ import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { data } from '../../database/constant/category';
+import { LocatorService } from './locator.service';
 
 @Injectable()
 export class OrdersService {
@@ -51,13 +52,24 @@ export class OrdersService {
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
+    private locatorService: LocatorService,
   ) {}
 
   async create(data: CreateOrderDto) {
+    if (!data.user_id) {
+      throw new HttpException('user_id là bắt buộc', 403);
+    }
+    const user = await this.userRepo.findOne({ user_id: data.user_id });
+    if (!user) {
+      throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
+    }
+
+    data['user_referer'] = user['referer'];
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: OrderStatusEnum.Failed,
+      status: OrderStatusEnum.Sync,
     };
 
     orderData['total'] = 0;
@@ -84,39 +96,39 @@ export class OrdersService {
     }
 
     //============ Push data to Appcore ==================
-    const config: any = {
-      method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: convertDataToIntegrate(result),
-    };
+    // const config: any = {
+    //   method: 'POST',
+    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   data: convertDataToIntegrate(result),
+    // };
 
-    try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const origin_order_id = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
-          { order_id: result.order_id },
-          { origin_order_id, status: OrderStatusEnum.Open },
-        );
+    // try {
+    //   const response = await axios(config);
+    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+    //   if (response?.data?.data) {
+    //     const origin_order_id = response.data.data;
+    //     let updateOriginOrderId = await this.orderRepo.update(
+    //       { order_id: result.order_id },
+    //       { origin_order_id, status: OrderStatusEnum.Open },
+    //     );
 
-        result = { ...result, ...updateOriginOrderId };
+    //     result = { ...result, ...updateOriginOrderId };
 
-        message = 'Đẩy đơn hàng đến appcore thành công';
-      }
-      return { result, message };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
-        400,
-      );
-    }
+    //     message = 'Đẩy đơn hàng đến appcore thành công';
+    //   }
+    //   return { result, message };
+    // } catch (error) {
+    //   console.log(error);
+    //   throw new HttpException(
+    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+    //       error?.response?.data?.message || error.message
+    //     }`,
+    //     400,
+    //   );
+    // }
   }
 
   async update(order_id: number, data) {

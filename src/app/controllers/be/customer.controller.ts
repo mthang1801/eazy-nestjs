@@ -26,13 +26,13 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, result, `action return all customer`);
   }
 
-  @Put('/:phone')
+  @Put('/:user_id')
   async update(
     @Res() res,
-    @Param('phone') phone: string,
+    @Param('user_id') user_id: string,
     @Body() body: UpdateCustomerDTO,
   ): Promise<IResponse> {
-    const result = await this.service.update(phone, body);
+    const result = await this.service.update(user_id, body);
 
     return this.responseSuccess(res, result, `action update customer`);
   }

@@ -8,6 +8,7 @@ export class OrderEntity {
   company_id: number = 0;
   issuer_id: number = 0;
   user_id: number = 0;
+  user_referer: string = '';
   store_id: number = 0;
   total: number = 0;
   subtotal: number = 0;

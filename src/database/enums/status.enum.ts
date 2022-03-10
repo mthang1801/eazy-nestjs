@@ -6,6 +6,7 @@ export enum OrderStatusEnum {
   'Declined' = 'D',
   'Backordered' = 'B',
   'Canceled' = 'I',
+  'Sync' = 'S',
 }
 
 export enum StatusType {

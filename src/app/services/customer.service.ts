@@ -119,15 +119,15 @@ export class CustomerService {
     return preprocessUserResult(user);
   }
 
-  async update(phone: string, data: UpdateCustomerDTO) {
-    const user = await this.userRepo.findOne({ phone });
+  async update(user_id: string, data: UpdateCustomerDTO) {
+    const user = await this.userRepo.findOne({ user_id });
     if (!user) {
       throw new HttpException('Không tìm thấy người dùng.', 404);
     }
     let result = { ...user };
     const userData = this.userRepo.setData(data);
     if (Object.entries(userData).length) {
-      const updatedUser = await this.userRepo.update({ phone }, userData);
+      const updatedUser = await this.userRepo.update({ user_id }, userData);
       result = { ...result, ...updatedUser };
     }
 
@@ -330,17 +330,17 @@ export class CustomerService {
   }
 
   async itgUpdate(referrer, data) {
+    if (data['phone'] || data['referer']) {
+      throw new HttpException(
+        'Phone hoặc user_id không được phép truyền vào như một tham số',
+        422,
+      );
+    }
+
     const user = await this.userRepo.findOne({ referer: referrer });
 
     if (!user) {
       throw new HttpException('Không tìm thấy user trong hệ thống.', 404);
-    }
-
-    if (data.phone && user.phone !== data.phone) {
-      const userPhone = await this.userRepo.findOne({ phone: data.phone });
-      if (userPhone) {
-        throw new HttpException('Số điện thoại đã tồn tại', 409);
-      }
     }
 
     if (data.email && user.email !== data.email) {
