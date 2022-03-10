@@ -246,13 +246,18 @@ export class CustomerService {
   async itgCreate(data) {
     const randomPassword = generateRandomPassword();
     const { passwordHash, salt } = saltHashPassword(randomPassword);
-    if (!data.phone) {
+    if (!data.phone || !data.referer) {
       throw new HttpException('Số điện thoại là bắt buộc', 422);
     }
 
     const user = await this.userRepo.findOne({ phone: data.phone });
     if (user) {
       throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
+    }
+
+    const userReferer = await this.userRepo.findOne({ referer: data.referer });
+    if (userReferer) {
+      throw new HttpException('Referer đã tồn tại', 409);
     }
 
     if (data.email) {

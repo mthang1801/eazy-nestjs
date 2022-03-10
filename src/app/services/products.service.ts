@@ -380,7 +380,7 @@ export class ProductService {
   }
 
   async getList(params: any): Promise<any> {
-    let { page, limit, search, ...others } = params;
+    let { page, limit, search, category_id, ...others } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
@@ -395,21 +395,32 @@ export class ProductService {
         }
         if (this.productDescriptionsRepo.tableProps.includes(key)) {
           filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
+          continue;
         }
+      }
+    }
+
+    let listCategories = [];
+    if (category_id) {
+      listCategories = await this.childrenCategories(category_id);
+      if (listCategories.length) {
+        listCategories = listCategories.map(({ cateogry_id }) => category_id);
       }
     }
 
     let count = await this.productRepo.find({
       select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
       join: {
-        [JoinTable.innerJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: 'product_id',
-            rootJoin: 'product_id',
-          },
-        },
+        [JoinTable.innerJoin]: productJoiner,
       },
-      where: productsListsSearchFilter(search, filterCondition),
+      where: [
+        {
+          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+            (categoryId) => categoryId,
+          ),
+        },
+        productsListsSearchFilter(search, filterCondition),
+      ],
     });
 
     let productLists = await this.productRepo.find({
@@ -418,7 +429,14 @@ export class ProductService {
         [JoinTable.innerJoin]: productJoiner,
       },
       orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
-      where: productsListsSearchFilter(search, filterCondition),
+      where: [
+        {
+          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+            (categoryId) => categoryId,
+          ),
+        },
+        productsListsSearchFilter(search, filterCondition),
+      ],
       skip,
       limit,
     });

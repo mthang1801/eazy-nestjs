@@ -39,6 +39,12 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { data } from '../../database/constant/category';
 import { LocatorService } from './locator.service';
+import { CityRepository } from '../repositories/city.repository';
+import { CityEntity } from '../entities/cities.entity';
+import { DistrictRepository } from '../repositories/district.repository';
+import { DistrictEntity } from '../entities/districts.entity';
+import { WardRepository } from '../repositories/ward.repository';
+import { WardEntity } from '../entities/wards.entity';
 
 @Injectable()
 export class OrdersService {
@@ -52,7 +58,9 @@ export class OrdersService {
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
-    private locatorService: LocatorService,
+    private cityRepo: CityRepository<CityEntity>,
+    private districtRepo: DistrictRepository<DistrictEntity>,
+    private wardRepo: WardRepository<WardEntity>,
   ) {}
 
   async create(data: CreateOrderDto) {
@@ -453,6 +461,27 @@ export class OrdersService {
           orderItem['store'] = store;
         }
       }
+
+      if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
+        const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
+        if (city) {
+          orderItem['b_city'] = city['city_name'];
+        }
+      }
+      if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
+        const district = await this.districtRepo.findOne({
+          id: orderItem['b_district'],
+        });
+        if (district) {
+          orderItem['b_district'] = district['district_name'];
+        }
+      }
+      if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
+        const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
+        if (ward) {
+          orderItem['b_ward'] = ward['ward_name'];
+        }
+      }
     }
 
     //Lấy thông tin trạng thái đơn hàng
@@ -467,6 +496,7 @@ export class OrdersService {
           [`${Table.STATUS}.type`]: StatusType.Order,
         },
       });
+
       if (status) {
         orderItem['status'] = status;
       }
