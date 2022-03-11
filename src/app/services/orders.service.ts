@@ -72,7 +72,7 @@ export class OrdersService {
       throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
     }
 
-    data['user_referer'] = user['referer'];
+    data['user_appcore_id'] = user['user_appcore_id'];
 
     const orderData = {
       ...new OrderEntity(),

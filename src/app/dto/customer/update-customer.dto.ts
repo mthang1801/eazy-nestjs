@@ -9,9 +9,6 @@ export class UpdateCustomerDTO {
   user_type: string;
 
   @IsOptional()
-  referer: string;
-
-  @IsOptional()
   firstname: string;
 
   @IsOptional()

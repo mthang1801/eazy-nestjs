@@ -43,7 +43,6 @@ import {
   UserMailingListsTypeEnum,
 } from 'src/database/enums/tableFieldEnum/userMailingLists.enum';
 import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
-import { UserGeneralInfoEntity } from '../entities/userGeneralInfo.entity';
 import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';

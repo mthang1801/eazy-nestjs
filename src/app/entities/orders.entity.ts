@@ -8,7 +8,6 @@ export class OrderEntity {
   company_id: number = 0;
   issuer_id: number = 0;
   user_id: number = 0;
-  user_referer: string = '';
   store_id: number = 0;
   total: number = 0;
   subtotal: number = 0;
@@ -85,6 +84,7 @@ export class OrderEntity {
   utm_source: number = 0;
   transfer_code: string = '';
   other_fees: number = 0;
+  user_appcore_id: number = 0;
   ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();

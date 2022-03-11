@@ -101,7 +101,7 @@ export const convertDataToIntegrate = (data) => {
     itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
   }
 
-  itgData['customerId'] = data['user_referer']; //Mã user *
+  itgData['customerId'] = data['user_appcore_id']; //Mã user *
 
   if (data['employee_id']) {
     itgData['saleId'] = data['employee_id']; //Mã nhân viên *

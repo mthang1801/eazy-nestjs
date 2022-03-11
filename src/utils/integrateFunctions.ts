@@ -108,7 +108,7 @@ export const itgCustomerFromAppcore = (cData) => {
     ['address', 's_address'],
     ['createdAt', 'created_at'],
     ['updatedAt', 'updated_at'],
-    ['id', 'referer'],
+    ['id', 'user_appcore_id'],
     ['type', 'type'],
     ['', 'data'],
     ['avatar', 'image_path'],

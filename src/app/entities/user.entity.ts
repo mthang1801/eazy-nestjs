@@ -5,7 +5,7 @@ export class UserEntity {
   status: string = 'A';
   user_type: string = 'C';
   user_login: string = 'SYSTEM';
-  referer: string = '';
+  user_appcore_id: number = 0;
   is_root: string = '';
   company_id: number = 0;
   store_id: number = 0;

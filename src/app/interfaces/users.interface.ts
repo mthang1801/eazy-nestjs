@@ -3,7 +3,7 @@ export interface IUser {
   status: string;
   user_type: string;
   user_login: string;
-  referer: string;
+  user_appcore_id: string;
   is_root: string;
   company_id: number;
   store_id: number;

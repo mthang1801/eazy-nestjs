@@ -31,6 +31,7 @@ import axios from 'axios';
 import { itgCustomerFromAppcore } from 'src/utils/integrateFunctions';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
+import { UpdateCustomerAppcoreDto } from '../dto/customer/update-customerAppcore.dto';
 import {
   UserStatusEnum,
   UserTypeEnum,
@@ -178,7 +179,7 @@ export class CustomerService {
         const itgUser = itgCustomerFromAppcore(userItem);
 
         const checkUserExist = await this.userRepo.findOne({
-          referer: userItem.id,
+          user_appcore_id: userItem.id,
         });
         if (checkUserExist) {
           logsUserExist.push(userItem.id);
@@ -246,18 +247,17 @@ export class CustomerService {
   async itgCreate(data) {
     const randomPassword = generateRandomPassword();
     const { passwordHash, salt } = saltHashPassword(randomPassword);
-    if (!data.phone || !data.referer) {
-      throw new HttpException('Số điện thoại là bắt buộc', 422);
-    }
 
     const user = await this.userRepo.findOne({ phone: data.phone });
     if (user) {
       throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
     }
 
-    const userReferer = await this.userRepo.findOne({ referer: data.referer });
-    if (userReferer) {
-      throw new HttpException('Referer đã tồn tại', 409);
+    const userAppcore = await this.userRepo.findOne({
+      user_appcore_id: data.user_appcore_id,
+    });
+    if (userAppcore) {
+      throw new HttpException('UserAppcore đã tồn tại', 409);
     }
 
     if (data.email) {
@@ -269,6 +269,14 @@ export class CustomerService {
 
     if (data['birthday']) {
       data['birthday'] = convertToMySQLDateTime(new Date(data['birthday']));
+    }
+
+    if (data['created_at']) {
+      data['created_at'] = convertToMySQLDateTime(new Date(data['created_at']));
+    }
+
+    if (data['updated_at']) {
+      data['updated_at'] = convertToMySQLDateTime(new Date(data['updated_at']));
     }
 
     if (!data['birthday']) {
@@ -358,15 +366,10 @@ export class CustomerService {
     return result;
   }
 
-  async itgUpdate(referrer, data) {
-    if (data['phone'] || data['referer']) {
-      throw new HttpException(
-        'Phone hoặc user_id không được phép truyền vào như một tham số',
-        422,
-      );
-    }
-
-    const user = await this.userRepo.findOne({ referer: referrer });
+  async itgUpdate(user_appcore_id: number, data: UpdateCustomerAppcoreDto) {
+    const user = await this.userRepo.findOne({
+      user_appcore_id,
+    });
 
     if (!user) {
       throw new HttpException('Không tìm thấy user trong hệ thống.', 404);
@@ -411,7 +414,7 @@ export class CustomerService {
       delete userData['updated_at'];
     }
 
-    delete userData['referer'];
+    delete userData['user_appcore_id'];
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
         { user_id: result.user_id },
