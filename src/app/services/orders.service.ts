@@ -37,6 +37,14 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+import { data } from '../../database/constant/category';
+import { LocatorService } from './locator.service';
+import { CityRepository } from '../repositories/city.repository';
+import { CityEntity } from '../entities/cities.entity';
+import { DistrictRepository } from '../repositories/district.repository';
+import { DistrictEntity } from '../entities/districts.entity';
+import { WardRepository } from '../repositories/ward.repository';
+import { WardEntity } from '../entities/wards.entity';
 
 @Injectable()
 export class OrdersService {
@@ -50,13 +58,26 @@ export class OrdersService {
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
+    private cityRepo: CityRepository<CityEntity>,
+    private districtRepo: DistrictRepository<DistrictEntity>,
+    private wardRepo: WardRepository<WardEntity>,
   ) {}
 
   async create(data: CreateOrderDto) {
+    if (!data.user_id) {
+      throw new HttpException('user_id là bắt buộc', 403);
+    }
+    const user = await this.userRepo.findOne({ user_id: data.user_id });
+    if (!user) {
+      throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
+    }
+
+    data['user_referer'] = user['referer'];
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: OrderStatusEnum.Failed,
+      status: OrderStatusEnum.Sync,
     };
 
     orderData['total'] = 0;
@@ -116,8 +137,6 @@ export class OrdersService {
     //     400,
     //   );
     // }
-
-    return result;
   }
 
   async update(order_id: number, data) {
@@ -246,23 +265,29 @@ export class OrdersService {
   }
 
   async itgCreate(data) {
-    // if (!data.origin_order_id) {
-    //   throw new HttpException(
-    //     "Dữ liệu cần id của đơn hàng, truyền vào với tham số 'origin_order_id'",
-    //     422,
-    //   );
-    // }
+    if (!data.origin_order_id) {
+      throw new HttpException('Mã đơn hàng không được trống', 422);
+    }
+    const order = await this.orderRepo.findOne({
+      origin_order_id: data.origin_order_id,
+    });
+    if (order) {
+      throw new HttpException(
+        'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
+        409,
+      );
+    }
 
-    // if (data?.order_items?.length) {
-    //   for (let orderItem of data.order_items) {
-    //     if (!orderItem.origin_order_item_id) {
-    //       throw new HttpException(
-    //         "Mỗi đơn hàng chi tiết cần có id thể hiện qua 'orgin_order_item_id'",
-    //         422,
-    //       );
-    //     }
-    //   }
-    // }
+    if (data?.order_items?.length) {
+      for (let orderItem of data.order_items) {
+        const orderDetail = await this.orderDetailRepo.findOne({
+          origin_order_item_id: orderItem.origin_order_item_id,
+        });
+        if (orderDetail) {
+          throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
+        }
+      }
+    }
 
     const orderData = {
       ...new OrderEntity(),
@@ -281,7 +306,6 @@ export class OrdersService {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-          status: 'A',
         };
 
         const newOrderDetail = await this.orderDetailRepo.create(
@@ -293,40 +317,7 @@ export class OrdersService {
           : [newOrderDetail];
       }
     }
-
-    const config: any = {
-      method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: convertDataToIntegrate(result),
-    };
-
-    try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const origin_order_id = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
-          { order_id: result.order_id },
-          { origin_order_id, status: OrderStatusEnum.Open },
-        );
-
-        result = { ...result, ...updateOriginOrderId };
-
-        message = 'Đẩy đơn hàng đến appcore thành công';
-      }
-      return { result, message };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
-        400,
-      );
-    }
+    return result;
   }
 
   async itgUpdate(origin_order_id: string, data) {
@@ -470,6 +461,27 @@ export class OrdersService {
           orderItem['store'] = store;
         }
       }
+
+      if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
+        const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
+        if (city) {
+          orderItem['b_city'] = city['city_name'];
+        }
+      }
+      if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
+        const district = await this.districtRepo.findOne({
+          id: orderItem['b_district'],
+        });
+        if (district) {
+          orderItem['b_district'] = district['district_name'];
+        }
+      }
+      if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
+        const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
+        if (ward) {
+          orderItem['b_ward'] = ward['ward_name'];
+        }
+      }
     }
 
     //Lấy thông tin trạng thái đơn hàng
@@ -484,6 +496,7 @@ export class OrdersService {
           [`${Table.STATUS}.type`]: StatusType.Order,
         },
       });
+
       if (status) {
         orderItem['status'] = status;
       }

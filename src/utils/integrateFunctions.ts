@@ -103,11 +103,15 @@ export const itgCustomerFromAppcore = (cData) => {
     ['cityName', 'b_city'],
     ['districtName', 'b_district'],
     ['address', 'b_address'],
+    ['cityName', 's_city'],
+    ['districtName', 's_district'],
+    ['address', 's_address'],
     ['createdAt', 'created_at'],
     ['updatedAt', 'updated_at'],
     ['id', 'referer'],
     ['type', 'type'],
     ['', 'data'],
+    ['avatar', 'image_path'],
   ]);
   let data = {};
   for (let [core, app] of dataMap) {
@@ -137,6 +141,8 @@ export const itgCustomerFromAppcore = (cData) => {
 
   return data;
 };
+
+export const itgCreateCustomerFromAppcore = () => {};
 
 export const itgCustomerToAppcore = (data) => {
   const dataMapping = new Map([

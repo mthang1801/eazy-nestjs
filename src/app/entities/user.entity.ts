@@ -30,4 +30,5 @@ export class UserEntity {
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
+  type: string = '1';
 }

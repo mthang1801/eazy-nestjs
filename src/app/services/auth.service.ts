@@ -111,7 +111,7 @@ export class AuthService {
     let result = { ...user };
 
     //create a new record as customer position at ddv_usergroup_links
-    const userGroupForCustomer: UserGroupEntity =
+    const userGroupForCustomer =
       await this.userGroupLinksService.createUserGroupLinkPosition(
         user.user_id,
         UserGroupTypeEnum.Customer,
@@ -148,6 +148,10 @@ export class AuthService {
     this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
 
     const itgUser = itgCustomerToAppcore(result);
+  }
+
+  async pushNewUserToAppCore(user) {
+    const itgUser = itgCustomerToAppcore(user);
   }
 
   async login(data: any): Promise<IResponseUserToken> {
