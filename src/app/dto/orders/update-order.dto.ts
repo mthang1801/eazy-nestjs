@@ -160,7 +160,7 @@ export class UpdateOrderDto {
   s_phone: string = '';
 
   @IsOptional()
-  origin_order_id: number = 0;
+  order_code: number = 0;
 }
 
 class ProductOrder {

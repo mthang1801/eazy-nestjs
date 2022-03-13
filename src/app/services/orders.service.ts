@@ -64,15 +64,14 @@ export class OrdersService {
   ) {}
 
   async create(data: CreateOrderDto) {
-    if (!data.user_id) {
-      throw new HttpException('user_id là bắt buộc', 403);
-    }
-    const user = await this.userRepo.findOne({ user_id: data.user_id });
-    if (!user) {
-      throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
-    }
+    // const user = await this.userRepo.findOne({ user_id: data.user_id });
+    // if (!user) {
+    //   throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
+    // }
 
-    data['user_appcore_id'] = user['user_appcore_id'];
+    // user_id has been deprecated, using user_appcore_id instead
+    data['user_appcore_id'] = data['user_appcore_id'];
+    data['user_id'] = data['user_appcore_id'];
 
     const orderData = {
       ...new OrderEntity(),
@@ -104,39 +103,39 @@ export class OrdersService {
     }
 
     //============ Push data to Appcore ==================
-    // const config: any = {
-    //   method: 'POST',
-    //   url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   data: convertDataToIntegrate(result),
-    // };
+    const config: any = {
+      method: 'POST',
+      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
 
-    // try {
-    //   const response = await axios(config);
-    //   let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-    //   if (response?.data?.data) {
-    //     const origin_order_id = response.data.data;
-    //     let updateOriginOrderId = await this.orderRepo.update(
-    //       { order_id: result.order_id },
-    //       { origin_order_id, status: OrderStatusEnum.Open },
-    //     );
+    try {
+      const response = await axios(config);
+      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
+      if (response?.data?.data) {
+        const order_code = response.data.data;
+        let updateOriginOrderId = await this.orderRepo.update(
+          { order_id: result.order_id },
+          { order_code, status: OrderStatusEnum.Open },
+        );
 
-    //     result = { ...result, ...updateOriginOrderId };
+        result = { ...result, ...updateOriginOrderId };
 
-    //     message = 'Đẩy đơn hàng đến appcore thành công';
-    //   }
-    //   return { result, message };
-    // } catch (error) {
-    //   console.log(error);
-    //   throw new HttpException(
-    //     `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-    //       error?.response?.data?.message || error.message
-    //     }`,
-    //     400,
-    //   );
-    // }
+        message = 'Đẩy đơn hàng đến appcore thành công';
+      }
+      return { result, message };
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
   }
 
   async update(order_id: number, data) {
@@ -265,11 +264,11 @@ export class OrdersService {
   }
 
   async itgCreate(data) {
-    if (!data.origin_order_id) {
+    if (!data.order_code) {
       throw new HttpException('Mã đơn hàng không được trống', 422);
     }
     const order = await this.orderRepo.findOne({
-      origin_order_id: data.origin_order_id,
+      order_code: data.order_code,
     });
     if (order) {
       throw new HttpException(
@@ -320,11 +319,11 @@ export class OrdersService {
     return result;
   }
 
-  async itgUpdate(origin_order_id: string, data) {
-    const order = await this.orderRepo.findOne({ origin_order_id });
+  async itgUpdate(order_code: string, data) {
+    const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException(
-        `Không tìm thấy đơn hàng có id ${origin_order_id} được gửi từ AppCore`,
+        `Không tìm thấy đơn hàng có id ${order_code} được gửi từ AppCore`,
         404,
       );
     }
@@ -335,7 +334,7 @@ export class OrdersService {
 
     if (Object.entries(orderData).length) {
       const updatedData = await this.orderRepo.update(
-        { origin_order_id },
+        { order_code },
         orderData,
       );
       result = { ...result, ...updatedData };

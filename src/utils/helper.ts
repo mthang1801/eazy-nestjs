@@ -117,3 +117,8 @@ export const formatQueryString = (queryString: string) => {
 };
 
 export const MaxLimit = 9999999999999;
+
+export const convertNullData = (data) => (data ? data : null);
+
+export const convertNullDatetimeData = (data) =>
+  data ? convertToMySQLDateTime(new Date(data)) : null;

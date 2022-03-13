@@ -2,7 +2,7 @@ import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
 import { OrderStatusEnum } from '../../database/enums/status.enum';
 export class OrderEntity {
   order_id: number = 0;
-  origin_order_id: null | number = 0;
+  order_code: null | number = 0;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;

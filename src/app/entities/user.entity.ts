@@ -10,7 +10,7 @@ export class UserEntity {
   company_id: number = 0;
   store_id: number = 0;
   last_login: number = 0;
-  created_at: string = convertToMySQLDateTime();
+  created_at: null | string;
   password: string = '';
   salt: string = '';
   firstname: string = '';
@@ -22,13 +22,12 @@ export class UserEntity {
   url: string = '';
   tax_exempt: string = '';
   lang_code: string = 'vi';
-  birthday: string = convertToMySQLDateTime();
-  purchase_timestamp_from: string = convertToMySQLDateTime();
-  purchase_timestamp_to: string = convertToMySQLDateTime();
+  birthday: null | string;
+  purchase_timestamp_from: null | string;
+  purchase_timestamp_to: null | string;
   responsible_email: string = '';
   last_passwords: string = '';
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
-  type: string = '1';
 }

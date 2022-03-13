@@ -21,7 +21,11 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
-import { generateRandomPassword, preprocessUserResult } from 'src/utils/helper';
+import {
+  convertNullDatetimeData,
+  generateRandomPassword,
+  preprocessUserResult,
+} from 'src/utils/helper';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { convertToMySQLDateTime } from '../../utils/helper';
@@ -169,7 +173,7 @@ export class CustomerService {
   async itgGet() {
     try {
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/customers?page=4',
+        url: 'http://mb.viendidong.com/core-api/v1/customers?page=5',
       });
       const randomPassword = generateRandomPassword();
       const { passwordHash, salt } = saltHashPassword(randomPassword);
@@ -267,29 +271,9 @@ export class CustomerService {
       }
     }
 
-    if (data['birthday']) {
-      data['birthday'] = convertToMySQLDateTime(new Date(data['birthday']));
-    }
-
-    if (data['created_at']) {
-      data['created_at'] = convertToMySQLDateTime(new Date(data['created_at']));
-    }
-
-    if (data['updated_at']) {
-      data['updated_at'] = convertToMySQLDateTime(new Date(data['updated_at']));
-    }
-
-    if (!data['birthday']) {
-      delete data['birthday'];
-    }
-
-    if (!data['created_at']) {
-      delete data['created_at'];
-    }
-
-    if (!data['updated_at']) {
-      delete data['updated_at'];
-    }
+    data['birthday'] = convertNullDatetimeData(data['birthday']);
+    data['created_at'] = convertNullDatetimeData(data['created_at']);
+    data['updated_at'] = convertNullDatetimeData(data['updated_at']);
 
     const userData = {
       ...new UserEntity(),
@@ -298,18 +282,6 @@ export class CustomerService {
       salt: salt,
       status: UserStatusEnum.Deactive,
     };
-
-    if (!data['birthday']) {
-      delete userData['birthday'];
-    }
-
-    if (!data['created_at']) {
-      delete userData['created_at'];
-    }
-
-    if (!data['updated_at']) {
-      delete userData['updated_at'];
-    }
 
     const newUser = await this.userRepo.create(userData);
 
@@ -384,37 +356,12 @@ export class CustomerService {
 
     let result = { ...user };
 
-    if (data['birthday']) {
-      data['birthday'] = convertToMySQLDateTime(new Date(data['birthday']));
-    }
-
-    if (!data['birthday']) {
-      delete data['birthday'];
-    }
-
-    if (!data['created_at']) {
-      delete data['created_at'];
-    }
-
-    if (!data['updated_at']) {
-      delete data['updated_at'];
-    }
+    data['birthday'] = convertNullDatetimeData(data['birthday']);
+    data['created_at'] = convertNullDatetimeData(data['created_at']);
+    data['updated_at'] = convertNullDatetimeData(data['updated_at']);
 
     const userData = this.userRepo.setData(data);
 
-    if (!data['birthday']) {
-      delete userData['birthday'];
-    }
-
-    if (!data['created_at']) {
-      delete userData['created_at'];
-    }
-
-    if (!data['updated_at']) {
-      delete userData['updated_at'];
-    }
-
-    delete userData['user_appcore_id'];
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
         { user_id: result.user_id },

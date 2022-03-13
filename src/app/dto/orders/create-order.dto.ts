@@ -40,9 +40,6 @@ export class CreateOrderDto {
   employee_id: number;
 
   @IsOptional()
-  user_id: number;
-
-  @IsOptional()
   utm_source: number;
 
   @IsOptional()
@@ -157,7 +154,7 @@ export class CreateOrderDto {
   s_phone: string = '';
 
   @IsOptional()
-  origin_order_id: number = 0;
+  order_code: number = 0;
 
   @IsOptional()
   transfer_code: string = '';

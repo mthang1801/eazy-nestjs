@@ -2,14 +2,14 @@ import { convertToMySQLDateTime } from './helper';
 import { OrderStatusEnum } from '../database/enums/status.enum';
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
-    ['id', 'origin_order_id'],
+    ['id', 'order_code'],
     ['storeId', 'store_id'],
     ['orderSourceId', 'ref_order_id'],
     ['saleId', 'employee_id'],
     ['saleNote', 'internal_note'],
     ['status', 'status'],
     ['orderType', 'order_type'],
-    ['customerId', 'user_id'],
+    ['customerId', 'user_appcore_id'],
     ['customerName', 'b_lastname'],
     ['customerName', 's_lastname'],
     ['customerMobile', 'b_phone'],

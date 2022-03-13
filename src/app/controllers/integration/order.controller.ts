@@ -58,13 +58,13 @@ export class OrderIntegrationController extends BaseController {
     return this.responseSuccess(res, result, 'Tạo thành công');
   }
 
-  @Put('/:origin_order_id')
+  @Put('/:order_code')
   async update(
     @Res() res: Response,
-    @Param('origin_order_id') origin_order_id: string,
+    @Param('order_code') order_code: string,
     data,
   ): Promise<IResponse> {
-    await this.service.itgUpdate(origin_order_id, data);
+    await this.service.itgUpdate(order_code, data);
     return this.responseSuccess(res, '', 'Cập nhật thành công');
   }
 }

@@ -139,7 +139,7 @@ export const orderSearchFilter = (search = '', filterConditions = {}) => {
   let arraySearch = [];
   if (search) {
     arraySearch = [
-      { [`${Table.ORDERS}.origin_order_id`]: Like(search) },
+      { [`${Table.ORDERS}.order_code`]: Like(search) },
       { [`${Table.ORDERS}.order_id`]: Like(search) },
     ];
   }
