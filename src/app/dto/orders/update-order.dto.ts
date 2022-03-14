@@ -168,7 +168,7 @@ class ProductOrder {
   item_id: number;
 
   @IsOptional()
-  origin_order_item_id: string;
+  order_item_appcore_id: string;
 
   @IsOptional()
   product_id: string;

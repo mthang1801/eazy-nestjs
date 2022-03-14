@@ -264,9 +264,6 @@ export class OrdersService {
   }
 
   async itgCreate(data) {
-    if (!data.order_code) {
-      throw new HttpException('Mã đơn hàng không được trống', 422);
-    }
     const order = await this.orderRepo.findOne({
       order_code: data.order_code,
     });
@@ -280,7 +277,7 @@ export class OrdersService {
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
         const orderDetail = await this.orderDetailRepo.findOne({
-          origin_order_item_id: orderItem.origin_order_item_id,
+          order_item_appcore_id: orderItem.order_item_appcore_id,
         });
         if (orderDetail) {
           throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
@@ -345,14 +342,14 @@ export class OrdersService {
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
         const currentOrderItem = await this.orderDetailRepo.findOne({
-          origin_order_item_id: orderItem.origin_order_item_id,
+          order_item_appcore_id: orderItem.order_item_appcore_id,
         });
 
         //Nếu có currentOrderItem thì update, ngược lại sẽ tạo mới
         if (currentOrderItem) {
           if (orderItem.deleted) {
             const updatedOrderItem = await this.orderDetailRepo.update(
-              { origin_order_item_id: orderItem.origin_order_item_id },
+              { order_item_appcore_id: orderItem.order_item_appcore_id },
               { status: 'D' },
             );
             result['order_items'] = [
@@ -365,7 +362,7 @@ export class OrdersService {
             });
             if (Object.entries(orderItemData).length) {
               const updatedOrderItem = await this.orderDetailRepo.update(
-                { origin_order_item_id: orderItem.origin_order_item_id },
+                { order_item_appcore_id: orderItem.order_item_appcore_id },
                 orderItemData,
               );
               result['order_items'] = [

@@ -71,7 +71,7 @@ export const itgOrderFromAppcore = (cData) => {
 
 export const itgOrderItemFromAppCore = (cData) => {
   const dataMapping = new Map([
-    ['id', 'origin_order_item_id'],
+    ['id', 'order_item_appcore_id'],
     ['orderId', 'order_id'],
     ['productId', 'product_id'],
     ['productPrice', 'price'],
