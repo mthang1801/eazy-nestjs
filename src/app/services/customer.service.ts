@@ -119,7 +119,12 @@ export class CustomerService {
     const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
 
     result = { ...result, ...newUserLoyalty };
-    const customerAppcoreData = itgCustomerToAppcore(result);
+
+    return this.createCustomerToAppcore(result);
+  }
+
+  async createCustomerToAppcore(user): Promise<void> {
+    const customerAppcoreData = itgCustomerToAppcore(user);
 
     try {
       const response = await axios({
@@ -128,25 +133,22 @@ export class CustomerService {
         data: customerAppcoreData,
       });
       const data = response.data;
-      console.log(data);
+
       const user_appcore_id = data.data.id;
       const updatedUser = await this.userRepo.update(
-        { user_id: result.user_id },
+        { user_id: user.user_id },
         { user_appcore_id },
       );
-      result = { ...result, ...updatedUser };
     } catch (error) {
-      await this.userRepo.delete({ user_id: result.user_id });
-      await this.userProfileRepo.delete({ user_id: result.user_id });
-      await this.userDataRepo.delete({ user_id: result.user_id });
-      await this.userLoyalRepo.delete({ user_id: result.user_id });
+      await this.userRepo.delete({ user_id: user.user_id });
+      await this.userProfileRepo.delete({ user_id: user.user_id });
+      await this.userDataRepo.delete({ user_id: user.user_id });
+      await this.userLoyalRepo.delete({ user_id: user.user_id });
       throw new HttpException(
-        error.response.data.message,
-        error.response.status,
+        error?.response?.data?.message || error.response,
+        error?.response?.status || error.status,
       );
     }
-
-    return result;
   }
 
   async getList(params) {

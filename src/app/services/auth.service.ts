@@ -111,21 +111,6 @@ export class AuthService {
       created_at: convertToMySQLDateTime(),
     });
 
-    // const userAppcore = itgCustomerToAppcore(user);
-    // console.log(userAppcore);
-    // try {
-    //   const response = await axios({
-    //     url: 'http://mb.viendidong.com/core-api/v1/customers',
-    //     method: 'POST',
-    //     data: JSON.stringify(userAppcore),
-    //   });
-    //   console.log(response.data.data);
-    // } catch (error) {
-    //   await this.userRepository.delete({ user_id: user.user_id });
-    //   console.log(error);
-    //   throw new HttpException(error.message, error.status);
-    // }
-
     let result = { ...user };
 
     //create a new record at ddv_user_profiles
@@ -150,19 +135,17 @@ export class AuthService {
 
     //create a new record at ddv_user_loyalty
     const newUserLoyalty = await this.userLoyaltyRepo.create({
-      user_id: user.user_id,
+      user_id: result.user_id,
       created_at: convertToMySQLDateTime(),
       updated_at: convertToMySQLDateTime(),
     });
 
+    result = { ...result, ...newUserLoyalty };
+
+    await this.customerService.createCustomerToAppcore(result);
+
     // Create a new record to user mailing list db and send email
     this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
-
-    const itgUser = itgCustomerToAppcore(result);
-  }
-
-  async pushNewUserToAppCore(user) {
-    const itgUser = itgCustomerToAppcore(user);
   }
 
   async login(data: any): Promise<IResponseUserToken> {

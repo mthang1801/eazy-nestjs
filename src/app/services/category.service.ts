@@ -405,7 +405,7 @@ export class CategoryService {
     return categoriesListLevel0;
   }
 
-  async get(id: number): Promise<ICategoryResult> {
+  async get(id: number) {
     let category = await this.categoryRepository.findOne({
       select: ['*'],
       join: {
@@ -419,48 +419,23 @@ export class CategoryService {
       where: { [`${Table.CATEGORIES}.category_id`]: id },
     });
 
-    // If level 1, find all its children
-    if (category.level === 1) {
-      const children = await this.categoryRepository.find({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.CATEGORY_DESCRIPTIONS]: {
-              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-              rootJoin: `${Table.CATEGORIES}.category_id`,
-            },
-          },
-        },
-        where: { [`${Table.CATEGORIES}.parent_id`]: id },
-      });
-      category['children'] = children;
-    }
-
-    return category;
+    const categories = await this.getCategoriesChildrenRecursive(category);
+    return categories;
   }
 
-  async categoriesChildren(category) {
-    const categoriesChildren = await this.categoryRepository.find({
+  async getCategoriesChildrenRecursive(currentCategory) {
+    const categoriesChildrenList = await this.categoryRepository.find({
       select: '*',
-      join: {
-        [JoinTable.innerJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: 'category_id',
-            leftJoin: 'category_id',
-          },
-        },
-      },
-      where: { [`${Table.CATEGORIES}.parent_id`]: category.category_id },
+      where: { parent_id: currentCategory.category_id },
     });
-    if (categoriesChildren.length) {
-      for (let categoryChild of categoriesChildren) {
-        category['children'] = category['children']
-          ? [...category['children'], categoryChild]
-          : [categoryChild];
-        return await this.categoriesChildren(categoryChild);
+
+    if (categoriesChildrenList.length) {
+      currentCategory['children'] = categoriesChildrenList;
+      for (let categoryChildItem of currentCategory['children']) {
+        await this.getCategoriesChildrenRecursive(categoryChildItem);
       }
     }
-    return category;
+    return currentCategory;
   }
 
   async delete(id: number): Promise<boolean> {
