@@ -252,6 +252,10 @@ export class bannerService {
 
     const response = await axios(config);
 
+    for (let image of images) {
+      await fsExtra.unlink(image.path);
+    }
+
     const results = response?.data?.data;
 
     return { image_path: results[0] };
