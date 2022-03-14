@@ -21,6 +21,7 @@ import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { Response } from 'express';
 import { CreateOrderAppcoreDto } from 'src/app/dto/orders/create-orderAppcore.dto';
+import { UpdateOrderAppcoreDto } from 'src/app/dto/orders/update-orderAppcore.dto';
 /**
  * Controller for Category
  * @Author LongTRinh
@@ -66,7 +67,7 @@ export class OrderIntegrationController extends BaseController {
   async update(
     @Res() res: Response,
     @Param('order_code') order_code: string,
-    data,
+    @Body() data: UpdateOrderAppcoreDto,
   ): Promise<IResponse> {
     await this.service.itgUpdate(order_code, data);
     return this.responseSuccess(res, '', 'Cập nhật thành công');

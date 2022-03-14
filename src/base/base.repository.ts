@@ -294,18 +294,28 @@ export class BaseRepositorty<T> {
           }
           Object.entries(option).forEach(([key, val], i) => {
             if (i === 0) {
-              queryString += `${key} = ${val}`;
+              queryString +=
+                typeof val === 'number'
+                  ? `${key} = ${val}`
+                  : `${key} = '${val}'`;
             } else {
-              queryString += ` OR ${key} = '${val}'`;
+              queryString +=
+                typeof val === 'number'
+                  ? ` OR ${key} = ${val}`
+                  : `OR ${key} = '${val}'`;
             }
           });
         }
       } else {
         Object.entries(option).forEach(([key, val], i) => {
           if (i === 0) {
-            queryString += `${key} = ${val}`;
+            queryString +=
+              typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
           } else {
-            queryString += ` AND ${key} = '${val}'`;
+            queryString +=
+              typeof val === 'number'
+                ? ` AND ${key} = ${val}`
+                : ` AND ${key} = '${val}'`;
           }
         });
       }

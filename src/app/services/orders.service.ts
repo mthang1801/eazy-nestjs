@@ -46,6 +46,7 @@ import { DistrictEntity } from '../entities/districts.entity';
 import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
 import { CreateOrderAppcoreDto } from '../dto/orders/create-orderAppcore.dto';
+import { UpdateOrderAppcoreDto } from '../dto/orders/update-orderAppcore.dto';
 
 @Injectable()
 export class OrdersService {
@@ -315,11 +316,12 @@ export class OrdersService {
     return result;
   }
 
-  async itgUpdate(order_code: string, data) {
+  async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
+
     let result = { ...order };
     const orderData = await this.orderRepo.setData(data);
     if (Object.entries(orderData).length) {
@@ -327,8 +329,72 @@ export class OrdersService {
       result = { ...result, ...updatedOrder };
     }
 
-    const orderItemsList = await this.orderRepo.find({ order_code });
-    if (orderItemsList.length) {
+    const orderItemsList = await this.orderDetailRepo.find({
+      select: '*',
+      where: { order_id: order.order_id },
+    });
+
+    if (data?.order_items?.length) {
+      let willRemoveOrderItems = [];
+      let willAddNewOrderItems = [];
+      let willUpdateOrderItems = [];
+      for (let orderItem of data.order_items) {
+        if (
+          !orderItemsList.some(
+            ({ order_item_appcore_id }) =>
+              order_item_appcore_id === orderItem.order_item_appcore_id,
+          )
+        ) {
+          willAddNewOrderItems = [...willAddNewOrderItems, orderItem];
+        } else {
+          willUpdateOrderItems = [...willUpdateOrderItems, orderItem];
+        }
+      }
+      willRemoveOrderItems = orderItemsList.filter(
+        ({ order_item_appcore_id }) =>
+          !willUpdateOrderItems.some(
+            (orderItem) =>
+              orderItem.order_item_appcore_id === order_item_appcore_id,
+          ),
+      );
+
+      console.log(`will Add:`, willAddNewOrderItems);
+      console.log(`will Update:`, willUpdateOrderItems);
+      console.log(`will Remove:`, willRemoveOrderItems);
+
+      for (let orderItem of willRemoveOrderItems) {
+        await this.orderDetailRepo.delete({
+          order_item_appcore_id: orderItem.order_item_appcore_id,
+        });
+      }
+
+      for (let orderItem of willUpdateOrderItems) {
+        await this.orderDetailRepo.update(
+          { order_item_appcore_id: orderItem.order_item_appcore_id },
+          orderItem,
+        );
+      }
+
+      for (let orderItem of willAddNewOrderItems) {
+        const orderItemData = {
+          ...new OrderDetailsEntity(),
+          ...this.orderDetailRepo.setData(orderItem),
+          order_id: order.order_id,
+        };
+        await this.orderDetailRepo.create(orderItemData);
+      }
+
+      const updatedOrderItems = await this.orderDetailRepo.find({
+        select: '*',
+        where: { order_id: order.order_id },
+      });
+      console.log(updatedOrderItems);
+      const total = updatedOrderItems.reduce(
+        (acc, ele) => acc + ele.price * ele.amount,
+        0,
+      );
+      console.log(total);
+      await this.orderRepo.update({ order_code }, { total });
     }
   }
 
