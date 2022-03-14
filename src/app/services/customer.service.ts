@@ -40,6 +40,7 @@ import {
   UserStatusEnum,
   UserTypeEnum,
 } from 'src/database/enums/tableFieldEnum/user.enum';
+import { CreateCustomerAppcoreDto } from '../dto/customer/crate-customerAppcore.dto';
 
 @Injectable()
 export class CustomerService {
@@ -248,7 +249,7 @@ export class CustomerService {
     }
   }
 
-  async itgCreate(data) {
+  async itgCreate(data: CreateCustomerAppcoreDto) {
     const randomPassword = generateRandomPassword();
     const { passwordHash, salt } = saltHashPassword(randomPassword);
 

@@ -45,6 +45,7 @@ import { DistrictRepository } from '../repositories/district.repository';
 import { DistrictEntity } from '../entities/districts.entity';
 import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
+import { CreateOrderAppcoreDto } from '../dto/orders/create-orderAppcore.dto';
 
 @Injectable()
 export class OrdersService {
@@ -263,7 +264,7 @@ export class OrdersService {
     }
   }
 
-  async itgCreate(data) {
+  async itgCreate(data: CreateOrderAppcoreDto) {
     const order = await this.orderRepo.findOne({
       order_code: data.order_code,
     });

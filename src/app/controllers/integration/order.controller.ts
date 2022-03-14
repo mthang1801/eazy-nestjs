@@ -20,6 +20,7 @@ import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { Response } from 'express';
+import { CreateOrderAppcoreDto } from 'src/app/dto/orders/create-orderAppcore.dto';
 /**
  * Controller for Category
  * @Author LongTRinh
@@ -38,8 +39,11 @@ export class OrderIntegrationController extends BaseController {
   }
 
   @Post()
-  async create(@Res() res, @Body() body): Promise<IResponse> {
-    const result = await this.service.itgCreate(body);
+  async create(
+    @Res() res,
+    @Body() data: CreateOrderAppcoreDto,
+  ): Promise<IResponse> {
+    const result = await this.service.itgCreate(data);
     return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
   }
 
