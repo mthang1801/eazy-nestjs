@@ -40,7 +40,7 @@ export class UpdateOrderAppcoreDto {
   employee_id: number;
 
   @IsOptional()
-  user_id: number;
+  user_appcore_id: number;
 
   @IsOptional()
   utm_source: number;

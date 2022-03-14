@@ -324,8 +324,21 @@ export class OrdersService {
 
     let result = { ...order };
     const orderData = await this.orderRepo.setData(data);
+
+    if (data.user_appcore_id) {
+      const user = await this.userRepo.findOne({
+        user_appcore_id: data.user_appcore_id,
+      });
+      if (user) {
+        orderData['user_id'] = user.user_id;
+      }
+    }
+
     if (Object.entries(orderData).length) {
-      const updatedOrder = await this.orderRepo.setData(orderData);
+      const updatedOrder = await this.orderRepo.update(
+        { order_code },
+        orderData,
+      );
       result = { ...result, ...updatedOrder };
     }
 
