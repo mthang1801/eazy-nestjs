@@ -98,7 +98,7 @@ export class CustomerService {
 
     const newUserProfile = await this.userProfileRepo.create(userProfileData);
 
-    result = { ...result, profile: newUserProfile };
+    result = { ...result, ...newUserProfile };
 
     const userDataData = {
       ...new UserDataEntity(),
@@ -108,7 +108,7 @@ export class CustomerService {
 
     const newUserData = await this.userDataRepo.create(userDataData);
 
-    result = { ...result, data: newUserData };
+    result = { ...result, ...newUserData };
 
     const userLoyaltyData = {
       ...new UserLoyaltyEntity(),
@@ -118,12 +118,33 @@ export class CustomerService {
 
     const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
 
-    result = { ...result, loyalty: newUserLoyalty };
+    result = { ...result, ...newUserLoyalty };
+    const customerAppcoreData = itgCustomerToAppcore(result);
 
-    // const customerAppcoreData = {
-    //   ...itgCustomerToAppcore(result),
-    //   fullName: `${result.firstname} ${result.lastname}`,
-    // };
+    try {
+      const response = await axios({
+        url: 'http://mb.viendidong.com/core-api/v1/customers/cms',
+        method: 'POST',
+        data: customerAppcoreData,
+      });
+      const data = response.data;
+      console.log(data);
+      const user_appcore_id = data.data.id;
+      const updatedUser = await this.userRepo.update(
+        { user_id: result.user_id },
+        { user_appcore_id },
+      );
+      result = { ...result, ...updatedUser };
+    } catch (error) {
+      await this.userRepo.delete({ user_id: result.user_id });
+      await this.userProfileRepo.delete({ user_id: result.user_id });
+      await this.userDataRepo.delete({ user_id: result.user_id });
+      await this.userLoyalRepo.delete({ user_id: result.user_id });
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
+    }
 
     return result;
   }

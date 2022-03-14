@@ -150,17 +150,11 @@ export const itgCustomerToAppcore = (data) => {
     ['phone', 'phoneNo'],
     ['gender', 'gender'],
     ['email', 'email'],
-    ['dateOfBirth', 'birthday'],
-    ['b_city', 'city'],
-    ['b_district', 'district'],
-    ['b_ward', 'ward'],
+    // ['birthday', 'dateOfBirth'],
+    ['b_city', 'cityId'],
+    ['b_district', 'districtId'],
+    ['b_ward', 'wardId'],
     ['b_address', 'address'],
-    ['status', 'deleted'],
-    ['created_at', 'createdAt'],
-    ['updated_at', 'updatedAt'],
-    ['lastname', 'lastName'],
-    ['b_city', 'cityName'],
-    ['b_district', 'districtName'],
   ]);
 
   let cData = {};
@@ -171,6 +165,14 @@ export const itgCustomerToAppcore = (data) => {
     }
     if (app === 'status') {
       cData[core] = false;
+      continue;
+    }
+    if (app === 'b_city' || app === 'b_district' || app === 'b_ward') {
+      cData[core] = +data[app];
+      continue;
+    }
+    if (app === 'email' && !data[app]) {
+      delete data[app];
       continue;
     }
     cData[core] = data[app] ?? null;

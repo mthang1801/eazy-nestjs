@@ -406,7 +406,7 @@ export class OrdersService {
         (acc, ele) => acc + ele.price * ele.amount,
         0,
       );
-      console.log(total);
+
       await this.orderRepo.update({ order_code }, { total });
     }
   }
