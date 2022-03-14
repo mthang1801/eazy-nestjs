@@ -18,6 +18,7 @@ export enum PrimaryKeys {
   ddv_banners = 'banner_id',
   ddv_banner_images = 'banner_id',
   ddv_banner_descriptions = 'banner_id',
+  ddv_banner_location_descriptions = 'location_id',
 
   //============== Image ==============
   ddv_images = 'image_id',

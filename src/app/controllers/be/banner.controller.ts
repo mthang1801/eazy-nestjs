@@ -19,14 +19,15 @@ import { IResponse } from '../../interfaces/response.interface';
 
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
-import { updateBannerDTO } from 'src/app/dto/banner/update-banner.dto';
+
 import { updateBannerImageDTO } from 'src/app/dto/banner/update-banner-image.dto';
 import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto';
 import { CreateBannerDto } from 'src/app/dto/banner/create-banner.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { Response } from 'express';
-@Controller('/be/v1/banner')
+import { UpdateBannerDTO } from '../../dto/banner/update-banner.dto';
+@Controller('/be/v1/banners')
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
     super();
@@ -38,23 +39,19 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, banners);
   }
 
+  @Get('/locations')
+  async getLocationsList(@Res() res): Promise<IResponse> {
+    const result = await this.service.getLocationsList();
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const banners = await this.service.getById(id);
     return this.responseSuccess(res, banners);
   }
 
-  @Get('/:id/images')
-  async getAllIamgesByBannerId(
-    @Res() res,
-    @Param('id') id,
-  ): Promise<IResponse> {
-    const banners = await this.service.getAllIamgesByBannerId(id);
-    return this.responseSuccess(res, banners);
-  }
-
   @Post()
-  //@UseGuards(AuthGuard)
   async create(@Res() res, @Body() body: CreateBannerDto): Promise<IResponse> {
     const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
@@ -68,7 +65,7 @@ export class bannerController extends BaseController {
    * @returns
    */
 
-  @Post('upload-images/:id')
+  @Post('upload-images')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: multer.diskStorage({
@@ -85,22 +82,30 @@ export class bannerController extends BaseController {
   async uploadImages(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Res() res: Response,
-    @Param('id') id: string,
   ) {
-    const result = await this.service.uploadImages(files, id);
-    return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
+    const result = await this.service.uploadImages(files);
+
+    return this.responseSuccess(res, result, 'Upload hình ảnh thành công.');
+  }
+
+  @Get('/:id/images')
+  async getAllIamgesByBannerId(
+    @Res() res,
+    @Param('id') id,
+  ): Promise<IResponse> {
+    const banners = await this.service.getAllIamgesByBannerId(id);
+    return this.responseSuccess(res, banners);
   }
 
   @Put('/:id')
-  @UsePipes(ValidationPipe)
   //@UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
-    @Body() body: updateBannerDTO,
-    @Param('id') id,
+    @Body() data: UpdateBannerDTO,
+    @Param('id') id: number,
   ): Promise<IResponse> {
-    const banner = await this.service.update(body, id);
-    return this.responseSuccess(res, banner);
+    const result = await this.service.update(id, data);
+    return this.responseSuccess(res, result);
   }
 
   @Delete('/:banner_id/images/:images_id')

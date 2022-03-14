@@ -158,7 +158,6 @@ export const itgCustomerToAppcore = (data) => {
     ['status', 'deleted'],
     ['created_at', 'createdAt'],
     ['updated_at', 'updatedAt'],
-    ['user_id', 'id'],
     ['lastname', 'lastName'],
     ['b_city', 'cityName'],
     ['b_district', 'districtName'],
@@ -174,7 +173,7 @@ export const itgCustomerToAppcore = (data) => {
       cData[core] = false;
       continue;
     }
-    cData[core] = data[app];
+    cData[core] = data[app] ?? null;
   }
   return cData;
 };

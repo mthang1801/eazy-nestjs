@@ -49,6 +49,9 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { CustomerService } from './customer.service';
+import axios from 'axios';
+import { UserDataEntity } from '../entities/userData.entity';
+import { UserDataRepository } from '../repositories/userData.repository';
 
 @Injectable()
 export class AuthService {
@@ -62,6 +65,7 @@ export class AuthService {
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userRepository: UserRepository<UserEntity>,
+    private userDataRepository: UserDataRepository<UserDataEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
@@ -107,14 +111,22 @@ export class AuthService {
       created_at: convertToMySQLDateTime(),
     });
 
-    let result = { ...user };
+    // const userAppcore = itgCustomerToAppcore(user);
+    // console.log(userAppcore);
+    // try {
+    //   const response = await axios({
+    //     url: 'http://mb.viendidong.com/core-api/v1/customers',
+    //     method: 'POST',
+    //     data: JSON.stringify(userAppcore),
+    //   });
+    //   console.log(response.data.data);
+    // } catch (error) {
+    //   await this.userRepository.delete({ user_id: user.user_id });
+    //   console.log(error);
+    //   throw new HttpException(error.message, error.status);
+    // }
 
-    //create a new record as customer position at ddv_usergroup_links
-    const userGroupForCustomer =
-      await this.userGroupLinksService.createUserGroupLinkPosition(
-        user.user_id,
-        UserGroupTypeEnum.Customer,
-      );
+    let result = { ...user };
 
     //create a new record at ddv_user_profiles
     const newUserProfile = await this.userService.createUserProfile({
@@ -127,12 +139,12 @@ export class AuthService {
 
     result = { ...result, ...newUserProfile };
 
+    const userData = {
+      ...new UserDataEntity(),
+      user_id: result.user_id,
+    };
     // Create a new record at ddv_user_data
-    const newUserData = await this.userService.createUserData({
-      user_id: user.user_id,
-      type: '',
-      data: '',
-    });
+    const newUserData = await this.userService.createUserData(userData);
 
     result = { ...result, ...newUserData };
 
@@ -241,26 +253,27 @@ export class AuthService {
         user_id: userExists.user_id,
         b_firstname: userExists.firstname,
         b_lastname: userExists.lastname,
+        profile_name: `${userExists.firstname} ${userExists.lastname}`,
       });
 
-      //create a new record as customer position at ddv_usergroup_links
-      const userGroupForCustomer =
-        await this.userGroupLinksService.createUserGroupLinkPosition(
-          userExists.user_id,
-          UserGroupTypeEnum.Customer,
-        );
-
       // Create a new record at ddv_user_data
-      const newUserData = await this.userService.createUserData({
+      const userData = {
+        ...new UserDataEntity(),
         user_id: userExists.user_id,
-        type: '',
-        data: '',
+      };
+      const newUserData = await this.userService.createUserData(userData);
+
+      //create a new record at ddv_user_loyalty
+      const newUserLoyalty = await this.userLoyaltyRepo.create({
+        user_id: userExists.user_id,
+        created_at: convertToMySQLDateTime(),
+        updated_at: convertToMySQLDateTime(),
       });
 
       userExists = {
         ...userExists,
         ...userProfile,
-        ...userGroupForCustomer,
+        ...newUserLoyalty,
         ...newUserData,
       };
     }

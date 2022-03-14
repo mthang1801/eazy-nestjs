@@ -12,7 +12,6 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { Like } from 'typeorm';
-import { updateBannerDTO } from '../dto/banner/update-banner.dto';
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
 import { CreateBannerDto } from '../dto/banner/create-banner.dto';
@@ -25,6 +24,10 @@ import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+import { UpdateBannerDTO } from '../dto/banner/update-banner.dto';
+import { BannerImagesEntity } from '../entities/bannerImages.entity';
+import { BannerLocationDescriptionRepository } from '../repositories/bannerLocationDescription.repository';
+import { BannerLocationDescriptionEntity } from '../entities/bannerLocationDescription.entity';
 @Injectable()
 export class bannerService {
   constructor(
@@ -33,6 +36,7 @@ export class bannerService {
     private imageService: ImagesService,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+    private bannerLocationsDescRepo: BannerLocationDescriptionRepository<BannerLocationDescriptionEntity>,
   ) {}
   async getList(params): Promise<IBannerResult[]> {
     //=====Filter param
@@ -81,6 +85,11 @@ export class bannerService {
     });
     return _banner;
   }
+
+  async getLocationsList() {
+    return this.bannerLocationsDescRepo.find();
+  }
+
   async getById(id): Promise<IBannerResult> {
     const string = `${Table.BANNER}.banner_id`;
     const banner = this.bannerRepo.findOne({
@@ -107,38 +116,110 @@ export class bannerService {
   }
 
   async create(data: CreateBannerDto) {
-    const bannerData = {
-      ...new BannerEntity(),
-      ...this.bannerRepo.setData(data),
-    };
+    for (let locationId of data.location_ids) {
+      const bannerData = {
+        ...new BannerEntity(),
+        ...this.bannerRepo.setData(data),
+        location_id: locationId,
+      };
 
-    const bannerDescData = {
-      ...new BannerDescriptionsEntity(),
-      ...this.bannerRepo.setData(data),
-    };
+      const banner = await this.bannerRepo.create(bannerData);
+
+      let result = { ...banner };
+
+      const bannerDescData = {
+        ...new BannerDescriptionsEntity(),
+        ...this.bannerDescriptionRepo.setData(data),
+        banner_id: result.banner_id,
+      };
+
+      const bannerDesc = await this.bannerDescriptionRepo.create(
+        bannerDescData,
+      );
+
+      result = { ...result, ...bannerDesc };
+
+      const bannerImageData = {
+        ...new ImagesEntity(),
+        ...this.imageRepo.setData(data),
+      };
+      const bannerImage = await this.imageRepo.create(bannerImageData);
+
+      result = { ...result, image: { ...bannerImage } };
+
+      const bannerImageLinkData = {
+        ...new ImagesLinksEntity(),
+        ...this.imageLinkRepo.setData(data),
+        object_id: result.banner_id,
+        object_type: ImageObjectType.BANNER,
+        image_id: bannerImage.image_id,
+      };
+
+      const bannerImageLink = await this.imageLinkRepo.create(
+        bannerImageLinkData,
+      );
+
+      result = { ...result, image: { ...result.image, ...bannerImageLink } };
+    }
   }
 
-  async update(data: updateBannerDTO, id: string): Promise<any> {
-    //===================|Update ddve_banner table|===================
-    const bannerTableData = {
-      ...this.bannerRepo.setData(data),
-    };
+  async update(id: number, data: UpdateBannerDTO): Promise<any> {
+    const banner = await this.bannerRepo.findById(id);
+    if (!banner) {
+      throw new HttpException('Không tìm thấy banner.', 404);
+    }
+    let result: any = { ...banner };
 
-    let _banner = this.bannerRepo.update(+id, bannerTableData);
-    //===========================|Add to ddve_banner description|======
+    const bannerData = this.bannerRepo.setData(data);
+    if (Object.entries(bannerData).length) {
+      const updatedBanner = await this.bannerRepo.update(
+        { banner_id: id },
+        bannerData,
+      );
+      result = { ...result, ...updatedBanner };
+    }
 
-    const bannerDescriptionTableData = {
-      ...this.bannerDescriptionRepo.setData(data),
-    };
+    const bannerDescData = this.bannerDescriptionRepo.setData(data);
+    if (Object.entries(bannerDescData).length) {
+      const updatedBannerDesc = await this.bannerDescriptionRepo.update(
+        { banner_id: id },
+        bannerDescData,
+      );
+      result = { ...result, ...updatedBannerDesc };
+    }
 
-    let _banner_description = this.bannerDescriptionRepo.update(
-      +id,
-      bannerDescriptionTableData,
-    );
+    if (data.image_path) {
+      const oldImageLink = await this.bannerRepo.findOne({
+        object_type: ImageObjectType.BANNER,
+        object_id: result.banner_id,
+      });
+      if (oldImageLink) {
+        const imageLinkData = this.imageLinkRepo.setData(data);
+        if (Object.entries(imageLinkData).length) {
+          const updatedImageLink = await this.imageLinkRepo.update(
+            { pair_id: oldImageLink.pair_id },
+            imageLinkData,
+          );
+          result = {
+            ...result,
+            image: { ...oldImageLink, ...updatedImageLink },
+          };
+        }
 
-    const result = await Promise.all([_banner, _banner_description]);
-    return result[0];
+        const imageData = this.imageRepo.setData(data);
+        if (Object.entries(imageData).length) {
+          const updatedImage = await this.imageRepo.update(
+            { image_id: oldImageLink.image_id },
+            imageData,
+          );
+          result = { ...result, image: { ...result.image, ...updatedImage } };
+        }
+      }
+    }
+
+    return result;
   }
+
   async Delete(banner_id, images_id): Promise<void> {
     await this.imageService.Delete(banner_id, images_id);
   }
@@ -153,66 +234,26 @@ export class bannerService {
     return this.imageService.Update(body, banner_id, images_id);
   }
 
-  async uploadImages(images, id) {
-    try {
-      const banner = await this.bannerRepo.findById(id);
-      if (!banner) {
-        throw new HttpException('Không tìm thấy banner', 404);
-      }
-
-      let data = new FormData();
-      for (let image of images) {
-        data.append('files', fs.createReadStream(image.path));
-      }
-
-      var config: any = {
-        method: 'post',
-        url: 'http://mb.viendidong.com/core-api/v1/files/website',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          ...data.getHeaders(),
-        },
-        data: data,
-      };
-
-      const response = await axios(config);
-
-      const results = response?.data?.data;
-
-      if (Array.isArray(results) && results?.length) {
-        let imageLink = await this.imageLinkRepo.findOne({
-          select: ['position'],
-          orderBy: [{ field: 'position', sortBy: SortBy.DESC }],
-          where: {
-            object_id: id,
-            object_type: ImageObjectType.BANNER,
-          },
-        });
-
-        let currentPosition = imageLink ? imageLink.position + 1 : 0;
-
-        for (let [i, dataItem] of results.entries()) {
-          let newImage = await this.imageRepo.create({ image_path: dataItem });
-          await this.imageLinkRepo.create({
-            object_id: id,
-            object_type: ImageObjectType.BANNER,
-            image_id: newImage.image_id,
-            position: currentPosition + i,
-          });
-        }
-      }
-
-      // delete files
-      for (let image of images) {
-        await fsExtra.unlink(image.path);
-      }
-
-      return results;
-    } catch (error) {
-      for (let image of images) {
-        await fsExtra.unlink(image.path);
-      }
-      throw new HttpException(error.response, error.status);
+  async uploadImages(images) {
+    let data = new FormData();
+    for (let image of images) {
+      data.append('files', fs.createReadStream(image.path));
     }
+
+    var config: any = {
+      method: 'post',
+      url: 'http://mb.viendidong.com/core-api/v1/files/website',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...data.getHeaders(),
+      },
+      data: data,
+    };
+
+    const response = await axios(config);
+
+    const results = response?.data?.data;
+
+    return { image_path: results[0] };
   }
 }
