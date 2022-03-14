@@ -118,12 +118,15 @@ export const customersListSearchFilter = (
   let firstName = splitSearchArr.slice(0, -1).join(' ').trim();
   let lastName = splitSearchArr.slice(-1)[0].trim();
   let arraySearch = [];
+
   if (search) {
     arraySearch = [
       { [`${Table.USERS}.email`]: Like(search) },
       { [`${Table.USERS}.phone`]: Like(search) },
       { [`${Table.USERS}.firstname`]: Like(firstName) },
       { [`${Table.USERS}.lastname`]: Like(lastName) },
+      { [`${Table.USERS}.firstname`]: Like(lastName) },
+      { [`${Table.USERS}.lastname`]: Like(firstName) },
     ];
   }
 

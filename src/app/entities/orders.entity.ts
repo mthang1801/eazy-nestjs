@@ -21,7 +21,7 @@ export class OrderEntity {
   disposit_amount: number = 0;
   status: string = OrderStatusEnum.Failed;
   notes: string = '';
-  gender: number = 0;
+  gender: string = '0';
   details: string = '';
   promotions: string = '';
   promotion_ids: string = '';

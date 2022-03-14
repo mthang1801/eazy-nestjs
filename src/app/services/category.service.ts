@@ -37,27 +37,7 @@ export class CategoryService {
     private imageLinkRepository: ImagesLinksRepository<ImagesLinksEntity>,
   ) {}
 
-  async create(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
-    const categoryData = this.categoryRepository.setData(data);
-    if (data.level > 1 && !data.parent_id) {
-      throw new HttpException('Level lớn hơn 1 cần có parent_id', 400);
-    }
-
-    let idPath = '';
-
-    if (data.level === 1) {
-      idPath = `${data.parent_id}`;
-    }
-    if (data.level === 2 && data.parent_id) {
-      let parentCategory = await this.categoryRepository.findById(
-        data.parent_id,
-      );
-      let grandParentCategory = await this.categoryRepository.findById(
-        parentCategory.parent_id,
-      );
-      idPath = `${grandParentCategory.category_id}/${parentCategory.category_id}`;
-    }
-
+  async create(data: CreateCategoryV2Dto): Promise<any> {
     const checkSlugExist = await this.categoryRepository.findOne({
       slug: convertToSlug(data.slug),
     });
@@ -66,134 +46,33 @@ export class CategoryService {
       throw new HttpException('Đường dẫn đã tồn tại.', 409);
     }
 
-    let parentLevel;
     if (data.parent_id) {
-      parentLevel = await this.categoryRepository.findById(data.parent_id);
-
-      if (!parentLevel) {
-        throw new HttpException('Không tìm thấy danh mục cha.', 404);
+      const parentCategory = await this.categoryRepository.findOne({
+        category_id: data.parent_id,
+      });
+      if (!parentCategory) {
+        throw new HttpException('Danh mục cha không tồn tại', 404);
       }
+      data['level'] = parentCategory['level'] + 1;
     }
 
-    const createdCategory = await this.categoryRepository.create({
-      ...categoryData,
-      id_path: idPath,
-      slug: convertToSlug(data.slug),
-      parent_id: data.parent_id === 0 ? null : data.parent_id,
-      level: data.parent_id ? parentLevel.level + 1 : 0,
-      display_at: convertToMySQLDateTime(
-        categoryData['display_at']
-          ? new Date(categoryData['display_at'])
-          : new Date(),
-      ),
-      created_at: convertToMySQLDateTime(),
-    });
+    const categoryData = {
+      ...new CategoryEntity(),
+      ...this.categoryRepository.setData(data),
+    };
+    const category = await this.categoryRepository.create(categoryData);
+    let result: any = { ...category };
 
-    let result = { ...createdCategory };
-
-    const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
-
-    const createdCategoryDescription: CategoryDescriptionEntity =
-      await this.categoryDescriptionRepo.create({
-        category_id: createdCategory.category_id,
-        ...categoryDescriptionData,
-      });
-
-    result = { ...result, ...createdCategoryDescription };
-
-    // add category_id to products in ddv_product_category
-    if (data.products_list.length) {
-      for (let productCode of data.products_list) {
-        const product: ProductsEntity = await this.productRepository.findOne({
-          product_code: productCode,
-        });
-        if (!product) continue;
-        const productCategory = await this.productCategoryRepository.findOne({
-          product_id: product.product_id,
-          category_id: result.category_id,
-        });
-
-        if (!productCategory) {
-          await this.productCategoryRepository.create({
-            product_id: product.product_id,
-            category_id: result.category_id,
-            link_type: result.category_type,
-            position: product.parent_product_id,
-            category_position: result.position,
-          });
-        }
-      }
-    }
-
-    // upload image
-    if (data.image) {
-      const image = await this.imageRepository.create({
-        image_path: data.image,
-      });
-
-      const imageLink = await this.imageLinkRepository.create({
-        object_id: result.category_id,
-        object_type: ImageObjectType.CATEGORY,
-        image_id: image.image_id,
-      });
-      result = { ...result, image: { ...image, ...imageLink } };
-    }
-
-    // Add category_id to product, working with ddv_products_categories table
-
+    const categoryDescData = {
+      ...new CategoryDescriptionEntity(),
+      ...this.categoryDescriptionRepo.setData(data),
+      category_id: result.category_id,
+    };
+    const categoryDesc = await this.categoryDescriptionRepo.create(
+      categoryDescData,
+    );
+    result = { ...result, ...categoryDesc };
     return result;
-  }
-
-  async createV2(data: CreateCategoryV2Dto): Promise<any> {
-    const checkSlugExist = await this.categoryRepository.findOne({
-      slug: convertToSlug(data.slug),
-    });
-
-    if (checkSlugExist) {
-      throw new HttpException('Đường dẫn đã tồn tại.', 409);
-    }
-    let idPaths = '';
-    let level = 0;
-    if (data.parent_id) {
-      const checkParentExist = await this.categoryRepository.findById(
-        data.parent_id,
-      );
-      if (!checkParentExist) {
-        throw new HttpException(
-          `Không tìm thấy danh mục có parent_id là ${data.parent_id}`,
-          404,
-        );
-      }
-      let getResult = await this.findAncestor(data.parent_id);
-    }
-
-    // const createdCategory = await this.categoryRepository.create({
-    //   ...categoryData,
-    //   id_path: idPaths,
-    //   slug: convertToSlug(data.slug),
-    //   parent_id: data.parent_id === 0 ? null : data.parent_id,
-    //   level: data.parent_id ? parentLevel.level + 1 : 0,
-    //   display_at: convertToMySQLDateTime(
-    //     categoryData['display_at']
-    //       ? new Date(categoryData['display_at'])
-    //       : new Date(),
-    //   ),
-    //   created_at: convertToMySQLDateTime(),
-    // });
-
-    // let result = { ...createdCategory };
-
-    // const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
-
-    // const createdCategoryDescription: CategoryDescriptionEntity =
-    //   await this.categoryDescriptionRepo.create({
-    //     category_id: createdCategory.category_id,
-    //     ...categoryDescriptionData,
-    //   });
-
-    // result = { ...result, ...createdCategoryDescription };
-
-    // return result;
   }
 
   async findAncestor(parentId: number, idPaths = '', level = 0) {
@@ -257,33 +136,6 @@ export class CategoryService {
 
     return result;
   }
-
-  // async syncData(): Promise<any> {
-  //   let categoryListData: any = categoryData;
-  //   for (let categoryItem of categoryListData) {
-  //     const categoryObjData = {
-  //       ...new CategoryEntity(),
-  //       ...this.categoryRepository.setData(categoryItem),
-  //       display_at: categoryItem.display_at
-  //         ? convertToMySQLDateTime(categoryItem.display_at)
-  //         : convertToMySQLDateTime(),
-  //     };
-
-  //     const newCategoryData = await this.categoryRepository.create(
-  //       categoryObjData,
-  //     );
-
-  //     const categoryObjDescData = {
-  //       ...new CategoryDescriptionEntity(),
-  //       ...this.categoryDescriptionRepo.setData(categoryItem),
-  //     };
-
-  //     await this.categoryDescriptionRepo.create({
-  //       category_id: categoryItem.category_id,
-  //       ...categoryObjDescData,
-  //     });
-  //   }
-  // }
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
     const oldCategoryData = await this.categoryRepository.findOne({
@@ -584,6 +436,30 @@ export class CategoryService {
       category['children'] = children;
     }
 
+    return category;
+  }
+
+  async categoriesChildren(category) {
+    const categoriesChildren = await this.categoryRepository.find({
+      select: '*',
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: 'category_id',
+            leftJoin: 'category_id',
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.parent_id`]: category.category_id },
+    });
+    if (categoriesChildren.length) {
+      for (let categoryChild of categoriesChildren) {
+        category['children'] = category['children']
+          ? [...category['children'], categoryChild]
+          : [categoryChild];
+        return await this.categoriesChildren(categoryChild);
+      }
+    }
     return category;
   }
 

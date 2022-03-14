@@ -9,6 +9,9 @@ export class UpdateCustomerDTO {
   user_type: string;
 
   @IsOptional()
+  email: string;
+
+  @IsOptional()
   firstname: string;
 
   @IsOptional()
@@ -24,7 +27,7 @@ export class UpdateCustomerDTO {
   gender: string;
 
   @IsOptional()
-  datebirth: string;
+  birthday: string;
 
   @IsOptional()
   lastname: string;
@@ -34,9 +37,6 @@ export class UpdateCustomerDTO {
 
   @IsOptional()
   fax: string;
-
-  @IsOptional()
-  birthday: string;
 
   @IsOptional()
   b_firstname: string;
@@ -115,4 +115,10 @@ export class UpdateCustomerDTO {
 
   @IsOptional()
   loyalty_point: number;
+
+  @IsOptional()
+  note: string;
+
+  @IsOptional()
+  type: string;
 }

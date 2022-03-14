@@ -1,3 +1,5 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class CategoryEntity {
   category_id: number = 0;
   parent_id: number = 0;
@@ -20,6 +22,6 @@ export class CategoryEntity {
   product_columns: number = 0;
   is_trash: string = '';
   category_type: string = 'C';
-  created_at: Date = new Date();
-  display_at: Date = new Date();
+  created_at: string = convertToMySQLDateTime();
+  display_at: string = convertToMySQLDateTime();
 }

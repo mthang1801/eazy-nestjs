@@ -183,8 +183,16 @@ export const productInfoJoiner = {
 export const userJoiner = {
   [JoinTable.leftJoin]: {
     [Table.USER_PROFILES]: {
-      fieldJoin: 'user_id',
-      rootJoin: 'user_id',
+      fieldJoin: `${Table.USER_PROFILES}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+    [Table.USER_LOYALTY]: {
+      fieldJoin: `${Table.USER_LOYALTY}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+    [Table.USER_DATA]: {
+      fieldJoin: `${Table.USER_DATA}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
     },
   },
 };

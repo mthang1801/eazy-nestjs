@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Body, Put, Res, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Body,
+  Put,
+  Res,
+  Post,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { CustomerService } from 'src/app/services/customer.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
@@ -6,11 +16,24 @@ import { UpdateCustomerDTO } from 'src/app/dto/customer/update-customer.dto';
 import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { Query } from '@nestjs/common';
+import { CreateCustomerDto } from '../../dto/customer/create-customer.dto';
+import { Response } from 'express';
 
 @Controller('/be/v1/customers')
 export class CustomerController extends BaseController {
   constructor(private service: CustomerService) {
     super();
+  }
+
+  @Post()
+  @UseGuards(AuthGuard)
+  async create(
+    @Res() res: Response,
+    @Req() req,
+    @Body() data: CreateCustomerDto,
+  ): Promise<IResponse> {
+    const result = await this.service.create(req.user, data);
+    return this.responseSuccess(res, result);
   }
 
   //@UseGuards(AuthGuard)

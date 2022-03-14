@@ -92,7 +92,7 @@ export class UserSystemService {
   async getById(id): Promise<any> {
     const user = await this.userRepository.findOne({
       select: ['*'],
-      join: userJoiner,
+      join: userSystemStoreJoiner,
       where: {
         [`${Table.USERS}.user_id`]: id,
       },

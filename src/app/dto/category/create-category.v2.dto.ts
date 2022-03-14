@@ -26,8 +26,5 @@ export class CreateCategoryV2Dto {
   slug: string;
 
   @IsOptional()
-  level: number = 0;
-
-  @IsOptional()
   description: string = '';
 }

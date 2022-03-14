@@ -259,7 +259,6 @@ export class OrdersService {
         }
       }
     } catch (error) {
-      console.log(error);
       throw new HttpException('Có lỗi xảy ra', 422);
     }
   }
@@ -291,7 +290,6 @@ export class OrdersService {
       ...this.orderRepo.setData(data),
     };
 
-    orderData['total'] = 0;
     for (let orderItem of data.order_items) {
       orderData['total'] += orderItem.price * orderItem.amount;
     }
@@ -320,70 +318,18 @@ export class OrdersService {
   async itgUpdate(order_code: string, data) {
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
-      throw new HttpException(
-        `Không tìm thấy đơn hàng có id ${order_code} được gửi từ AppCore`,
-        404,
-      );
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
-
     let result = { ...order };
-
-    const orderData = this.orderRepo.setData(data);
-
+    const orderData = await this.orderRepo.setData(data);
     if (Object.entries(orderData).length) {
-      const updatedData = await this.orderRepo.update(
-        { order_code },
-        orderData,
-      );
-      result = { ...result, ...updatedData };
+      const updatedOrder = await this.orderRepo.setData(orderData);
+      result = { ...result, ...updatedOrder };
     }
 
-    result['order_items'] = [];
-
-    if (data?.order_items?.length) {
-      for (let orderItem of data.order_items) {
-        const currentOrderItem = await this.orderDetailRepo.findOne({
-          order_item_appcore_id: orderItem.order_item_appcore_id,
-        });
-
-        //Nếu có currentOrderItem thì update, ngược lại sẽ tạo mới
-        if (currentOrderItem) {
-          if (orderItem.deleted) {
-            const updatedOrderItem = await this.orderDetailRepo.update(
-              { order_item_appcore_id: orderItem.order_item_appcore_id },
-              { status: 'D' },
-            );
-            result['order_items'] = [
-              ...result['order_items'],
-              updatedOrderItem,
-            ];
-          } else {
-            const orderItemData = await this.orderDetailRepo.setData({
-              ...orderItem,
-            });
-            if (Object.entries(orderItemData).length) {
-              const updatedOrderItem = await this.orderDetailRepo.update(
-                { order_item_appcore_id: orderItem.order_item_appcore_id },
-                orderItemData,
-              );
-              result['order_items'] = [
-                ...result['order_items'],
-                updatedOrderItem,
-              ];
-            }
-          }
-        } else {
-          const orderItemData = {
-            ...new OrderDetailsEntity(),
-            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-          };
-          const newOrderItem = await this.orderDetailRepo.create(orderItemData);
-          result['order_items'] = [...result['order_items'], newOrderItem];
-        }
-      }
+    const orderItemsList = await this.orderRepo.find({ order_code });
+    if (orderItemsList.length) {
     }
-
-    return result;
   }
 
   async getByPhoneAndId(phone: string, order_id: number) {

@@ -41,6 +41,10 @@ import {
   UserTypeEnum,
 } from 'src/database/enums/tableFieldEnum/user.enum';
 import { CreateCustomerAppcoreDto } from '../dto/customer/crate-customerAppcore.dto';
+import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
+import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
+import { sortBy } from 'lodash';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class CustomerService {
@@ -53,6 +57,76 @@ export class CustomerService {
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
   ) {}
+
+  async create(creator, data: CreateCustomerDto) {
+    if (!data.firstname && !data.lastname) {
+      throw new HttpException('Tên khách hàng không được để trống', 422);
+    }
+    const randomPassword = generateRandomPassword();
+    const { passwordHash, salt } = saltHashPassword(randomPassword);
+
+    const user = await this.userRepo.findOne({ phone: data.phone });
+
+    if (user) {
+      throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
+    }
+
+    if (data.email) {
+      const userEmail = await this.userRepo.findOne({ email: data.email });
+      if (userEmail) {
+        throw new HttpException('Email đã tồn tại', 409);
+      }
+    }
+
+    const userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(data),
+      password: passwordHash,
+      salt: salt,
+      status: UserStatusEnum.Deactive,
+    };
+
+    const newUser = await this.userRepo.create(userData);
+
+    let result = { ...newUser };
+
+    const userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(data),
+      user_id: result.user_id,
+    };
+
+    const newUserProfile = await this.userProfileRepo.create(userProfileData);
+
+    result = { ...result, profile: newUserProfile };
+
+    const userDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(data),
+      user_id: result.user_id,
+    };
+
+    const newUserData = await this.userDataRepo.create(userDataData);
+
+    result = { ...result, data: newUserData };
+
+    const userLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalRepo.setData(data),
+      user_id: result.user_id,
+    };
+
+    const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
+
+    result = { ...result, loyalty: newUserLoyalty };
+
+    // const customerAppcoreData = {
+    //   ...itgCustomerToAppcore(result),
+    //   fullName: `${result.firstname} ${result.lastname}`,
+    // };
+
+    return result;
+  }
 
   async getList(params) {
     let { page, limit, search, ...others } = params;
@@ -83,6 +157,7 @@ export class CustomerService {
     let customersList = await this.userRepo.find({
       select: ['*'],
       join: userJoiner,
+      orderBy: [{ field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC }],
       where: customersListSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -130,8 +205,22 @@ export class CustomerService {
     if (!user) {
       throw new HttpException('Không tìm thấy người dùng.', 404);
     }
+    if (data.email) {
+      if (user.email) {
+        throw new HttpException('Không thể cập nhật email', 403);
+      }
+      const userEmail = await this.userRepo.findOne({ email: data.email });
+      if (userEmail) {
+        throw new HttpException('Email đã tồn tại', 403);
+      }
+    }
+
     let result = { ...user };
+    data['birthday'] = convertNullDatetimeData(data['birthday']);
+
     const userData = this.userRepo.setData(data);
+    console.log(userData);
+
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update({ user_id }, userData);
       result = { ...result, ...updatedUser };
@@ -168,6 +257,11 @@ export class CustomerService {
         );
         result['loyalty'] = updatedUserLoyal;
       }
+    }
+
+    const userDataData = this.userDataRepo.setData(data);
+    if (Object.entries(userDataData).length) {
+      await this.userDataRepo.update({ user_id: result.user_id }, userDataData);
     }
   }
 

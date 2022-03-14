@@ -50,15 +50,6 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/v2')
-  async createV2(
-    @Body() categoryDto: CreateCategoryV2Dto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.createV2(categoryDto);
-    return this.responseSuccess(res, result);
-  }
-
   /**
    * Fetch list categories in ddv_categories table
    * @param skip number
