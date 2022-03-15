@@ -28,12 +28,6 @@ export class ProductIntegrationController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post()
-  async createMany(@Body() data, @Res() res: Response): Promise<IResponse> {
-    await this.service.itgCreateMany(data);
-    return this.responseSuccess(res, null, 'Tạo list SP thành công');
-  }
-
   @Get('/sync')
   async callSync(@Res() res: Response): Promise<IResponse> {
     await this.service.callSync();

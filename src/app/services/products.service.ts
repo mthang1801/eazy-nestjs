@@ -95,6 +95,7 @@ import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { GroupProductStatusEnum } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ProductGroupTypeEnum } from 'src/database/enums/tableFieldEnum/productGroupType.enum';
 // import { productsData } from 'src/database/constant/product';
+// import * as mockProductsData from 'src/database/constant/_productsData.json';
 
 @Injectable()
 export class ProductService {
@@ -919,6 +920,7 @@ export class ProductService {
         return this.itgUpdate(product.product_code, data);
       }
     }
+
     // set product
     const productData = {
       ...new ProductsEntity(),
@@ -968,17 +970,19 @@ export class ProductService {
     result = { ...result, ...productSale };
 
     // category
-    const productCategoryData = {
-      ...new ProductsCategoriesEntity(),
-      ...this.productCategoryRepo.setData(data),
-    };
+    if (data.category_id) {
+      const productCategoryData = {
+        ...new ProductsCategoriesEntity(),
+        ...this.productCategoryRepo.setData(data),
+      };
 
-    await this.productCategoryRepo.createSync({
-      ...productCategoryData,
-      product_id: result.product_id,
-    });
+      await this.productCategoryRepo.createSync({
+        ...productCategoryData,
+        product_id: result.product_id,
+      });
 
-    result = { ...result, ...productCategoryData };
+      result = { ...result, ...productCategoryData };
+    }
 
     if (data?.images?.length) {
       for (let [i, imagePath] of data.images.entries()) {
@@ -1069,23 +1073,21 @@ export class ProductService {
     return result;
   }
 
-  async itgCreateMany(data) {
-    for (let dataItem of data) {
-      console.log(data);
-    }
-  }
-
   async callSync(): Promise<void> {
-    await this.clearAll();
+    // await this.clearAll();
 
-    // for (let productItem of productsData) {
-    //   await this.itgCreate(productItem);
-    // }
+    for (let productItem of mockProductsData) {
+      // await this.itgCreate(productItem);
+    }
     await this.syncProductsIntoGroup();
   }
 
   async itgUpdate(sku, data): Promise<any> {
-    const product = await this.productRepo.findOne({ product_code: sku });
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productJoiner,
+      where: [{ product_code: sku }, { product_id: sku }],
+    });
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
@@ -1118,23 +1120,34 @@ export class ProductService {
     const productPriceData = this.productPriceRepo.setData(data);
 
     if (Object.entries(productPriceData).length) {
-      const newProductPrice = await this.productPriceRepo.update(
+      const updatedProductPrice = await this.productPriceRepo.update(
         { product_id: result.product_id },
         productPriceData,
       );
 
-      result = { ...result, ...newProductPrice };
+      result = { ...result, ...updatedProductPrice };
     }
 
     //sale
     const productSale = this.productSaleRepo.setData(data);
 
     if (Object.entries(productSale).length) {
-      const newProductSale = await this.productSaleRepo.update(
+      const updatedProductSale = await this.productSaleRepo.update(
         { product_id: result.product_id },
         productSale,
       );
-      result = { ...result, ...newProductSale };
+      result = { ...result, ...updatedProductSale };
+    }
+
+    if (data.category_id !== null) {
+      const productCategoryData = this.productCategoryRepo.setData(data);
+      if (Object.entries(productCategoryData).length) {
+        const updatedProductCategory = await this.productCategoryRepo.update(
+          { category_id: result.category_id, product_id: result.product_id },
+          productCategoryData,
+        );
+        result = { ...result, ...updatedProductCategory };
+      }
     }
 
     if (data?.product_features?.length) {
