@@ -5,6 +5,7 @@ import { UsersModule } from './users.module';
 import { UserGroupsModule } from './usergroups.module';
 import { UserGroupLinksModule } from './usergroupLinks.module';
 import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
+import { CustomerModule } from './customer.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
     UserGroupsModule,
     UserGroupLinksModule,
     UserGroupPrivilegeModule,
+    CustomerModule,
   ],
   providers: [UserSystemService],
   controllers: [UserSystemController],

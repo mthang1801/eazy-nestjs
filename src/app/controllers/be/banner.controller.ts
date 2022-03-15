@@ -118,17 +118,16 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Delete('/:banner_id/images/:images_id')
+  @Delete('/:banner_id')
   //@UseGuards(AuthGuard)
   async deleteBannerById(
     @Res() res,
-    @Param('banner_id') banner_id,
-    @Param('images_id') images_id,
+    @Param('banner_id') banner_id: number,
   ): Promise<IResponse> {
-    const banner = await this.service.Delete(banner_id, images_id);
-
-    return this.responseSuccess(res, banner);
+    await this.service.delete(banner_id);
+    return this.responseSuccess(res, '', 'Xoá thành công.');
   }
+
   @Put('/:banner_id/images/:images_id')
   //@UseGuards(AuthGuard)
   async updateBannerById(

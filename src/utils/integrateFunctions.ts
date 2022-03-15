@@ -177,7 +177,7 @@ export const itgCustomerToAppcore = (data) => {
       delete data[app];
       continue;
     }
-    if (app === 'birthday') {
+    if (app === 'birthday' && data[app]) {
       cData[core] = moment(data[app]).format('YYYY-MM-DD');
       continue;
     }

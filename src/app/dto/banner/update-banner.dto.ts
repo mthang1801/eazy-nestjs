@@ -1,4 +1,11 @@
-import { IsOptional, IsNotEmpty } from 'class-validator';
+import {
+  IsOptional,
+  IsNotEmpty,
+  ArrayNotEmpty,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
 export class UpdateBannerDTO {
   @IsOptional()
   status: string;
@@ -10,9 +17,6 @@ export class UpdateBannerDTO {
   target: string;
 
   @IsOptional()
-  localization: string;
-
-  @IsOptional()
   position: number;
 
   @IsNotEmpty()
@@ -21,21 +25,28 @@ export class UpdateBannerDTO {
   @IsNotEmpty()
   banner: string;
 
-  @IsOptional()
+  @IsNotEmpty()
+  banner_title: string;
+
+  @IsNotEmpty()
   description: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   url: string;
 
   @IsOptional()
-  image_x: number;
+  url_media: string;
 
-  @IsOptional()
-  image_y: number;
+  @ArrayNotEmpty()
+  @ValidateNested()
+  @Type(() => Display)
+  displays: Display[];
+}
 
-  @IsOptional()
-  is_high_res: string;
+class Display {
+  @IsNotEmpty()
+  target_id: number;
 
-  @IsOptional()
-  product_id: string;
+  @IsNotEmpty()
+  location_id: number;
 }

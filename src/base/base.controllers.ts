@@ -33,12 +33,21 @@ export class BaseController {
    * @returns IResponseError
    */
   private respond(): IResponse {
-    let dataResponse = {
-      statusCode: this.statusCode,
-      data: typeof this.data !== 'object' ? { data: this.data } : this.data,
-      message: this.message,
-      timestamp: new Date().toLocaleString(),
-    };
+    let dataResponse = {};
+    if (!this.data) {
+      dataResponse = {
+        statusCode: this.statusCode,
+        message: this.message,
+        timestamp: new Date().toLocaleString(),
+      };
+    } else {
+      dataResponse = {
+        statusCode: this.statusCode,
+        data: typeof this.data !== 'object' ? { data: this.data } : this.data,
+        message: this.message,
+        timestamp: new Date().toLocaleString(),
+      };
+    }
 
     return this.res.status(this.statusCode).send(dataResponse);
   }

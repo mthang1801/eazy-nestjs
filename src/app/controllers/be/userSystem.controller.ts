@@ -13,8 +13,9 @@ import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { UserSystemService } from '../../services/userSystem.service';
-import { Get } from '@nestjs/common';
+import { Get, Post } from '@nestjs/common';
 import { UpdateUserSystemDto } from 'src/app/dto/userSystem/update-userSystem.dto';
+import { CreateUserSystemDto } from 'src/app/dto/userSystem/create-userSystem.dto';
 
 @Controller('/be/v1/user-system')
 export class UserSystemController extends BaseController {
@@ -54,5 +55,14 @@ export class UserSystemController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.update(id, data);
     return this.responseSuccess(res, result);
+  }
+
+  @Post()
+  async create(
+    @Body() data: CreateUserSystemDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.create(data);
+    return this.responseSuccess(res, null, 'Tạo thành công');
   }
 }

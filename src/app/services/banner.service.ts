@@ -106,29 +106,24 @@ export class bannerService {
     return this.bannerTargetDescRepo.find();
   }
 
-  async getById(id) {
-    const string = `${Table.BANNER}.banner_id`;
-    const banner = this.bannerRepo.findOne({
+  async getById(id: number) {
+    const banner = await this.bannerRepo.findOne({
       select: ['*'],
-      where: { [string]: id },
-      join: {
-        [JoinTable.join]: {
-          [Table.BANNER_DESCRIPTIONS]: {
-            fieldJoin: 'banner_id',
-            rootJoin: 'banner_id',
-          },
-        },
-      },
-
-      skip: 0,
-      limit: 30,
+      join: bannerJoiner,
+      where: { [`${Table.BANNER}.banner_id`]: id },
     });
 
-    const images = this.imageService.GetImageById(id);
-
-    const result = await Promise.all([images, banner]);
-
-    return { ...result[1], images: result[0] };
+    const bannerImageLink = await this.imageLinkRepo.findOne({
+      object_id: banner.banner_id,
+      object_type: ImageObjectType.BANNER,
+    });
+    if (bannerImageLink) {
+      const bannerImage = await this.imageRepo.findById({
+        image_id: bannerImageLink.image_id,
+      });
+      banner['image'] = bannerImage;
+    }
+    return banner;
   }
 
   async create(data: CreateBannerDto) {
@@ -179,6 +174,7 @@ export class bannerService {
     if (!banner) {
       throw new HttpException('Không tìm thấy banner.', 404);
     }
+
     let result: any = { ...banner };
 
     const bannerData = this.bannerRepo.setData(data);
@@ -200,40 +196,36 @@ export class bannerService {
     }
 
     if (data.image_path) {
-      const oldImageLink = await this.bannerRepo.findOne({
-        object_type: ImageObjectType.BANNER,
+      const bannerImageLink = await this.imageLinkRepo.findOne({
         object_id: result.banner_id,
+        object_type: ImageObjectType.BANNER,
       });
-      if (oldImageLink) {
-        const imageLinkData = this.imageLinkRepo.setData(data);
-        if (Object.entries(imageLinkData).length) {
-          const updatedImageLink = await this.imageLinkRepo.update(
-            { pair_id: oldImageLink.pair_id },
-            imageLinkData,
-          );
-          result = {
-            ...result,
-            image: { ...oldImageLink, ...updatedImageLink },
-          };
-        }
-
-        const imageData = this.imageRepo.setData(data);
-        if (Object.entries(imageData).length) {
-          const updatedImage = await this.imageRepo.update(
-            { image_id: oldImageLink.image_id },
-            imageData,
-          );
-          result = { ...result, image: { ...result.image, ...updatedImage } };
-        }
+      if (bannerImageLink) {
+        const updatedImage = await this.imageRepo.update(
+          bannerImageLink.image_id,
+          { image_path: data.image_path },
+        );
+        result = { ...result, image: { ...bannerImageLink, ...updatedImage } };
       }
     }
 
     return result;
   }
 
-  async Delete(banner_id, images_id): Promise<void> {
-    await this.imageService.Delete(banner_id, images_id);
+  async delete(banner_id: number) {
+    await this.bannerRepo.delete({ banner_id });
+    await this.bannerDescriptionRepo.delete({ banner_id });
+    const bannerImageLink = await this.imageLinkRepo.findOne({
+      object_id: banner_id,
+      object_type: ImageObjectType.BANNER,
+    });
+    await this.imageLinkRepo.delete({
+      object_id: banner_id,
+      object_type: ImageObjectType.BANNER,
+    });
+    await this.imageRepo.delete({ image_id: bannerImageLink.image_id });
   }
+
   async createBannerImage(data: createBannerImageDTO, id): Promise<any> {
     return this.imageService.Create(data, id);
   }

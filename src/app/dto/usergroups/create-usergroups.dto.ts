@@ -13,6 +13,6 @@ export class CreateUserGroupsDto {
   @IsOptional()
   status: string = 'A';
 
-  @ArrayNotEmpty()
-  privileges: number[];
+  @IsOptional()
+  privileges: number[] = [];
 }

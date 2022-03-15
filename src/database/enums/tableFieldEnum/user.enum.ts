@@ -5,6 +5,5 @@ export enum UserStatusEnum {
 
 export enum UserTypeEnum {
   'Customer' = 'C',
-  'Administrator' = 'A',
-  'Employee' = 'E',
+  'Employee' = 'A',
 }

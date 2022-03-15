@@ -45,6 +45,7 @@ import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
 import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { defaultPassword } from '../../database/constant/defaultPassword';
 
 @Injectable()
 export class CustomerService {
@@ -62,8 +63,8 @@ export class CustomerService {
     if (!data.firstname && !data.lastname) {
       throw new HttpException('Tên khách hàng không được để trống', 422);
     }
-    const randomPassword = generateRandomPassword();
-    const { passwordHash, salt } = saltHashPassword(randomPassword);
+
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
 
     const user = await this.userRepo.findOne({ phone: data.phone });
 
@@ -123,7 +124,7 @@ export class CustomerService {
     return this.createCustomerToAppcore(result);
   }
 
-  async createCustomerToAppcore(user): Promise<void> {
+  async createCustomerToAppcore(user, deleteWhenFalse = true): Promise<void> {
     try {
       const customerAppcoreData = itgCustomerToAppcore(user);
 
@@ -140,11 +141,13 @@ export class CustomerService {
         { user_appcore_id },
       );
     } catch (error) {
-      console.log(error);
-      await this.userRepo.delete({ user_id: user.user_id });
-      await this.userProfileRepo.delete({ user_id: user.user_id });
-      await this.userDataRepo.delete({ user_id: user.user_id });
-      await this.userLoyalRepo.delete({ user_id: user.user_id });
+      if (deleteWhenFalse) {
+        await this.userRepo.delete({ user_id: user.user_id });
+        await this.userProfileRepo.delete({ user_id: user.user_id });
+        await this.userDataRepo.delete({ user_id: user.user_id });
+        await this.userLoyalRepo.delete({ user_id: user.user_id });
+      }
+
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -313,8 +316,8 @@ export class CustomerService {
       const response = await axios({
         url: 'http://mb.viendidong.com/core-api/v1/customers?page=5',
       });
-      const randomPassword = generateRandomPassword();
-      const { passwordHash, salt } = saltHashPassword(randomPassword);
+
+      const { passwordHash, salt } = saltHashPassword(defaultPassword);
       const users = response.data.data;
       let logsUserExist = [];
       for (let userItem of users) {
@@ -387,8 +390,7 @@ export class CustomerService {
   }
 
   async itgCreate(data: CreateCustomerAppcoreDto) {
-    const randomPassword = generateRandomPassword();
-    const { passwordHash, salt } = saltHashPassword(randomPassword);
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
 
     const user = await this.userRepo.findOne({ phone: data.phone });
     if (user) {

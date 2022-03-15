@@ -25,6 +25,7 @@ import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity'
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { PrivilegeRepository } from '../repositories/privilege.repository';
 import { PrivilegeEntity } from '../entities/privilege.entity';
+import { convertToMySQLDateTime } from 'src/utils/helper';
 
 @Injectable()
 export class UserGroupsService {
@@ -59,33 +60,35 @@ export class UserGroupsService {
     });
     result = { ...result, ...newUserGroupDesc };
 
-    for (let privilegeId of data.privileges) {
-      let privilege = await this.privilegeRepo.findOne({
-        privilege_id: privilegeId,
-      });
-      // find parent
-      if (privilege.level === 1) {
-        let parentPrivilege = await this.privilegeRepo.findOne({
-          privilege_id: privilege.parent_id,
+    if (data.privileges.length) {
+      for (let privilegeId of data.privileges) {
+        let privilege = await this.privilegeRepo.findOne({
+          privilege_id: privilegeId,
         });
-        if (parentPrivilege) {
-          let parentUsergroupPrivilegeExist =
-            await this.userGroupPrivilegeRepo.findOne({
-              privilege_id: parentPrivilege.privilege_id,
-              usergroup_id: newUserGroup.usergroup_id,
-            });
-          if (!parentUsergroupPrivilegeExist) {
-            await this.userGroupPrivilegeRepo.createSync({
-              privilege_id: parentPrivilege.privilege_id,
-              usergroup_id: newUserGroup.usergroup_id,
-            });
+        // find parent
+        if (privilege.level === 1) {
+          let parentPrivilege = await this.privilegeRepo.findOne({
+            privilege_id: privilege.parent_id,
+          });
+          if (parentPrivilege) {
+            let parentUsergroupPrivilegeExist =
+              await this.userGroupPrivilegeRepo.findOne({
+                privilege_id: parentPrivilege.privilege_id,
+                usergroup_id: newUserGroup.usergroup_id,
+              });
+            if (!parentUsergroupPrivilegeExist) {
+              await this.userGroupPrivilegeRepo.createSync({
+                privilege_id: parentPrivilege.privilege_id,
+                usergroup_id: newUserGroup.usergroup_id,
+              });
+            }
           }
         }
+        await this.userGroupPrivilegeRepo.createSync({
+          privilege_id: privilegeId,
+          usergroup_id: newUserGroup.usergroup_id,
+        });
       }
-      await this.userGroupPrivilegeRepo.createSync({
-        privilege_id: privilegeId,
-        usergroup_id: newUserGroup.usergroup_id,
-      });
     }
 
     return result;
@@ -176,6 +179,7 @@ export class UserGroupsService {
           },
         },
       },
+
       where: userGroupSearchByNameCode(search, filterConditions),
     });
 
@@ -189,6 +193,10 @@ export class UserGroupsService {
           },
         },
       },
+      orderBy: [
+        { field: 'updated_at', sortBy: SortBy.DESC },
+        { field: 'created_at', sortBy: SortBy.DESC },
+      ],
       where: userGroupSearchByNameCode(search, filterConditions),
       skip,
       limit,
@@ -215,7 +223,10 @@ export class UserGroupsService {
 
     let result = { ...currentUserGroup };
 
-    const userGroupData = this.userGroupRepo.setData(data);
+    const userGroupData = this.userGroupRepo.setData({
+      ...data,
+      updated_at: convertToMySQLDateTime(),
+    });
     if (Object.entries(userGroupData).length) {
       const updatedUserGroup = await this.userGroupRepo.update(
         { usergroup_id },

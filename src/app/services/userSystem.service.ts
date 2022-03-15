@@ -23,6 +23,19 @@ import { userJoiner } from 'src/utils/joinTable';
 import { customer_type } from '../../database/constant/customer';
 import { userSystemStoreJoiner } from '../../utils/joinTable';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { CreateUserSystemDto } from '../dto/userSystem/create-userSystem.dto';
+import { defaultPassword } from '../../database/constant/defaultPassword';
+import {
+  UserStatusEnum,
+  UserTypeEnum,
+} from 'src/database/enums/tableFieldEnum/user.enum';
+import { saltHashPassword } from 'src/utils/cipherHelper';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserDataEntity } from '../entities/userData.entity';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { CustomerService } from './customer.service';
+import { convertNullDatetimeData } from 'src/utils/helper';
 
 @Injectable()
 export class UserSystemService {
@@ -34,6 +47,9 @@ export class UserSystemService {
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
     private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
+    private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
+    private customerService: CustomerService,
   ) {}
 
   async getUserLists(params): Promise<any> {
@@ -137,5 +153,79 @@ export class UserSystemService {
     }
 
     return result;
+  }
+
+  async create(data: CreateUserSystemDto) {
+    const user = await this.userRepository.findOne({
+      select: '*',
+      join: userJoiner,
+      where: { phone: data.phone },
+    });
+    let result: any = {};
+    if (user) {
+      if (user.user_type === UserTypeEnum.Employee) {
+        throw new HttpException('Người dùng này đã nằm trong hệ thống', 400);
+      }
+      await this.userRepository.update(
+        { user_id: user.user_id },
+        { user_type: UserTypeEnum.Employee, store_id: data.store_id },
+      );
+      result = { ...user };
+    } else {
+      const { passwordHash, salt } = saltHashPassword(defaultPassword);
+
+      const userData = {
+        ...new UserEntity(),
+        ...this.userRepository.setData(data),
+        password: passwordHash,
+        salt: salt,
+        status: UserStatusEnum.Active,
+        user_type: UserTypeEnum.Employee,
+        store_id: data.store_id,
+      };
+      userData['birthday'] = convertNullDatetimeData(userData['birthday']);
+      const newUser = await this.userRepository.create(userData);
+
+      result = { ...newUser };
+
+      const userProfileData = {
+        ...new UserProfileEntity(),
+        ...this.userProfileRepository.setData(data),
+        user_id: result.user_id,
+      };
+
+      const newUserProfile = await this.userProfileRepository.create(
+        userProfileData,
+      );
+
+      result = { ...result, ...newUserProfile };
+
+      const userDataData = {
+        ...new UserDataEntity(),
+        ...this.userDataRepo.setData(data),
+        user_id: result.user_id,
+      };
+
+      const newUserData = await this.userDataRepo.create(userDataData);
+
+      result = { ...result, ...newUserData };
+
+      const userLoyaltyData = {
+        ...new UserLoyaltyEntity(),
+        ...this.userLoyalRepo.setData(data),
+        user_id: result.user_id,
+      };
+
+      const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
+
+      result = { ...result, ...newUserLoyalty };
+
+      await this.customerService.createCustomerToAppcore(result);
+    }
+
+    await this.userGroupLinksRepo.create({
+      usergroup_id: data.usergroup_id,
+      user_id: result.user_id,
+    });
   }
 }
