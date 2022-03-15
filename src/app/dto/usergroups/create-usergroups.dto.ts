@@ -8,9 +8,6 @@ import { Type } from 'class-transformer';
 
 export class CreateUserGroupsDto {
   @IsNotEmpty()
-  code: string = '';
-
-  @IsNotEmpty()
   usergroup: string = '';
 
   @IsOptional()

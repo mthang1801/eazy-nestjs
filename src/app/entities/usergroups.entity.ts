@@ -1,6 +1,5 @@
 export class UserGroupEntity {
-  code: string = '';
+  usergroup_id: number = 0;
   status: string = 'A';
-  type: string = '';
   company_id: number = 0;
 }

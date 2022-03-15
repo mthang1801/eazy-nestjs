@@ -5,9 +5,6 @@ export class UpdateUserGroupsDto {
   usergroup: string;
 
   @IsOptional()
-  code: string;
-
-  @IsOptional()
   status: string;
 
   @IsOptional()

@@ -124,9 +124,9 @@ export class CustomerService {
   }
 
   async createCustomerToAppcore(user): Promise<void> {
-    const customerAppcoreData = itgCustomerToAppcore(user);
-
     try {
+      const customerAppcoreData = itgCustomerToAppcore(user);
+
       const response = await axios({
         url: 'http://mb.viendidong.com/core-api/v1/customers/cms',
         method: 'POST',
@@ -140,6 +140,7 @@ export class CustomerService {
         { user_appcore_id },
       );
     } catch (error) {
+      console.log(error);
       await this.userRepo.delete({ user_id: user.user_id });
       await this.userProfileRepo.delete({ user_id: user.user_id });
       await this.userDataRepo.delete({ user_id: user.user_id });
@@ -178,7 +179,7 @@ export class CustomerService {
     });
 
     let customersList = await this.userRepo.find({
-      select: ['*'],
+      select: ['*', `${Table.USERS}.*`],
       join: userJoiner,
       orderBy: [{ field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC }],
       where: customersListSearchFilter(search, filterConditions),
@@ -242,7 +243,6 @@ export class CustomerService {
     data['birthday'] = convertNullDatetimeData(data['birthday']);
 
     const userData = this.userRepo.setData(data);
-    console.log(userData);
 
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update({ user_id }, userData);
@@ -255,7 +255,7 @@ export class CustomerService {
         { user_id: result.user_id },
         userProfileData,
       );
-      result = { ...result, profile: updatedUserProfile };
+      result = { ...result, ...updatedUserProfile };
     }
 
     if (data.loyalty_point) {
@@ -284,7 +284,27 @@ export class CustomerService {
 
     const userDataData = this.userDataRepo.setData(data);
     if (Object.entries(userDataData).length) {
-      await this.userDataRepo.update({ user_id: result.user_id }, userDataData);
+      const updatedUserData = await this.userDataRepo.update(
+        { user_id: result.user_id },
+        userDataData,
+      );
+      result = { ...result, ...updatedUserData };
+    }
+
+    await this.updateCustomerToAppcore(result);
+  }
+
+  async updateCustomerToAppcore(customer) {
+    try {
+      const customerDataToAppcore = itgCustomerToAppcore(customer);
+      console.log(customerDataToAppcore);
+      await axios({
+        url: `http://mb.viendidong.com/core-api/v1/customers/cms/${customer.user_appcore_id}`,
+        method: 'PUT',
+        data: customerDataToAppcore,
+      });
+    } catch (error) {
+      throw new HttpException('Cập nhật tới Appcore không thành công', 400);
     }
   }
 

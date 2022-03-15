@@ -9,8 +9,8 @@ import {
 import { OrderStatusEnum } from '../../../database/enums/status.enum';
 import { generateRandomString } from 'src/utils/helper';
 export class CreateOrderDto {
-  @IsOptional()
-  user_appcore_id: number;
+  @IsNotEmpty()
+  user_id: number;
 
   @IsOptional()
   b_firstname: string;

@@ -21,7 +21,10 @@ import { convertDataToIntegrate } from 'src/database/constant/order';
 import axios from 'axios';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
-import { orderSearchFilter } from 'src/utils/tableConditioner';
+import {
+  ordersByCustomerFilter,
+  orderSearchFilter,
+} from 'src/utils/tableConditioner';
 import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
@@ -78,7 +81,7 @@ export class OrdersService {
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      status: OrderStatusEnum.Sync,
+      is_sync: 0,
     };
 
     orderData['total'] = 0;
@@ -121,7 +124,7 @@ export class OrdersService {
         const order_code = response.data.data;
         let updateOriginOrderId = await this.orderRepo.update(
           { order_id: result.order_id },
-          { order_code, status: OrderStatusEnum.Open },
+          { order_code, is_sync: 1 },
         );
 
         result = { ...result, ...updateOriginOrderId };
@@ -175,7 +178,6 @@ export class OrdersService {
               status: 'A',
             });
             if (orderItem.deleted) {
-              console.log(orderItem);
               await this.orderDetailRepo.update(
                 { item_id: orderItem.item_id },
                 { ...orderItemData, status: 'D' },
@@ -291,6 +293,13 @@ export class OrdersService {
       ...this.orderRepo.setData(data),
     };
 
+    const user = await this.userRepo.findOne({
+      user_appcore_id: data.user_appcore_id,
+    });
+    if (user) {
+      orderData['user_id'] = user.user_id;
+    }
+
     for (let orderItem of data.order_items) {
       orderData['total'] += orderItem.price * orderItem.amount;
     }
@@ -323,7 +332,7 @@ export class OrdersService {
     }
 
     let result = { ...order };
-    const orderData = await this.orderRepo.setData(data);
+    const orderData = await this.orderRepo.setData({ ...data });
 
     if (data.user_appcore_id) {
       const user = await this.userRepo.findOne({
@@ -456,7 +465,7 @@ export class OrdersService {
     const ordersList = await this.orderRepo.find({
       select: [`DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*`],
       join: orderJoiner,
-      orderBy: [{ field: `${Table.ORDERS}.order_id`, sortBy: SortBy.DESC }],
+      orderBy: [{ field: `${Table.ORDERS}.updated_date`, sortBy: SortBy.DESC }],
       where: orderSearchFilter(search, { ...filterConditions }),
       skip,
       limit,
@@ -539,8 +548,8 @@ export class OrdersService {
     };
   }
 
-  async getById(order_id: number) {
-    const order = await this.orderRepo.findOne({ order_id });
+  async getById(order_code: number) {
+    const order = await this.orderRepo.findOne({ order_code });
 
     return this.getOrderDetails(order);
   }
@@ -628,6 +637,4 @@ export class OrdersService {
     order['order_items'] = orderDetails;
     return order;
   }
-
-  async callCreateItg() {}
 }

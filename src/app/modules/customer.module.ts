@@ -4,11 +4,12 @@ import { CustomerController as CustomerControllerBE } from '../controllers/be/cu
 import { CustomerService } from '../services/customer.service';
 import { CustomerController as CustomerControllerIntergration } from '../controllers/integration/customer.controller';
 import { MailModule } from './mail.module';
+import { OrdersModule } from './orders.module';
 
 @Module({
   controllers: [CustomerControllerBE, CustomerControllerIntergration],
   providers: [CustomerService],
   exports: [CustomerService],
-  imports: [UsersModule, MailModule],
+  imports: [UsersModule, MailModule, OrdersModule],
 })
 export class CustomerModule {}

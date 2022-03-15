@@ -85,6 +85,7 @@ export class OrderEntity {
   transfer_code: string = '';
   other_fees: number = 0;
   user_appcore_id: number = 0;
+  is_sync: number = 0;
   ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();

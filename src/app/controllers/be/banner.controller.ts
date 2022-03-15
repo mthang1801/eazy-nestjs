@@ -25,8 +25,9 @@ import { createBannerImageDTO } from 'src/app/dto/banner/create-banner-image.dto
 import { CreateBannerDto } from 'src/app/dto/banner/create-banner.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
-import { Response } from 'express';
 import { UpdateBannerDTO } from '../../dto/banner/update-banner.dto';
+import { Query } from '@nestjs/common';
+import { Response } from 'express';
 @Controller('/be/v1/banners')
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
@@ -34,25 +35,34 @@ export class bannerController extends BaseController {
   }
 
   @Get()
-  async getList(@Res() res, @Param() param): Promise<IResponse> {
-    const banners = await this.service.getList(param);
+  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const banners = await this.service.getList(params);
     return this.responseSuccess(res, banners);
   }
 
   @Get('/locations')
-  async getLocationsList(@Res() res): Promise<IResponse> {
+  async getLocationsList(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getLocationsList();
     return this.responseSuccess(res, result);
   }
 
+  @Get('/targets')
+  async getTargetsList(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getTargetsList();
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/:id')
-  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
+  async getById(@Res() res: Response, @Param('id') id): Promise<IResponse> {
     const banners = await this.service.getById(id);
     return this.responseSuccess(res, banners);
   }
 
   @Post()
-  async create(@Res() res, @Body() body: CreateBannerDto): Promise<IResponse> {
+  async create(
+    @Res() res: Response,
+    @Body() body: CreateBannerDto,
+  ): Promise<IResponse> {
     const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
   }

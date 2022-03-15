@@ -50,12 +50,12 @@ export class OrderController extends BaseController {
     return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 
-  @Get('/:order_id')
+  @Get('/:order_code')
   async get(
     @Res() res,
-    @Param('order_id') order_id: number,
+    @Param('order_code') order_code: number,
   ): Promise<IResponse> {
-    const result = await this.service.getById(order_id);
+    const result = await this.service.getById(order_code);
     return this.responseSuccess(res, result);
   }
 }

@@ -141,10 +141,7 @@ export const customersListSearchFilter = (
 export const orderSearchFilter = (search = '', filterConditions = {}) => {
   let arraySearch = [];
   if (search) {
-    arraySearch = [
-      { [`${Table.ORDERS}.order_code`]: Like(search) },
-      { [`${Table.ORDERS}.order_id`]: Like(search) },
-    ];
+    arraySearch = [{ [`${Table.ORDERS}.order_code`]: search }];
   }
 
   return searchFilterTemplate(filterConditions, arraySearch);
@@ -176,5 +173,25 @@ export const shippingFilter = (search = '', filterConditions = {}) => {
     ];
   }
 
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const ordersByCustomerFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const bannerSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.BANNER_DESCRIPTIONS}.url`]: Like(search) },
+      { [`${Table.BANNER_DESCRIPTIONS}.url_media`]: Like(search) },
+      { [`${Table.BANNER_DESCRIPTIONS}.banner_title`]: Like(search) },
+      { [`${Table.BANNER_DESCRIPTIONS}.banner`]: Like(search) },
+      { [`${Table.BANNER_DESCRIPTIONS}.description`]: Like(search) },
+    ];
+  }
   return searchFilterTemplate(filterConditions, arraySearch);
 };

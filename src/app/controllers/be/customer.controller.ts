@@ -18,10 +18,14 @@ import { AuthGuard } from '../../../middlewares/be.auth';
 import { Query } from '@nestjs/common';
 import { CreateCustomerDto } from '../../dto/customer/create-customer.dto';
 import { Response } from 'express';
+import { OrdersService } from 'src/app/services/orders.service';
 
 @Controller('/be/v1/customers')
 export class CustomerController extends BaseController {
-  constructor(private service: CustomerService) {
+  constructor(
+    private service: CustomerService,
+    private orderService: OrdersService,
+  ) {
     super();
   }
 
@@ -58,5 +62,15 @@ export class CustomerController extends BaseController {
     const result = await this.service.update(user_id, body);
 
     return this.responseSuccess(res, result, `action update customer`);
+  }
+
+  @Get('/:user_id/orders')
+  async getOrdersList(
+    @Param('user_id') user_id: number,
+    @Res() res: Response,
+    @Query() params,
+  ) {
+    const result = await this.orderService.getByCustomerId(user_id, params);
+    return this.responseSuccess(res, result);
   }
 }

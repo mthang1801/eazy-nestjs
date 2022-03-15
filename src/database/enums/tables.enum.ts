@@ -24,6 +24,7 @@ export enum Table {
   BANNER_IMAGE = 'ddv_banner_images',
   BANNER_DESCRIPTIONS = 'ddv_banner_descriptions',
   BANNER_LOCATION_DESCRIPTION = 'ddv_banner_location_descriptions',
+  BANNER_TARGET_DESCRIPTION = 'ddv_banner_target_descriptions',
 
   //============== Image ==============
   IMAGE = 'ddv_images',

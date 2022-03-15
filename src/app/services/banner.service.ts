@@ -11,7 +11,7 @@ import { Table, JoinTable, SortBy } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
-import { Like } from 'typeorm';
+
 import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
 import { CreateBannerDto } from '../dto/banner/create-banner.dto';
@@ -28,6 +28,12 @@ import { UpdateBannerDTO } from '../dto/banner/update-banner.dto';
 import { BannerImagesEntity } from '../entities/bannerImages.entity';
 import { BannerLocationDescriptionRepository } from '../repositories/bannerLocationDescription.repository';
 import { BannerLocationDescriptionEntity } from '../entities/bannerLocationDescription.entity';
+import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository copy';
+import { BannerTargetDescriptionEntity } from '../entities/bannerTargetDescription.entity';
+import { bannerSearchFilter } from '../../utils/tableConditioner';
+import { bannerJoiner } from 'src/utils/joinTable';
+import { Like } from 'src/database/find-options/operators';
+
 @Injectable()
 export class bannerService {
   constructor(
@@ -37,16 +43,16 @@ export class bannerService {
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private bannerLocationsDescRepo: BannerLocationDescriptionRepository<BannerLocationDescriptionEntity>,
+    private bannerTargetDescRepo: BannerTargetDescriptionRepository<BannerTargetDescriptionEntity>,
   ) {}
-  async getList(params): Promise<IBannerResult[]> {
-    //=====Filter param
-    let { page, limit, ...others } = params;
+  async getList(params) {
+    let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
-    if (others && typeof others === 'object' && Object.entries(others).length) {
+    if (Object.entries(others).length) {
       for (let [key, val] of Object.entries(others)) {
         if (this.bannerRepo.tableProps.includes(key)) {
           filterCondition[`${Table.BANNER}.${key}`] = Like(val);
@@ -55,42 +61,52 @@ export class bannerService {
         }
       }
     }
-    //===
-    const banner = this.bannerRepo.find({
-      select: ['*'],
-      join: {
-        [JoinTable.join]: {
-          ddv_banner_descriptions: {
-            fieldJoin: 'banner_id',
-            rootJoin: 'banner_id',
-          },
-        },
-      },
 
-      skip: skip,
-      limit: limit,
+    const banners = await this.bannerRepo.find({
+      select: '*',
+      join: bannerJoiner,
+      orderBy: [{ field: 'updated_at', sortBy: SortBy.DESC }],
+      where: bannerSearchFilter(search, filterCondition),
+      skip,
+      limit,
     });
-    const images = this.imageService.GetImage();
 
-    const result = await Promise.all([images, banner]);
-    let _banner = [];
-    result[1].forEach((ele) => {
-      _banner.push({
-        ...ele,
-        images: result[0].filter(
-          (img) =>
-            img.object_id == ele.banner_id && img.object_type == 'banners',
-        ),
+    const count = await this.bannerRepo.find({
+      select: `COUNT(DISTINCT(${Table.BANNER}.banner_id)) as total`,
+      join: bannerJoiner,
+      where: bannerSearchFilter(search, filterCondition),
+    });
+
+    for (let bannerItem of banners) {
+      let bannerImage = await this.imageLinkRepo.findOne({
+        object_id: bannerItem.banner_id,
+        object_type: ImageObjectType.BANNER,
       });
-    });
-    return _banner;
+      if (bannerImage) {
+        const image = await this.imageRepo.findById(bannerImage.image_id);
+        bannerItem['image'] = { ...bannerImage, ...image };
+      }
+    }
+
+    return {
+      banners,
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count.length ? count[0].total : banners.length,
+      },
+    };
   }
 
   async getLocationsList() {
     return this.bannerLocationsDescRepo.find();
   }
 
-  async getById(id): Promise<IBannerResult> {
+  async getTargetsList() {
+    return this.bannerTargetDescRepo.find();
+  }
+
+  async getById(id) {
     const string = `${Table.BANNER}.banner_id`;
     const banner = this.bannerRepo.findOne({
       select: ['*'],
@@ -116,11 +132,13 @@ export class bannerService {
   }
 
   async create(data: CreateBannerDto) {
-    for (let locationId of data.location_ids) {
+    let results = [];
+    for (let { target_id, location_id } of data.displays) {
       const bannerData = {
         ...new BannerEntity(),
         ...this.bannerRepo.setData(data),
-        location_id: locationId,
+        target_id,
+        location_id,
       };
 
       const banner = await this.bannerRepo.create(bannerData);
@@ -130,7 +148,7 @@ export class bannerService {
       const bannerDescData = {
         ...new BannerDescriptionsEntity(),
         ...this.bannerDescriptionRepo.setData(data),
-        banner_id: result.banner_id,
+        banner_id: banner.banner_id,
       };
 
       const bannerDesc = await this.bannerDescriptionRepo.create(
@@ -139,28 +157,21 @@ export class bannerService {
 
       result = { ...result, ...bannerDesc };
 
-      const bannerImageData = {
-        ...new ImagesEntity(),
-        ...this.imageRepo.setData(data),
-      };
-      const bannerImage = await this.imageRepo.create(bannerImageData);
+      const bannerImage = await this.imageRepo.create({
+        image_path: data.image_path,
+      });
 
-      result = { ...result, image: { ...bannerImage } };
-
-      const bannerImageLinkData = {
-        ...new ImagesLinksEntity(),
-        ...this.imageLinkRepo.setData(data),
+      const bannerImageLink = await this.imageLinkRepo.create({
         object_id: result.banner_id,
         object_type: ImageObjectType.BANNER,
         image_id: bannerImage.image_id,
-      };
+      });
 
-      const bannerImageLink = await this.imageLinkRepo.create(
-        bannerImageLinkData,
-      );
+      result = { ...result, image: { ...bannerImage, ...bannerImageLink } };
 
-      result = { ...result, image: { ...result.image, ...bannerImageLink } };
+      results = [...results, result];
     }
+    return results;
   }
 
   async update(id: number, data: UpdateBannerDTO): Promise<any> {

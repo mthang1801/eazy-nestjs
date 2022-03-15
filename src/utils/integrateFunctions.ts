@@ -1,5 +1,7 @@
 import { convertToMySQLDateTime } from './helper';
 import { OrderStatusEnum } from '../database/enums/status.enum';
+import * as moment from 'moment';
+
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
     ['id', 'order_code'],
@@ -150,7 +152,7 @@ export const itgCustomerToAppcore = (data) => {
     ['phone', 'phoneNo'],
     ['gender', 'gender'],
     ['email', 'email'],
-    // ['birthday', 'dateOfBirth'],
+    ['birthday', 'dateOfBirth'],
     ['b_city', 'cityId'],
     ['b_district', 'districtId'],
     ['b_ward', 'wardId'],
@@ -173,6 +175,10 @@ export const itgCustomerToAppcore = (data) => {
     }
     if (app === 'email' && !data[app]) {
       delete data[app];
+      continue;
+    }
+    if (app === 'birthday') {
+      cData[core] = moment(data[app]).format('YYYY-MM-DD');
       continue;
     }
     cData[core] = data[app] ?? null;

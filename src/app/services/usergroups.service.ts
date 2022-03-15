@@ -39,17 +39,9 @@ export class UserGroupsService {
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
-    const checkCode = await this.userGroupRepo.findOne({
-      code: data.code.toUpperCase(),
-    });
-    if (checkCode) {
-      throw new HttpException('Mã sản phẩm đã tồn tại', 409);
-    }
-
     const userGroupData = {
       ...new UserGroupEntity(),
       ...this.userGroupRepo.setData(data),
-      code: data.code.toUpperCase().trim(),
     };
 
     const newUserGroup = await this.userGroupRepo.create(userGroupData);
@@ -58,6 +50,7 @@ export class UserGroupsService {
     const userGroupDescData = {
       ...new UserGroupDescriptionEntity(),
       ...this.userGroupDescriptionRepo.setData(data),
+      usergroup_id: result.usergroup_id,
     };
 
     const newUserGroupDesc = await this.userGroupDescriptionRepo.create({

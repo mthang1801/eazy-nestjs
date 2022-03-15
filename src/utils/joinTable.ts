@@ -245,3 +245,20 @@ export const orderJoiner = {
     },
   },
 };
+
+export const bannerJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.BANNER_DESCRIPTIONS]: {
+      fieldJoin: `${Table.BANNER_DESCRIPTIONS}.banner_id`,
+      rootJoin: `${Table.BANNER}.banner_id`,
+    },
+    [Table.BANNER_LOCATION_DESCRIPTION]: {
+      fieldJoin: `${Table.BANNER_LOCATION_DESCRIPTION}.location_id`,
+      rootJoin: `${Table.BANNER}.location_id`,
+    },
+    [Table.BANNER_TARGET_DESCRIPTION]: {
+      fieldJoin: `${Table.BANNER_TARGET_DESCRIPTION}.target_id`,
+      rootJoin: `${Table.BANNER}.target_id`,
+    },
+  },
+};

@@ -253,6 +253,8 @@ export class AuthService {
         updated_at: convertToMySQLDateTime(),
       });
 
+      await this.customerService.createCustomerToAppcore(userExists);
+
       userExists = {
         ...userExists,
         ...userProfile,
