@@ -19,4 +19,7 @@ export class CreateUserSystemDto {
 
   @IsNotEmpty()
   store_id: number;
+
+  @IsOptional()
+  status: string = 'A';
 }

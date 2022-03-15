@@ -129,7 +129,10 @@ export class UsersService {
   }
 
   async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {
-    const updatedUser = await this.userRepository.update(user_id, dataObj);
+    const updatedUser = await this.userRepository.update(user_id, {
+      ...dataObj,
+      updated_at: convertToMySQLDateTime(),
+    });
     updatedUser['image'] = await this.getUserImage(updatedUser.user_id);
     return preprocessUserResult(updatedUser);
   }
@@ -249,6 +252,7 @@ export class UsersService {
       verify_token_exp: convertToMySQLDateTime(
         new Date(Date.now() + 2 * 3600 * 1000),
       ),
+      updated_at: convertToMySQLDateTime(),
     });
 
     await this.mailService.sendUserConfirmation(
@@ -326,6 +330,7 @@ export class UsersService {
       password: passwordHash,
       salt,
       verify_token: '',
+      updated_at: convertToMySQLDateTime(),
     });
     return true;
   }
@@ -341,6 +346,7 @@ export class UsersService {
   async updateProfilebyAdmin(id, data) {
     let userData = {
       ...this.userRepository.setData(data),
+      updated_at: convertToMySQLDateTime(),
     };
     let _user = await this.userRepository.update(id, userData);
     let result = { ..._user };

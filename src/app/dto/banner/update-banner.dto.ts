@@ -19,6 +19,12 @@ export class UpdateBannerDTO {
   @IsOptional()
   position: number;
 
+  @IsOptional()
+  location_id: number;
+
+  @IsOptional()
+  target_id: number;
+
   @IsNotEmpty()
   image_path: string;
 
@@ -36,17 +42,4 @@ export class UpdateBannerDTO {
 
   @IsOptional()
   url_media: string;
-
-  @ArrayNotEmpty()
-  @ValidateNested()
-  @Type(() => Display)
-  displays: Display[];
-}
-
-class Display {
-  @IsNotEmpty()
-  target_id: number;
-
-  @IsNotEmpty()
-  location_id: number;
 }

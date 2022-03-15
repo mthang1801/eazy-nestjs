@@ -185,3 +185,17 @@ export const itgCustomerToAppcore = (data) => {
   }
   return cData;
 };
+
+export const itgProductsFromAppcore = () => {
+  const dataMapping = new Map([
+    ['id', 'product_id'],
+    ['categoryId', 'category_id'],
+    ['parentId', 'parent_product_id'],
+    ['barCode', 'barcode'],
+    ['code', 'product_code'],
+    ['name', 'product'],
+    ['wholesalePrice', 'whole_price'],
+    ['images', 'images'],
+    ['status', 'status'],
+  ]);
+};

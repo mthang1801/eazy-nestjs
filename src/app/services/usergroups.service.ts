@@ -227,6 +227,7 @@ export class UserGroupsService {
       ...data,
       updated_at: convertToMySQLDateTime(),
     });
+
     if (Object.entries(userGroupData).length) {
       const updatedUserGroup = await this.userGroupRepo.update(
         { usergroup_id },
@@ -245,9 +246,9 @@ export class UserGroupsService {
       result = { ...result, ...updatedUserGroupDesc };
     }
 
-    await this.userGroupPrivilegeRepo.delete({ usergroup_id });
+    if (data?.privileges?.length) {
+      await this.userGroupPrivilegeRepo.delete({ usergroup_id });
 
-    if (data.privileges.length) {
       for (let privilegeId of data.privileges) {
         let privilege = await this.privilegeRepo.findOne({
           privilege_id: privilegeId,

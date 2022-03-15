@@ -80,10 +80,7 @@ export const userGroupSearchByNameCode = (
     return filterCondition;
   }
   if (search && !Object.entries(filterCondition).length) {
-    return [
-      { [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search) },
-      { [`${Table.USER_GROUPS}.code`]: Like(search) },
-    ];
+    return [{ [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search) }];
   }
   return [
     {

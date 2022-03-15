@@ -35,7 +35,10 @@ import { UserDataEntity } from '../entities/userData.entity';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { CustomerService } from './customer.service';
-import { convertNullDatetimeData } from 'src/utils/helper';
+import {
+  convertNullDatetimeData,
+  convertToMySQLDateTime,
+} from 'src/utils/helper';
 
 @Injectable()
 export class UserSystemService {
@@ -90,7 +93,10 @@ export class UserSystemService {
       select: ['*', `${Table.USERS}.*`],
       join: userSystemStoreJoiner,
       where: userSystemSearchFilter(search, filterCondition),
-      orderBy: [{ field: 'created_at', sortBy: SortBy.DESC }],
+      orderBy: [
+        { field: 'updated_at', sortBy: SortBy.DESC },
+        { field: 'created_at', sortBy: SortBy.DESC },
+      ],
       skip,
       limit,
     });
@@ -136,7 +142,7 @@ export class UserSystemService {
     if (Object.entries(userUpdateData).length) {
       const updatedUser = await this.userRepository.update(
         { user_id: result.user_id },
-        userUpdateData,
+        { ...userUpdateData, updated_at: convertToMySQLDateTime() },
       );
 
       result = { ...result, ...updatedUser };
@@ -168,7 +174,12 @@ export class UserSystemService {
       }
       await this.userRepository.update(
         { user_id: user.user_id },
-        { user_type: UserTypeEnum.Employee, store_id: data.store_id },
+        {
+          user_type: UserTypeEnum.Employee,
+          store_id: data.store_id,
+          status: data.status,
+          updated_at: convertToMySQLDateTime(),
+        },
       );
       result = { ...user };
     } else {
@@ -179,7 +190,7 @@ export class UserSystemService {
         ...this.userRepository.setData(data),
         password: passwordHash,
         salt: salt,
-        status: UserStatusEnum.Active,
+        status: data.status,
         user_type: UserTypeEnum.Employee,
         store_id: data.store_id,
       };

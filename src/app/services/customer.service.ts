@@ -138,7 +138,7 @@ export class CustomerService {
       const user_appcore_id = data.data.id;
       const updatedUser = await this.userRepo.update(
         { user_id: user.user_id },
-        { user_appcore_id },
+        { user_appcore_id, updated_at: convertToMySQLDateTime() },
       );
     } catch (error) {
       if (deleteWhenFalse) {
@@ -248,7 +248,10 @@ export class CustomerService {
     const userData = this.userRepo.setData(data);
 
     if (Object.entries(userData).length) {
-      const updatedUser = await this.userRepo.update({ user_id }, userData);
+      const updatedUser = await this.userRepo.update(
+        { user_id },
+        { ...userData, updated_at: convertToMySQLDateTime() },
+      );
       result = { ...result, ...updatedUser };
     }
 
@@ -505,7 +508,7 @@ export class CustomerService {
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
         { user_id: result.user_id },
-        userData,
+        { ...userData, updated_at: convertToMySQLDateTime() },
       );
       result = { ...updatedUser };
     }

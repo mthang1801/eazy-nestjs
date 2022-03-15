@@ -403,6 +403,7 @@ export class AuthService {
     // Update user
     await this.userRepository.update(user_id, {
       status: UserStatusEnum.Active,
+      updated_at: convertToMySQLDateTime(),
     });
 
     // Update email
@@ -468,6 +469,7 @@ export class AuthService {
     const updatedUser = await this.userRepository.update(user_id, {
       password: passwordHash,
       salt,
+      updated_at: convertToMySQLDateTime(),
     });
 
     const userLogin = { email: updatedUser.email, password };

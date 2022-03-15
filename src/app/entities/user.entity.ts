@@ -10,7 +10,6 @@ export class UserEntity {
   company_id: number = 0;
   store_id: number = 0;
   last_login: number = 0;
-  created_at: string = convertToMySQLDateTime();
   password: string = '';
   salt: string = '';
   firstname: string = '';
@@ -31,4 +30,6 @@ export class UserEntity {
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
+  created_at: string = convertToMySQLDateTime();
+  updated_at: string = convertToMySQLDateTime();
 }

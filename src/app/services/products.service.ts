@@ -1069,6 +1069,12 @@ export class ProductService {
     return result;
   }
 
+  async itgCreateMany(data) {
+    for (let dataItem of data) {
+      console.log(data);
+    }
+  }
+
   async callSync(): Promise<void> {
     await this.clearAll();
 
