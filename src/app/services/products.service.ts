@@ -1516,6 +1516,7 @@ export class ProductService {
 
             // Lấy các SP con
             if (product.product_id === productInfoDetail.parent_product_id) {
+              // Lấy thuộc tính SP
               let features = await this.productFeatureValueRepo.find({
                 select: productFeatureValuesSelector,
                 join: {
@@ -1528,6 +1529,7 @@ export class ProductService {
               });
               productInfoDetail['features'] = features;
 
+              // Lấy hình ảnh đính kèm
               const productImages = await this.imageLinkRepo.find({
                 select: ['image_id'],
                 where: {
@@ -1545,6 +1547,18 @@ export class ProductService {
                     : [image];
                 }
               }
+
+              // Lấy các kho hàng hiện tại
+              const productsStores = await this.getProductsStores(
+                productInfoDetail.product_id,
+              );
+              const totalAmount = productsStores.length
+                ? productsStores.reduce((acc, ele) => acc + ele['amount'], 0)
+                : 0;
+              productInfoDetail['totalAmount'] = totalAmount;
+              productInfoDetail['inventories'] = productsStores.length
+                ? productsStores
+                : null;
 
               product['children_products'] = product['children_products']
                 ? [
