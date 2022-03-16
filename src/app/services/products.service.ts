@@ -1789,7 +1789,7 @@ export class ProductService {
     // This function will automatically group products base on approximating product name
     // Will do later
     const productsList = await this.productRepo.find({
-      select: '*',
+      select: `*, LOWER(product) as product`,
       join: {
         [JoinTable.innerJoin]: {
           [Table.PRODUCT_DESCRIPTION]: {
@@ -1802,9 +1802,27 @@ export class ProductService {
         { product_type: 1, parent_product_id: IsNull() },
         { product_type: 2, parent_product_id: IsNull() },
       ],
-      limit: 30,
     });
-    console.log(productsList);
+    let exceptionWords = `(2gb|3gb|4gb|6gb|8gb|12gb|16gb|32gb|64gb|128gb|256gb|512gb|1tb|2tb)`;
+    for (let product of productsList) {
+      const { product: productName } = product;
+      const shortenIndex =
+        productName.split('-')[0].search(exceptionWords) === -1
+          ? productName.split('-')[0].length
+          : productName.split('-')[0].search(exceptionWords);
+      const shortname = productName.slice(0, shortenIndex);
+      const restName = productName.slice(shortenIndex);
+      const restIndex =
+        restName.search(exceptionWords) === -1
+          ? restName.length
+          : restName.search(exceptionWords);
+      const extraName = restName.slice(restIndex);
+      console.log(productName, '-', shortname, '-', extraName);
+      // await this.productDescriptionsRepo.update(
+      //   { product_id: product.product_id },
+      //   { shortname },
+      // );
+    }
   }
 
   async itgGetProductsStores() {

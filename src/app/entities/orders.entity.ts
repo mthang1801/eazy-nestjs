@@ -19,7 +19,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: string = OrderStatusEnum.Failed;
+  status: string = OrderStatusEnum.Open;
   notes: string = '';
   gender: string = '0';
   details: string = '';

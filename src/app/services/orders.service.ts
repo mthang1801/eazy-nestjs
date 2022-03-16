@@ -444,14 +444,14 @@ export class OrdersService {
     }
 
     let filterConditions = { user_id: customer_id };
-    return this.getOrdersList(params, filterConditions);
+    return this.getOrdersList(params, filterConditions, true);
   }
 
   async getList(params) {
     return this.getOrdersList(params);
   }
 
-  async getOrdersList(params, filterConditions = {}) {
+  async getOrdersList(params, filterConditions = {}, showDetails = false) {
     let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 10;
@@ -477,6 +477,12 @@ export class OrdersService {
 
     // lấy địa chỉ
     for (let orderItem of ordersList) {
+      // Case for getting all order items
+      if (showDetails) {
+        orderItem = await this.getOrderDetails(orderItem);
+        continue;
+      }
+      // Case for getting only order info, not order items
       if (orderItem.store_id) {
         const store = await this.storeLocationRepo.findOne({
           select: ['*'],
@@ -495,8 +501,24 @@ export class OrdersService {
         if (store) {
           orderItem['store'] = store;
         }
-      }
 
+        // Lấy thông tin trạng thái đơn hàng
+        const status = await this.statusRepo.findOne({
+          select: ['*'],
+          join: {
+            [JoinTable.leftJoin]: statusJoiner,
+          },
+          where: {
+            [`${Table.STATUS}.status`]: orderItem.status,
+            [`${Table.STATUS}.type`]: StatusType.Order,
+          },
+        });
+
+        if (status) {
+          orderItem['status'] = status;
+        }
+      }
+      // Lấy địa chỉ theo id
       if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
         const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
         if (city) {
@@ -519,24 +541,6 @@ export class OrdersService {
       }
     }
 
-    //Lấy thông tin trạng thái đơn hàng
-    for (let orderItem of ordersList) {
-      const status = await this.statusRepo.findOne({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: statusJoiner,
-        },
-        where: {
-          [`${Table.STATUS}.status`]: orderItem.status,
-          [`${Table.STATUS}.type`]: StatusType.Order,
-        },
-      });
-
-      if (status) {
-        orderItem['status'] = status;
-      }
-    }
-
     const count = await this.orderRepo.find({
       select: [`DISTINCT(COUNT(${Table.ORDERS}.order_id)) as total`],
       where: orderSearchFilter(search, filterConditions),
@@ -552,7 +556,7 @@ export class OrdersService {
     };
   }
 
-  async getById(order_code: number) {
+  async getByOrderCode(order_code: number) {
     const order = await this.orderRepo.findOne({ order_code });
 
     return this.getOrderDetails(order);

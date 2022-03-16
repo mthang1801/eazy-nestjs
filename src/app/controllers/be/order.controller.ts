@@ -55,7 +55,7 @@ export class OrderController extends BaseController {
     @Res() res,
     @Param('order_code') order_code: number,
   ): Promise<IResponse> {
-    const result = await this.service.getById(order_code);
+    const result = await this.service.getByOrderCode(order_code);
     return this.responseSuccess(res, result);
   }
 }
