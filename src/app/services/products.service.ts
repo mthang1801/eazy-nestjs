@@ -48,7 +48,7 @@ import {
   productsFamilyFilterConditioner,
   productsGroupFilterConditioner,
 } from 'src/utils/tableConditioner';
-import { In, Like, Not } from 'src/database/find-options/operators';
+import { In, Like, MoreThan, Not } from 'src/database/find-options/operators';
 import { ProductFeaturesRepository } from '../repositories/productFeature.repository';
 import { ProductFeatureEntity } from '../entities/productFeature.entity';
 import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
@@ -1367,6 +1367,8 @@ export class ProductService {
       Object.entries(productsStocks).length
     ) {
       for (let [key, val] of Object.entries(productsStocks)) {
+        if (val['inStockQuantity'] < 1 || typeof val !== 'object') continue;
+
         const store = await this.storeRepo.findOne({
           select: '*',
           join: {
@@ -1381,22 +1383,22 @@ export class ProductService {
             [`${Table.STORE_LOCATIONS}.store_location_id`]: key,
           },
         });
-        if (typeof val === 'object') {
-          result = [
-            ...result,
-            {
-              product_id: val['productId'],
-              store_location_id: val['storeId'],
-              amount: val['inStockQuantity'],
-              store,
-            },
-          ];
-        }
+
+        result = [
+          ...result,
+          {
+            product_id: val['productId'],
+            store_location_id: val['storeId'],
+            amount: val['inStockQuantity'],
+            store,
+          },
+        ];
       }
     } else {
       const productsStores = await this.productStoreRepo.find({
         select: '*',
-        where: { product_id: id },
+        orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
+        where: { product_id: id, amount: MoreThan(0) },
       });
 
       if (productsStores.length) {
@@ -1552,10 +1554,7 @@ export class ProductService {
               const productsStores = await this.getProductsStores(
                 productInfoDetail.product_id,
               );
-              const totalAmount = productsStores.length
-                ? productsStores.reduce((acc, ele) => acc + ele['amount'], 0)
-                : 0;
-              productInfoDetail['totalAmount'] = totalAmount;
+
               productInfoDetail['inventories'] = productsStores.length
                 ? productsStores
                 : null;
@@ -1668,7 +1667,7 @@ export class ProductService {
     }
 
     if (group.group_type == 2) {
-      throw new HttpException('Không thể them vào nhóm SP combo', 403);
+      throw new HttpException('Không thể thêm vào nhóm SP combo', 403);
     }
 
     if (group.product_root_id == product.product_id) {
@@ -1786,9 +1785,26 @@ export class ProductService {
     }
   }
 
-  async findApproximateString() {
+  async findApproximateName() {
     // This function will automatically group products base on approximating product name
     // Will do later
+    const productsList = await this.productRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: 'product_id',
+            rootJoin: 'product_id',
+          },
+        },
+      },
+      where: [
+        { product_type: 1, parent_product_id: IsNull() },
+        { product_type: 2, parent_product_id: IsNull() },
+      ],
+      limit: 30,
+    });
+    console.log(productsList);
   }
 
   async itgGetProductsStores() {

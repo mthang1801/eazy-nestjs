@@ -19,9 +19,9 @@ export function LessThan<T>(value: T): {
   return { operator: '<', value };
 }
 
-export function MoreThan<T>(value: T): {
+export function MoreThan(value): {
   operator: string;
-  value: T;
+  value;
 } {
   return { operator: '>', value };
 }

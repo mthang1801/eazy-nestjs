@@ -48,6 +48,12 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('find-approximate-name')
+  async findApproximateName(@Res() res: Response): Promise<IResponse> {
+    await this.service.findApproximateName();
+    return this.responseSuccess(res, null, 'OK');
+  }
+
   @Get('/parents')
   async getParentsList(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getParentsList();
