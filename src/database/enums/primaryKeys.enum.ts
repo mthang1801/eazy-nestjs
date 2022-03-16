@@ -60,6 +60,8 @@ export enum PrimaryKeys {
   ddv_product_variation_groups = 'group_id',
   ddv_product_variation_group_products = 'group_products_id',
   ddv_product_variation_group_features = 'group_feature_id',
+  ddv_product_stores = 'auto_increment_id',
+  ddv_product_store_histories = 'history_id',
 
   //============== Order status ==============
   ddv_statuses = 'status_id',

@@ -94,6 +94,15 @@ import { StoreLocationDescriptionsRepository } from '../repositories/storeLocati
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { GroupProductStatusEnum } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ProductGroupTypeEnum } from 'src/database/enums/tableFieldEnum/productGroupType.enum';
+import { ProductStoreRepository } from '../repositories/productStore.repository';
+import { ProductStoreEntity } from '../entities/productStore.entity';
+import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';
+import { ProductStoreHistoryEntity } from '../entities/productStoreHistory.entity';
+import { CreateProductStoreDto } from '../dto/product/create-productStore.dto';
+import {
+  GET_PRODUCTS_STORES_API,
+  UPLOAD_IMAGE_API,
+} from 'src/database/constant/api';
 // import { productsData } from 'src/database/constant/product';
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
 
@@ -124,6 +133,8 @@ export class ProductService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
     private storeDescRepo: StoreLocationDescriptionsRepository<StoreLocationDescriptionEntity>,
+    private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
+    private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -1083,6 +1094,7 @@ export class ProductService {
     //   await this.itgCreate(productItem);
     // }
     // await this.syncProductsIntoGroup();
+    await this.itgGenerateSlug();
   }
 
   async itgUpdate(sku, data): Promise<any> {
@@ -1251,7 +1263,7 @@ export class ProductService {
     }
     var config: any = {
       method: 'post',
-      url: 'http://mb.viendidong.com/core-api/v1/files/website',
+      url: UPLOAD_IMAGE_API,
       headers: {
         'Content-Type': 'multipart/form-data',
         ...data.getHeaders(),
@@ -1342,12 +1354,13 @@ export class ProductService {
     return 'Xoá ảnh thành công.';
   }
 
-  async getProductsStocks(id: string) {
+  async getProductsStores(id: string) {
     let response = await axios({
-      url: `http://mb.viendidong.com/core-api/v1/product-stocks/product/${id}`,
+      url: GET_PRODUCTS_STORES_API(id),
     });
     const productsStocks = response?.data?.data;
     let result = [];
+
     if (
       productsStocks &&
       typeof productsStocks === 'object' &&
@@ -1355,7 +1368,7 @@ export class ProductService {
     ) {
       for (let [key, val] of Object.entries(productsStocks)) {
         const store = await this.storeRepo.findOne({
-          select: ['*'],
+          select: '*',
           join: {
             [JoinTable.leftJoin]: {
               [Table.STORE_LOCATION_DESCRIPTIONS]: {
@@ -1369,7 +1382,41 @@ export class ProductService {
           },
         });
         if (typeof val === 'object') {
-          result = [...result, { ...val, store }];
+          result = [
+            ...result,
+            {
+              product_id: val['productId'],
+              store_location_id: val['storeId'],
+              amount: val['inStockQuantity'],
+              store,
+            },
+          ];
+        }
+      }
+    } else {
+      const productsStores = await this.productStoreRepo.find({
+        select: '*',
+        where: { product_id: id },
+      });
+
+      if (productsStores.length) {
+        for (let productStoreItem of productsStores) {
+          const store = await this.storeRepo.findOne({
+            select: '*',
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                  fieldJoin: 'store_location_id',
+                  rootJoin: 'store_location_id',
+                },
+              },
+            },
+            where: {
+              [`${Table.STORE_LOCATIONS}.store_location_id`]:
+                productStoreItem.store_location_id,
+            },
+          });
+          result = [...result, { ...productStoreItem, store }];
         }
       }
     }
@@ -1693,5 +1740,100 @@ export class ProductService {
         }
       }
     }
+  }
+
+  async itgGenerateSlug() {
+    const productsList = await this.productRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.PRODUCT_DESCRIPTION]: {
+            fieldJoin: `product_id`,
+            rootJoin: `product_id`,
+          },
+        },
+      },
+    });
+    if (productsList.length) {
+      for (let product of productsList) {
+        let slug = convertToSlug(removeVietnameseTones(product['product']));
+        const checkSlugExist = await this.productRepo.findOne({
+          slug,
+        });
+
+        if (checkSlugExist) {
+          slug = `${slug}-${Date.now().toString(36)}`;
+        }
+        await this.productRepo.update(
+          { product_id: product.product_id },
+          { slug },
+        );
+      }
+    }
+  }
+
+  async findApproximateString() {
+    // This function will automatically group products base on approximating product name
+    // Will do later
+  }
+
+  async itgGetProductsStores() {
+    const productsList = await this.productRepo.find();
+    if (productsList.length) {
+      for (let product of productsList) {
+        const response = await axios({
+          url: GET_PRODUCTS_STORES_API(product.product_id),
+        });
+        const { data } = response.data;
+
+        if (data && Object.entries(data).length) {
+          for (let dataItem of Object.values(data)) {
+            await this.productStoreRepo.create({
+              store_location_id: dataItem['storeId'],
+              product_id: dataItem['productId'],
+              amount: dataItem['inStockQuantity'],
+              created_at: convertToMySQLDateTime(),
+              updated_at: convertToMySQLDateTime(),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  async itgCreateProductStores(data: CreateProductStoreDto) {
+    const { product_id, store_location_id, amount } = data;
+    const productStore = await this.productStoreRepo.findOne({
+      product_id,
+      store_location_id,
+    });
+
+    if (productStore) {
+      // Update product store
+      await this.productStoreRepo.update(
+        { product_id, store_location_id },
+        {
+          amount,
+          updated_at: convertToMySQLDateTime(),
+        },
+      );
+      // Create new product store history
+      await this.productStoreHistoryRepo.create({
+        product_id,
+        store_location_id,
+        amount,
+        created_at: convertToMySQLDateTime(),
+        updated_at: convertToMySQLDateTime(),
+      });
+      return;
+    }
+    // Create new product store
+    await this.productStoreRepo.create({
+      product_id,
+      store_location_id,
+      amount,
+      created_at: convertToMySQLDateTime(),
+      updated_at: convertToMySQLDateTime(),
+    });
   }
 }

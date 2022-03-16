@@ -194,8 +194,11 @@ export const itgProductsFromAppcore = () => {
     ['barCode', 'barcode'],
     ['code', 'product_code'],
     ['name', 'product'],
+    ['price', 'price'],
     ['wholesalePrice', 'whole_price'],
     ['images', 'images'],
     ['status', 'status'],
+    ['width', 'width'],
+    ['height', 'height'],
   ]);
 };

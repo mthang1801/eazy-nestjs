@@ -15,3 +15,5 @@ export const categorySelector = [
   'category',
   'slug',
 ];
+
+export const getUserSystemByIdSelector = `*, ${Table.USERS}.*`;

@@ -46,6 +46,10 @@ import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { defaultPassword } from '../../database/constant/defaultPassword';
+import {
+  CREATE_CUSTOMER_API,
+  GET_CUSTOMERS_API,
+} from 'src/database/constant/api';
 
 @Injectable()
 export class CustomerService {
@@ -129,7 +133,7 @@ export class CustomerService {
       const customerAppcoreData = itgCustomerToAppcore(user);
 
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/customers/cms',
+        url: CREATE_CUSTOMER_API,
         method: 'POST',
         data: customerAppcoreData,
       });
@@ -305,7 +309,7 @@ export class CustomerService {
       const customerDataToAppcore = itgCustomerToAppcore(customer);
       console.log(customerDataToAppcore);
       await axios({
-        url: `http://mb.viendidong.com/core-api/v1/customers/cms/${customer.user_appcore_id}`,
+        url: `${CREATE_CUSTOMER_API}/${customer.user_appcore_id}`,
         method: 'PUT',
         data: customerDataToAppcore,
       });
@@ -317,7 +321,7 @@ export class CustomerService {
   async itgGet() {
     try {
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/customers?page=5',
+        url: `${GET_CUSTOMERS_API}?page=5`,
       });
 
       const { passwordHash, salt } = saltHashPassword(defaultPassword);

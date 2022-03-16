@@ -50,6 +50,10 @@ import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
 import { CreateOrderAppcoreDto } from '../dto/orders/create-orderAppcore.dto';
 import { UpdateOrderAppcoreDto } from '../dto/orders/update-orderAppcore.dto';
+import {
+  GET_ORDERS_FROM_APPCORE_API,
+  PUSH_ORDER_TO_APPCORE_API,
+} from 'src/database/constant/api';
 
 @Injectable()
 export class OrdersService {
@@ -110,7 +114,7 @@ export class OrdersService {
     //============ Push data to Appcore ==================
     const config: any = {
       method: 'POST',
-      url: 'http://mb.viendidong.com/core-api/v1/orders/cms/create',
+      url: PUSH_ORDER_TO_APPCORE_API,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -234,7 +238,7 @@ export class OrdersService {
   async itgGet() {
     try {
       const response = await axios({
-        url: 'http://mb.viendidong.com/core-api/v1/orders?page=10',
+        url: `${GET_ORDERS_FROM_APPCORE_API}?page=10`,
       });
       if (!response) {
         throw new HttpException('không tìm thấy db', 404);

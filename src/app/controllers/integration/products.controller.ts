@@ -9,9 +9,8 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { CreateProductDto } from 'src/app/dto/product/create-product.dto';
-import { UpdateProductDto } from 'src/app/dto/product/update-product.dto';
-import { UpdateImageDto } from 'src/app/dto/product/update-productImage.dto';
+import { CreateProductStoreDto } from 'src/app/dto/product/create-productStore.dto';
+
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from 'src/base/base.controllers';
@@ -32,6 +31,27 @@ export class ProductIntegrationController extends BaseController {
   async callSync(@Res() res: Response): Promise<IResponse> {
     await this.service.callSync();
     return this.responseSuccess(res, null, 'Đồng bộ thành công');
+  }
+
+  // Create or update products stores from appcore
+  @Post('/products-stores')
+  async createProductStores(
+    @Res() res: Response,
+    @Body() data: CreateProductStoreDto,
+  ) {
+    await this.service.itgCreateProductStores(data);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  /**
+   * Get products stores from Appcore back to CMS
+   * @param res
+   * @returns
+   */
+  @Get('/products-stores')
+  async getProductsStores(@Res() res: Response): Promise<IResponse> {
+    await this.service.itgGetProductsStores();
+    return this.responseSuccess(res, null, 'Lấy tồn kho hoàn tất.');
   }
 
   @Put(':sku')

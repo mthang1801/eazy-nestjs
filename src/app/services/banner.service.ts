@@ -33,6 +33,7 @@ import { BannerTargetDescriptionEntity } from '../entities/bannerTargetDescripti
 import { bannerSearchFilter } from '../../utils/tableConditioner';
 import { bannerJoiner } from 'src/utils/joinTable';
 import { Like } from 'src/database/find-options/operators';
+import { UPLOAD_IMAGE_API } from 'src/database/constant/api';
 
 @Injectable()
 export class bannerService {
@@ -278,7 +279,7 @@ export class bannerService {
 
     var config: any = {
       method: 'post',
-      url: 'http://mb.viendidong.com/core-api/v1/files/website',
+      url: UPLOAD_IMAGE_API,
       headers: {
         'Content-Type': 'multipart/form-data',
         ...data.getHeaders(),

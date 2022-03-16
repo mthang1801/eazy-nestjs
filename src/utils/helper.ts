@@ -72,8 +72,8 @@ export function formatDate(date) {
 export const convertToSlug = (text) =>
   text
     .toLowerCase()
-    .replace(/ /g, '-')
-    .replace(/[^\w-]+/g, '');
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-');
 
 export const removeVietnameseTones = (str) => {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');

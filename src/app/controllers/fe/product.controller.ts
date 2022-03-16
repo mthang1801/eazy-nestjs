@@ -19,12 +19,12 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/:id/product-stocks')
-  async getProductsStocks(
+  @Get('/:id/products-stores')
+  async getProductsStores(
     @Param('id') id: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.getProductsStocks(id);
+    const result = await this.service.getProductsStores(id);
     return this.responseSuccess(res, result);
   }
 

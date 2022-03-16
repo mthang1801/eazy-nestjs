@@ -39,6 +39,7 @@ import {
   convertNullDatetimeData,
   convertToMySQLDateTime,
 } from 'src/utils/helper';
+import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
 
 @Injectable()
 export class UserSystemService {
@@ -113,7 +114,7 @@ export class UserSystemService {
 
   async getById(id): Promise<any> {
     const user = await this.userRepository.findOne({
-      select: ['*'],
+      select: getUserSystemByIdSelector,
       join: userSystemStoreJoiner,
       where: {
         [`${Table.USERS}.user_id`]: id,
@@ -236,8 +237,6 @@ export class UserSystemService {
       const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
 
       result = { ...result, ...newUserLoyalty };
-
-      await this.customerService.createCustomerToAppcore(result);
     }
 
     await this.userGroupLinksRepo.create({
