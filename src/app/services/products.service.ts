@@ -913,6 +913,10 @@ export class ProductService {
   }
 
   async itgCreate(data): Promise<any> {
+    if (!data['category_id']) {
+      data['category_id'] = 0;
+    }
+
     if (data.product_id) {
       let product = await this.productRepo.findById(data.product_id);
 
@@ -1075,19 +1079,22 @@ export class ProductService {
 
   async callSync(): Promise<void> {
     // await this.clearAll();
-
-    for (let productItem of mockProductsData) {
-      // await this.itgCreate(productItem);
-    }
-    await this.syncProductsIntoGroup();
+    // for (let productItem of mockProductsData) {
+    //   await this.itgCreate(productItem);
+    // }
+    // await this.syncProductsIntoGroup();
   }
 
   async itgUpdate(sku, data): Promise<any> {
+    if (!data['category_id']) {
+      data['category_id'] = 0;
+    }
     const product = await this.productRepo.findOne({
       select: '*',
       join: productJoiner,
       where: [{ product_code: sku }, { product_id: sku }],
     });
+
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
@@ -1139,9 +1146,13 @@ export class ProductService {
       result = { ...result, ...updatedProductSale };
     }
 
-    if (data.category_id !== null) {
-      const productCategoryData = this.productCategoryRepo.setData(data);
-      if (Object.entries(productCategoryData).length) {
+    const productCategoryData = this.productCategoryRepo.setData(data);
+    if (Object.entries(productCategoryData).length) {
+      const productCategory = await this.productCategoryRepo.findOne({
+        category_id: result.category_id,
+        product_id: result.product_id,
+      });
+      if (productCategory) {
         const updatedProductCategory = await this.productCategoryRepo.update(
           { category_id: result.category_id, product_id: result.product_id },
           productCategoryData,

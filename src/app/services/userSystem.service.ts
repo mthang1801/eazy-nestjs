@@ -138,6 +138,12 @@ export class UserSystemService {
     }
 
     const userUpdateData = this.userRepository.setData(data);
+    if (data.password) {
+      const { passwordHash, salt } = saltHashPassword(data.password);
+      userUpdateData['password'] = passwordHash;
+      userUpdateData['salt'] = salt;
+    }
+
     let result: any = { ...user };
     if (Object.entries(userUpdateData).length) {
       const updatedUser = await this.userRepository.update(
@@ -183,7 +189,7 @@ export class UserSystemService {
       );
       result = { ...user };
     } else {
-      const { passwordHash, salt } = saltHashPassword(defaultPassword);
+      const { passwordHash, salt } = saltHashPassword(data.password);
 
       const userData = {
         ...new UserEntity(),

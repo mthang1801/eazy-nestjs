@@ -98,6 +98,39 @@ export class bannerService {
     };
   }
 
+  async getListByTarget(target_id) {
+    const banners = await this.bannerRepo.find({
+      select: '*',
+      join: bannerJoiner,
+      where: { [`${Table.BANNER}.target_id`]: target_id },
+    });
+
+    let bannerLocations = {};
+    if (banners.length) {
+      for (let bannerItem of banners) {
+        bannerItem['image'] = null;
+        const bannerImageLink = await this.imageLinkRepo.findOne({
+          object_type: ImageObjectType.BANNER,
+          object_id: bannerItem.banner_id,
+        });
+        if (bannerImageLink) {
+          const bannerImage = await this.imageRepo.findOne({
+            image_id: bannerImageLink.image_id,
+          });
+          bannerItem['image'] = { ...bannerImageLink, ...bannerImage };
+        }
+
+        bannerLocations[bannerItem['location_description']] = bannerLocations[
+          bannerItem['location_description']
+        ]
+          ? [...bannerLocations[bannerItem['location_description']], bannerItem]
+          : [bannerItem];
+      }
+      return bannerLocations;
+    }
+    return banners;
+  }
+
   async getLocationsList() {
     return this.bannerLocationsDescRepo.find();
   }

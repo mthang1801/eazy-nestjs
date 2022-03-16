@@ -14,8 +14,8 @@ import {
 import { bannerService } from '../../services/banner.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
+import { Response } from 'express';
 
-import {} from '../../interfaces/response.interface';
 import { AuthGuard } from '../../../middlewares/be.auth';
 @Controller('/fe/v1/banners')
 export class bannerController extends BaseController {
@@ -27,6 +27,15 @@ export class bannerController extends BaseController {
   async getList(@Res() res, @Param() param): Promise<IResponse> {
     const banners = await this.service.getList(param);
     return this.responseSuccess(res, banners);
+  }
+
+  @Get('/:target_id')
+  async getListByTarget(
+    @Res() res: Response,
+    @Param('target_id') target_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getListByTarget(target_id);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/:id')
