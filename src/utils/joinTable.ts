@@ -288,3 +288,32 @@ export const shippingServiceJoiner = {
     },
   },
 };
+
+export const cartJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CART_ITEMS]: {
+      fieldJoin: `${Table.CART_ITEMS}.cart_id`,
+      rootJoin: `${Table.CART}.cart_id`,
+    },
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.CART_ITEMS}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  },
+};

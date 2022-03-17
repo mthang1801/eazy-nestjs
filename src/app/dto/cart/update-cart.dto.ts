@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, ValidateNested } from 'class-validator';
-export class CreateCartDto {
+import { IsNotEmpty, ValidateNested, IsOptional } from 'class-validator';
+export class UpdateCartDto {
   @IsNotEmpty()
   user_id: string;
 
@@ -10,9 +10,12 @@ export class CreateCartDto {
 }
 
 class CartItem {
+  @IsOptional()
+  cart_item_id: number;
+
   @IsNotEmpty()
   product_id: string;
 
   @IsNotEmpty()
-  amount: number;
+  amount: string;
 }
