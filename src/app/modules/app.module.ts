@@ -37,6 +37,7 @@ import { LocatorModule } from './locator.module';
 import { StatusModule } from './status.module';
 import { ProductGroupModule } from './productGroup.module';
 import { UploadModule } from './upload.module';
+import { CartModule } from './cart.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -76,6 +77,7 @@ import { UploadModule } from './upload.module';
     QueueModule,
     LocatorModule,
     ProductGroupModule,
+    CartModule,
   ],
   providers: [
     {

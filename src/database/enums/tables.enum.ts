@@ -40,6 +40,10 @@ export enum Table {
   SHIPPING_SERVICE = 'ddv_shipping_services',
   SHIPPING_SERVICE_DESCRIPTION = 'ddv_shipping_service_descriptions',
 
+  //============== Cart ===============
+  CART = 'ddv_user_carts',
+  CART_ITEMS = 'ddv_user_cart_items',
+
   //============== Products ==============
   PRODUCTS_CATEGORIES = 'ddv_products_categories',
   PRODUCTS = 'ddv_products',

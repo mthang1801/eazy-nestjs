@@ -91,12 +91,13 @@ export class ShippingService {
       throw new HttpException('Không tìm thấy đơn vị vận chuyển', 404);
     }
 
+    if (data.created_at) {
+      data['created_at'] = convertToMySQLDateTime(new Date(data['created_at']));
+    }
     const shippingData = this.shippingRepo.setData(data);
+
     if (Object.entries(shippingData).length) {
-      await this.shippingRepo.update(
-        { shipping_id: id },
-        { ...shippingData, updated_at: convertToMySQLDateTime() },
-      );
+      await this.shippingRepo.update({ shipping_id: id }, { ...shippingData });
     }
 
     const shippingDescData = this.shippingDescriptionRepo.setData(data);
@@ -121,7 +122,7 @@ export class ShippingService {
           if (Object.entries(serviceData).length) {
             await this.shippingServiceRepo.update(
               { service_id: service.service_id },
-              { ...serviceData, updated_at: convertToMySQLDateTime() },
+              { ...serviceData },
             );
           }
 
@@ -140,6 +141,7 @@ export class ShippingService {
         const newServiceData = {
           ...new ShippingsServiceEntity(),
           ...this.shippingServiceRepo.setData(service),
+          shipping_id: id,
         };
         const newService = await this.shippingServiceRepo.create(
           newServiceData,

@@ -14,6 +14,10 @@ export enum PrimaryKeys {
   ddv_usergroups = 'usergroup_id',
   ddv_privileges = 'privilege_id',
 
+  //============== Cart ================
+  ddv_user_cart_items = 'cart_item_id',
+  ddv_user_carts = 'cart_id',
+
   //============== Banner ==============
   ddv_banners = 'banner_id',
   ddv_banner_images = 'banner_id',
