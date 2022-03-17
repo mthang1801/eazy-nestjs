@@ -20,8 +20,8 @@ import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { OrderStatusUpdateDTO } from 'src/app/dto/orderStatus/update-orderStatus.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { Response } from 'express';
-import { CreateOrderAppcoreDto } from 'src/app/dto/orders/create-orderAppcore.dto';
-import { UpdateOrderAppcoreDto } from 'src/app/dto/orders/update-orderAppcore.dto';
+import { CreateOrderAppcoreDto } from 'src/app/dto/orders/create-order.appcore.dto';
+import { UpdateOrderAppcoreDto } from 'src/app/dto/orders/update-order.appcore.dto';
 /**
  * Controller for Category
  * @Author LongTRinh

@@ -1,3 +1,5 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class ShippingsEntity {
   shipping_id: number;
   company_id: number = 0;
@@ -14,4 +16,5 @@ export class ShippingsEntity {
   status: string = '';
   free_shipping: string = '';
   is_address_required: string = '';
+  created_at: string = convertToMySQLDateTime();
 }

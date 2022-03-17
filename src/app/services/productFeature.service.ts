@@ -21,9 +21,17 @@ import { ProductOptionVariantDescriptionEntity } from '../entities/productOption
 import * as _ from 'lodash';
 import { productFeatures as productFeaturesData } from '../../database/constant/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
-import { removeVietnameseTones } from 'src/utils/helper';
+import {
+  convertToMySQLDateTime,
+  removeVietnameseTones,
+} from 'src/utils/helper';
 import { convertToSlug } from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import {
+  productFeatureSearchFilter,
+  productFeatureVariantSearchFilter,
+} from 'src/utils/tableConditioner';
+
 @Injectable()
 export class ProductFeatureService {
   constructor(
@@ -96,7 +104,7 @@ export class ProductFeatureService {
   }
 
   async getList(params): Promise<IProductFeaturesResponse[]> {
-    let { page, limit, ...others } = params;
+    let { page, limit, search, ...others } = params;
     page = +page || 1;
     limit = +limit || 20;
     const skip = (page - 1) * limit;
@@ -124,9 +132,10 @@ export class ProductFeatureService {
         },
       },
       orderBy: [
-        { field: `${Table.PRODUCT_FEATURES}.feature_id`, sortBy: SortBy.DESC },
+        { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.PRODUCT_FEATURES}.created_at`, sortBy: SortBy.DESC },
       ],
-      where: filterCondition,
+      where: productFeatureSearchFilter(search, filterCondition),
       skip,
       limit,
     });
@@ -151,8 +160,82 @@ export class ProductFeatureService {
 
         productFeatureItem['feature_variants'] = productFeatureVariant;
       }
+    } else {
+      productFeatures = await this.findProductFeaturesByProductVariants(params);
     }
 
+    return productFeatures;
+  }
+
+  async findProductFeaturesByProductVariants(params) {
+    let { page, limit, search, ...others } = params;
+    let filterConditions = {};
+    if (others && Object.entries(others).length) {
+      for (let [key, val] of Object.entries(others)) {
+        if (this.productFeatureVariantsRepo.tableProps.includes(key)) {
+          filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.${key}`] =
+            Like(val);
+        } else {
+          filterConditions[
+            `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.${key}`
+          ] = Like(val);
+        }
+      }
+    }
+
+    const featureVariants = await this.productFeatureVariantsRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+            fieldJoin: 'variant_id',
+            rootJoin: 'variant_id',
+          },
+        },
+      },
+      where: productFeatureVariantSearchFilter(search, filterConditions),
+    });
+
+    let productFeatures = [];
+    if (featureVariants.length) {
+      for (let featureVariant of featureVariants) {
+        const productFeature = await this.productFeaturesRepo.findOne({
+          select: '*',
+          join: {
+            [JoinTable.innerJoin]: {
+              [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+                fieldJoin: 'feature_id',
+                rootJoin: 'feature_id',
+              },
+            },
+          },
+          where: {
+            [`${Table.PRODUCT_FEATURES}.feature_id`]: featureVariant.feature_id,
+          },
+        });
+
+        if (productFeature) {
+          let productFeatureVariants =
+            await this.productFeatureVariantsRepo.find({
+              select: ['*'],
+              join: {
+                [JoinTable.leftJoin]: {
+                  [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+                    fieldJoin: 'variant_id',
+                    rootJoin: 'variant_id',
+                  },
+                },
+              },
+              where: {
+                [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
+                  featureVariant.feature_id,
+              },
+            });
+          productFeature['feature_variants'] = productFeatureVariants;
+          productFeatures = [...productFeatures, productFeature];
+        }
+      }
+    }
     return productFeatures;
   }
 
@@ -252,7 +335,10 @@ export class ProductFeatureService {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
     }
 
-    const productFeatureData = this.productFeaturesRepo.setData(data);
+    const productFeatureData = {
+      ...this.productFeaturesRepo.setData(data),
+      updated_at: convertToMySQLDateTime(),
+    };
     let updatedFeature = {};
     if (Object.entries(productFeatureData).length) {
       updatedFeature = await this.productFeaturesRepo.update(

@@ -1,5 +1,8 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class ShippingsServiceDescriptionEntity {
   service_id: number = 0;
-  description: string = '';
+  service_name: string = '';
+  service_description: string = '';
   lang_code: string = '';
 }

@@ -48,8 +48,8 @@ import { DistrictRepository } from '../repositories/district.repository';
 import { DistrictEntity } from '../entities/districts.entity';
 import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
-import { CreateOrderAppcoreDto } from '../dto/orders/create-orderAppcore.dto';
-import { UpdateOrderAppcoreDto } from '../dto/orders/update-orderAppcore.dto';
+import { CreateOrderAppcoreDto } from '../dto/orders/create-order.appcore.dto';
+import { UpdateOrderAppcoreDto } from '../dto/orders/update-order.appcore.dto';
 import {
   GET_ORDERS_FROM_APPCORE_API,
   PUSH_ORDER_TO_APPCORE_API,

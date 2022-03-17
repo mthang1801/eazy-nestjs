@@ -11,14 +11,8 @@ import { Table, JoinTable, SortBy } from '../../database/enums/index';
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
-
-import { createBannerImageDTO } from '../dto/banner/create-banner-image.dto';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
 import { CreateBannerDto } from '../dto/banner/create-banner.dto';
-import * as fs from 'fs';
-import * as fsExtra from 'fs-extra';
-import axios from 'axios';
-import * as FormData from 'form-data';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
@@ -33,8 +27,6 @@ import { BannerTargetDescriptionEntity } from '../entities/bannerTargetDescripti
 import { bannerSearchFilter } from '../../utils/tableConditioner';
 import { bannerJoiner } from 'src/utils/joinTable';
 import { Like } from 'src/database/find-options/operators';
-import { UPLOAD_IMAGE_API } from 'src/database/constant/api';
-
 @Injectable()
 export class bannerService {
   constructor(
@@ -260,41 +252,10 @@ export class bannerService {
     await this.imageRepo.delete({ image_id: bannerImageLink.image_id });
   }
 
-  async createBannerImage(data: createBannerImageDTO, id): Promise<any> {
-    return this.imageService.Create(data, id);
-  }
-
   async getAllIamgesByBannerId(id): Promise<any> {
     return this.imageService.getAllIamgesByBannerId(id);
   }
   async updateBannerById(banner_id, images_id, body): Promise<any> {
     return this.imageService.Update(body, banner_id, images_id);
-  }
-
-  async uploadImages(images) {
-    let data = new FormData();
-    for (let image of images) {
-      data.append('files', fs.createReadStream(image.path));
-    }
-
-    var config: any = {
-      method: 'post',
-      url: UPLOAD_IMAGE_API,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...data.getHeaders(),
-      },
-      data: data,
-    };
-
-    const response = await axios(config);
-
-    for (let image of images) {
-      await fsExtra.unlink(image.path);
-    }
-
-    const results = response?.data?.data;
-
-    return { image_path: results[0] };
   }
 }

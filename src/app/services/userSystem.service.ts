@@ -237,6 +237,8 @@ export class UserSystemService {
       const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
 
       result = { ...result, ...newUserLoyalty };
+
+      await this.customerService.createCustomerToAppcore(result);
     }
 
     await this.userGroupLinksRepo.create({

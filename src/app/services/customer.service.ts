@@ -50,6 +50,7 @@ import {
   CREATE_CUSTOMER_API,
   GET_CUSTOMERS_API,
 } from 'src/database/constant/api';
+import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
 
 @Injectable()
 export class CustomerService {
@@ -574,5 +575,32 @@ export class CustomerService {
     }
 
     return result;
+  }
+
+  async itgUpdateLoyalty(user_appcore_id: number, data: UpdateCustomerLoyalty) {
+    const customer = await this.userRepo.findOne({ user_appcore_id });
+    if (!customer) {
+      throw new HttpException('Không tìm thấy Khách hàng trong hệ thống', 404);
+    }
+    const customerLoyalty = await this.userLoyalRepo.findOne({
+      user_id: customer.user_id,
+    });
+    if (!customerLoyalty) {
+      const customerLoyaltyData = {
+        ...new UserLoyaltyEntity(),
+        loyalty_point: data.loyalty_point,
+        user_id: customer.user_id,
+      };
+      await this.userLoyalRepo.createSync(customerLoyaltyData);
+      return;
+    }
+
+    await this.userLoyalRepo.update(
+      { user_id: customer.user_id },
+      {
+        loyalty_point: data.loyalty_point,
+        updated_at: convertToMySQLDateTime(),
+      },
+    );
   }
 }

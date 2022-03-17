@@ -1,3 +1,5 @@
+import { convertToMySQLDateTime } from 'src/utils/helper';
+
 export class ProductFeatureEntity {
   feature_id: number = 0;
   feature_code: string = '';
@@ -14,4 +16,6 @@ export class ProductFeatureEntity {
   status: string = 'A';
   position: number = 0;
   comparison: string = 'N';
+  created_at: string = convertToMySQLDateTime();
+  updated_at: string = convertToMySQLDateTime();
 }

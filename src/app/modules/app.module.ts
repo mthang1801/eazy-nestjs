@@ -36,6 +36,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { LocatorModule } from './locator.module';
 import { StatusModule } from './status.module';
 import { ProductGroupModule } from './productGroup.module';
+import { UploadModule } from './upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { ProductGroupModule } from './productGroup.module';
         dest: './uploads',
       }),
     }),
+    UploadModule,
     AuthModule,
     UsersModule,
     UserSystemModule,

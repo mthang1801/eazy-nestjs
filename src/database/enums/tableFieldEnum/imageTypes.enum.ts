@@ -1,5 +1,5 @@
 export enum ImageObjectType {
-  LOGO = 'logos',
+  LOGO = 'logos', // dùng cho đơn vị vận chuyển, các thương hiệu, nhà SX...
   PRODUCT = 'products',
   BANNER = 'banners',
   USER = 'users',

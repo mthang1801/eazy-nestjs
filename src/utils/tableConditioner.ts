@@ -192,3 +192,33 @@ export const bannerSearchFilter = (search = '', filterConditions = {}) => {
   }
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const productFeatureSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_FEATURE_DESCRIPTIONS}.description`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const productFeatureVariantSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      {
+        [`${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant`]:
+          Like(search),
+      },
+    ];
+  }
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

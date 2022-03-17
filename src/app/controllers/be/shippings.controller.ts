@@ -14,11 +14,11 @@ import {
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
-
+import { Response } from 'express';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { ShippingService } from 'src/app/services/shippings.service';
-import { ShippingCreateDTO } from 'src/app/dto/shipping/create-shipping.dto';
-import { UpdateCreateDTO } from 'src/app/dto/shipping/update-shipping.dto';
+import { CreateShippingDto } from 'src/app/dto/shipping/create-shipping.dto';
+import { UpdateShippingDto } from '../../dto/shipping/update-shipping.dto';
 
 //@UseGuards(AuthGuard)
 @Controller('/be/v1/shippings')
@@ -27,31 +27,35 @@ export class ShippingController extends BaseController {
     super();
   }
 
-  @Get()
-  async getList(@Res() res, @Query() params): Promise<IResponse> {
-    const result = await this.service.getList(params);
-    return this.responseSuccess(res, result);
-  }
-  @Get('/:id')
-  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const result = await this.service.getById(id);
-    return this.responseSuccess(res, result);
-  }
   @Post()
   async create(
     @Res() res,
-    @Body() body: ShippingCreateDTO,
+    @Body() data: CreateShippingDto,
   ): Promise<IResponse> {
-    const result = await this.service.create(body);
+    const result = await this.service.create(data);
     return this.responseSuccess(res, result);
   }
-  @Put('/:id')
+
+  @Put(':id')
   async update(
-    @Res() res,
-    @Body() body: UpdateCreateDTO,
-    @Param('id') id,
+    @Param('id') id: number,
+    @Res()
+    res: Response,
+    @Body() data: UpdateShippingDto,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, body);
+    const result = await this.service.update(id, data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
+  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':id')
+  async get(@Res() res: Response, @Param('id') id: number): Promise<IResponse> {
+    const result = await this.service.get(id);
     return this.responseSuccess(res, result);
   }
 }

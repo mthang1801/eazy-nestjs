@@ -1,190 +1,235 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ShippingsEntity } from '../entities/shippings.entity';
 import { ShippingRepository } from '../repositories/shippings.repository';
-import { Table, JoinTable } from '../../database/enums/index';
+import { Table, JoinTable, SortBy } from '../../database/enums/index';
 
 import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
 import { ShippingsServiceEntity } from '../entities/shippingsService.entity';
-import { ShippingCreateDTO } from '../dto/shipping/create-shipping.dto';
-import { IShippingService } from '../interfaces/shipping.interface';
 import { ShippingServiceDescriptionRepository } from '../repositories/shippingServiceDescription.repository';
 import { ShippingsDescriptionEntity } from '../entities/shippingDescription.entity';
 import { ShippingDescriptionRepository } from '../repositories/shippingDescription.repository';
 import { ShippingsServiceDescriptionEntity } from '../entities/shippingServiceDescription.entity';
+import { CreateShippingDto } from '../dto/shipping/create-shipping.dto';
+import { ImagesLinksRepository } from '../repositories/imageLink.repository';
+import { ImagesLinksEntity } from '../entities/imageLinkEntity';
+
+import { ImagesEntity } from '../entities/image.entity';
+import { ImagesRepository } from '../repositories/image.repository';
+import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+import { UpdateShippingDto } from '../dto/shipping/update-shipping.dto';
 import { convertToMySQLDateTime } from 'src/utils/helper';
+import { shippingJoiner, shippingServiceJoiner } from '../../utils/joinTable';
 @Injectable()
 export class ShippingService {
   private table = Table.SHIPPINGS;
   constructor(
-    private shippingRepository: ShippingRepository<ShippingsEntity>,
+    private shippingRepo: ShippingRepository<ShippingsEntity>,
     private shippingDescriptionRepo: ShippingDescriptionRepository<ShippingsDescriptionEntity>,
-
     private shippingServiceDescriptionRepo: ShippingServiceDescriptionRepository<ShippingsServiceDescriptionEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
+    private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
+    private imageRepo: ImagesRepository<ImagesEntity>,
   ) {}
 
-  async create(data: ShippingCreateDTO) {
-    const shipping = {
-      ...this.shippingRepository.setData(data),
+  async create(data: CreateShippingDto) {
+    const shippingData = {
+      ...new ShippingsEntity(),
+      ...this.shippingRepo.setData(data),
+      created_at: convertToMySQLDateTime(new Date(data.created_at)),
     };
-    let _shipping = await this.shippingRepository.create(shipping);
-    const shippingDescription = {
+    const newShipping = await this.shippingRepo.create(shippingData);
+    let result = { ...newShipping };
+
+    const shippingDescData = {
+      ...new ShippingsDescriptionEntity(),
       ...this.shippingDescriptionRepo.setData(data),
-      shipping_id: _shipping.shipping_id,
+      shipping_id: result.shipping_id,
     };
-    let _shippingDes = await this.shippingDescriptionRepo.create(
-      shippingDescription,
+    const newShippingDesc = await this.shippingDescriptionRepo.create(
+      shippingDescData,
     );
-    const shippingService = {
-      ...this.shippingServiceRepo.setData(data),
-      shipping_id: _shipping.shipping_id,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
-    };
-    let _shippingService = await this.shippingServiceRepo.create(
-      shippingService,
-    );
-    const shippingServiceDescription = {
-      ...this.shippingServiceDescriptionRepo.setData({
-        ...data,
-        description: data.descriptionService,
-      }),
-      service_id: _shippingService.service_id,
-    };
-    let _shippingServiceDescription =
-      await this.shippingServiceDescriptionRepo.create(
-        shippingServiceDescription,
+    result = { ...result, ...newShippingDesc };
+
+    result = { ...result, services: [] };
+    for (let service of data.services) {
+      const serviceData = {
+        ...new ShippingsServiceEntity(),
+        ...this.shippingServiceRepo.setData(service),
+        shipping_id: result.shipping_id,
+      };
+      const newService = await this.shippingServiceRepo.create(serviceData);
+
+      const serviceDescData = {
+        ...new ShippingsServiceDescriptionEntity(),
+        ...this.shippingServiceDescriptionRepo.setData(service),
+        service_id: newService.service_id,
+      };
+      const newServiceDesc = await this.shippingServiceDescriptionRepo.create(
+        serviceDescData,
       );
-    const result = await this.getById(_shipping.shipping_id);
+
+      result = { ...result, services: [...result['services'], newServiceDesc] };
+    }
+
+    const shippingImage = await this.imageRepo.create({
+      image_path: data.image_path,
+    });
+    const shippingImageLink = await this.imageLinkRepo.create({
+      object_id: result.shipping_id,
+      object_type: ImageObjectType.LOGO,
+      image_id: shippingImage.image_id,
+    });
+
+    result = { ...result, image: { ...shippingImageLink, ...shippingImage } };
+
     return result;
+  }
+
+  async update(id: number, data: UpdateShippingDto) {
+    const shipping = await this.shippingRepo.findOne({ shipping_id: id });
+    if (!shipping) {
+      throw new HttpException('Không tìm thấy đơn vị vận chuyển', 404);
+    }
+
+    const shippingData = this.shippingRepo.setData(data);
+    if (Object.entries(shippingData).length) {
+      await this.shippingRepo.update(
+        { shipping_id: id },
+        { ...shippingData, updated_at: convertToMySQLDateTime() },
+      );
+    }
+
+    const shippingDescData = this.shippingDescriptionRepo.setData(data);
+    if (Object.entries(shippingDescData).length) {
+      await this.shippingDescriptionRepo.update(
+        { shipping_id: id },
+        shippingDescData,
+      );
+    }
+
+    if (data.services) {
+      for (let service of data.services) {
+        // Nếu có service_id -> check trong db -> update
+        if (service.service_id) {
+          const currentService = await this.shippingServiceRepo.findOne({
+            service_id: service.service_id,
+          });
+          if (!currentService) {
+            throw new HttpException('Không tìm thấy dịch vụ vận chuyển', 404);
+          }
+          const serviceData = await this.shippingServiceRepo.setData(service);
+          if (Object.entries(serviceData).length) {
+            await this.shippingServiceRepo.update(
+              { service_id: service.service_id },
+              { ...serviceData, updated_at: convertToMySQLDateTime() },
+            );
+          }
+
+          const serviceDescData =
+            await this.shippingServiceDescriptionRepo.setData(service);
+          if (Object.entries(serviceDescData).length) {
+            await this.shippingServiceDescriptionRepo.update(
+              { service_id: service.service_id },
+              serviceDescData,
+            );
+          }
+          continue;
+        }
+
+        // Nếu ko có service_id -> tạo mới
+        const newServiceData = {
+          ...new ShippingsServiceEntity(),
+          ...this.shippingServiceRepo.setData(service),
+        };
+        const newService = await this.shippingServiceRepo.create(
+          newServiceData,
+        );
+
+        const newServiceDescData = {
+          ...new ShippingsServiceDescriptionEntity(),
+          ...this.shippingServiceDescriptionRepo.setData(service),
+          service_id: newService.service_id,
+        };
+        await this.shippingServiceDescriptionRepo.create(newServiceDescData);
+      }
+    }
   }
 
   async getList(params) {
-    let { page, limit, q, ...others } = params;
+    let { page, limit } = params;
     page = +page || 1;
     limit = +limit || 20;
-    let skip = (page - 1) * limit;
-    const shipping = this.shippingRepository.find({
-      select: ['*'],
-      join: {
-        [JoinTable.join]: {
-          ddv_shipping_descriptions: {
-            fieldJoin: `${Table.SHIPPINGS_DESCRIPTION}.shipping_id`,
-            rootJoin: `${Table.SHIPPINGS}.shipping_id`,
-          },
-        },
-      },
-
+    const skip = (page - 1) * limit;
+    const shippingsList = await this.shippingRepo.find({
+      select: '*',
+      join: shippingJoiner,
+      orderBy: [
+        { field: `${Table.SHIPPINGS}.shipping_id`, sortBy: SortBy.DESC },
+      ],
       skip,
       limit,
     });
-    const service = this.shippingServiceRepo.find({
-      select: ['*'],
-      join: {
-        [JoinTable.join]: {
-          ddv_shipping_service_descriptions: {
-            fieldJoin: `${Table.SHIPPING_SERVICE_DESCRIPTION}.service_id`,
-            rootJoin: `${Table.SHIPPING_SERVICE}.service_id`,
+
+    if (shippingsList.length) {
+      for (let shippingItem of shippingsList) {
+        const shippingServices = await this.shippingServiceRepo.find({
+          select: '*',
+          join: shippingServiceJoiner,
+
+          where: {
+            [`${Table.SHIPPING_SERVICE}.shipping_id`]: shippingItem.shipping_id,
           },
-        },
-      },
+        });
 
-      skip,
-      limit,
-    });
-    const result = await Promise.all([shipping, service]);
-    let _result = [];
-    result[0].forEach((ele) => {
-      _result.push({
-        ...ele,
-        service: result[1].filter(
-          (service) => service.shipping_id == ele.shipping_id,
-        ),
-      });
-    });
-    return _result;
-  }
-  async getById(id): Promise<any> {
-    const string = `${this.table}.shipping_id`;
-    const string1 = `${Table.SHIPPING_SERVICE}.shipping_id`;
-    const shipping = this.shippingRepository.findOne({
-      select: ['*'],
-      where: { [string]: id },
-      join: {
-        [JoinTable.join]: {
-          ddv_shipping_descriptions: {
-            fieldJoin: `${Table.SHIPPINGS_DESCRIPTION}.shipping_id`,
-            rootJoin: `${Table.SHIPPINGS}.shipping_id`,
-          },
-        },
-      },
+        shippingItem['services'] = shippingServices;
 
-      skip: 0,
-      limit: 30,
-    });
-    const service = this.shippingServiceRepo.find({
-      select: ['*'],
-      where: { [string1]: id },
+        shippingItem['image'] = null;
+        const logoImageLink = await this.imageLinkRepo.findOne({
+          object_type: ImageObjectType.LOGO,
+          object_id: shippingItem.shipping_id,
+        });
 
-      join: {
-        [JoinTable.join]: {
-          ddv_shipping_service_descriptions: {
-            fieldJoin: `${Table.SHIPPING_SERVICE_DESCRIPTION}.service_id`,
-            rootJoin: `${Table.SHIPPING_SERVICE}.service_id`,
-          },
-        },
-      },
-
-      skip: 0,
-      limit: 30,
-    });
-    const result = await Promise.all([shipping, service]);
-    return { ...result[0], service: result[1] };
-  }
-  async update(id, data: ShippingCreateDTO) {
-    const shipping = {
-      ...this.shippingRepository.setData(data),
-    };
-    let _shipping = await this.shippingRepository.update(id, shipping);
-    const shippingDescription = {
-      ...this.shippingDescriptionRepo.setData(data),
-      shipping_id: id,
-    };
-
-    let _shippingDes = await this.shippingDescriptionRepo.update(
-      id,
-      shippingDescription,
-    );
-    const serviceid = await this.shippingServiceRepo.findOne({
-      select: ['*'],
-      where: { shipping_id: id },
-    });
-
-    if (!serviceid) {
-      return _shipping;
+        if (logoImageLink) {
+          const logoImage = await this.imageRepo.findOne({
+            image_id: logoImageLink.image_id,
+          });
+          shippingItem['image'] = { ...logoImageLink, ...logoImage };
+        }
+      }
     }
-    const shippingService = {
-      ...this.shippingServiceRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
-    };
+    return shippingsList;
+  }
 
-    let _shippingService = await this.shippingServiceRepo.update(
-      serviceid.service_id,
-      shippingService,
-    );
-    const shippingServiceDescription = {
-      ...this.shippingServiceDescriptionRepo.setData({
-        ...data,
-        description: data.descriptionService,
-      }),
-      service_id: _shippingService.service_id,
-    };
-    let _shippingServiceDescription =
-      await this.shippingServiceDescriptionRepo.update(
-        serviceid.service_id,
-        shippingServiceDescription,
-      );
-    const result = await this.getById(id);
-    return result;
+  async get(id: number) {
+    const shipping = await this.shippingRepo.findOne({
+      select: '*',
+      join: shippingJoiner,
+      where: { [`${Table.SHIPPINGS}.shipping_id`]: id },
+    });
+
+    if (!shipping) {
+      throw new HttpException('Không tìm thấy đơn vị vận chuyển', 404);
+    }
+
+    const shippingService = await this.shippingServiceRepo.find({
+      select: '*',
+      join: shippingServiceJoiner,
+      where: { [`${Table.SHIPPING_SERVICE}.shipping_id`]: id },
+    });
+
+    const logoImageLink = await this.imageLinkRepo.findOne({
+      object_id: shipping.shipping_id,
+      object_type: ImageObjectType.LOGO,
+    });
+    shipping['image'] = null;
+    if (logoImageLink) {
+      const logoImage = await this.imageRepo.findOne({
+        image_id: logoImageLink.image_id,
+      });
+      shipping['image'] = { ...logoImageLink, ...logoImage };
+    }
+
+    shipping['services'] = shippingService;
+    return shipping;
   }
 }

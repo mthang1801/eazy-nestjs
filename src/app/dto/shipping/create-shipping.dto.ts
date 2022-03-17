@@ -1,50 +1,46 @@
-import { IsOptional, MaxLength } from 'class-validator';
-export class ShippingCreateDTO {
-  @IsOptional()
-  company_id: number;
-  @IsOptional()
-  @MaxLength(1)
-  destination: string;
-  @IsOptional()
-  min_weight: number;
-  @IsOptional()
-  max_weight: number;
-  @IsOptional()
-  usergroup_ids: string;
-  @IsOptional()
-  @MaxLength(1)
-  rate_calculation: string;
-  @IsOptional()
-  service_id: number;
-  @IsOptional()
-  service_params: string;
-  @IsOptional()
-  localization: string;
-  @IsOptional()
-  tax_ids: string;
-  @IsOptional()
-  position: number;
-  @IsOptional()
-  @MaxLength(1)
-  status: string;
-  @IsOptional()
-  @MaxLength(1)
-  free_shipping: string;
-  @IsOptional()
-  @MaxLength(1)
-  is_address_required: string;
-  @IsOptional()
-  @MaxLength(2)
-  lang_code: string;
-  @IsOptional()
-  shipping: string;
-  @IsOptional()
-  delivery_time: string;
-  @IsOptional()
-  description: string;
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  ValidateNested,
+} from 'class-validator';
+import { convertToMySQLDateTime } from 'src/utils/helper';
+export class CreateShippingDto {
+  @IsNotEmpty()
+  @IsString()
+  shipping_name: string;
 
   @IsOptional()
-  statusService: string;
+  shipping_description: string;
+
   @IsOptional()
-  descriptionService: string;
+  status: string = 'A';
+
+  @Type(() => ShippingService)
+  @ValidateNested()
+  @ArrayNotEmpty()
+  services: ShippingService[];
+
+  @IsOptional()
+  created_at: string = convertToMySQLDateTime();
+
+  @IsNotEmpty()
+  image_path: string;
+}
+
+class ShippingService {
+  @IsNotEmpty()
+  service_name: string;
+
+  @IsOptional()
+  service_code: string;
+
+  @IsOptional()
+  service_description: string;
+
+  @IsOptional()
+  status: string = 'A';
 }

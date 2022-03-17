@@ -124,6 +124,10 @@ export const productJoiner = {
     fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
+  [Table.CATEGORIES]: {
+    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    rootJoin: `${Table.CATEGORIES}.category_id`,
+  },
   [Table.PRODUCT_SALES]: {
     fieldJoin: `${Table.PRODUCT_SALES}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,
@@ -263,6 +267,24 @@ export const bannerJoiner = {
     [Table.BANNER_TARGET_DESCRIPTION]: {
       fieldJoin: `${Table.BANNER_TARGET_DESCRIPTION}.target_id`,
       rootJoin: `${Table.BANNER}.target_id`,
+    },
+  },
+};
+
+export const shippingJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.SHIPPINGS_DESCRIPTION]: {
+      fieldJoin: 'shipping_id',
+      rootJoin: 'shipping_id',
+    },
+  },
+};
+
+export const shippingServiceJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.SHIPPING_SERVICE_DESCRIPTION]: {
+      fieldJoin: 'service_id',
+      rootJoin: 'service_id',
     },
   },
 };

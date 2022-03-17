@@ -425,14 +425,13 @@ export class ProductService {
         listCategories = listCategories.map(({ category_id }) => category_id);
       }
 
-      console.log(listCategories);
       listCategories = [category_id, ...listCategories];
     }
 
     let count = await this.productRepo.find({
       select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
       join: {
-        [JoinTable.innerJoin]: productJoiner,
+        [JoinTable.leftJoin]: productJoiner,
       },
       where: {
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
@@ -443,9 +442,9 @@ export class ProductService {
     });
 
     let productLists = await this.productRepo.find({
-      select: ['*'],
+      select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
       join: {
-        [JoinTable.innerJoin]: productJoiner,
+        [JoinTable.leftJoin]: productJoiner,
       },
       orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
       where: {
@@ -593,7 +592,6 @@ export class ProductService {
       +categoryId,
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
-    console.log(576, categoriesList);
 
     let { page, limit, search, ...others } = params;
 
@@ -601,165 +599,201 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    let filterConditions = {};
-    if (Object.entries(others).length) {
-      // Tạo filter, ứng với others, với mỗi key tương ứng product feature, val tương ứng feature variant
-      for (let [key, val] of Object.entries(others)) {
-        let productFeature = await this.productFeaturesRepo.findOne({
-          feature_code: key,
-        });
-        if (!productFeature) continue;
-        let productFeatureVariant =
-          await this.productFeatureVariantRepo.findOne({
-            feature_id: productFeature.feature_id,
-            variant_code: val,
-          });
-        if (!productFeatureVariant) continue;
+    // let filterConditions = {};
+    // if (Object.entries(others).length) {
+    //   if (this.productRepo.tableProps.includes(key)) {
+    //     filterConditions[`${Table.PRODUCTS}.${key}`] = Like(val);
+    //   }
+    //   if (this.productDescriptionsRepo.tableProps.includes(key)) {
+    //     filterConditions[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
+    //   }
+    // }
 
-        filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`] =
-          filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`]
-            ? [
-                ...filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`],
-                productFeature.feature_id,
-              ]
-            : [productFeature.feature_id];
-        filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`] =
-          filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`]
-            ? [
-                ...filterConditions[
-                  `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`
-                ],
-                productFeatureVariant.variant_id,
-              ]
-            : [productFeatureVariant.variant_id];
-      }
-    }
+    const productsList = await this.productRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
+          (categoryId) => categoryId,
+        ),
+        [`${Table.PRODUCTS}.parent_product_id`]: IsNull(),
+      },
+      skip,
+      limit,
+    });
 
-    let productsList = [];
-    let count;
+    const count = await this.productRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: {
+        [JoinTable.leftJoin]: productByCategoryJoiner,
+      },
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
+          (categoryId) => categoryId,
+        ),
+      },
+    });
 
-    if (
-      filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`] &&
-      filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length
-    ) {
-      for (
-        let i = 0;
-        i < filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length;
-        i++
-      ) {
-        let featureId =
-          filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`][i];
-        let variantId =
-          filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`][i];
+    // if (Object.entries(others).length) {
+    //   // Tạo filter, ứng với others, với mỗi key tương ứng product feature, val tương ứng feature variant
+    //   for (let [key, val] of Object.entries(others)) {
+    //     let productFeature = await this.productFeaturesRepo.findOne({
+    //       feature_code: key,
+    //     });
+    //     if (!productFeature) continue;
+    //     let productFeatureVariant =
+    //       await this.productFeatureVariantRepo.findOne({
+    //         feature_id: productFeature.feature_id,
+    //         variant_code: val,
+    //       });
+    //     if (!productFeatureVariant) continue;
 
-        count = await this.productVariationGroupRepo.find({
-          select: [
-            `COUNT(DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)) as total`,
-          ],
-          join: {
-            [JoinTable.rightJoin]: productGroupJoiner,
-          },
-          where: {
-            [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.feature_id`]: featureId,
-            [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.variant_id`]: variantId,
-            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
-              (categoryId) => categoryId,
-            ),
-            [`${Table.PRODUCTS}.product_id`]: productsList.map(
-              ({ product_id }) => product_id,
-            ),
-            [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
-          },
-        });
+    //     filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`] =
+    //       filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`]
+    //         ? [
+    //             ...filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`],
+    //             productFeature.feature_id,
+    //           ]
+    //         : [productFeature.feature_id];
+    //     filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`] =
+    //       filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`]
+    //         ? [
+    //             ...filterConditions[
+    //               `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`
+    //             ],
+    //             productFeatureVariant.variant_id,
+    //           ]
+    //         : [productFeatureVariant.variant_id];
+    //   }
+    // }
 
-        productsList = await this.productVariationGroupRepo.find({
-          select: [
-            `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
-            `${Table.PRODUCTS}.*`,
-            `${Table.PRODUCT_DESCRIPTION}.*`,
-            `${Table.PRODUCT_PRICES}.*`,
-          ],
-          join: {
-            [JoinTable.rightJoin]: productGroupJoiner,
-          },
-          where: {
-            [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.feature_id`]: featureId,
-            [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.variant_id`]: variantId,
-            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
-              (categoryId) => categoryId,
-            ),
-            [`${Table.PRODUCTS}.product_id`]: productsList.map(
-              ({ product_id }) => product_id,
-            ),
-            [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
-          },
-          skip:
-            i ===
-            filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length - 1
-              ? skip
-              : 0,
-          limit:
-            i ===
-            filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length - 1
-              ? limit
-              : MaxLimit,
-        });
-        if (!productsList.length) {
-          break;
-        }
-      }
-    } else {
-      count = await this.productVariationGroupRepo.find({
-        select: [
-          `COUNT(DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)) as total`,
-        ],
-        join: {
-          [JoinTable.rightJoin]: productGroupJoiner,
-        },
-        where: {
-          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
-            (categoryId) => categoryId,
-          ),
-        },
-        [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
-      });
+    // let productsList = [];
+    // let count;
 
-      productsList = await this.productVariationGroupRepo.find({
-        select: [
-          `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
-          `${Table.PRODUCTS}.*`,
-          `${Table.PRODUCT_DESCRIPTION}.*`,
-          `${Table.PRODUCT_PRICES}.*`,
-        ],
-        join: {
-          [JoinTable.rightJoin]: productGroupJoiner,
-        },
-        where: {
-          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
-            (categoryId) => categoryId,
-          ),
-          [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
-        },
-        [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
-        skip,
-        limit,
-      });
-    }
-    // get images
-    for (let productItem of productsList) {
-      productItem['image'] = null;
-      const productImage = await this.imageLinkRepo.findOne({
-        object_id: productItem.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      });
+    // if (
+    //   filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`] &&
+    //   filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length
+    // ) {
+    //   for (
+    //     let i = 0;
+    //     i < filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length;
+    //     i++
+    //   ) {
+    //     let featureId =
+    //       filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`][i];
+    //     let variantId =
+    //       filterConditions[`${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`][i];
 
-      if (productImage) {
-        let image = await this.imageRepo.findOne({
-          image_id: productImage.image_id,
-        });
-        productItem['image'] = image;
-      }
-    }
+    //     count = await this.productVariationGroupRepo.find({
+    //       select: [
+    //         `COUNT(DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)) as total`,
+    //       ],
+    //       join: {
+    //         [JoinTable.rightJoin]: productGroupJoiner,
+    //       },
+    //       where: {
+    //         [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.feature_id`]: featureId,
+    //         [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.variant_id`]: variantId,
+    //         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
+    //           (categoryId) => categoryId,
+    //         ),
+    //         [`${Table.PRODUCTS}.product_id`]: productsList.map(
+    //           ({ product_id }) => product_id,
+    //         ),
+    //         [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
+    //       },
+    //     });
+
+    //     productsList = await this.productVariationGroupRepo.find({
+    //       select: [
+    //         `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
+    //         `${Table.PRODUCTS}.*`,
+    //         `${Table.PRODUCT_DESCRIPTION}.*`,
+    //         `${Table.PRODUCT_PRICES}.*`,
+    //       ],
+    //       join: {
+    //         [JoinTable.rightJoin]: productGroupJoiner,
+    //       },
+    //       where: {
+    //         [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.feature_id`]: featureId,
+    //         [`${Table.PRODUCT_VARIATION_GROUP_FEATURES}.variant_id`]: variantId,
+    //         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
+    //           (categoryId) => categoryId,
+    //         ),
+    //         [`${Table.PRODUCTS}.product_id`]: productsList.map(
+    //           ({ product_id }) => product_id,
+    //         ),
+    //         [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
+    //       },
+    //       skip:
+    //         i ===
+    //         filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length - 1
+    //           ? skip
+    //           : 0,
+    //       limit:
+    //         i ===
+    //         filterConditions[`${Table.PRODUCT_FEATURES}.feature_id`].length - 1
+    //           ? limit
+    //           : MaxLimit,
+    //     });
+    //     if (!productsList.length) {
+    //       break;
+    //     }
+    //   }
+    // } else {
+    //   count = await this.productVariationGroupRepo.find({
+    //     select: [
+    //       `COUNT(DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)) as total`,
+    //     ],
+    //     join: {
+    //       [JoinTable.rightJoin]: productGroupJoiner,
+    //     },
+    //     where: {
+    //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
+    //         (categoryId) => categoryId,
+    //       ),
+    //     },
+    //     [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
+    //   });
+
+    //   productsList = await this.productVariationGroupRepo.find({
+    //     select: [
+    //       `DISTINCT(${Table.PRODUCT_VARIATION_GROUPS}.product_root_id)`,
+    //       `${Table.PRODUCTS}.*`,
+    //       `${Table.PRODUCT_DESCRIPTION}.*`,
+    //       `${Table.PRODUCT_PRICES}.*`,
+    //     ],
+    //     join: {
+    //       [JoinTable.rightJoin]: productGroupJoiner,
+    //     },
+    //     where: {
+    //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoriesList.map(
+    //         (categoryId) => categoryId,
+    //       ),
+    //       [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
+    //     },
+    //     [`${Table.PRODUCT_VARIATION_GROUPS}.status`]: 'A',
+    //     skip,
+    //     limit,
+    //   });
+    // }
+    // // get images
+    // for (let productItem of productsList) {
+    //   productItem['image'] = null;
+    //   const productImage = await this.imageLinkRepo.findOne({
+    //     object_id: productItem.product_id,
+    //     object_type: ImageObjectType.PRODUCT,
+    //   });
+
+    //   if (productImage) {
+    //     let image = await this.imageRepo.findOne({
+    //       image_id: productImage.image_id,
+    //     });
+    //     productItem['image'] = image;
+    //   }
+    // }
 
     return {
       currentCategory: category,
@@ -1817,11 +1851,6 @@ export class ProductService {
           ? restName.length
           : restName.search(exceptionWords);
       const extraName = restName.slice(restIndex);
-      console.log(productName, '-', shortname, '-', extraName);
-      // await this.productDescriptionsRepo.update(
-      //   { product_id: product.product_id },
-      //   { shortname },
-      // );
     }
   }
 
