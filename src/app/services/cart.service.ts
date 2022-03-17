@@ -39,7 +39,6 @@ export class CartService {
   }
 
   async create(data: CreateCartDto) {
-    console.log(data);
     const cartData = { ...new CartEntity(), ...this.cartRepo.setData(data) };
     const newCart = await this.cartRepo.create(cartData);
 
@@ -114,6 +113,14 @@ export class CartService {
           cartItemData,
         );
       }
+    }
+  }
+
+  async delete(user_id: string) {
+    const cart = await this.cartRepo.findOne({ user_id });
+    if (cart) {
+      await this.cartRepo.delete({ cart_id: cart.cart_id });
+      await this.cartItemRepo.delete({ cart_id: cart.cart_id });
     }
   }
 }

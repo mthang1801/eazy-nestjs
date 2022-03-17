@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Put, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Res,
+} from '@nestjs/common';
 import { BaseController } from 'src/base/base.controllers';
 import { Response } from 'express';
 import { CreateCartDto } from 'src/app/dto/cart/create-cart.dto';
@@ -37,5 +46,14 @@ export class CartController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.get(user_id);
     return this.responseSuccess(res, result);
+  }
+
+  @Delete(':user_id')
+  async delete(
+    @Res() res: Response,
+    @Param('user_id') user_id: string,
+  ): Promise<IResponse> {
+    await this.service.delete(user_id);
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 }
