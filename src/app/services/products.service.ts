@@ -47,6 +47,7 @@ import {
 import {
   productsFamilyFilterConditioner,
   productsGroupFilterConditioner,
+  productsListCategorySearchFilter,
 } from 'src/utils/tableConditioner';
 import { In, Like, MoreThan, Not } from 'src/database/find-options/operators';
 import { ProductFeaturesRepository } from '../repositories/productFeature.repository';
@@ -397,66 +398,96 @@ export class ProductService {
   }
 
   async getList(params: any): Promise<any> {
-    let { page, limit, search, category_id, ...others } = params;
+    let { page, limit, search, status, category_id } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
-
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.productRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCTS}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.productDescriptionsRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
-          continue;
-        }
-      }
+    if (status) {
+      filterCondition[`${Table.PRODUCTS}.status`] = status;
     }
 
-    let listCategories = [];
+    let categoriesList = [];
     if (category_id) {
-      listCategories = await this.childrenCategories(category_id);
-
-      if (listCategories.length) {
-        listCategories = listCategories.map(({ category_id }) => category_id);
-      }
-
-      listCategories = [category_id, ...listCategories];
+      categoriesList = await this.childrenCategories(category_id);
+      categoriesList = [
+        +category_id,
+        ...categoriesList.map(({ category_id }) => category_id),
+      ];
     }
+
+    const productLists = await this.productRepo.find({
+      select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
+      join: {
+        [JoinTable.leftJoin]: productJoiner,
+      },
+      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
 
     let count = await this.productRepo.find({
       select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
       join: {
         [JoinTable.leftJoin]: productJoiner,
       },
-      where: {
-        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-          (categoryId) => categoryId,
-        ),
-        ...productsListsSearchFilter(search, filterCondition),
-      },
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
     });
 
-    let productLists = await this.productRepo.find({
-      select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
-      join: {
-        [JoinTable.leftJoin]: productJoiner,
-      },
-      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
-      where: {
-        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-          (categoryId) => categoryId,
-        ),
+    // let listCategories = [];
+    // if (category_id) {
+    //   listCategories = await this.childrenCategories(category_id);
 
-        ...productsListsSearchFilter(search, filterCondition),
-      },
-      skip,
-      limit,
-    });
+    //   if (listCategories.length) {
+    //     listCategories = listCategories.map(({ category_id }) => category_id);
+    //   }
+
+    //   listCategories = [category_id, ...listCategories];
+    // }
+
+    // let count = await this.productRepo.find({
+    //   select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+    //   join: {
+    //     [JoinTable.leftJoin]: productJoiner,
+    //   },
+    //   where: {
+    //     [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+    //       (categoryId) => categoryId,
+    //     ),
+    //     ...productsListsSearchFilter(search, filterCondition),
+    //   },
+    // });
+
+    // let productLists = await this.productRepo.find({
+    //   select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
+    //   join: {
+    //     [JoinTable.leftJoin]: productJoiner,
+    //   },
+    //   orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
+    //   where: {
+    //     [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
+    //       (categoryId) => categoryId,
+    //     ),
+
+    //     ...productsListsSearchFilter(search, filterCondition),
+    //   },
+    //   skip,
+    //   limit,
+    // });
 
     // determine product type and  get Image
     for (let productItem of productLists) {
@@ -492,12 +523,12 @@ export class ProductService {
     }
 
     return {
-      products: productLists,
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count.length ? count[0].total : 0,
+        total: count[0].total,
       },
+      products: productLists,
     };
   }
 
@@ -796,21 +827,22 @@ export class ProductService {
     // }
 
     return {
-      currentCategory: category,
-      childrenCategories: categoriesListByLevel,
-      products: productsList,
       paging: {
         currentPage: page,
         pageSize: limit,
         total: count[0]?.total,
       },
+      currentCategory: category,
+      childrenCategories: categoriesListByLevel,
+      products: productsList,
     };
   }
 
-  async update(sku: string, data) {
+  async update(sku: string, data: UpdateProductDto) {
     // Filter Exception
     const currentProduct = await this.productRepo.findOne({
-      product_code: sku,
+      select: '*',
+      where: [{ product_code: sku }, { product_id: sku }],
     });
 
     if (!currentProduct) {
@@ -886,6 +918,12 @@ export class ProductService {
     }
 
     // Update product category
+    if (data?.category_id?.length) {
+      const currentProductCategories = await this.productCategoryRepo.find({
+        select: '*',
+        where: { product_id: result.product_id },
+      });
+    }
     const productCategoryData = this.productCategoryRepo.setData(data);
     if (Object.entries(productCategoryData).length) {
       const updatedProductCategory = await this.productCategoryRepo.update(
@@ -1159,6 +1197,7 @@ export class ProductService {
     }
 
     // set product description
+
     const productDescData = this.productDescriptionsRepo.setData(data);
 
     if (Object.entries(productDescData).length) {
@@ -1285,7 +1324,9 @@ export class ProductService {
   }
 
   async uploadImages(images, sku) {
-    const product = await this.productRepo.findOne({ product_code: sku });
+    const product = await this.productRepo.findOne({
+      where: [{ product_code: sku }, { product_id: sku }],
+    });
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -1819,41 +1860,6 @@ export class ProductService {
     }
   }
 
-  async findApproximateName() {
-    // This function will automatically group products base on approximating product name
-    // Will do later
-    const productsList = await this.productRepo.find({
-      select: `*, LOWER(product) as product`,
-      join: {
-        [JoinTable.innerJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: 'product_id',
-            rootJoin: 'product_id',
-          },
-        },
-      },
-      where: [
-        { product_type: 1, parent_product_id: IsNull() },
-        { product_type: 2, parent_product_id: IsNull() },
-      ],
-    });
-    let exceptionWords = `(2gb|3gb|4gb|6gb|8gb|12gb|16gb|32gb|64gb|128gb|256gb|512gb|1tb|2tb)`;
-    for (let product of productsList) {
-      const { product: productName } = product;
-      const shortenIndex =
-        productName.split('-')[0].search(exceptionWords) === -1
-          ? productName.split('-')[0].length
-          : productName.split('-')[0].search(exceptionWords);
-      const shortname = productName.slice(0, shortenIndex);
-      const restName = productName.slice(shortenIndex);
-      const restIndex =
-        restName.search(exceptionWords) === -1
-          ? restName.length
-          : restName.search(exceptionWords);
-      const extraName = restName.slice(restIndex);
-    }
-  }
-
   async itgGetProductsStores() {
     const productsList = await this.productRepo.find();
     if (productsList.length) {
@@ -1894,18 +1900,18 @@ export class ProductService {
           updated_at: convertToMySQLDateTime(),
         },
       );
-      // Create new product store history
-      await this.productStoreHistoryRepo.create({
+    } else {
+      // Create new product store
+      await this.productStoreRepo.create({
         product_id,
         store_location_id,
         amount,
         created_at: convertToMySQLDateTime(),
         updated_at: convertToMySQLDateTime(),
       });
-      return;
     }
-    // Create new product store
-    await this.productStoreRepo.create({
+    // Create new product store history
+    await this.productStoreHistoryRepo.create({
       product_id,
       store_location_id,
       amount,

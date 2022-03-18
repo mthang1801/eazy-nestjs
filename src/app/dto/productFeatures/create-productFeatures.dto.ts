@@ -9,6 +9,9 @@ export class CreateProductFeatureDto {
   company_id: number = 0;
 
   @IsOptional()
+  is_singly_choosen: string = 'N';
+
+  @IsOptional()
   purpose: string = '';
 
   @IsNotEmpty({ message: 'Tên thuộc tính là bắt buộc.' })

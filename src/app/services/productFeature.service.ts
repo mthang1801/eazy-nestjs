@@ -51,6 +51,8 @@ export class ProductFeatureService {
 
     const newFeature = await this.productFeaturesRepo.create({
       ...productFeatureData,
+      created_at: convertToMySQLDateTime(),
+      updated_at: convertToMySQLDateTime(),
     });
 
     let result = { ...newFeature };

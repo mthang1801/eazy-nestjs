@@ -11,6 +11,12 @@ export class UpdateProductDto {
   barcode: string;
 
   @IsOptional()
+  company_id: number;
+
+  @IsOptional()
+  sale_amount: number;
+
+  @IsOptional()
   tax_name: string;
 
   @IsOptional()
@@ -35,7 +41,6 @@ export class UpdateProductDto {
   product_status: string; // Tình trạng
 
   @IsOptional()
-  @IsIn(['1', '2', '3', '4'])
   product_type: number;
 
   @IsOptional()
@@ -46,7 +51,7 @@ export class UpdateProductDto {
   display_at: string;
 
   @IsOptional()
-  category_id: number;
+  category_id: number[];
 
   @IsOptional()
   parent_product_id: null | string;

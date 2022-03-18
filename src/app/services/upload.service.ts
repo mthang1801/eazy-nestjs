@@ -8,7 +8,7 @@ import { UPLOAD_IMAGE_API } from 'src/database/constant/api';
 export class UploadService {
   async upload(files) {
     if (!files?.length) return;
-    console.log(files);
+
     let data = new FormData();
     for (let file of files) {
       data.append('files', fs.createReadStream(file.path));
@@ -30,6 +30,7 @@ export class UploadService {
       for (let file of files) {
         await fsExtra.unlink(file.path);
       }
+
       return results;
     } catch (error) {
       for (let file of files) {

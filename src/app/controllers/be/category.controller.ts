@@ -63,6 +63,15 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, categoriesMenuList);
   }
 
+  @Get('/all')
+  async getAll(
+    @Res() res: Response,
+    @Query('level') level: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getAll(level);
+    return this.responseSuccess(res, result);
+  }
+
   /**
    * Get category item by category_id, if it is level 1, find all its children
    * @param id

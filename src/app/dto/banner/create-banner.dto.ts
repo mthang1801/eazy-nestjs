@@ -11,7 +11,7 @@ export class CreateBannerDto {
   status: string;
 
   @IsOptional()
-  type: string;
+  device_type: string;
 
   @IsOptional()
   target: string;

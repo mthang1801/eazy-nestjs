@@ -151,24 +151,16 @@ export class UserGroupsService {
   }
 
   async getList(user, params) {
-    let { page, limit, search, ...others } = params;
+    let { page, limit, search, status } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterConditions = {};
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.userGroupRepo.tableProps.includes(key)) {
-          filterConditions[`${Table.USER_GROUPS}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.userGroupDescriptionRepo.tableProps.includes(key)) {
-          filterConditions[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] =
-            Like(val);
-        }
-      }
+    if (status) {
+      filterConditions['status'] = status;
     }
+
     let count = await this.userGroupRepo.find({
       select: [`COUNT(DISTINCT(${Table.USER_GROUPS}.usergroup_id)) as total`],
       join: {

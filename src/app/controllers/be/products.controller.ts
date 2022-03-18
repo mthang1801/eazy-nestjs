@@ -18,6 +18,7 @@ import { Response } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { DeleteProductImageDto } from '../../dto/product/delete-productImage.dto';
+import { UpdateProductDto } from '../../dto/product/update-product.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -48,12 +49,6 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('find-approximate-name')
-  async findApproximateName(@Res() res: Response): Promise<IResponse> {
-    await this.service.findApproximateName();
-    return this.responseSuccess(res, null, 'OK');
-  }
-
   @Get('/parents')
   async getParentsList(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getParentsList();
@@ -81,8 +76,7 @@ export class ProductsController extends BaseController {
   @Put(':sku')
   async update(
     @Param('sku') sku: string,
-    @Body() data,
-
+    @Body() data: UpdateProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.update(sku, data);

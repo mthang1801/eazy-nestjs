@@ -12,6 +12,9 @@ export class UpdateProductFeatureDto {
   @IsOptional()
   purpose: string;
 
+  @IsOptional()
+  is_singly_choosen: string;
+
   @IsOptional({ message: 'Tên thuộc tính là bắt buộc.' })
   description: string;
 

@@ -4,6 +4,7 @@ export class ProductFeatureEntity {
   feature_id: number = 0;
   feature_code: string = '';
   company_id: number = 0;
+  is_singly_choosen: string = 'N';
   purpose: string = '';
   feature_style: string = '';
   filter_style: string = '';

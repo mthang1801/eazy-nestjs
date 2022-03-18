@@ -354,13 +354,34 @@ export class CategoryService {
         join: categoryJoiner,
         where: [
           { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
-          { [`${Table.CATEGORIES}.slug`]: Like(search) },
+          {
+            [`${Table.CATEGORIES}.slug`]: Like(
+              convertToSlug(removeVietnameseTones(search)),
+            ),
+          },
         ],
+        skip,
+        limit,
+      });
+      const totalCategories = await this.categoryRepository.find({
+        select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
+        join: categoryJoiner,
+        where: [
+          { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
+          {
+            [`${Table.CATEGORIES}.slug`]: Like(
+              convertToSlug(removeVietnameseTones(search)),
+            ),
+          },
+        ],
+        skip,
+        limit,
       });
 
       for (let category of categories) {
         const categoriesList = await this.getCategoriesChildrenRecursive(
           category,
+          Infinity,
           true,
         );
 
@@ -379,7 +400,14 @@ export class CategoryService {
         category['totalProducts'] = count;
         category = categoriesList['currentCategory'];
       }
-      return categories;
+      return {
+        paging: {
+          currentPage: page,
+          pageSize: limit,
+          total: totalCategories[0].total,
+        },
+        categories,
+      };
     }
 
     let categoriesListRoot = await this.categoryRepository.find({
@@ -397,9 +425,23 @@ export class CategoryService {
       limit,
     });
 
+    let totalCategory = await this.categoryRepository.find({
+      select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.CATEGORY_DESCRIPTIONS]: {
+            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+            rootJoin: `${Table.CATEGORIES}.category_id`,
+          },
+        },
+      },
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
+    });
+
     for (let categoryRoot of categoriesListRoot) {
       const categoriesList = await this.getCategoriesChildrenRecursive(
         categoryRoot,
+        Infinity,
         true,
       );
       let count = 0;
@@ -416,7 +458,33 @@ export class CategoryService {
       categoryRoot = categoriesList['currentCategory'];
     }
 
-    return categoriesListRoot;
+    return {
+      categories: categoriesListRoot,
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: totalCategory.length
+          ? totalCategory[0].total
+          : categoriesListRoot.length,
+      },
+    };
+  }
+
+  async getAll(level = Infinity) {
+    const categories = await this.categoryRepository.find({
+      select: '*',
+      join: categoryJoiner,
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
+    });
+    for (let category of categories) {
+      const categoriesList = await this.getCategoriesChildrenRecursive(
+        category,
+        level,
+      );
+      category = categoriesList;
+    }
+
+    return categories;
   }
 
   async get(id: number) {
@@ -439,11 +507,13 @@ export class CategoryService {
 
   async getCategoriesChildrenRecursive(
     currentCategory,
+    maxLevel = Infinity,
     getCategoryListId = false,
     categoriesIdList = [],
   ) {
     const categoriesChildrenList = await this.categoryRepository.find({
       select: '*',
+      join: categoryJoiner,
       where: { parent_id: currentCategory.category_id },
     });
 
@@ -455,12 +525,15 @@ export class CategoryService {
       ];
     }
 
-    if (categoriesChildrenList.length) {
+    if (categoriesChildrenList.length && currentCategory.level < maxLevel) {
       currentCategory['children'] = categoriesChildrenList;
       for (let categoryChildItem of currentCategory['children']) {
-        await this.getCategoriesChildrenRecursive(categoryChildItem);
+        await this.getCategoriesChildrenRecursive(categoryChildItem, maxLevel);
       }
     }
+
+    console.log(currentCategory.level, maxLevel);
+
     return getCategoryListId
       ? { currentCategory, categoriesIdList }
       : currentCategory;

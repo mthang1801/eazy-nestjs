@@ -2,6 +2,7 @@ import { customer_type } from 'src/database/constant/customer';
 import { Table } from 'src/database/enums';
 import { UserTypeEnum } from 'src/database/enums/tableFieldEnum/user.enum';
 import { Equal, Like, Not } from 'src/database/find-options/operators';
+import { convertToSlug, removeVietnameseTones } from './helper';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
@@ -87,11 +88,35 @@ export const userGroupSearchByNameCode = (
       ...filterCondition,
       [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search),
     },
-    { ...filterCondition, [`${Table.USER_GROUPS}.code`]: Like(search) },
   ];
 };
 
 export const productsListsSearchFilter = (
+  search = '',
+  filterConditions = {},
+  categoriesList = [],
+) => {
+  let arraySearch = categoriesList.length
+    ? categoriesList.map((categoryId) => ({
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+      }))
+    : [];
+
+  if (search) {
+    arraySearch = [
+      ...arraySearch,
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+      { [`${Table.PRODUCTS}.barcode`]: Like(search) },
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.slug`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const productsListCategorySearchFilter = (
+  categoriesList,
   search = '',
   filterConditions = {},
 ) => {
@@ -101,7 +126,38 @@ export const productsListsSearchFilter = (
       { [`${Table.PRODUCTS}.product_code`]: Like(search) },
       { [`${Table.PRODUCTS}.barcode`]: Like(search) },
       { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      {
+        [`${Table.PRODUCTS}.slug`]: Like(
+          convertToSlug(removeVietnameseTones(search)),
+        ),
+      },
     ];
+  }
+  let searchList = [];
+  for (let categoryId of categoriesList) {
+    if (arraySearch.length) {
+      let categoryWithSearch = [];
+      for (let searchItem of arraySearch) {
+        categoryWithSearch = [
+          ...categoryWithSearch,
+          {
+            ...searchItem,
+            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+          },
+        ];
+      }
+
+      searchList = [...searchList, ...categoryWithSearch];
+    } else {
+      searchList = [
+        ...searchList,
+        { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId },
+      ];
+    }
+  }
+
+  if (searchList.length) {
+    arraySearch = searchList;
   }
 
   return searchFilterTemplate(filterConditions, arraySearch);
