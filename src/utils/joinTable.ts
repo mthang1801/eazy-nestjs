@@ -317,3 +317,12 @@ export const cartJoiner = {
     },
   },
 };
+
+export const categoryJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CATEGORY_DESCRIPTIONS]: {
+      fieldJoin: 'category_id',
+      rootJoin: 'category_id',
+    },
+  },
+};

@@ -26,6 +26,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
 import { data as categoryData } from '../../database/constant/category';
+import { categoryJoiner } from 'src/utils/joinTable';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -330,11 +331,11 @@ export class CategoryService {
     return result;
   }
 
-  async getList(params): Promise<ICategoryResult[]> {
+  async getList(params) {
     // ignore page and limit
     let { page, limit, search, ...others } = params;
     page = +page || 1;
-    limit = +limit || 100;
+    limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
@@ -347,7 +348,41 @@ export class CategoryService {
       }
     }
 
-    const categoriesListLevel0 = await this.categoryRepository.find({
+    if (search) {
+      const categories = await this.categoryRepository.find({
+        select: '*',
+        join: categoryJoiner,
+        where: [
+          { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
+          { [`${Table.CATEGORIES}.slug`]: Like(search) },
+        ],
+      });
+
+      for (let category of categories) {
+        const categoriesList = await this.getCategoriesChildrenRecursive(
+          category,
+          true,
+        );
+
+        let count = 0;
+
+        if (categoriesList?.categoriesIdList?.length) {
+          for (let categoryId of categoriesList.categoriesIdList) {
+            const numberOfProductsByCategoryId =
+              await this.productCategoryRepository.count({
+                where: { category_id: categoryId },
+              });
+            count += numberOfProductsByCategoryId;
+          }
+        }
+
+        category['totalProducts'] = count;
+        category = categoriesList['currentCategory'];
+      }
+      return categories;
+    }
+
+    let categoriesListRoot = await this.categoryRepository.find({
       select: [`*, ${Table.CATEGORIES}.*`],
       join: {
         [JoinTable.leftJoin]: {
@@ -362,47 +397,26 @@ export class CategoryService {
       limit,
     });
 
-    for (let categoryLevel0Item of categoriesListLevel0) {
-      let categoriesListLevel1 = await this.categoryRepository.find({
-        select: [`*, ${Table.CATEGORIES}.*`],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.CATEGORY_DESCRIPTIONS]: {
-              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-              rootJoin: `${Table.CATEGORIES}.category_id`,
-            },
-          },
-        },
-        where: {
-          [`${Table.CATEGORIES}.level`]: 1,
-          parent_id: categoryLevel0Item.category_id,
-        },
-      });
-      if (categoriesListLevel1.length) {
-        for (let categoryLevel1Item of categoriesListLevel1) {
-          let categoriesListLevel2 = await this.categoryRepository.find({
-            select: [`*, ${Table.CATEGORIES}.*`],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.CATEGORY_DESCRIPTIONS]: {
-                  fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                  rootJoin: `${Table.CATEGORIES}.category_id`,
-                },
-              },
-            },
-            where: {
-              [`${Table.CATEGORIES}.level`]: 2,
-              parent_id: categoryLevel1Item.category_id,
-            },
-          });
-          categoryLevel1Item.children = categoriesListLevel2;
+    for (let categoryRoot of categoriesListRoot) {
+      const categoriesList = await this.getCategoriesChildrenRecursive(
+        categoryRoot,
+        true,
+      );
+      let count = 0;
+      if (categoriesList?.categoriesIdList?.length) {
+        for (let categoryId of categoriesList.categoriesIdList) {
+          const numberOfProductsByCategoryId =
+            await this.productCategoryRepository.count({
+              where: { category_id: categoryId },
+            });
+          count += numberOfProductsByCategoryId;
         }
       }
-
-      categoryLevel0Item.children = categoriesListLevel1;
+      categoryRoot['totalProducts'] = count;
+      categoryRoot = categoriesList['currentCategory'];
     }
 
-    return categoriesListLevel0;
+    return categoriesListRoot;
   }
 
   async get(id: number) {
@@ -423,11 +437,23 @@ export class CategoryService {
     return categories;
   }
 
-  async getCategoriesChildrenRecursive(currentCategory) {
+  async getCategoriesChildrenRecursive(
+    currentCategory,
+    getCategoryListId = false,
+    categoriesIdList = [],
+  ) {
     const categoriesChildrenList = await this.categoryRepository.find({
       select: '*',
       where: { parent_id: currentCategory.category_id },
     });
+
+    if (getCategoryListId) {
+      categoriesIdList = [
+        currentCategory.category_id,
+        ...categoriesIdList,
+        ...categoriesChildrenList.map(({ category_id }) => category_id),
+      ];
+    }
 
     if (categoriesChildrenList.length) {
       currentCategory['children'] = categoriesChildrenList;
@@ -435,7 +461,9 @@ export class CategoryService {
         await this.getCategoriesChildrenRecursive(categoryChildItem);
       }
     }
-    return currentCategory;
+    return getCategoryListId
+      ? { currentCategory, categoriesIdList }
+      : currentCategory;
   }
 
   async delete(id: number): Promise<boolean> {
