@@ -9,6 +9,7 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
+import { CreateProductAppcoreDto } from 'src/app/dto/product/create-product.appcore.dto';
 import { CreateProductStoreDto } from 'src/app/dto/product/create-productStore.dto';
 
 import { IResponse } from 'src/app/interfaces/response.interface';

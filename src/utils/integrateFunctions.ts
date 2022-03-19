@@ -186,19 +186,39 @@ export const itgCustomerToAppcore = (data) => {
   return cData;
 };
 
-export const itgProductsFromAppcore = () => {
-  const dataMapping = new Map([
-    ['id', 'product_id'],
-    ['categoryId', 'category_id'],
-    ['parentId', 'parent_product_id'],
-    ['barCode', 'barcode'],
-    ['code', 'product_code'],
-    ['name', 'product'],
-    ['price', 'price'],
-    ['wholesalePrice', 'whole_price'],
-    ['images', 'images'],
-    ['status', 'status'],
-    ['width', 'width'],
-    ['height', 'height'],
+export const itgConvertProductsFromAppcore = (data) => {
+  const mappingData = new Map([
+    ['product_id', 'product_appcore_id'],
+    ['parent_product_id', 'parent_product_appcore_id'],
+    ['category_id', 'category_id'],
   ]);
+  let convertedData = { ...data };
+  for (let [fromData, toData] of mappingData) {
+    if (fromData === 'category_id') {
+      convertedData[toData] = !convertedData[fromData]
+        ? 0
+        : convertedData[fromData];
+      continue;
+    }
+    convertedData[toData] = convertedData[fromData];
+    delete convertedData[fromData];
+  }
+
+  const mappingComboData = new Map([
+    ['product_id', 'product_appcore_id'],
+    ['product_combo_id', 'parent_product_appcore_id'],
+    ['id', 'other_appcore_id'],
+    ['quantity', 'amount'],
+  ]);
+
+  if (convertedData['combo_items'] && convertedData['combo_items'].length) {
+    for (let convertedDataItem of convertedData['combo_items']) {
+      for (let [fromData, toData] of mappingComboData) {
+        convertedDataItem[toData] = convertedDataItem[fromData];
+        delete convertedDataItem[fromData];
+      }
+    }
+  }
+
+  return convertedData;
 };
