@@ -28,8 +28,16 @@ import {
 import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
-import { OrderStatusEnum, StatusType } from '../../database/enums/status.enum';
-import { orderJoiner, statusJoiner } from '../../utils/joinTable';
+import {
+  OrderStatusEnum,
+  StatusType,
+  CommonStatus,
+} from '../../database/enums/status.enum';
+import {
+  orderJoiner,
+  productJoiner,
+  statusJoiner,
+} from '../../utils/joinTable';
 import { itgOrderFromAppcore } from 'src/utils/integrateFunctions';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
@@ -52,8 +60,16 @@ import { CreateOrderAppcoreDto } from '../dto/orders/create-order.appcore.dto';
 import { UpdateOrderAppcoreDto } from '../dto/orders/update-order.appcore.dto';
 import {
   GET_ORDERS_FROM_APPCORE_API,
+  GET_ORDER_BY_ID_FROM_APPCORE_API,
   PUSH_ORDER_TO_APPCORE_API,
-} from 'src/database/constant/api';
+} from 'src/database/constant/api.appcore';
+import { saltHashPassword } from 'src/utils/cipherHelper';
+import { defaultPassword } from '../../database/constant/defaultPassword';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserDataEntity } from '../entities/userData.entity';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { CustomerService } from './customer.service';
 
 @Injectable()
 export class OrdersService {
@@ -61,7 +77,9 @@ export class OrdersService {
     private orderRepo: OrdersRepository<OrderEntity>,
     private orderDetailRepo: OrderDetailsRepository<OrderDetailsEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
-    private userProfileRepository: UserProfileRepository<UserProfileEntity>,
+    private userProfileRepo: UserProfileRepository<UserProfileEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
+    private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userRepo: UserRepository<UserEntity>,
     private statusRepo: StatusRepository<StatusEntity>,
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
@@ -70,17 +88,20 @@ export class OrdersService {
     private cityRepo: CityRepository<CityEntity>,
     private districtRepo: DistrictRepository<DistrictEntity>,
     private wardRepo: WardRepository<WardEntity>,
+    private customerService: CustomerService,
   ) {}
 
   async create(data: CreateOrderDto) {
-    // const user = await this.userRepo.findOne({ user_id: data.user_id });
-    // if (!user) {
-    //   throw new HttpException('Không tìm thấy khách hàng trong hệ thống', 404);
-    // }
-
-    // user_id has been deprecated, using user_appcore_id instead
-    data['user_appcore_id'] = data['user_appcore_id'];
-    data['user_id'] = data['user_appcore_id'];
+    let user: any = await this.userRepo.findById(data.user_id);
+    console.log(96, user);
+    if (!user) {
+      user = await this.userRepo.findOne({ phone: data.b_phone });
+      // Nếu không có thông tin user thì sẽ tạo mới
+      if (!user) {
+        user = await this.createCustomer(data);
+        console.log(102, user);
+      }
+    }
 
     const orderData = {
       ...new OrderEntity(),
@@ -88,9 +109,31 @@ export class OrdersService {
       is_sync: 0,
     };
 
+    if (!user['user_appcore_id']) {
+      throw new HttpException('User_appcore_id không được nhận diện.', 400);
+    }
+    orderData['user_appcore_id'] = user['user_appcore_id'];
+    orderData['user_id'] = user['user_id'];
+
     orderData['total'] = 0;
     for (let orderItem of data.order_items) {
-      orderData['total'] += orderItem.price * orderItem.amount;
+      const productInfo = await this.productRepo.findOne({
+        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        join: { [JoinTable.leftJoin]: productJoiner },
+        where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
+      });
+
+      if (!productInfo) {
+        throw new HttpException(
+          `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+          404,
+        );
+      }
+
+      orderData['total'] +=
+        ((productInfo['price'] * (100 - productInfo['percentage_discount'])) /
+          100) *
+        orderItem.amount;
     }
 
     let result = await this.orderRepo.create(orderData);
@@ -100,7 +143,7 @@ export class OrdersService {
         ...this.orderDetailRepo.setData({
           ...result,
           ...orderItem,
-          status: 'A',
+          status: CommonStatus.Active,
         }),
       };
 
@@ -112,7 +155,7 @@ export class OrdersService {
     }
 
     //============ Push data to Appcore ==================
-    const config: any = {
+    const configPushOrderToAppcore: any = {
       method: 'POST',
       url: PUSH_ORDER_TO_APPCORE_API,
       headers: {
@@ -121,21 +164,58 @@ export class OrdersService {
       data: convertDataToIntegrate(result),
     };
 
+    const configGetOrderFromAppcore = (orderId): any => ({
+      method: 'GET',
+      url: GET_ORDER_BY_ID_FROM_APPCORE_API(orderId),
+    });
+
     try {
-      const response = await axios(config);
-      let message = 'Đã đẩy đơn hàng đến appcore thất bại';
-      if (response?.data?.data) {
-        const order_code = response.data.data;
-        let updateOriginOrderId = await this.orderRepo.update(
+      const response = await axios(configPushOrderToAppcore);
+      const orderAppcoreId = response.data.data;
+
+      const getOrderDetailsResponse = await axios(
+        configGetOrderFromAppcore(orderAppcoreId),
+      );
+
+      const orderInfoDetails = getOrderDetailsResponse.data.data.filter(
+        ({ id }) => id === orderAppcoreId,
+      )[0];
+
+      if (orderInfoDetails) {
+        const order_code = orderAppcoreId;
+        const orderCodeItems = result['order_items'].map((orderItem) => {
+          const orderAppcoreItem = orderInfoDetails['orderItems'].find(
+            ({ productId }) => productId == orderItem.product_id,
+          );
+          if (orderAppcoreItem) {
+            return {
+              order_item_id: orderItem.item_id,
+              order_item_appcore_id: orderAppcoreItem.id,
+            };
+          }
+          return {
+            order_item_id: orderItem.item_id,
+            order_item_appcore_id: null,
+          };
+        });
+
+        // update order code
+        await this.orderRepo.update(
           { order_id: result.order_id },
-          { order_code, is_sync: 1 },
+          { order_code },
         );
 
-        result = { ...result, ...updateOriginOrderId };
-
-        message = 'Đẩy đơn hàng đến appcore thành công';
+        if (orderCodeItems?.length) {
+          for (let { order_item_id, order_item_appcore_id } of orderCodeItems) {
+            await this.orderDetailRepo.update(
+              {
+                item_id: order_item_id,
+              },
+              { order_item_appcore_id },
+            );
+          }
+        }
       }
-      return { result, message };
     } catch (error) {
       console.log(error);
       throw new HttpException(
@@ -145,6 +225,56 @@ export class OrdersService {
         400,
       );
     }
+  }
+
+  async createCustomer(data: CreateOrderDto) {
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
+    const userData = {
+      ...new UserEntity(),
+      birthday: null,
+      firstname: data.b_firstname,
+      lastname: data.b_lastname,
+      phone: data.b_phone,
+      password: passwordHash,
+      salt,
+    };
+
+    let result = await this.userRepo.create(userData);
+
+    const userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(data),
+      user_id: result.user_id,
+    };
+    userProfileData['b_firstname'] = userProfileData['s_firstname'];
+    userProfileData['b_lastname'] = userProfileData['b_lastname'];
+    userProfileData['b_city'] = userProfileData['s_city'];
+    userProfileData['b_district'] = userProfileData['s_district'];
+    userProfileData['b_ward'] = userProfileData['s_ward'];
+
+    const newUserProfile = await this.userProfileRepo.create(userProfileData);
+
+    result = { ...result, ...newUserProfile };
+
+    const newUserDataData = {
+      ...new UserDataEntity(),
+      user_id: result.user_id,
+    };
+
+    const newUserData = await this.userDataRepo.create(newUserDataData);
+
+    const newUserLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      user_id: result.user_id,
+    };
+
+    const newUserLoyalty = await this.userLoyaltyRepo.create(
+      newUserLoyaltyData,
+    );
+
+    await this.customerService.createCustomerToAppcore(result);
+
+    return this.userRepo.findOne({ user_id: result.user_id });
   }
 
   async update(order_id: number, data) {
@@ -281,6 +411,13 @@ export class OrdersService {
       );
     }
 
+    const orderData = {
+      ...new OrderEntity(),
+      ...this.orderRepo.setData(data),
+    };
+
+    orderData['total'] = 0;
+
     if (data?.order_items?.length) {
       for (let orderItem of data.order_items) {
         const orderDetail = await this.orderDetailRepo.findOne({
@@ -289,13 +426,9 @@ export class OrdersService {
         if (orderDetail) {
           throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
         }
+        orderData['total'] += orderItem['price'] * orderItem['amount'];
       }
     }
-
-    const orderData = {
-      ...new OrderEntity(),
-      ...this.orderRepo.setData(data),
-    };
 
     const user = await this.userRepo.findOne({
       user_appcore_id: data.user_appcore_id,

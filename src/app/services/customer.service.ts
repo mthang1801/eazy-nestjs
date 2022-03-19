@@ -49,7 +49,7 @@ import { defaultPassword } from '../../database/constant/defaultPassword';
 import {
   CREATE_CUSTOMER_API,
   GET_CUSTOMERS_API,
-} from 'src/database/constant/api';
+} from 'src/database/constant/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
 
 @Injectable()

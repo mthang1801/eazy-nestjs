@@ -55,9 +55,9 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':sku')
+  @Get(':identifier')
   async get(
-    @Param('sku') identifier: number | string,
+    @Param('identifier') identifier: number | string,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.get(identifier);

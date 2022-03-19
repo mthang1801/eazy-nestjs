@@ -103,7 +103,7 @@ import { CreateProductStoreDto } from '../dto/product/create-productStore.dto';
 import {
   GET_PRODUCTS_STORES_API,
   UPLOAD_IMAGE_API,
-} from 'src/database/constant/api';
+} from 'src/database/constant/api.appcore';
 // import { productsData } from 'src/database/constant/product';
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
 
@@ -447,47 +447,6 @@ export class ProductService {
           )
         : productsListsSearchFilter(search, filterCondition),
     });
-
-    // let listCategories = [];
-    // if (category_id) {
-    //   listCategories = await this.childrenCategories(category_id);
-
-    //   if (listCategories.length) {
-    //     listCategories = listCategories.map(({ category_id }) => category_id);
-    //   }
-
-    //   listCategories = [category_id, ...listCategories];
-    // }
-
-    // let count = await this.productRepo.find({
-    //   select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
-    //   join: {
-    //     [JoinTable.leftJoin]: productJoiner,
-    //   },
-    //   where: {
-    //     [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-    //       (categoryId) => categoryId,
-    //     ),
-    //     ...productsListsSearchFilter(search, filterCondition),
-    //   },
-    // });
-
-    // let productLists = await this.productRepo.find({
-    //   select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
-    //   join: {
-    //     [JoinTable.leftJoin]: productJoiner,
-    //   },
-    //   orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
-    //   where: {
-    //     [`${Table.PRODUCTS_CATEGORIES}.category_id`]: listCategories.map(
-    //       (categoryId) => categoryId,
-    //     ),
-
-    //     ...productsListsSearchFilter(search, filterCondition),
-    //   },
-    //   skip,
-    //   limit,
-    // });
 
     // determine product type and  get Image
     for (let productItem of productLists) {

@@ -9,28 +9,28 @@ import {
 import { OrderStatusEnum } from '../../../database/enums/status.enum';
 import { generateRandomString } from 'src/utils/helper';
 export class CreateOrderDto {
-  @IsNotEmpty()
+  @IsOptional()
   user_id: number;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_firstname: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_lastname: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_city: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_district: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_ward: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_address: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   b_phone: string;
 
   @IsOptional()
