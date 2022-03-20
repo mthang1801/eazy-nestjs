@@ -268,6 +268,10 @@ export const bannerJoiner = {
       fieldJoin: `${Table.BANNER_TARGET_DESCRIPTION}.target_id`,
       rootJoin: `${Table.BANNER}.target_id`,
     },
+    [Table.BANNER_PAGE_DESCRIPTION]: {
+      fieldJoin: `${Table.BANNER_PAGE_DESCRIPTION}.page_id`,
+      rootJoin: `${Table.BANNER}.page_id`,
+    },
   },
 };
 

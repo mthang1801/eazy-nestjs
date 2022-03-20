@@ -8,38 +8,48 @@ import { Type } from 'class-transformer';
 
 export class UpdateBannerDTO {
   @IsOptional()
+  banner: string;
+
+  @IsOptional()
+  banner_title: string;
+
+  @IsOptional()
   status: string;
 
   @IsOptional()
-  type: string;
+  device_type: string;
 
   @IsOptional()
-  target: string;
-
-  @IsOptional()
-  position: number;
-
-  @IsOptional()
-  location_id: number;
-
-  @IsOptional()
-  target_id: number;
-
-  @IsNotEmpty()
   image_path: string;
 
-  @IsNotEmpty()
-  banner: string;
-
-  @IsNotEmpty()
-  banner_title: string;
-
-  @IsNotEmpty()
+  @IsOptional()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   url: string;
 
   @IsOptional()
   url_media: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Display)
+  displays: Display[];
+}
+
+class Display {
+  @IsOptional()
+  page_id: number;
+
+  @IsNotEmpty()
+  target_id: number;
+
+  @IsNotEmpty()
+  location_id: number;
+
+  @IsNotEmpty()
+  page_type: number;
+
+  @IsNotEmpty()
+  page_url: string;
 }

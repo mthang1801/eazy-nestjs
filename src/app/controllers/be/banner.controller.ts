@@ -81,8 +81,8 @@ export class bannerController extends BaseController {
     @Body() data: UpdateBannerDTO,
     @Param('id') id: number,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, data);
-    return this.responseSuccess(res, result);
+    await this.service.update(id, data);
+    return this.responseSuccess(res, null, 'Cập nhật thành công');
   }
 
   @Delete('/:banner_id')

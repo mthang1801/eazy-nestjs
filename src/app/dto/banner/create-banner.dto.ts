@@ -7,28 +7,22 @@ import {
 import { Type } from 'class-transformer';
 
 export class CreateBannerDto {
-  @IsOptional()
-  status: string;
-
-  @IsOptional()
-  device_type: string;
-
-  @IsOptional()
-  target: string;
-
-  @IsOptional()
-  position: number;
-
-  @IsNotEmpty()
-  image_path: string;
-
   @IsNotEmpty()
   banner: string;
 
   @IsNotEmpty()
   banner_title: string;
 
+  @IsOptional()
+  status: string = 'A';
+
+  @IsOptional()
+  device_type: string = 'D';
+
   @IsNotEmpty()
+  image_path: string;
+
+  @IsOptional()
   description: string;
 
   @IsNotEmpty()
@@ -49,4 +43,10 @@ class Display {
 
   @IsNotEmpty()
   location_id: number;
+
+  @IsNotEmpty()
+  page_type: number;
+
+  @IsNotEmpty()
+  page_url: string;
 }

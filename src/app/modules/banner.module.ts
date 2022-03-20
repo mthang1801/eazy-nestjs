@@ -7,6 +7,7 @@ import { BannerDescriptionsRepository } from '../repositories/bannerDescription.
 import { ImageModule } from './image.module';
 import { BannerLocationDescriptionRepository } from '../repositories/bannerLocationDescription.repository';
 import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository copy';
+import { BannerPageDescriptionRepository } from '../repositories/bannerPageDescription.repository';
 @Module({
   controllers: [bannerControllerBE, bannerControllerFE],
   providers: [
@@ -15,8 +16,16 @@ import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetD
     BannerDescriptionsRepository,
     BannerLocationDescriptionRepository,
     BannerTargetDescriptionRepository,
+    BannerPageDescriptionRepository,
   ],
-  exports: [bannerService],
+  exports: [
+    bannerService,
+    BannerRepository,
+    BannerDescriptionsRepository,
+    BannerLocationDescriptionRepository,
+    BannerTargetDescriptionRepository,
+    BannerPageDescriptionRepository,
+  ],
   imports: [ImageModule],
 })
 export class BannerModule {}

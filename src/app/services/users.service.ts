@@ -16,7 +16,7 @@ import {
 } from '../../utils/helper';
 import { ObjectLiteral } from '../../common/ObjectLiteral';
 
-import { PrimaryKeys } from '../../database/enums/primaryKeys.enum';
+import { PrimaryKeys } from '../../database/enums/autoIncrementKeys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
