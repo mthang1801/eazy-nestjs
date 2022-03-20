@@ -1,5 +1,5 @@
 import { convertToMySQLDateTime } from './helper';
-import { OrderStatusEnum } from '../database/enums/status.enum';
+
 import * as moment from 'moment';
 
 export const itgOrderFromAppcore = (cData) => {
@@ -56,7 +56,7 @@ export const itgOrderFromAppcore = (cData) => {
   for (let [core, app] of dataMapping) {
     if (core === 'deleted') {
       if (cData[core]) {
-        data[app] = OrderStatusEnum.Failed;
+        data[app] = 11;
         continue;
       }
     }
@@ -221,4 +221,44 @@ export const itgConvertProductsFromAppcore = (data) => {
   }
 
   return convertedData;
+};
+
+export const convertGetProductsFromAppcore = (appCoreData) => {
+  const mappingData = new Map([
+    ['id', 'product_appcore_id'],
+    ['categoryId', 'category_id'],
+    ['parentId', 'parent_product_appcore_id'],
+    ['barCode', 'barcode'],
+    ['code', 'product_code'],
+    ['name', 'product'],
+    ['otherName', 'shortname'],
+    ['importPrice', 'buy_price'],
+    ['oldPrice', 'list_price'],
+    ['price', 'price'],
+    ['wholesalePrice', 'whole_price'],
+    ['images', 'images'],
+    ['status', 'status'],
+    ['description', 'full_description'],
+    ['content', 'promo_text'],
+    ['width', 'width'],
+    ['height', 'height'],
+    ['length', 'length'],
+    ['createdDateTime', 'created_at'],
+    ['typeId', 'product_type'],
+  ]);
+
+  let cmsData = {};
+  for (let [appcore, cms] of mappingData) {
+    if (appcore === 'status') {
+      cmsData[cms] = appCoreData[appcore] === 1 ? 'A' : 'D';
+      continue;
+    }
+    if (appCoreData[appcore] === null) {
+      cmsData['cms'] = '';
+      continue;
+    }
+    cmsData[cms] = appCoreData[appcore];
+  }
+
+  return cmsData;
 };

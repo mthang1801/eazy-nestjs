@@ -70,7 +70,7 @@ export enum PrimaryKeys {
 
   //============== Order status ==============
   ddv_statuses = 'status_id',
-  ddv_status_descriptions = 'status_id',
+  ddv_status_descriptions = 'auto_increment_id',
   ddv_status_data = 'status_id',
 
   //============== Order ==============

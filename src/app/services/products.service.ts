@@ -101,13 +101,18 @@ import { ProductStoreHistoryRepository } from '../repositories/productStoreHisto
 import { ProductStoreHistoryEntity } from '../entities/productStoreHistory.entity';
 import { CreateProductStoreDto } from '../dto/product/create-productStore.dto';
 import {
+  GET_PRODUCTS_COMBO_STORES_API,
+  GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API,
   GET_PRODUCTS_STORES_API,
   UPLOAD_IMAGE_API,
 } from 'src/database/constant/api.appcore';
 import { CreateProductAppcoreDto } from '../dto/product/create-product.appcore.dto';
-import { itgConvertProductsFromAppcore } from '../../utils/integrateFunctions';
+import {
+  convertGetProductsFromAppcore,
+  itgConvertProductsFromAppcore,
+} from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
-// import * as mockProductsData from 'src/database/constant/_productsData.json';
+import * as mockProductsData from 'src/database/constant/_productsData.json';
 
 @Injectable()
 export class ProductService {
@@ -1053,7 +1058,6 @@ export class ProductService {
           const productComboItemData = {
             ...new ProductsEntity(),
             ...this.productRepo.setData(productItem),
-            parent_product_id: result.product_id,
           };
 
           productComboItem = await this.productRepo.create(
@@ -1071,7 +1075,7 @@ export class ProductService {
         const newGroupProductItem =
           await this.productVariationGroupProductsRepo.create({
             product_id: productComboItem.product_id,
-            parent_product_id: productComboItem.parent_product_id,
+            parent_product_id: result.product_id,
             group_id: productGroup.group_id,
             quantity: productComboItem.quantity || 1,
           });
@@ -1083,12 +1087,12 @@ export class ProductService {
 
   async callSync(): Promise<void> {
     //========== create =============
-    // await this.clearAll();
-    // for (let productItem of mockProductsData) {
-    //   await this.itgCreate(productItem);
-    // }
-    // await this.syncProductsIntoGroup();
-    // await this.itgGenerateSlug();
+    await this.clearAll();
+    for (let productItem of mockProductsData) {
+      await this.itgCreate(productItem);
+    }
+    await this.syncProductsIntoGroup();
+    await this.itgGenerateSlug();
     //=========== update ===========
     // for (let productItem of mockProductsData) {
     //   let productItemInfo = await this.productRepo.findOne({
@@ -1098,6 +1102,33 @@ export class ProductService {
     //     await this.itgUpdate(productItemInfo.product_id, productItem);
     //   }
     // }
+  }
+
+  async getFromAppcore() {
+    const totalPage = 500;
+    await this.clearAll();
+    for (let currentPage = 1; currentPage <= totalPage; currentPage++) {
+      try {
+        const response = await axios.get(
+          GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API(currentPage),
+        );
+        const productsAppcoreList = response.data.data.products;
+
+        for (let productAppcoreItem of productsAppcoreList) {
+          await this.itgCreate(
+            convertGetProductsFromAppcore(productAppcoreItem),
+          );
+        }
+      } catch (error) {
+        console.log(error);
+        throw new HttpException(
+          error.response.data.message,
+          error.response.status,
+        );
+      }
+    }
+    await this.syncProductsIntoGroup();
+    await this.itgGenerateSlug();
   }
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
@@ -1361,7 +1392,6 @@ export class ProductService {
           const productComboItemData = {
             ...new ProductsEntity(),
             ...productItem,
-            parent_product_id: result.product_id,
           };
 
           productComboItem = await this.productRepo.create(
@@ -1379,7 +1409,7 @@ export class ProductService {
         const newGroupProductItem =
           await this.productVariationGroupProductsRepo.create({
             product_id: productComboItem.product_id,
-            parent_product_id: productComboItem.parent_product_id,
+            parent_product_id: result.product_id,
             group_id: productGroup.group_id,
             quantity: productComboItem.quantity || 1,
           });
@@ -1525,9 +1555,23 @@ export class ProductService {
   }
 
   async getProductsStores(id: string) {
-    let response = await axios({
-      url: GET_PRODUCTS_STORES_API(id),
-    });
+    const product = await this.productRepo.findOne({ product_id: id });
+    if (!product) {
+      throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
+    }
+
+    let response;
+
+    if (product.product_type === 3) {
+      response = await axios({
+        url: GET_PRODUCTS_COMBO_STORES_API(id),
+      });
+    } else {
+      response = await axios({
+        url: GET_PRODUCTS_STORES_API(id),
+      });
+    }
+
     const productsStocks = response?.data?.data;
     let result = [];
 
@@ -1956,19 +2000,39 @@ export class ProductService {
   }
 
   async itgGetProductsStores() {
+    await this.clearStore();
     const productsList = await this.productRepo.find();
+
     if (productsList.length) {
       for (let product of productsList) {
-        const response = await axios({
-          url: GET_PRODUCTS_STORES_API(product.product_id),
-        });
+        if (!product.product_appcore_id) {
+          continue;
+        }
+        let response;
+        if (product.product_type == 3) {
+          response = await axios({
+            url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
+          });
+        } else {
+          response = await axios({
+            url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
+          });
+        }
+
         const { data } = response.data;
 
         if (data && Object.entries(data).length) {
           for (let dataItem of Object.values(data)) {
             await this.productStoreRepo.create({
               store_location_id: dataItem['storeId'],
-              product_id: dataItem['productId'],
+              product_id: product.product_id,
+              amount: dataItem['inStockQuantity'],
+              created_at: convertToMySQLDateTime(),
+              updated_at: convertToMySQLDateTime(),
+            });
+            await this.productStoreHistoryRepo.create({
+              store_location_id: dataItem['storeId'],
+              product_id: product.product_id,
               amount: dataItem['inStockQuantity'],
               created_at: convertToMySQLDateTime(),
               updated_at: convertToMySQLDateTime(),
@@ -2013,5 +2077,14 @@ export class ProductService {
       created_at: convertToMySQLDateTime(),
       updated_at: convertToMySQLDateTime(),
     });
+  }
+
+  async clearStore() {
+    await this.productStoreRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_STORES}`,
+    );
+    await this.productStoreHistoryRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_STORE_HISTORIES}`,
+    );
   }
 }

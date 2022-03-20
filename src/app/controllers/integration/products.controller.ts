@@ -34,6 +34,12 @@ export class ProductIntegrationController extends BaseController {
     return this.responseSuccess(res, null, 'Đồng bộ thành công');
   }
 
+  @Get('/appcore')
+  async getFromAppcore(@Res() res: Response): Promise<IResponse> {
+    await this.service.getFromAppcore();
+    return this.responseSuccess(res, null, 'Lấy từ appcore hoàn tất.');
+  }
+
   // Create or update products stores from appcore
   @Post('/products-stores')
   async createProductStores(

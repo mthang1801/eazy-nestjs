@@ -15,7 +15,6 @@ import { UserProfileEntity } from '../entities/userProfile.entity';
 import { userJoiner } from 'src/utils/joinTable';
 import { customersListSearchFilter } from 'src/utils/tableConditioner';
 import { Like } from 'src/database/find-options/operators';
-import { customer_type } from '../../database/constant/customer';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
@@ -602,5 +601,20 @@ export class CustomerService {
         updated_at: convertToMySQLDateTime(),
       },
     );
+  }
+
+  async clearAll() {
+    const customersList = await this.userRepo.find({
+      select: '*',
+      where: { user_type: 'C' },
+    });
+    if (customersList.length) {
+      for (let customer of customersList) {
+        await this.userRepo.delete({ user_id: customer.user_id });
+        await this.userProfileRepo.delete({ user_id: customer.user_id });
+        await this.userDataRepo.delete({ user_id: customer.user_id });
+        await this.userLoyalRepo.delete({ user_id: customer.user_id });
+      }
+    }
   }
 }

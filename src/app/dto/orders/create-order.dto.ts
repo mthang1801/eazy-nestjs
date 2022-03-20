@@ -6,7 +6,7 @@ import {
   IsIn,
   ArrayNotEmpty,
 } from 'class-validator';
-import { OrderStatusEnum } from '../../../database/enums/status.enum';
+
 import { generateRandomString } from 'src/utils/helper';
 export class CreateOrderDto {
   @IsOptional()
@@ -49,7 +49,7 @@ export class CreateOrderDto {
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
-  status: string = OrderStatusEnum.Failed; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
+  status: number = 1; //Trạng thái đơn hàng 0. Chưa hoạt động, 1. Mới
 
   @IsOptional()
   payment_status: number = 1;

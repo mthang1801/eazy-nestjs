@@ -15,3 +15,9 @@ export const GET_ORDER_BY_ID_FROM_APPCORE_API = (order_id) =>
 
 export const GET_PRODUCTS_STORES_API = (product_id) =>
   `${CORE_API}/product-stocks/product/${product_id}`;
+
+export const GET_PRODUCTS_COMBO_STORES_API = (product_id) =>
+  `${CORE_API}/product-stocks/product-combo/${product_id}`;
+
+export const GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API = (pageNumber) =>
+  `${CORE_API}/products?page=${pageNumber}`;

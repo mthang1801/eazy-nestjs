@@ -28,11 +28,7 @@ import {
 import { Like } from 'src/database/find-options/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
-import {
-  OrderStatusEnum,
-  StatusType,
-  CommonStatus,
-} from '../../database/enums/status.enum';
+import { StatusType, CommonStatus } from '../../database/enums/status.enum';
 import {
   orderJoiner,
   productJoiner,
@@ -93,13 +89,11 @@ export class OrdersService {
 
   async create(data: CreateOrderDto) {
     let user: any = await this.userRepo.findById(data.user_id);
-    console.log(96, user);
     if (!user) {
       user = await this.userRepo.findOne({ phone: data.b_phone });
       // Nếu không có thông tin user thì sẽ tạo mới
       if (!user) {
         user = await this.createCustomer(data);
-        console.log(102, user);
       }
     }
 

@@ -1,5 +1,5 @@
 import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
-import { OrderStatusEnum } from '../../database/enums/status.enum';
+
 export class OrderEntity {
   order_id: number = 0;
   order_code: null | number = 0;
@@ -19,7 +19,7 @@ export class OrderEntity {
   warranty_note: string = '';
   shipping_cost: number = 0;
   disposit_amount: number = 0;
-  status: string = OrderStatusEnum.Open;
+  status: number = 1;
   notes: string = '';
   gender: string = '0';
   details: string = '';
