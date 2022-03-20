@@ -73,13 +73,13 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(':sku')
+  @Put(':identifier')
   async update(
-    @Param('sku') sku: string,
+    @Param('identifier') identifier: string | number,
     @Body() data: UpdateProductDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(sku, data);
+    const result = await this.service.update(identifier, data);
     return this.responseSuccess(res, result);
   }
 

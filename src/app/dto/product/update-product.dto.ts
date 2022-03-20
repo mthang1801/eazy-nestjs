@@ -97,8 +97,8 @@ export class UpdateProductDto {
 
 class ProductFeatureDto {
   @IsNotEmpty()
-  feature_code: string;
+  feature_id: number;
 
   @IsNotEmpty()
-  variant_code: string;
+  variant_id: number;
 }
