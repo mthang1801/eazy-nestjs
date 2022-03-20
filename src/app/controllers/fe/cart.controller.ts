@@ -20,15 +20,23 @@ export class CartController extends BaseController {
     super();
   }
 
-  @Post()
+  @Post(':user_id')
   async create(
     @Res() res: Response,
     @Body() data: CreateCartDto,
+    @Param('user_id') user_id: number,
   ): Promise<IResponse> {
-    await this.service.create(data);
+    await this.service.create(user_id, data);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
+  /**
+   * Change user cart
+   * @param user_id
+   * @param res
+   * @param data
+   * @returns
+   */
   @Put(':user_id')
   async update(
     @Param('user_id') user_id: string,
@@ -48,12 +56,22 @@ export class CartController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Delete(':user_id')
+  @Delete(':user_id/:cart_item_id')
   async delete(
+    @Param('user_id') user_id: number,
+    @Param('cart_item_id') cart_item_id: number,
     @Res() res: Response,
-    @Param('user_id') user_id: string,
   ): Promise<IResponse> {
-    await this.service.delete(user_id);
+    await this.service.delete(user_id, cart_item_id);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Delete(':user_id')
+  async clearAll(
+    @Param('user_id') user_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.clearAll(user_id);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }
