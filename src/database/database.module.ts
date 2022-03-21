@@ -1,7 +1,10 @@
 import { Module, OnApplicationShutdown, Logger, Global } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { DatabaseService } from './database.service';
-import { DatabasePoolFactory } from './database.provider';
+import {
+  DatabaseMagentoPoolFactory,
+  DatabasePoolFactory,
+} from './database.provider';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Pool } from 'mysql2/promise';
 import { UserRepository } from '../app/repositories/user.repository';
@@ -24,9 +27,8 @@ import { DatabasePool } from './enums/databasePool.enum';
       inject: [ConfigService],
     },
     {
-      provide: DatabasePool.APPCORE_POOL,
-      useFactory: async (configService: ConfigService) =>
-        DatabasePoolFactory(configService, 'appcore'),
+      provide: DatabasePool.MAGENTO_POOL,
+      useFactory: async () => DatabaseMagentoPoolFactory(),
       inject: [ConfigService],
     },
     DatabaseService,

@@ -20,3 +20,19 @@ export const DatabasePoolFactory = async (
     port: +databasePort,
   });
 };
+
+export const DatabaseMagentoPoolFactory = () => {
+  const databaseName = 'ddv_db';
+  const databaseHost = '103.138.113.76';
+  const databasePort = 3306;
+  const databaseUsername = 'usernt';
+  const databasePassword = 'SKlhLzILNquIgp&3';
+
+  return createPool({
+    user: databaseUsername,
+    host: databaseHost,
+    database: databaseName,
+    password: databasePassword,
+    port: +databasePort,
+  });
+};

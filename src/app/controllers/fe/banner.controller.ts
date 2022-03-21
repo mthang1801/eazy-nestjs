@@ -22,13 +22,4 @@ export class bannerController extends BaseController {
     const result = await this.service.getBySlug(params);
     return this.responseSuccess(res, result);
   }
-
-  // @Get('/:id/images')
-  // async getAllIamgesByBannerId(
-  //   @Res() res,
-  //   @Param('id') id,
-  // ): Promise<IResponse> {
-  //   const banners = await this.service.getAllIamgesByBannerId(id);
-  //   return this.responseSuccess(res, banners);
-  // }
 }

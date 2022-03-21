@@ -31,6 +31,8 @@ import {
   productFeatureSearchFilter,
   productFeatureVariantSearchFilter,
 } from 'src/utils/tableConditioner';
+import { DatabaseService } from 'src/database/database.service';
+import { MagentoEntityAttributeValue } from 'src/database/constant/magentor.tables';
 
 @Injectable()
 export class ProductFeatureService {
@@ -41,6 +43,7 @@ export class ProductFeatureService {
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureValuesRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
     private ProductOptionVariantDescriptionRepository: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
+    private matengoDatabaseService: DatabaseService,
   ) {}
 
   async create(
@@ -563,5 +566,10 @@ export class ProductFeatureService {
     }
   }
 
-  async getSync() {}
+  async getSync() {
+    const attributes = await this.matengoDatabaseService.executeMagentoPool(
+      `SELECT * FROM ${MagentoEntityAttributeValue}`,
+    );
+    console.log(attributes);
+  }
 }
