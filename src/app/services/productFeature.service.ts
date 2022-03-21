@@ -19,7 +19,10 @@ import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.ent
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 import * as _ from 'lodash';
-import { productFeatures as productFeaturesData } from '../../database/constant/productFeatures';
+import {
+  productFeatures as productFeaturesData,
+  productFeatures,
+} from '../../database/constant/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 import {
   convertToMySQLDateTime,
@@ -33,6 +36,14 @@ import {
 } from 'src/utils/tableConditioner';
 import { DatabaseService } from 'src/database/database.service';
 import { MagentoEntityAttributeValue } from 'src/database/constant/magentor.tables';
+import {
+  covertProductFeaturesFromMagento,
+  sqlGetFeatureValues,
+} from 'src/utils/scriptSyncFromMagentor/syncProductFeature';
+import {
+  productFeatureJoiner,
+  productFeatureVariantJoiner,
+} from 'src/utils/joinTable';
 
 @Injectable()
 export class ProductFeatureService {
@@ -128,14 +139,7 @@ export class ProductFeatureService {
 
     let productFeatures = await this.productFeaturesRepo.find({
       select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-            fieldJoin: 'feature_id',
-            rootJoin: 'feature_id',
-          },
-        },
-      },
+      join: productFeatureJoiner,
       orderBy: [
         { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
         { field: `${Table.PRODUCT_FEATURES}.created_at`, sortBy: SortBy.DESC },
@@ -147,23 +151,18 @@ export class ProductFeatureService {
 
     if (productFeatures.length) {
       for (let productFeatureItem of productFeatures) {
-        let productFeatureVariant = await this.productFeatureVariantsRepo.find({
-          select: ['*'],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                fieldJoin: 'variant_id',
-                rootJoin: 'variant_id',
-              },
+        let productFeatureVariants = await this.productFeatureVariantsRepo.find(
+          {
+            select: ['*'],
+            join: productFeatureVariantJoiner,
+            where: {
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
+                productFeatureItem.feature_id,
             },
           },
-          where: {
-            [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
-              productFeatureItem.feature_id,
-          },
-        });
+        );
 
-        productFeatureItem['feature_variants'] = productFeatureVariant;
+        productFeatureItem['feature_variants'] = productFeatureVariants;
       }
     } else {
       productFeatures = await this.findProductFeaturesByProductVariants(params);
@@ -206,14 +205,7 @@ export class ProductFeatureService {
       for (let featureVariant of featureVariants) {
         const productFeature = await this.productFeaturesRepo.findOne({
           select: '*',
-          join: {
-            [JoinTable.innerJoin]: {
-              [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-                fieldJoin: 'feature_id',
-                rootJoin: 'feature_id',
-              },
-            },
-          },
+          join: productFeatureJoiner,
           where: {
             [`${Table.PRODUCT_FEATURES}.feature_id`]: featureVariant.feature_id,
           },
@@ -223,14 +215,7 @@ export class ProductFeatureService {
           let productFeatureVariants =
             await this.productFeatureVariantsRepo.find({
               select: ['*'],
-              join: {
-                [JoinTable.leftJoin]: {
-                  [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                    fieldJoin: 'variant_id',
-                    rootJoin: 'variant_id',
-                  },
-                },
-              },
+              join: productFeatureVariantJoiner,
               where: {
                 [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
                   featureVariant.feature_id,
@@ -567,9 +552,74 @@ export class ProductFeatureService {
   }
 
   async getSync() {
-    const attributes = await this.matengoDatabaseService.executeMagentoPool(
-      `SELECT * FROM ${MagentoEntityAttributeValue}`,
+    await this.clearAll();
+    const featuresValues = await this.matengoDatabaseService.executeMagentoPool(
+      sqlGetFeatureValues,
     );
-    console.log(attributes);
+    if (featuresValues[0].length) {
+      for (let featureValue of featuresValues[0]) {
+        const convertedData = covertProductFeaturesFromMagento(featureValue);
+        console.log(convertedData);
+        const productFeatureData = {
+          ...new ProductFeatureEntity(),
+          ...this.productFeaturesRepo.setData(convertedData),
+        };
+
+        let productFeature = await this.productFeaturesRepo.findOne({
+          feature_code: convertedData['feature_code'],
+        });
+        if (!productFeature) {
+          productFeature = await this.productFeaturesRepo.create(
+            productFeatureData,
+          );
+        }
+
+        let productFeatureDesc =
+          await this.productFeatureDescriptionRepo.findOne({
+            feature_id: productFeature.feature_id,
+          });
+        if (!productFeatureDesc) {
+          const productFeatureDescData = {
+            ...new ProductFeatureDescriptionEntity(),
+            ...this.productFeatureDescriptionRepo.setData(convertedData),
+            feature_id: productFeature.feature_id,
+          };
+          productFeatureDesc = await this.productFeatureDescriptionRepo.create(
+            productFeatureDescData,
+          );
+        }
+
+        let productFeatureVariant =
+          await this.productFeatureVariantsRepo.findOne({
+            feature_id: productFeature.feature_id,
+            variant_code: convertedData['variant_code'],
+          });
+        if (!productFeatureVariant) {
+          const productFeatureValueData = {
+            ...new ProductFeatureVariantEntity(),
+            ...this.productFeatureVariantsRepo.setData(convertedData),
+            feature_id: productFeature.feature_id,
+          };
+          productFeatureVariant = await this.productFeatureVariantsRepo.create(
+            productFeatureValueData,
+          );
+        }
+
+        let productFeatureVariantDesc =
+          await this.productFeatureVariantDescriptionRepo.findOne({
+            variant_id: productFeatureVariant.variant_id,
+          });
+        if (!productFeatureVariantDesc) {
+          const productFeatureVariantDescData = {
+            ...new ProductFeatureVariantDescriptionEntity(),
+            ...this.productFeatureVariantDescriptionRepo.setData(convertedData),
+            variant_id: productFeatureVariant.variant_id,
+          };
+          await this.productFeatureVariantDescriptionRepo.create(
+            productFeatureVariantDescData,
+          );
+        }
+      }
+    }
   }
 }

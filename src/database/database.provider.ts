@@ -25,8 +25,8 @@ export const DatabaseMagentoPoolFactory = () => {
   const databaseName = 'ddv_db';
   const databaseHost = '103.138.113.76';
   const databasePort = 3306;
-  const databaseUsername = 'usernt';
-  const databasePassword = 'SKlhLzILNquIgp&3';
+  const databaseUsername = 'ddv_guest';
+  const databasePassword = 'KXBHcQjGfTp042T';
 
   return createPool({
     user: databaseUsername,

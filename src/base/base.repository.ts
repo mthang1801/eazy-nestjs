@@ -46,7 +46,7 @@ export class BaseRepositorty<T> {
 
     //Primiry keys is unique and db define
 
-    // delete dataObject[PrimaryKeys[this.table]];
+    delete dataObject[PrimaryKeys[this.table]];
 
     return dataObject;
   }

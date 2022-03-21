@@ -336,3 +336,21 @@ export const categoryJoiner = {
     },
   },
 };
+
+export const productFeatureJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+      fieldJoin: 'feature_id',
+      rootJoin: 'feature_id',
+    },
+  },
+};
+
+export const productFeatureVariantJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+      fieldJoin: 'variant_id',
+      rootJoin: 'variant_id',
+    },
+  },
+};
