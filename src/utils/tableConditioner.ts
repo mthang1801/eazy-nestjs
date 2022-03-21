@@ -244,7 +244,6 @@ export const bannerSearchFilter = (search = '', filterConditions = {}) => {
       { [`${Table.BANNER_DESCRIPTIONS}.banner_title`]: Like(search) },
       { [`${Table.BANNER_DESCRIPTIONS}.banner`]: Like(search) },
       { [`${Table.BANNER_DESCRIPTIONS}.description`]: Like(search) },
-      { [`${Table.BANNER_PAGE_DESCRIPTION}.page_url`]: Like(search) },
     ];
   }
   return searchFilterTemplate(filterConditions, arraySearch);

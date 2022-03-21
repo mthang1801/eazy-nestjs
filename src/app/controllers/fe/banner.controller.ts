@@ -29,27 +29,18 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, banners);
   }
 
-  @Get('/:target_id')
-  async getListByTarget(
-    @Res() res: Response,
-    @Param('target_id') target_id: number,
-  ): Promise<IResponse> {
-    const result = await this.service.getListByTarget(target_id);
-    return this.responseSuccess(res, result);
-  }
+  // @Get('/:id')
+  // async getById(@Res() res, @Param('id') id): Promise<IResponse> {
+  //   const banners = await this.service.getById(id);
+  //   return this.responseSuccess(res, banners);
+  // }
 
-  @Get('/:id')
-  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const banners = await this.service.getById(id);
-    return this.responseSuccess(res, banners);
-  }
-
-  @Get('/:id/images')
-  async getAllIamgesByBannerId(
-    @Res() res,
-    @Param('id') id,
-  ): Promise<IResponse> {
-    const banners = await this.service.getAllIamgesByBannerId(id);
-    return this.responseSuccess(res, banners);
-  }
+  // @Get('/:id/images')
+  // async getAllIamgesByBannerId(
+  //   @Res() res,
+  //   @Param('id') id,
+  // ): Promise<IResponse> {
+  //   const banners = await this.service.getAllIamgesByBannerId(id);
+  //   return this.responseSuccess(res, banners);
+  // }
 }

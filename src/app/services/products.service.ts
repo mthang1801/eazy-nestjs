@@ -596,18 +596,8 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    // let filterConditions = {};
-    // if (Object.entries(others).length) {
-    //   if (this.productRepo.tableProps.includes(key)) {
-    //     filterConditions[`${Table.PRODUCTS}.${key}`] = Like(val);
-    //   }
-    //   if (this.productDescriptionsRepo.tableProps.includes(key)) {
-    //     filterConditions[`${Table.PRODUCT_DESCRIPTION}.${key}`] = Like(val);
-    //   }
-    // }
-
     const productsList = await this.productRepo.find({
-      select: '*',
+      select: `*, ${Table.PRODUCTS}.*`,
       join: {
         [JoinTable.leftJoin]: productByCategoryJoiner,
       },
@@ -621,6 +611,20 @@ export class ProductService {
       limit,
     });
 
+    for (let productItem of productsList) {
+      console.log(productItem);
+      const productImageLink = await this.imageLinkRepo.findOne({
+        object_id: productItem.product_id,
+        object_type: ImageObjectType.PRODUCT,
+      });
+      if (productImageLink) {
+        const productImage = await this.imageRepo.findOne({
+          image_id: productImageLink.image_id,
+        });
+        productItem['image'] = { ...productImageLink, ...productImage };
+      }
+    }
+
     const count = await this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: {
@@ -630,6 +634,7 @@ export class ProductService {
         [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
           (categoryId) => categoryId,
         ),
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       },
     });
 

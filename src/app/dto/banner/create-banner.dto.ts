@@ -33,14 +33,11 @@ export class CreateBannerDto {
 
   @ArrayNotEmpty()
   @ValidateNested()
-  @Type(() => Display)
-  displays: Display[];
+  @Type(() => BannerItem)
+  banner_items: BannerItem[];
 }
 
-class Display {
-  @IsNotEmpty()
-  target_id: number;
-
+class BannerItem {
   @IsNotEmpty()
   location_id: number;
 
