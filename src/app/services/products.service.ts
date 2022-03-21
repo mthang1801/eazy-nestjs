@@ -321,7 +321,7 @@ export class ProductService {
         },
       },
       where: {
-        parent_product_id: IsNull(),
+        parent_product_id: 0,
         product_type: [1, 2],
       },
     });
@@ -615,7 +615,7 @@ export class ProductService {
         [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
           (categoryId) => categoryId,
         ),
-        [`${Table.PRODUCTS}.parent_product_id`]: IsNull(),
+        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       },
       skip,
       limit,
