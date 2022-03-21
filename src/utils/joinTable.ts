@@ -47,6 +47,15 @@ export const productFeaturesJoiner = {
   },
 };
 
+export const productSearchJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: 'product_id',
+      rootJoin: 'product_id',
+    },
+  },
+};
+
 export const productFamilyJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {

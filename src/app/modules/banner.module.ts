@@ -7,7 +7,7 @@ import { BannerDescriptionsRepository } from '../repositories/bannerDescription.
 import { ImageModule } from './image.module';
 import { BannerLocationDescriptionRepository } from '../repositories/bannerLocationDescription.repository';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
-import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository copy';
+import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository';
 
 @Module({
   controllers: [bannerControllerBE, bannerControllerFE],

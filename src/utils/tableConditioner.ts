@@ -278,3 +278,19 @@ export const productFeatureVariantSearchFilter = (
   }
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const productSearch = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      {
+        [`${Table.PRODUCTS}.slug`]: Like(
+          convertToSlug(removeVietnameseTones(search)),
+        ),
+      },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

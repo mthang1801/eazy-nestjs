@@ -5,5 +5,4 @@ export class BannerDescriptionsEntity {
   url: string = '';
   url_media: string = '';
   description: string = '';
-  lang_code: string = 'vi';
 }

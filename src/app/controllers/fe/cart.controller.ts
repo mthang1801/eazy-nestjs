@@ -13,7 +13,7 @@ import { Response } from 'express';
 import { CreateCartDto } from 'src/app/dto/cart/create-cart.dto';
 import { CartService } from 'src/app/services/cart.service';
 import { IResponse } from 'src/app/interfaces/response.interface';
-import { UpdateCartDto } from '../../dto/cart/update-cart.dto';
+import { AlterUserCartDto } from '../../dto/cart/update-cart.dto';
 @Controller('/fe/v1/carts')
 export class CartController extends BaseController {
   constructor(private service: CartService) {
@@ -23,10 +23,10 @@ export class CartController extends BaseController {
   @Post(':user_id')
   async create(
     @Res() res: Response,
-    @Body() data: CreateCartDto,
+    @Body('product_id') product_id: number,
     @Param('user_id') user_id: number,
   ): Promise<IResponse> {
-    await this.service.create(user_id, data);
+    await this.service.create(user_id, product_id);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
@@ -37,13 +37,23 @@ export class CartController extends BaseController {
    * @param data
    * @returns
    */
-  @Put(':user_id')
-  async update(
+  @Put('/alter/:user_id')
+  async alterUser(
     @Param('user_id') user_id: string,
     @Res() res: Response,
-    @Body() data: UpdateCartDto,
+    @Body('alter_user_id') alter_user_id: number,
   ): Promise<IResponse> {
-    await this.service.update(user_id, data);
+    await this.service.alterUser(user_id, alter_user_id);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Put(':cart_item_id')
+  async update(
+    @Param('cart_item_id') cart_item_id: string,
+    @Res() res: Response,
+    @Body('amount') amount: number,
+  ): Promise<IResponse> {
+    await this.service.update(cart_item_id, amount);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
@@ -56,22 +66,21 @@ export class CartController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Delete(':user_id/:cart_item_id')
+  @Delete(':cart_item_id')
   async delete(
-    @Param('user_id') user_id: number,
     @Param('cart_item_id') cart_item_id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.service.delete(user_id, cart_item_id);
+    await this.service.delete(cart_item_id);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
-  @Delete(':user_id')
+  @Delete('/clear/:cart_id')
   async clearAll(
-    @Param('user_id') user_id: number,
     @Res() res: Response,
+    @Param('cart_id') cart_id: number,
   ): Promise<IResponse> {
-    await this.service.clearAll(user_id);
+    await this.service.clearAll(cart_id);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }

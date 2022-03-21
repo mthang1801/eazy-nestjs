@@ -33,23 +33,20 @@ export class UpdateBannerDTO {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => Display)
-  displays: Display[];
+  @Type(() => BannerItem)
+  banner_items: BannerItem[];
 }
 
-class Display {
+class BannerItem {
   @IsOptional()
-  page_id: number;
+  banner_item_id: number;
 
-  @IsNotEmpty()
-  target_id: number;
-
-  @IsNotEmpty()
+  @IsOptional()
   location_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   page_type: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   page_url: string;
 }

@@ -3,8 +3,4 @@ import { IsNotEmpty, Min, ValidateNested } from 'class-validator';
 export class CreateCartDto {
   @IsNotEmpty()
   product_id: number;
-
-  @IsNotEmpty()
-  @Min(1)
-  amount: number;
 }

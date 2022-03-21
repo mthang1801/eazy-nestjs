@@ -65,33 +65,24 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, banners);
   }
 
-  // @Get('/:id/images')
-  // async getAllIamgesByBannerId(
-  //   @Res() res,
-  //   @Param('id') id,
-  // ): Promise<IResponse> {
-  //   const banners = await this.service.getAllIamgesByBannerId(id);
-  //   return this.responseSuccess(res, banners);
-  // }
+  @Put('/:id')
+  //@UseGuards(AuthGuard)
+  async updateBannerbyId(
+    @Res() res,
+    @Body() data: UpdateBannerDTO,
+    @Param('id') id: number,
+  ): Promise<IResponse> {
+    await this.service.update(id, data);
+    return this.responseSuccess(res, null, 'Cập nhật thành công');
+  }
 
-  // @Put('/:id')
-  // //@UseGuards(AuthGuard)
-  // async updateBannerbyId(
-  //   @Res() res,
-  //   @Body() data: UpdateBannerDTO,
-  //   @Param('id') id: number,
-  // ): Promise<IResponse> {
-  //   await this.service.update(id, data);
-  //   return this.responseSuccess(res, null, 'Cập nhật thành công');
-  // }
-
-  // @Delete('/:banner_id')
-  // //@UseGuards(AuthGuard)
-  // async deleteBannerById(
-  //   @Res() res,
-  //   @Param('banner_id') banner_id: number,
-  // ): Promise<IResponse> {
-  //   await this.service.delete(banner_id);
-  //   return this.responseSuccess(res, '', 'Xoá thành công.');
-  // }
+  @Delete('/:banner_id')
+  //@UseGuards(AuthGuard)
+  async deleteBannerById(
+    @Res() res,
+    @Param('banner_id') banner_id: number,
+  ): Promise<IResponse> {
+    await this.service.delete(banner_id);
+    return this.responseSuccess(res, '', 'Xoá thành công.');
+  }
 }

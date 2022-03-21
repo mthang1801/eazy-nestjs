@@ -41,9 +41,9 @@ class BannerItem {
   @IsNotEmpty()
   location_id: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   page_type: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   page_url: string;
 }

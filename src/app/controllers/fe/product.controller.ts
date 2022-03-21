@@ -10,6 +10,12 @@ export class ProductsController extends BaseController {
     super();
   }
 
+  @Get('/search')
+  async searchList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.searchList(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':slug')
   async get(
     @Param('slug') slug: string,

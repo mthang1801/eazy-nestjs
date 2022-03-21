@@ -562,4 +562,6 @@ export class ProductFeatureService {
       await this.createSync(dataItem);
     }
   }
+
+  async getSync() {}
 }

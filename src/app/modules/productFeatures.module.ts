@@ -9,6 +9,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureService } from '../services/productFeature.service';
 import { ProductsModule } from './products.module';
 import { ProductFeatureController as ProductFeatureIntegrationController } from '../controllers/integration/productFeature.controller';
+import { ProductFeatureSyncController } from '../controllers/sync/productFeatures.controller';
 
 @Module({
   imports: [forwardRef(() => ProductsModule)],
@@ -28,6 +29,10 @@ import { ProductFeatureController as ProductFeatureIntegrationController } from 
     ProductFeatureVariantDescriptionRepository,
     ProductFeatureValueRepository,
   ],
-  controllers: [ProductFeatureController, ProductFeatureIntegrationController],
+  controllers: [
+    ProductFeatureController,
+    ProductFeatureIntegrationController,
+    ProductFeatureSyncController,
+  ],
 })
 export class ProductFeaturesModule {}

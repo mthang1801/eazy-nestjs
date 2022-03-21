@@ -22,7 +22,7 @@ import { UpdateBannerDTO } from '../dto/banner/update-banner.dto';
 import { BannerImagesEntity } from '../entities/bannerImages.entity';
 import { BannerLocationDescriptionRepository } from '../repositories/bannerLocationDescription.repository';
 import { BannerLocationDescriptionEntity } from '../entities/bannerLocationDescription.entity';
-import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository copy';
+import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository';
 import { BannerTargetDescriptionEntity } from '../entities/bannerTargetDescription.entity';
 import { bannerSearchFilter } from '../../utils/tableConditioner';
 import { bannerItemsJoiner, bannerJoiner } from 'src/utils/joinTable';
@@ -149,11 +149,10 @@ export class bannerService {
     const bannerDescData = {
       ...new BannerDescriptionsEntity(),
       ...this.bannerDescriptionRepo.setData(data),
+      banner_id: newBanner.banner_id,
     };
 
-    const newBannerDesc = await this.bannerDescriptionRepo.create(
-      bannerDescData,
-    );
+    await this.bannerDescriptionRepo.create(bannerDescData);
 
     if (data.banner_items.length) {
       for (let bannerItem of data.banner_items) {
@@ -178,130 +177,115 @@ export class bannerService {
     });
   }
 
-  // async update(id: number, data: UpdateBannerDTO): Promise<any> {
-  //   const banner = await this.bannerRepo.findById(id);
-  //   if (!banner) {
-  //     throw new HttpException('Không tìm thấy banner.', 404);
-  //   }
+  async update(id: number, data: UpdateBannerDTO): Promise<any> {
+    const banner = await this.bannerRepo.findOne({ banner_id: id });
+    if (!banner) {
+      throw new HttpException('Không tìm thấy banner.', 404);
+    }
+    const bannerData = this.bannerRepo.setData({
+      ...data,
+      updated_at: convertToMySQLDateTime(),
+    });
+    if (Object.entries(bannerData).length) {
+      await this.bannerRepo.update({ banner_id: id }, bannerData);
+    }
 
-  //   let result: any = { ...banner };
+    const bannerDescData = await this.bannerDescriptionRepo.findOne({
+      banner_id: id,
+    });
+    if (bannerDescData) {
+      const bannerDescData = this.bannerDescriptionRepo.setData(data);
+      if (Object.entries(bannerDescData).length) {
+        await this.bannerDescriptionRepo.update(
+          { banner_id: id },
+          bannerDescData,
+        );
+      }
+    } else {
+      const bannerDescData = {
+        ...new BannerDescriptionsEntity(),
+        ...this.bannerDescriptionRepo.setData(data),
+      };
+      await this.bannerLocationsDescRepo.create(bannerDescData);
+    }
+    if (data?.banner_items?.length) {
+      await this.bannerItemRepo.delete({
+        banner_id: id,
+      });
+      for (let bannerItem of data.banner_items) {
+        const newBannerItemData = {
+          ...new BannerItemEntity(),
+          ...this.bannerItemRepo.setData(bannerItem),
+          banner_id: id,
+        };
+        await this.bannerItemRepo.create(newBannerItemData);
+      }
+    }
 
-  //   const bannerData = this.bannerRepo.setData(data);
-  //   if (Object.entries(bannerData).length) {
-  //     const updatedBanner = await this.bannerRepo.update(
-  //       { banner_id: id },
-  //       bannerData,
-  //     );
-  //     result = { ...result, ...updatedBanner };
-  //   }
+    if (data.image_path) {
+      const oldImageLink = await this.imageLinkRepo.findOne({
+        object_type: ImageObjectType.BANNER,
+        object_id: id,
+      });
+      if (oldImageLink) {
+        await this.imageLinkRepo.delete({
+          object_type: ImageObjectType.BANNER,
+          object_id: id,
+        });
+        await this.imageRepo.delete({ image_id: oldImageLink.image_id });
+      }
 
-  //   const bannerDescData = this.bannerDescriptionRepo.setData(data);
-  //   if (Object.entries(bannerDescData).length) {
-  //     const updatedBannerDesc = await this.bannerDescriptionRepo.update(
-  //       { banner_id: id },
-  //       bannerDescData,
-  //     );
-  //     result = { ...result, ...updatedBannerDesc };
-  //   }
+      const newImageBanner = await this.imageRepo.create({
+        image_path: data.image_path,
+      });
+      await this.imageLinkRepo.create({
+        object_id: id,
+        object_type: ImageObjectType.BANNER,
+        image_id: newImageBanner.image_id,
+      });
+    }
+  }
 
-  //   if (data.image_path) {
-  //     const bannerImageLink = await this.imageLinkRepo.findOne({
-  //       object_id: result.banner_id,
-  //       object_type: ImageObjectType.BANNER,
-  //     });
-  //     if (bannerImageLink) {
-  //       const updatedImage = await this.imageRepo.update(
-  //         bannerImageLink.image_id,
-  //         { image_path: data.image_path },
-  //       );
-  //       result = { ...result, image: { ...bannerImageLink, ...updatedImage } };
-  //     }
-  //   }
+  async delete(banner_id: number) {
+    await this.bannerRepo.delete({ banner_id });
+    await this.bannerDescriptionRepo.delete({ banner_id });
+    await this.bannerItemRepo.delete({ banner_id });
+  }
 
-  //   if (data?.displays?.length) {
-  //     for (let displayItem of data.displays) {
-  //       if (displayItem.page_id) {
-  //         const bannerPage = await this.bannerPageDescRepo.findOne({
-  //           page_id: displayItem.page_id,
-  //         });
-  //         if (bannerPage) {
-  //           const bannerPageData = this.bannerPageDescRepo.setData(displayItem);
-  //           await this.bannerPageDescRepo.update(
-  //             { page_id: displayItem.page_id },
-  //             bannerPageData,
-  //           );
-  //         }
-  //       } else {
-  //         // Tạo thêm banner nếu ko có page_id
-  //         const bannerPageData = {
-  //           ...new BannerPageDescriptionEntity(),
-  //           ...this.bannerPageDescRepo.setData(displayItem),
-  //         };
+  async getBySlug(params) {
+    let { type, slug } = params;
+    let bannerItems;
+    if (type) {
+      bannerItems = await this.bannerItemRepo.find({
+        select: '*',
+        join: bannerItemsJoiner,
+        where: { page_url: slug, page_type: type },
+      });
+    } else {
+      bannerItems = await this.bannerItemRepo.find({
+        select: '*',
+        join: bannerItemsJoiner,
+        where: { page_url: slug },
+      });
+    }
 
-  //         const newBannerPage = await this.bannerPageDescRepo.create(
-  //           bannerPageData,
-  //         );
+    if (!bannerItems.length) {
+      return bannerItems;
+    }
 
-  //         const bannerData = {
-  //           ...new BannerEntity(),
-  //           ...this.bannerRepo.setData(result),
-  //           ...this.bannerRepo.setData(displayItem),
-  //           page_id: newBannerPage.page_id,
-  //         };
-  //         const newBanner = await this.bannerRepo.create(bannerData);
-
-  //         const bannerDescData = {
-  //           ...new BannerDescriptionsEntity(),
-  //           ...this.bannerDescriptionRepo.setData(result),
-  //           ...this.bannerDescriptionRepo.setData(displayItem),
-  //           banner_id: newBanner.banner_id,
-  //         };
-  //         const bannerDesc = await this.bannerDescriptionRepo.create(
-  //           bannerDescData,
-  //         );
-
-  //         let image_path = '';
-
-  //         const oldbannerImageLink = await this.imageLinkRepo.findOne({
-  //           object_type: ImageObjectType.BANNER,
-  //           object_id: result.banner_id,
-  //         });
-  //         if (oldbannerImageLink) {
-  //           const bannerImage = await this.imageRepo.findOne({
-  //             image_id: oldbannerImageLink.image_id,
-  //           });
-  //           image_path = bannerImage.image_path;
-  //         }
-
-  //         const newBannerImage = await this.imageRepo.create({ image_path });
-  //         await this.imageLinkRepo.create({
-  //           object_type: ImageObjectType.BANNER,
-  //           object_id: newBanner.banner_id,
-  //           image_id: newBannerImage.image_id,
-  //         });
-  //       }
-  //     }
-  //   }
-  // }
-
-  // async delete(banner_id: number) {
-  //   await this.bannerRepo.delete({ banner_id });
-  //   await this.bannerDescriptionRepo.delete({ banner_id });
-  //   const bannerImageLink = await this.imageLinkRepo.findOne({
-  //     object_id: banner_id,
-  //     object_type: ImageObjectType.BANNER,
-  //   });
-  //   await this.imageLinkRepo.delete({
-  //     object_id: banner_id,
-  //     object_type: ImageObjectType.BANNER,
-  //   });
-  //   await this.imageRepo.delete({ image_id: bannerImageLink.image_id });
-  // }
-
-  // async getAllIamgesByBannerId(id): Promise<any> {
-  //   return this.imageService.getAllIamgesByBannerId(id);
-  // }
-  // async updateBannerById(banner_id, images_id, body): Promise<any> {
-  //   return this.imageService.Update(body, banner_id, images_id);
-  // }
+    for (let bannerItem of bannerItems) {
+      bannerItem['image'] = null;
+      const bannerImageLink = await this.imageLinkRepo.findOne({
+        object_id: bannerItem.banner_id,
+        object_type: ImageObjectType.BANNER,
+      });
+      if (bannerImageLink) {
+        const bannerImage = await this.imageRepo.findOne({
+          image_id: bannerImageLink.image_id,
+        });
+        bannerItem['image'] = { ...bannerImageLink, ...bannerImage };
+      }
+    }
+    return bannerItems;
+  }
 }

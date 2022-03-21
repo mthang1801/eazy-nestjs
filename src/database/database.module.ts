@@ -23,6 +23,12 @@ import { DatabasePool } from './enums/databasePool.enum';
         DatabasePoolFactory(configService, 'read'),
       inject: [ConfigService],
     },
+    {
+      provide: DatabasePool.APPCORE_POOL,
+      useFactory: async (configService: ConfigService) =>
+        DatabasePoolFactory(configService, 'appcore'),
+      inject: [ConfigService],
+    },
     DatabaseService,
   ],
   exports: [DatabaseService],

@@ -532,8 +532,6 @@ export class CategoryService {
       }
     }
 
-    console.log(currentCategory.level, maxLevel);
-
     return getCategoryListId
       ? { currentCategory, categoriesIdList }
       : currentCategory;

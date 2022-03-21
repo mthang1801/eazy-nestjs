@@ -43,8 +43,10 @@ import {
   productGroupJoiner,
   productGroupProductsJoiner,
   productInfoJoiner,
+  productSearchJoiner,
 } from 'src/utils/joinTable';
 import {
+  productSearch,
   productsFamilyFilterConditioner,
   productsGroupFilterConditioner,
   productsListCategorySearchFilter,
@@ -66,7 +68,7 @@ import {
   ImageType,
 } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
-import { Equal, IsNull } from '../../database/find-options/operators';
+import { Equal, IsNull, LessThan } from '../../database/find-options/operators';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import {
   convertToSlug,
@@ -350,7 +352,7 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy sp', 404);
     }
-    return this.getProductDetails(product);
+    return this.getProductDetails(product, true);
   }
 
   async getBySlug(slug: string): Promise<any> {
@@ -612,7 +614,6 @@ export class ProductService {
     });
 
     for (let productItem of productsList) {
-      console.log(productItem);
       const productImageLink = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
@@ -664,28 +665,28 @@ export class ProductService {
       );
     }
 
-    //Kiểm tra product features hợp lệ
-    if (data?.product_features?.length) {
-      for (let productFeature of data.product_features) {
-        const productFeatureItem = await this.productFeaturesRepo.findOne({
-          feature_id: productFeature.feature_id,
-        });
-        if (
-          productFeatureItem &&
-          productFeatureItem['is_singly_choosen'] === 'Y' &&
-          data.product_features.reduce(
-            (acc, ele) =>
-              ele.feature_id === productFeatureItem.feature_id ? acc + 1 : acc,
-            0,
-          ) > 1
-        ) {
-          throw new HttpException(
-            `Thuộc tính SP có id ${productFeatureItem.feature_id} chỉ được chọn 1, không thể chọn nhiều`,
-            422,
-          );
-        }
-      }
-    }
+    // //Kiểm tra product features hợp lệ
+    // if (data?.product_features?.length) {
+    //   for (let productFeature of data.product_features) {
+    //     const productFeatureItem = await this.productFeaturesRepo.findOne({
+    //       feature_id: productFeature.feature_id,
+    //     });
+    //     if (
+    //       productFeatureItem &&
+    //       productFeatureItem['is_singly_choosen'] === 'Y' &&
+    //       data.product_features.reduce(
+    //         (acc, ele) =>
+    //           ele.feature_id === productFeatureItem.feature_id ? acc + 1 : acc,
+    //         0,
+    //       ) > 1
+    //     ) {
+    //       throw new HttpException(
+    //         `Thuộc tính SP có id ${productFeatureItem.feature_id} chỉ được chọn 1, không thể chọn nhiều`,
+    //         422,
+    //       );
+    //     }
+    //   }
+    // }
 
     let result = { ...currentProduct };
 
@@ -784,6 +785,7 @@ export class ProductService {
     });
     if (productSale) {
       const productSaleData = this.productSaleRepo.setData(data);
+
       if (Object.entries(productSaleData).length) {
         const updatedProductSale = await this.productSaleRepo.update(
           { product_id: result.product_id },
@@ -806,16 +808,14 @@ export class ProductService {
     // Update product category
     if (data?.category_id?.length) {
       //delete all old product categories
-      await this.categoryRepo.delete({ product_id: result.product_id });
+      await this.productCategoryRepo.delete({ product_id: result.product_id });
       for (let categoryId of data.category_id) {
         const newProductCategoryData = {
           ...new ProductsCategoriesEntity(),
           category_id: categoryId,
           product_id: result.product_id,
         };
-        const newProductCategory = await this.productCategoryRepo.create(
-          newProductCategoryData,
-        );
+        await this.productCategoryRepo.create(newProductCategoryData);
       }
     }
 
@@ -1645,7 +1645,7 @@ export class ProductService {
     return result;
   }
 
-  async getProductDetails(product) {
+  async getProductDetails(product, showListCategories = false) {
     let status = product['status'];
     product['images'] = [];
     const productImages = await this.imageLinkRepo.find({
@@ -1688,6 +1688,7 @@ export class ProductService {
       const comboGroup = await this.productVariationGroupRepo.findOne({
         product_root_id: product.product_id,
       });
+
       if (comboGroup) {
         let comboProductsList =
           await this.productVariationGroupProductsRepo.find({
@@ -1827,24 +1828,53 @@ export class ProductService {
       }
     }
 
-    const currentCategory = await this.categoryRepo.findOne({
-      select: [
-        `${Table.CATEGORIES}.category_id`,
-        'level',
-        'slug',
-        'category',
-        'parent_id',
-      ],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-            rootJoin: `${Table.CATEGORIES}.category_id`,
+    let currentCategory;
+
+    if (showListCategories) {
+      currentCategory = await this.categoryRepo.find({
+        select: [
+          `${Table.CATEGORIES}.category_id`,
+          'level',
+          'slug',
+          'category',
+          'parent_id',
+        ],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.CATEGORY_DESCRIPTIONS]: {
+              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
+            },
+            [Table.PRODUCTS_CATEGORIES]: {
+              fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
+            },
           },
         },
-      },
-      where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
-    });
+        where: {
+          [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product.product_id,
+        },
+      });
+    } else {
+      currentCategory = await this.categoryRepo.findOne({
+        select: [
+          `${Table.CATEGORIES}.category_id`,
+          'level',
+          'slug',
+          'category',
+          'parent_id',
+        ],
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.CATEGORY_DESCRIPTIONS]: {
+              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
+            },
+          },
+        },
+        where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
+      });
+    }
 
     const categoriesList = await this.parentCategories(currentCategory);
     const parentCategories = categoriesList.slice(1);
@@ -1852,7 +1882,7 @@ export class ProductService {
     product['status'] = status;
 
     return {
-      currentCategory: categoriesList[0],
+      currentCategory: showListCategories ? currentCategory : categoriesList[0],
       parentCategories,
       product,
     };
@@ -1936,7 +1966,6 @@ export class ProductService {
           'SP không phải là SP cha, không thể đổi nhóm',
           403,
         );
-      console.log('here');
       let oldGroup;
       let productsList = [];
       productsList = [{ ...product }];
@@ -2050,8 +2079,19 @@ export class ProductService {
 
   async itgCreateProductStores(data: CreateProductStoreDto) {
     const { product_id, store_location_id, amount } = data;
+    let product = await this.productRepo.findOne({
+      product_appcore_id: product_id,
+    });
+    if (!product) {
+      const newProductData = {
+        ...new ProductsEntity(),
+        product_appcore_id: product_id,
+      };
+      product = await this.productRepo.create(newProductData);
+    }
+
     const productStore = await this.productStoreRepo.findOne({
-      product_id,
+      product_id: product.product_id,
       store_location_id,
     });
 
@@ -2091,5 +2131,18 @@ export class ProductService {
     await this.productStoreHistoryRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_STORE_HISTORIES}`,
     );
+  }
+
+  async searchList(params) {
+    let { page, limit, q } = params;
+    console.log(q);
+    page = +page || 1;
+    limit = +limit || 10;
+    const productLists = await this.productRepo.find({
+      select: '*',
+      join: productSearchJoiner,
+      where: productSearch(q),
+    });
+    return productLists;
   }
 }

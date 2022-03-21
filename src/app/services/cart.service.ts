@@ -4,7 +4,6 @@ import { CartEntity } from '../entities/cart.entity';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { CartRepository } from '../repositories/cart.repository';
 import { CartItemRepository } from '../repositories/cartItem.repository';
-import { UpdateCartDto } from '../dto/cart/update-cart.dto';
 import { convertToMySQLDateTime } from '../../utils/helper';
 import { words } from 'lodash';
 import { cartJoiner } from 'src/utils/joinTable';
@@ -14,6 +13,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
+import { AlterUserCartDto } from '../dto/cart/update-cart.dto';
 @Injectable()
 export class CartService {
   constructor(
@@ -23,45 +23,18 @@ export class CartService {
     private imageRepo: ImagesRepository<ImagesEntity>,
   ) {}
 
-  async create(user_id: number, data: CreateCartDto) {
+  async create(user_id: number, product_id: number) {
     // Kiểm tra xem giỏ hàng đã tồn tại hay chưa
-    const cart = await this.cartRepo.findOne({ user_id });
-
-    //TH 1 : Gio hang đã tồn tại
-    if (cart) {
-      //TH giỏ hàng tồn tại, kiểm tra xem sản phẩm trong giỏ hàng đã tồn tại hay chưa
-      const cartItem = await this.cartItemRepo.findOne({
-        cart_id: cart.cart_id,
-        product_id: data.product_id,
-      });
-      // Nếu SP đã tồn tại -> update amount
-      if (cartItem) {
-        await this.cartItemRepo.update(
-          { cart_item_id: cartItem.cart_item_id },
-          { amount: data.amount },
-        );
-      } else {
-        const newCartItemData = {
-          ...new CartItemEntity(),
-          ...this.cartItemRepo.setData(data),
-          cart_id: cart.cart_id,
-        };
-        await this.cartItemRepo.create(newCartItemData);
-      }
-    } else {
-      // TH giỏ hàng chưa tồn tại :
-      // 1. Tạo mới giỏ hàng
-      // 2. Thêm item vào giỏ hàng
-      const newCartData = { ...new CartEntity(), user_id };
-      const newCart = await this.cartRepo.create(newCartData);
-
-      const newCartItemData = {
-        ...new CartItemEntity(),
-        ...this.cartItemRepo.setData(data),
-        cart_id: newCart.cart_id,
-      };
-      await this.cartItemRepo.create(newCartItemData);
+    let cart = await this.cartRepo.findOne({ user_id });
+    if (!cart) {
+      const cartData = { ...new CartEntity(), user_id };
+      cart = await this.cartRepo.create(cartData);
     }
+    await this.cartItemRepo.create({
+      cart_id: cart.cart_id,
+      product_id,
+      amount: 1,
+    });
   }
 
   async get(user_id) {
@@ -107,7 +80,7 @@ export class CartService {
     return result;
   }
 
-  async update(user_id: string, data: UpdateCartDto) {
+  async alterUser(user_id: string, alter_user_id) {
     const currentCart = await this.cartRepo.findOne({ user_id });
     if (!currentCart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
@@ -115,36 +88,26 @@ export class CartService {
 
     await this.cartRepo.update(
       { cart_id: currentCart.cart_id },
-      { user_id: data.alter_user_id },
+      { user_id: alter_user_id },
     );
   }
 
-  async delete(user_id: number, cart_item_id: number) {
-    const cart = await this.cartRepo.findOne({ user_id });
-    if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng', 404);
-    }
-
-    const cartItem = await this.cartItemRepo.findOne({
-      cart_id: cart.cart_id,
-      cart_item_id,
-    });
-    if (!cartItem) {
+  async update(cart_item_id, amount) {
+    if (amount < 1) {
       throw new HttpException(
-        'Xoá không thành công, người dùng hoặc id giỏ hàng không đúng',
-        404,
+        'Số lượng sản phẩm đã giảm đến mức tối thiểu',
+        400,
       );
     }
+    await this.cartItemRepo.update({ cart_item_id }, { amount });
+  }
 
+  async delete(cart_item_id: number) {
     await this.cartItemRepo.delete({ cart_item_id });
   }
 
-  async clearAll(user_id) {
-    const cart = await this.cartRepo.findOne({ user_id });
-    if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng.', 404);
-    }
-    await this.cartRepo.delete({ cart_id: cart.cart_id });
-    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+  async clearAll(cart_id) {
+    await this.cartRepo.delete({ cart_id });
+    await this.cartItemRepo.delete({ cart_id });
   }
 }

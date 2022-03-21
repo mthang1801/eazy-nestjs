@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Post,
-  Body,
-  Put,
-  Delete,
-  UsePipes,
-  ValidationPipe,
-  UseGuards,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import { bannerService } from '../../services/banner.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
@@ -29,11 +17,11 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, banners);
   }
 
-  // @Get('/:id')
-  // async getById(@Res() res, @Param('id') id): Promise<IResponse> {
-  //   const banners = await this.service.getById(id);
-  //   return this.responseSuccess(res, banners);
-  // }
+  @Get('/slug')
+  async getBySlug(@Res() res, @Query() params): Promise<IResponse> {
+    const result = await this.service.getBySlug(params);
+    return this.responseSuccess(res, result);
+  }
 
   // @Get('/:id/images')
   // async getAllIamgesByBannerId(
