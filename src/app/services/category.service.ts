@@ -27,6 +27,11 @@ import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
 import { data as categoryData } from '../../database/constant/category';
 import { categoryJoiner } from 'src/utils/joinTable';
+import { DatabaseService } from 'src/database/database.service';
+import {
+  sqlSyncGetCategoryFromMagento,
+  convertCategoryFromMagentoToCMS,
+} from '../../utils/scriptSyncFromMagentor/syncCategory';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -36,6 +41,7 @@ export class CategoryService {
     private productCategoryRepository: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private imageRepository: ImagesRepository<ImagesEntity>,
     private imageLinkRepository: ImagesLinksRepository<ImagesLinksEntity>,
+    private databaseService: DatabaseService,
   ) {}
 
   async create(data: CreateCategoryV2Dto): Promise<any> {
@@ -545,5 +551,77 @@ export class CategoryService {
     await this.categoryDescriptionRepo.delete({ category_id: id });
 
     return deleteStatus;
+  }
+
+  async clearAll() {
+    await this.categoryRepository.writeExec(
+      `TRUNCATE TABLE ${Table.CATEGORIES}`,
+    );
+    await this.categoryDescriptionRepo.writeExec(
+      `TRUNCATE TABLE ${Table.CATEGORY_DESCRIPTIONS}`,
+    );
+  }
+
+  async getSync() {
+    await this.clearAll();
+    const categoriesResponse = await this.databaseService.executeMagentoPool(
+      sqlSyncGetCategoryFromMagento,
+    );
+    const categoriesList = categoriesResponse[0];
+    for (let categoryItem of categoriesList) {
+      const convertedData = convertCategoryFromMagentoToCMS(categoryItem);
+      const newCategoryData = {
+        ...new CategoryEntity(),
+        ...this.categoryRepository.setData(convertedData),
+        slug: convertToSlug(removeVietnameseTones(convertedData['category'])),
+      };
+      const newCategory = await this.categoryRepository.create(newCategoryData);
+
+      const categoryDescriptionData = {
+        ...new CategoryDescriptionEntity(),
+        ...this.categoryDescriptionRepo.setData(convertedData),
+      };
+      await this.categoryDescriptionRepo.createSync(categoryDescriptionData);
+    }
+    const CMSCategoriesList = await this.categoryRepository.find();
+    await this.findAndUpdateFromMagento(CMSCategoriesList);
+  }
+
+  async findAndUpdateFromMagento(categoriesList) {
+    for (let categoryItem of categoriesList) {
+      if (categoryItem['parent_matengo_id'] != 0) {
+        const categoryParent = await this.categoryRepository.findOne({
+          category_matengo_id: categoryItem['parent_matengo_id'],
+        });
+        if (categoryParent) {
+          await this.categoryRepository.update(
+            {
+              category_id: categoryItem.category_id,
+            },
+            { parent_id: categoryParent.category_id },
+          );
+        }
+      }
+      const categoryIdMatengoPaths = categoryItem['id_matengo_path']
+        ? categoryItem['id_matengo_path'].split('/')
+        : categoryItem['id_matengo_path'];
+      let idPaths = [];
+      if (Array.isArray(categoryIdMatengoPaths)) {
+        for (let idPath of categoryIdMatengoPaths) {
+          const categoryByIdPath = await this.categoryRepository.findOne({
+            category_id: idPath,
+          });
+          if (categoryByIdPath) {
+            idPaths.push(categoryByIdPath.category_id);
+          }
+        }
+        await this.categoryRepository.update(
+          {
+            category_id: categoryItem.category_id,
+          },
+          { id_path: idPaths.join('/') },
+        );
+      }
+    }
   }
 }

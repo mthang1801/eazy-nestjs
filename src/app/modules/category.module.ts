@@ -7,6 +7,7 @@ import { CategoryController as CategoryControllerFE } from '../controllers/fe/ca
 import { ProductService } from '../services/products.service';
 import { ProductsModule } from './products.module';
 import { CategoryController as CategoryControllerIntegration } from '../controllers/integration/category.controller';
+import { CategorySyncController } from '../controllers/sync/category.controller';
 
 @Module({
   imports: [forwardRef(() => ProductsModule)],
@@ -21,6 +22,7 @@ import { CategoryController as CategoryControllerIntegration } from '../controll
     CategoryControllerBE,
     CategoryControllerFE,
     CategoryControllerIntegration,
+    CategorySyncController,
   ],
 })
 export class CategoryModule {}

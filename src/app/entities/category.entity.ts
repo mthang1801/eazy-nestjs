@@ -11,17 +11,13 @@ export class CategoryEntity {
   product_count: number = 0;
   position: number = 0;
   is_op: string = 'N';
-  localization: string = '';
-  age_verification: string = 'N';
-  age_limit: number = 0;
-  parent_age_verification: string = 'N';
-  parent_age_limit: number = 0;
   selected_views: string = '';
   slug: string = '';
-  product_details_view: string = '';
-  product_columns: number = 0;
-  is_trash: string = '';
   category_type: string = 'C';
+  category_matengo_id: number = 0;
+  id_matengo_path: string = '';
+  parent_matengo_id: number = 0;
+  feature_id: number = 0;
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

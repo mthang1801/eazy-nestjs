@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { ProductFeatureService } from '../../services/productFeature.service';
 import { BaseController } from '../../../base/base.controllers';
-@Controller('/sync/v1')
+@Controller('/sync/v1/product-features')
 export class ProductFeatureSyncController extends BaseController {
   constructor(private service: ProductFeatureService) {
     super();
