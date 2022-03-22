@@ -404,7 +404,7 @@ export class CategoryService {
     let categoriesListRoot = await this.categoryRepository.find({
       select: `*`,
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 0 },
+      where: { [`${Table.CATEGORIES}.level`]: 1 },
       skip,
       limit,
     });
@@ -412,15 +412,13 @@ export class CategoryService {
     let totalCategory = await this.categoryRepository.find({
       select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 0 },
+      where: { [`${Table.CATEGORIES}.level`]: 1 },
     });
-
-    console.log(categoriesListRoot);
 
     for (let categoryRoot of categoriesListRoot) {
       const categoriesList = await this.getCategoriesChildrenRecursive(
         categoryRoot,
-        Infinity,
+        2,
         true,
       );
       let count = 0;
