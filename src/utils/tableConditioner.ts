@@ -294,3 +294,18 @@ export const productSearch = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const categoriesSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
+      {
+        [`${Table.CATEGORIES}.slug`]: Like(
+          convertToSlug(removeVietnameseTones(search)),
+        ),
+      },
+    ];
+  }
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

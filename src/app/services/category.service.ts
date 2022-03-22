@@ -32,6 +32,7 @@ import {
   sqlSyncGetCategoryFromMagento,
   convertCategoryFromMagentoToCMS,
 } from '../../utils/scriptSyncFromMagentor/syncCategory';
+import { categoriesSearchFilter } from 'src/utils/tableConditioner';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -358,30 +359,14 @@ export class CategoryService {
       const categories = await this.categoryRepository.find({
         select: '*',
         join: categoryJoiner,
-        where: [
-          { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
-          {
-            [`${Table.CATEGORIES}.slug`]: Like(
-              convertToSlug(removeVietnameseTones(search)),
-            ),
-          },
-        ],
+        where: categoriesSearchFilter(search, filterCondition),
         skip,
         limit,
       });
       const totalCategories = await this.categoryRepository.find({
         select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
         join: categoryJoiner,
-        where: [
-          { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
-          {
-            [`${Table.CATEGORIES}.slug`]: Like(
-              convertToSlug(removeVietnameseTones(search)),
-            ),
-          },
-        ],
-        skip,
-        limit,
+        where: categoriesSearchFilter(search, filterCondition),
       });
 
       for (let category of categories) {
@@ -417,15 +402,8 @@ export class CategoryService {
     }
 
     let categoriesListRoot = await this.categoryRepository.find({
-      select: [`*, ${Table.CATEGORIES}.*`],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-            rootJoin: `${Table.CATEGORIES}.category_id`,
-          },
-        },
-      },
+      select: `*`,
+      join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
       skip,
       limit,
@@ -433,16 +411,11 @@ export class CategoryService {
 
     let totalCategory = await this.categoryRepository.find({
       select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-            rootJoin: `${Table.CATEGORIES}.category_id`,
-          },
-        },
-      },
+      join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
     });
+
+    console.log(categoriesListRoot);
 
     for (let categoryRoot of categoriesListRoot) {
       const categoriesList = await this.getCategoriesChildrenRecursive(
@@ -580,6 +553,7 @@ export class CategoryService {
       const categoryDescriptionData = {
         ...new CategoryDescriptionEntity(),
         ...this.categoryDescriptionRepo.setData(convertedData),
+        category_id: newCategory.category_id,
       };
       await this.categoryDescriptionRepo.createSync(categoryDescriptionData);
     }
