@@ -220,12 +220,15 @@ export class UsersService {
     return preprocessUserResult(users);
   }
   async getUserImage(user_id: number): Promise<ImagesEntity> {
-    const imageLinks = await this.imageLinksRepository.findOne({
+    const imageLink = await this.imageLinksRepository.findOne({
       object_id: user_id,
       object_type: ImageObjectType.USER,
     });
-    if (imageLinks) {
-      const image = await this.imagesRepository.findById(imageLinks.image_id);
+    console.log(imageLink);
+    if (imageLink) {
+      const image = await this.imagesRepository.findOne({
+        image_id: imageLink.image_id,
+      });
       return image;
     }
     return null;

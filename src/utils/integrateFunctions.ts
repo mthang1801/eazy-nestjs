@@ -40,7 +40,7 @@ export const itgOrderFromAppcore = (cData) => {
     ['otherFees', 'other_fees'],
     ['creditFeeAcountId', 'credit_account_id'],
     ['totalAmount', 'total'],
-    ['codeShip', 'shipping_ids'],
+    ['codeShip', 'shipping_id'],
     ['deleted', 'status'],
     ['createdAt', 'created_date'],
     ['updatedAt', 'updated_date'],

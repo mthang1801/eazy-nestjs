@@ -1,12 +1,35 @@
-import { Controller, Get, Param, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Res,
+  UseGuards,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { OrdersService } from 'src/app/services/orders.service';
 import { BaseController } from '../../../base/base.controllers';
 import { Response } from 'express';
+import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
+import { Body } from '@nestjs/common';
+import { AuthGuard } from 'src/middlewares/fe.auth';
 @Controller('/fe/v1/orders')
 export class OrdersController extends BaseController {
   constructor(private service: OrdersService) {
     super();
+  }
+
+  @Post()
+  @UseGuards(AuthGuard)
+  async create(
+    @Res() res,
+    @Body() body: CreateOrderDto,
+    @Req() req,
+  ): Promise<IResponse> {
+    const result = await this.service.createFE(body, req.user);
+    return this.responseSuccess(res, result, 'Tạo thành công');
   }
 
   @Get()

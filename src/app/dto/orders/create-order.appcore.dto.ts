@@ -62,7 +62,7 @@ export class CreateOrderAppcoreDto {
   order_items: ProductOrder[];
 
   @IsOptional()
-  shipping_ids: string = ''; //Mã vận đơn
+  shipping_id: string = ''; //Mã vận đơn
 
   @IsOptional()
   shipping_cost: number = 0; //Phí trả khách hàng phải trả

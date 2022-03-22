@@ -231,6 +231,145 @@ export class OrdersService {
     }
   }
 
+  async createFE(data: CreateOrderDto, userAuth) {
+    let user: any = await this.userRepo.findById(userAuth.user_id);
+
+    if (!user) {
+      throw new HttpException('Người dùng không tồn tại', 404);
+    }
+
+    const orderData = {
+      ...new OrderEntity(),
+      ...this.orderRepo.setData(data),
+      is_sync: 0,
+    };
+
+    if (!user['user_appcore_id']) {
+      throw new HttpException('User_appcore_id không được nhận diện.', 400);
+    }
+    orderData['user_appcore_id'] = user['user_appcore_id'];
+    orderData['user_id'] = user['user_id'];
+
+    orderData['total'] = 0;
+    for (let orderItem of data.order_items) {
+      const productInfo = await this.productRepo.findOne({
+        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        join: { [JoinTable.leftJoin]: productJoiner },
+        where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
+      });
+
+      if (!productInfo) {
+        throw new HttpException(
+          `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+          404,
+        );
+      }
+
+      orderData['total'] +=
+        ((productInfo['price'] * (100 - productInfo['percentage_discount'])) /
+          100) *
+        orderItem.amount;
+    }
+
+    let result = await this.orderRepo.create(orderData);
+    for (let orderItem of data.order_items) {
+      let orderDetailData = {
+        ...new OrderDetailsEntity(),
+        ...this.orderDetailRepo.setData({
+          ...result,
+          ...orderItem,
+          status: CommonStatus.Active,
+        }),
+      };
+
+      const orderProductItem = await this.productRepo.findOne({
+        select: '*',
+        join: productJoiner,
+        where: { product_id: orderItem.product_id },
+      });
+
+      let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+
+      newOrderDetail['product_id'] = orderProductItem['product_appcore_id'];
+
+      result['order_items'] = result['order_items']
+        ? [...result['order_items'], newOrderDetail]
+        : [newOrderDetail];
+    }
+
+    //============ Push data to Appcore ==================
+    const configPushOrderToAppcore: any = {
+      method: 'POST',
+      url: PUSH_ORDER_TO_APPCORE_API,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
+
+    const configGetOrderFromAppcore = (orderId): any => ({
+      method: 'GET',
+      url: GET_ORDER_BY_ID_FROM_APPCORE_API(orderId),
+    });
+
+    try {
+      const response = await axios(configPushOrderToAppcore);
+      const orderAppcoreId = response.data.data;
+
+      const getOrderDetailsResponse = await axios(
+        configGetOrderFromAppcore(orderAppcoreId),
+      );
+
+      const orderInfoDetails = getOrderDetailsResponse.data.data.filter(
+        ({ id }) => id === orderAppcoreId,
+      )[0];
+
+      if (orderInfoDetails) {
+        const order_code = orderAppcoreId;
+        const orderCodeItems = result['order_items'].map((orderItem) => {
+          const orderAppcoreItem = orderInfoDetails['orderItems'].find(
+            ({ productId }) => productId == orderItem.product_id,
+          );
+          if (orderAppcoreItem) {
+            return {
+              order_item_id: orderItem.item_id,
+              order_item_appcore_id: orderAppcoreItem.id,
+            };
+          }
+          return {
+            order_item_id: orderItem.item_id,
+            order_item_appcore_id: null,
+          };
+        });
+
+        // update order code
+        await this.orderRepo.update(
+          { order_id: result.order_id },
+          { order_code },
+        );
+
+        if (orderCodeItems?.length) {
+          for (let { order_item_id, order_item_appcore_id } of orderCodeItems) {
+            await this.orderDetailRepo.update(
+              {
+                item_id: order_item_id,
+              },
+              { order_item_appcore_id },
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
+  }
+
   async createCustomer(data: CreateOrderDto) {
     const { passwordHash, salt } = saltHashPassword(defaultPassword);
     const userData = {

@@ -47,6 +47,7 @@ import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { CustomerService } from './customer.service';
 import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
@@ -183,14 +184,14 @@ export class AuthService {
     user['image'] = await this.getUserImage(user.user_id);
 
     // get menu at ddv_usergroup_privileges
-    const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
-      user.usergroup_id,
-    );
+    // const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
+    //   user.usergroup_id,
+    // );
 
     const dataResult = {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
-      menu,
+      menu: [],
     };
 
     return dataResult;

@@ -45,7 +45,7 @@ const orderSampleData = {
   ],
   internal_note: 'Internal note',
 
-  shipping_ids: 'AWS327189323213213',
+  shipping_id: 'AWS327189323213213',
   shipping_cost: 35000,
   shipping_fee: 22000,
 
@@ -97,8 +97,8 @@ export const convertDataToIntegrate = (data) => {
     itgData['status'] = data['status'];
   }
 
-  if (data['shipping_ids']) {
-    itgData['codeShip'] = data['shipping_ids']; //Mã vận đơn
+  if (data['shipping_id']) {
+    itgData['codeShip'] = data['shipping_id']; //Mã vận đơn
   }
 
   itgData['customerId'] = data['user_appcore_id']; //Mã user *

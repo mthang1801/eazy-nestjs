@@ -11,19 +11,6 @@ export class CustomerController extends BaseController {
   constructor(private service: CustomerService) {
     super();
   }
-  @Get()
-  async get(@Res() res: Response): Promise<IResponse> {
-    const logs = await this.service.itgGet();
-    let result = null;
-    if (logs.length) {
-      result = `Người dùng có đã tồn tại : ${logs.join(', ')}`;
-    }
-    return this.responseSuccess(
-      res,
-      result,
-      'Đồng bộ KH từ appcore thành công.',
-    );
-  }
 
   @Post()
   async create(

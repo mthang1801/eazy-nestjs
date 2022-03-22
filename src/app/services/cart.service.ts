@@ -30,11 +30,25 @@ export class CartService {
       const cartData = { ...new CartEntity(), user_id };
       cart = await this.cartRepo.create(cartData);
     }
-    await this.cartItemRepo.create({
+    const cartItem = await this.cartItemRepo.findOne({
       cart_id: cart.cart_id,
       product_id,
-      amount: 1,
     });
+
+    if (!cartItem) {
+      await this.cartItemRepo.create({
+        cart_id: cart.cart_id,
+        product_id,
+        amount: 1,
+      });
+    }
+
+    if (cartItem && cartItem.amount < 3) {
+      await this.cartItemRepo.update(
+        { cart_item_id: cartItem.cart_item_id },
+        { amount: cartItem.amount + 1 },
+      );
+    }
   }
 
   async get(user_id) {
@@ -51,7 +65,7 @@ export class CartService {
       where: { [`${Table.CART}.cart_id`]: result.cart_id },
     });
 
-    const totalAmount = cartItems.reduce((acc, ele) => acc + ele.amount, 0);
+    const totalAmount = cartItems.length;
     result['totalAmount'] = totalAmount;
 
     const totalPrice = cartItems.reduce(
@@ -67,6 +81,7 @@ export class CartService {
         object_id: cartItem.product_id,
         object_type: ImageObjectType.PRODUCT,
       });
+      console.log(productImageLink);
       if (productImageLink) {
         const productImage = await this.imageRepo.findOne({
           image_id: productImageLink.image_id,
@@ -99,7 +114,16 @@ export class CartService {
         400,
       );
     }
+    if (amount > 3) {
+      throw new HttpException('Số lượng sản phẩm đã vượt quá giới hạn', 400);
+    }
+    const cartItem = await this.cartItemRepo.findOne({ cart_item_id });
+    if (!cartItem) {
+      throw new HttpException('Không tìm thấy giỏ hàng.', 404);
+    }
+
     await this.cartItemRepo.update({ cart_item_id }, { amount });
+    return;
   }
 
   async delete(cart_item_id: number) {

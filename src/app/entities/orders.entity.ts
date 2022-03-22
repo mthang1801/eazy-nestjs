@@ -15,9 +15,10 @@ export class OrderEntity {
   discount_type: number = 1;
   subtotal_discount: number = 0;
   payment_surcharge: number = 0;
-  shipping_ids: string = '';
+  shipping_id: string = '';
   warranty_note: string = '';
   shipping_cost: number = 0;
+  shipping_service_id: number = 0;
   disposit_amount: number = 0;
   status: number = 1;
   notes: string = '';
