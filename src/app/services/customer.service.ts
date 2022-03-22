@@ -31,7 +31,11 @@ import { convertToMySQLDateTime } from '../../utils/helper';
 import { saltHashPassword } from 'src/utils/cipherHelper';
 import { MailService } from './mail.service';
 import axios from 'axios';
-import { itgCustomerFromAppcore } from 'src/utils/integrateFunctions';
+import {
+  itgCreateCustomerFromAppcore,
+  itgCustomerFromAppcore,
+  itgUpdateCustomerFromAppcore,
+} from 'src/utils/integrateFunctions';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UpdateCustomerAppcoreDto } from '../dto/customer/update-customerAppcore.dto';
@@ -50,6 +54,7 @@ import {
   GET_CUSTOMERS_API,
 } from 'src/database/constant/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
+import { Not, Equal } from '../../database/find-options/operators';
 
 @Injectable()
 export class CustomerService {
@@ -318,7 +323,7 @@ export class CustomerService {
     }
   }
 
-  async itgGet() {
+  async syncGet() {
     try {
       const response = await axios({
         url: `${GET_CUSTOMERS_API}?page=5`,
@@ -396,24 +401,37 @@ export class CustomerService {
     }
   }
 
-  async itgCreate(data: CreateCustomerAppcoreDto) {
-    const { passwordHash, salt } = saltHashPassword(defaultPassword);
-
-    const userAppcore = await this.userRepo.findOne({
-      user_appcore_id: data.user_appcore_id,
+  async itgGet(user_appcore_id: number) {
+    const customer = await this.userRepo.findOne({
+      select: '*',
+      join: userJoiner,
+      where: { user_appcore_id },
     });
-    if (userAppcore) {
-      throw new HttpException('UserAppcore đã tồn tại', 409);
+    if (!customer) {
+      throw new HttpException(
+        `Không tìm thấy KH có appcore id : ${user_appcore_id}`,
+        404,
+      );
     }
 
-    data['birthday'] = convertNullDatetimeData(data['birthday']);
-    data['created_at'] = convertNullDatetimeData(data['created_at']);
-    data['updated_at'] = convertNullDatetimeData(data['updated_at']);
+    return customer;
+  }
 
+  async itgCreate(data: CreateCustomerAppcoreDto) {
+    let convertedData = itgCreateCustomerFromAppcore(data);
+
+    const userAppcore = await this.userRepo.findOne({
+      user_appcore_id: convertedData['user_appcore_id'],
+    });
+    if (userAppcore) {
+      throw new HttpException('Người dùng đã tồn tại trong hệ thống', 409);
+    }
+
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
     let result;
     const user = await this.userRepo.findOne({ phone: data.phone });
     if (user) {
-      const userData = this.userDataRepo.setData(data);
+      const userData = this.userDataRepo.setData(convertedData);
       const updatedUser = await this.userDataRepo.update(
         { phone: data.phone },
         userData,
@@ -422,7 +440,7 @@ export class CustomerService {
     } else {
       const userData = {
         ...new UserEntity(),
-        ...this.userRepo.setData(data),
+        ...this.userRepo.setData(convertedData),
         password: passwordHash,
         salt: salt,
         status: UserStatusEnum.Deactive,
@@ -437,7 +455,8 @@ export class CustomerService {
       user_id: result.user_id,
     });
     if (userProfile) {
-      const updatedUserProfileData = this.userProfileRepo.setData(data);
+      const updatedUserProfileData =
+        this.userProfileRepo.setData(convertedData);
       if (Object.entries(updatedUserProfileData).length) {
         await this.userProfileRepo.update(
           { user_id: result.user_id },
@@ -447,7 +466,7 @@ export class CustomerService {
     } else {
       const userProfileData = {
         ...new UserProfileEntity(),
-        ...this.userProfileRepo.setData(data),
+        ...this.userProfileRepo.setData(convertedData),
         user_id: result.user_id,
       };
       await this.userProfileRepo.create(userProfileData);
@@ -455,7 +474,7 @@ export class CustomerService {
 
     let userData = await this.userDataRepo.findOne({ user_id: result.user_id });
     if (userData) {
-      const updatedUserDataData = this.userDataRepo.setData(data);
+      const updatedUserDataData = this.userDataRepo.setData(convertedData);
       if (Object.entries(updatedUserDataData).length) {
         await this.userDataRepo.update(
           { user_id: result.user_id },
@@ -465,7 +484,7 @@ export class CustomerService {
     } else {
       const userDataData = {
         ...new UserDataEntity(),
-        ...this.userDataRepo.setData(data),
+        ...this.userDataRepo.setData(convertedData),
         user_id: result.user_id,
       };
       await this.userDataRepo.create(userDataData);
@@ -475,7 +494,7 @@ export class CustomerService {
       user_id: result.user_id,
     });
     if (userLoyalty) {
-      const updatedUserLoyaltyData = this.userLoyalRepo.setData(data);
+      const updatedUserLoyaltyData = this.userLoyalRepo.setData(convertedData);
       if (Object.entries(updatedUserLoyaltyData).length) {
         await this.userLoyalRepo.update(
           { user_id: result.user_id },
@@ -485,35 +504,19 @@ export class CustomerService {
     } else {
       const userLoyaltyData = {
         ...new UserLoyaltyEntity(),
-        ...this.userLoyalRepo.setData(data),
+        ...this.userLoyalRepo.setData(convertedData),
         user_id: result.user_id,
       };
 
       await this.userLoyalRepo.create(userLoyaltyData);
     }
 
-    if (data['image_path']) {
-      const customerImage = await this.imageRepo.create({
-        image_path: data['image_path'],
-      });
-      if (customerImage) {
-        const customerImageLink = await this.imageLinkRepo.create({
-          object_id: result.user_id,
-          object_type: ImageObjectType.USER,
-          image_id: customerImage.image_id,
-        });
-
-        result = {
-          ...result,
-          avatar: { ...customerImage, ...customerImageLink },
-        };
-      }
-    }
-
     return result;
   }
 
   async itgUpdate(user_appcore_id: number, data: UpdateCustomerAppcoreDto) {
+    const convertedData = itgUpdateCustomerFromAppcore(data);
+    console.log(convertedData);
     const user = await this.userRepo.findOne({
       user_appcore_id,
     });
@@ -522,8 +525,11 @@ export class CustomerService {
       throw new HttpException('Không tìm thấy user trong hệ thống.', 404);
     }
 
-    if (data.email && user.email !== data.email) {
-      const userEmail = await this.userRepo.findOne({ email: data.email });
+    if (convertedData['email']) {
+      const userEmail = await this.userRepo.findOne({
+        email: data.email,
+        user_appcore_id: Not(Equal(user_appcore_id)),
+      });
       if (userEmail) {
         throw new HttpException('Email đã tồn tại', 409);
       }
@@ -531,11 +537,7 @@ export class CustomerService {
 
     let result = { ...user };
 
-    data['birthday'] = convertNullDatetimeData(data['birthday']);
-    data['created_at'] = convertNullDatetimeData(data['created_at']);
-    data['updated_at'] = convertNullDatetimeData(data['updated_at']);
-
-    const userData = this.userRepo.setData(data);
+    const userData = this.userRepo.setData(convertedData);
 
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
@@ -545,60 +547,69 @@ export class CustomerService {
       result = { ...updatedUser };
     }
 
-    const userProfileData = this.userProfileRepo.setData(data);
-    if (Object.entries(userProfileData).length) {
-      const updatedUserProfile = await this.userProfileRepo.update(
-        { user_id: result.user_id },
-        userProfileData,
-      );
-      result = { ...result, ...updatedUserProfile };
-    }
-
-    const userDataData = this.userDataRepo.setData(data);
-
-    if (Object.entries(userDataData).length) {
-      const updatedUserData = await this.userDataRepo.update(
-        { user_id: result.user_id },
-        userDataData,
-      );
-      result = { ...result, ...updatedUserData };
-    }
-
-    const userLoyaltyData = this.userLoyalRepo.setData(data);
-
-    if (Object.entries(userLoyaltyData).length) {
-      const updatedUserLoyalty = await this.userLoyalRepo.update(
-        { user_id: result.user_id },
-        userLoyaltyData,
-      );
-      result = { ...result, ...updatedUserLoyalty };
-    }
-
-    if (data['image_path']) {
-      const oldAvatar = await this.imageLinkRepo.findOne({
-        object_id: result.user_id,
-        object_type: ImageObjectType.USER,
-      });
-      if (oldAvatar) {
-        await this.imageLinkRepo.delete({ pair_id: oldAvatar.pair_id });
-        await this.imageRepo.delete({ image_id: oldAvatar.image_id });
+    let userProfile = await this.userProfileRepo.findOne({
+      user_id: result.user_id,
+    });
+    if (userProfile) {
+      const userProfileData = this.userProfileRepo.setData(convertedData);
+      if (Object.entries(userProfileData).length) {
+        const updatedUserProfile = await this.userProfileRepo.update(
+          { user_id: result.user_id },
+          userProfileData,
+        );
+        result = { ...result, ...updatedUserProfile };
       }
+    } else {
+      const newUserProfileData = {
+        ...new UserProfileEntity(),
+        ...this.userProfileRepo.setData(convertedData),
+        user_id: result.user_id,
+      };
+      await this.userProfileRepo.create(newUserProfileData);
+    }
 
-      const customerImage = await this.imageRepo.create({
-        image_path: data['image_path'],
-      });
-      if (customerImage) {
-        const customerImageLink = await this.imageLinkRepo.create({
-          object_id: result.user_id,
-          object_type: ImageObjectType.USER,
-          image_id: customerImage.image_id,
-        });
+    let _userData = await this.userDataRepo.findOne({
+      user_id: result.user_id,
+    });
+    if (_userData) {
+      const userDataData = this.userDataRepo.setData(convertedData);
 
-        result = {
-          ...result,
-          avatar: { ...customerImage, ...customerImageLink },
-        };
+      if (Object.entries(userDataData).length) {
+        const updatedUserData = await this.userDataRepo.update(
+          { user_id: result.user_id },
+          userDataData,
+        );
+        result = { ...result, ...updatedUserData };
       }
+    } else {
+      const newUserDataData = {
+        ...new UserDataEntity(),
+        ...this.userDataRepo.setData(convertedData),
+        user_id: result.user_id,
+      };
+      await this.userDataRepo.create(newUserDataData);
+    }
+
+    const userLoyalty = await this.userLoyalRepo.findOne({
+      user_id: result.user_id,
+    });
+    if (userLoyalty) {
+      const userLoyaltyData = this.userLoyalRepo.setData(convertedData);
+
+      if (Object.entries(userLoyaltyData).length) {
+        const updatedUserLoyalty = await this.userLoyalRepo.update(
+          { user_id: result.user_id },
+          userLoyaltyData,
+        );
+        result = { ...result, ...updatedUserLoyalty };
+      }
+    } else {
+      const newUserLoyaltyData = {
+        ...new UserLoyaltyEntity(),
+        ...this.userLoyalRepo.setData(convertedData),
+        user_id: result.user_id,
+      };
+      await this.userLoyalRepo.create(newUserLoyaltyData);
     }
 
     return result;

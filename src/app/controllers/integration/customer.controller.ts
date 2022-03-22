@@ -40,4 +40,13 @@ export class CustomerController extends BaseController {
     const result = await this.service.itgUpdate(customer_appcore_id, data);
     return this.responseSuccess(res, result, 'Cập nhật thành công');
   }
+
+  @Get('/:customer_appcore_id')
+  async get(
+    @Param('customer_appcore_id') customer_appcore_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.itgGet(customer_appcore_id);
+    return this.responseSuccess(res, result);
+  }
 }

@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from './helper';
+import { convertNullDatetimeData, convertToMySQLDateTime } from './helper';
 
 import * as moment from 'moment';
 
@@ -144,7 +144,82 @@ export const itgCustomerFromAppcore = (cData) => {
   return data;
 };
 
-export const itgCreateCustomerFromAppcore = () => {};
+export const itgCreateCustomerFromAppcore = (coreData) => {
+  const dataMapping = new Map([
+    ['firstname', 'firstname'],
+    ['lastname', 'lastname'],
+    ['phone', 'phone'],
+    ['user_appcore_id', 'user_appcore_id'],
+    ['gender', 'gender'],
+    ['email', 'email'],
+    ['birthday', 'birthday'],
+    ['b_city', 'b_city'],
+    ['b_district', 'b_district'],
+    ['b_ward', 'b_ward'],
+    ['b_address', 'b_address'],
+    ['b_city', 's_city'],
+    ['b_district', 's_district'],
+    ['b_ward', 's_ward'],
+    ['b_address', 's_address'],
+    ['created_at', 'created_at'],
+    ['updated_at', 'updated_at'],
+    ['type', 'type'],
+  ]);
+  let cmsData = {};
+  for (let [core, cms] of dataMapping) {
+    if (core === 'created_at' || core === 'updated_at' || core === 'birthday') {
+      cmsData[cms] = convertNullDatetimeData(coreData[core]);
+      continue;
+    }
+    if (core === 'b_phone') {
+      cmsData[cms] = coreData[core] || coreData['phone'];
+      continue;
+    }
+    if (core === 'gender') {
+      cmsData[cms] = coreData[core] == true ? 1 : 0;
+      continue;
+    }
+    cmsData[cms] = coreData[core];
+  }
+  return cmsData;
+};
+
+export const itgUpdateCustomerFromAppcore = (coreData) => {
+  const dataMapping = new Map([
+    ['firstname', 'firstname'],
+    ['lastname', 'lastname'],
+    ['gender', 'gender'],
+    ['email', 'email'],
+    ['birthday', 'birthday'],
+    ['b_phone', 'b_phone'],
+    ['b_city', 'b_city'],
+    ['b_district', 'b_district'],
+    ['b_ward', 'b_ward'],
+    ['b_address', 'b_address'],
+    ['b_phone', 's_phone'],
+    ['b_city', 's_city'],
+    ['b_district', 's_district'],
+    ['b_ward', 's_ward'],
+    ['b_address', 's_address'],
+    ['created_at', 'created_at'],
+    ['updated_at', 'updated_at'],
+    ['type', 'type'],
+  ]);
+  let cmsData = {};
+  for (let [core, cms] of dataMapping) {
+    if (core === 'created_at' || core === 'updated_at' || core === 'birthday') {
+      cmsData[cms] = convertNullDatetimeData(coreData[core]);
+      continue;
+    }
+    if (core === 'gender') {
+      cmsData[cms] = coreData[core] == true ? 1 : 0;
+      continue;
+    }
+
+    cmsData[cms] = coreData[core];
+  }
+  return cmsData;
+};
 
 export const itgCustomerToAppcore = (data) => {
   const dataMapping = new Map([

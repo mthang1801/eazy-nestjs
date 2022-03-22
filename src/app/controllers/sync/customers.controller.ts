@@ -10,7 +10,7 @@ export class CustomerControllers extends BaseController {
   }
   @Get()
   async get(@Res() res: Response): Promise<IResponse> {
-    const logs = await this.service.itgGet();
+    const logs = await this.service.syncGet();
     let result = null;
     if (logs.length) {
       result = `Người dùng có đã tồn tại : ${logs.join(', ')}`;
