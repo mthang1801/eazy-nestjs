@@ -26,6 +26,7 @@ import { ProductIntegrationController } from '../controllers/integration/product
 import { StoreModule } from './store.module';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';
+import { ProductSyncController } from '../controllers/sync/product.controller';
 
 @Module({
   imports: [forwardRef(() => CategoryModule)],
@@ -81,6 +82,7 @@ import { ProductStoreHistoryRepository } from '../repositories/productStoreHisto
     ProductsControllerBE,
     ProductsControllerFE,
     ProductIntegrationController,
+    ProductSyncController,
   ],
 })
 export class ProductsModule {}

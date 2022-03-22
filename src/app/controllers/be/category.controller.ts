@@ -50,6 +50,9 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('count-products')
+  async countProducts(): Promise<void> {}
+
   /**
    * Fetch list categories in ddv_categories table
    * @param skip number

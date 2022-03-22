@@ -34,7 +34,6 @@ import { CreateProductDto } from '../dto/product/create-product.dto';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryEntity } from '../entities/category.entity';
 import {
-  productByCategoryJoiner,
   productFamilyJoiner,
   productFeaturesByCategory,
   productFeaturesJoiner,
@@ -89,6 +88,7 @@ import { DeleteProductImageDto } from '../dto/product/delete-productImage.dto';
 
 import {
   categorySelector,
+  getProductsListSelector,
   productFeatureValuesSelector,
 } from 'src/utils/tableSelector';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
@@ -115,6 +115,7 @@ import {
 } from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
+import { productByCategoryJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -427,9 +428,9 @@ export class ProductService {
     }
 
     const productLists = await this.productRepo.find({
-      select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status `,
+      select: getProductsListSelector,
       join: {
-        [JoinTable.leftJoin]: productJoiner,
+        [JoinTable.innerJoin]: productJoiner,
       },
       orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
       where: categoriesList.length
@@ -443,8 +444,33 @@ export class ProductService {
       limit,
     });
 
+    if (productLists.length) {
+      for (let productItem of productLists) {
+        const currentCategory = await this.categoryRepo.findOne({
+          select: '*',
+          join: {
+            [JoinTable.innerJoin]: {
+              [Table.PRODUCTS_CATEGORIES]: {
+                fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+                rootJoin: `${Table.CATEGORIES}.category_id`,
+              },
+              [Table.CATEGORY_DESCRIPTIONS]: {
+                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+                rootJoin: `${Table.CATEGORIES}.category_id`,
+              },
+            },
+          },
+          where: { product_id: productItem.product_id },
+        });
+
+        if (currentCategory) {
+          productItem['currentCategory'] = currentCategory;
+        }
+      }
+    }
+
     let count = await this.productRepo.find({
-      select: [`COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`],
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: {
         [JoinTable.leftJoin]: productJoiner,
       },
@@ -1527,10 +1553,15 @@ export class ProductService {
   }
 
   async deleteProductImage(
-    sku: string,
+    identifier: string | number,
     data: DeleteProductImageDto,
   ): Promise<string> {
-    const product = await this.productRepo.findOne({ product_code: sku });
+    console.log(identifier);
+    const product = await this.productRepo.findOne({
+      select: '*',
+      where: [{ product_code: identifier }, { product_id: identifier }],
+    });
+    console.log(product);
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
@@ -1565,7 +1596,6 @@ export class ProductService {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
     }
 
-    console.log(product);
     let response;
 
     if (product.product_type === 3) {
@@ -2145,5 +2175,36 @@ export class ProductService {
       where: productSearch(q),
     });
     return productLists;
+  }
+
+  async getProductsAmountFromStores() {
+    const productsList = await this.productRepo.find();
+    for (let productItem of productsList) {
+      let response;
+
+      if (productItem.product_type === 3) {
+        response = await axios({
+          url: GET_PRODUCTS_COMBO_STORES_API(productItem.product_appcore_id),
+        });
+      } else {
+        response = await axios({
+          url: GET_PRODUCTS_STORES_API(productItem.product_appcore_id),
+        });
+      }
+      const data = response.data.data;
+      if (Object.entries(data)) {
+        let totalProduct = 0;
+        for (let [key, val] of Object.entries(data)) {
+          totalProduct += val['inStockQuantity'];
+        }
+        await this.productRepo.update(
+          { product_id: productItem.product_id },
+          {
+            amount: productItem.product_type !== 3 ? totalProduct : 0,
+            combo_amount: productItem.product_type === 3 ? totalProduct : 0,
+          },
+        );
+      }
+    }
   }
 }

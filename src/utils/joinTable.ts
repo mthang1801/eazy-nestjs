@@ -129,14 +129,6 @@ export const productJoiner = {
     fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
-  [Table.PRODUCTS_CATEGORIES]: {
-    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-    rootJoin: `${Table.PRODUCTS}.product_id`,
-  },
-  [Table.CATEGORIES]: {
-    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-    rootJoin: `${Table.CATEGORIES}.category_id`,
-  },
   [Table.PRODUCT_SALES]: {
     fieldJoin: `${Table.PRODUCT_SALES}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,

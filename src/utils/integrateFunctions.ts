@@ -186,6 +186,26 @@ export const itgCustomerToAppcore = (data) => {
   return cData;
 };
 
+export const itgCreateCategoryFromAppcore = (coreData) => {
+  const mappingData = new Map([
+    ['category_id', 'category_magento_id'],
+    ['parent_id', 'parent_magento_id'],
+    ['display_at', 'display_at'],
+  ]);
+  let cmsData = { ...coreData };
+  delete cmsData['category_id'];
+  delete cmsData['parent_id'];
+
+  for (let [core, cms] of mappingData) {
+    if (core === 'display_at') {
+      cmsData[cms] = convertToMySQLDateTime(coreData[core]);
+      continue;
+    }
+    cmsData[cms] = coreData[core];
+  }
+  return cmsData;
+};
+
 export const itgConvertProductsFromAppcore = (data) => {
   const mappingData = new Map([
     ['product_id', 'product_appcore_id'],

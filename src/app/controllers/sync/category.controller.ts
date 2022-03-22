@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, Post } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
@@ -11,6 +11,11 @@ export class CategorySyncController extends BaseController {
   @Get()
   async get(@Res() res: Response): Promise<IResponse> {
     await this.service.getSync();
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+  @Post()
+  async callSync(@Res() res: Response): Promise<IResponse> {
+    await this.service.callSync();
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }

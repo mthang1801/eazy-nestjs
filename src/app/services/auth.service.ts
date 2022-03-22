@@ -47,7 +47,6 @@ import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
-import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { CustomerService } from './customer.service';
 import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';

@@ -31,8 +31,12 @@ import { DatabaseService } from 'src/database/database.service';
 import {
   sqlSyncGetCategoryFromMagento,
   convertCategoryFromMagentoToCMS,
-} from '../../utils/scriptSyncFromMagentor/syncCategory';
+} from '../../utils/scriptSyncFromMagentor/category.sync';
 import { categoriesSearchFilter } from 'src/utils/tableConditioner';
+import {
+  itgCreateCategoryFromAppcore,
+  itgCreateCustomerFromAppcore,
+} from 'src/utils/integrateFunctions';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -97,52 +101,20 @@ export class CategoryService {
     return { idPaths: result.idPaths, level: result.level };
   }
 
-  async itgCreate(data: CreateCategoryDto): Promise</*ICategoryResult*/ any> {
-    const categoryData = this.categoryRepository.setData(data);
-    const slug = data['category']
-      ? convertToSlug(removeVietnameseTones(data.category))
-      : '';
-
-    let idPath = '';
-
-    if (data.level === 1) {
-      idPath = `${data.parent_id}`;
-    }
-    if (data.level === 2 && data.parent_id) {
-      let parentCategory = await this.categoryRepository.findById(
-        data.parent_id,
-      );
-      if (parentCategory) {
-        let grandParentCategory = await this.categoryRepository.findById(
-          parentCategory.parent_id,
-        );
-        idPath = `${grandParentCategory.category_id}/${parentCategory.category_id}`;
-      }
+  async itgCreate(data) {
+    if (data['display_at']) {
+      data['display_at'] = convertToMySQLDateTime(data['display_at']);
     }
 
-    let result = await this.categoryRepository.create({
-      ...categoryData,
-      id_path: idPath,
-      slug,
-      display_at: convertToMySQLDateTime(
-        categoryData['display_at']
-          ? new Date(categoryData['display_at'])
-          : new Date(),
-      ),
-      created_at: convertToMySQLDateTime(),
-    });
+    const categoryData = {
+      ...new CategoryEntity(),
+      ...this.categoryRepository.setData(data),
+      slug: convertToSlug(removeVietnameseTones(data['category'])),
+    };
+    await this.categoryRepository.createSync(categoryData);
 
-    const categoryDescriptionData = this.categoryDescriptionRepo.setData(data);
-
-    const createdCategoryDescription: CategoryDescriptionEntity =
-      await this.categoryDescriptionRepo.create({
-        category_id: result.category_id,
-        ...categoryDescriptionData,
-      });
-
-    result = { ...result, ...createdCategoryDescription };
-
-    return result;
+    const categoryDescData = this.categoryDescriptionRepo.setData(data);
+    await this.categoryDescriptionRepo.create(categoryDescData);
   }
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
@@ -404,7 +376,7 @@ export class CategoryService {
     let categoriesListRoot = await this.categoryRepository.find({
       select: `*`,
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 1 },
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
       skip,
       limit,
     });
@@ -412,7 +384,7 @@ export class CategoryService {
     let totalCategory = await this.categoryRepository.find({
       select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 1 },
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
     });
 
     for (let categoryRoot of categoriesListRoot) {
@@ -451,7 +423,7 @@ export class CategoryService {
     const categories = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 1 },
+      where: { [`${Table.CATEGORIES}.level`]: 0 },
     });
     for (let category of categories) {
       const categoriesList = await this.getCategoriesChildrenRecursive(
@@ -561,9 +533,9 @@ export class CategoryService {
 
   async findAndUpdateFromMagento(categoriesList) {
     for (let categoryItem of categoriesList) {
-      if (categoryItem['parent_matengo_id'] != 0) {
+      if (categoryItem['parent_magento_id'] != 0) {
         const categoryParent = await this.categoryRepository.findOne({
-          category_matengo_id: categoryItem['parent_matengo_id'],
+          category_magento_id: categoryItem['parent_magento_id'],
         });
         if (categoryParent) {
           await this.categoryRepository.update(
@@ -574,9 +546,9 @@ export class CategoryService {
           );
         }
       }
-      const categoryIdMatengoPaths = categoryItem['id_matengo_path']
-        ? categoryItem['id_matengo_path'].split('/')
-        : categoryItem['id_matengo_path'];
+      const categoryIdMatengoPaths = categoryItem['id_magento_path']
+        ? categoryItem['id_magento_path'].split('/')
+        : categoryItem['id_magento_path'];
       let idPaths = [];
       if (Array.isArray(categoryIdMatengoPaths)) {
         for (let idPath of categoryIdMatengoPaths) {
@@ -594,6 +566,14 @@ export class CategoryService {
           { id_path: idPaths.join('/') },
         );
       }
+    }
+  }
+
+  async callSync() {
+    let categoriesList: any = categoryData;
+    await this.clearAll();
+    for (let categoryItem of categoriesList) {
+      await this.itgCreate(categoryItem);
     }
   }
 }

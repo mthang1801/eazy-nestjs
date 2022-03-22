@@ -35,11 +35,11 @@ import {
   productFeatureVariantSearchFilter,
 } from 'src/utils/tableConditioner';
 import { DatabaseService } from 'src/database/database.service';
-import { MagentoEntityAttributeValue } from 'src/database/constant/magentor.tables';
+
 import {
   covertProductFeaturesFromMagento,
   sqlGetFeatureValues,
-} from 'src/utils/scriptSyncFromMagentor/syncProductFeature';
+} from 'src/utils/scriptSyncFromMagentor/productFeature.sync';
 import {
   productFeatureJoiner,
   productFeatureVariantJoiner,
@@ -54,7 +54,7 @@ export class ProductFeatureService {
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureValuesRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
     private ProductOptionVariantDescriptionRepository: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
-    private matengoDatabaseService: DatabaseService,
+    private magentoDatabaseService: DatabaseService,
   ) {}
 
   async create(
@@ -546,6 +546,7 @@ export class ProductFeatureService {
   }
 
   async callSync() {
+    await this.clearAll();
     for (let dataItem of productFeaturesData) {
       await this.createSync(dataItem);
     }
@@ -553,7 +554,7 @@ export class ProductFeatureService {
 
   async getSync() {
     await this.clearAll();
-    const featuresValues = await this.matengoDatabaseService.executeMagentoPool(
+    const featuresValues = await this.magentoDatabaseService.executeMagentoPool(
       sqlGetFeatureValues,
     );
     if (featuresValues[0].length) {

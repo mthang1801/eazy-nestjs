@@ -4,9 +4,9 @@ export const sqlSyncGetCategoryFromMagento =
 
 export const convertCategoryFromMagentoToCMS = (magentoData) => {
   const mappingData = new Map([
-    ['parent_id', 'parent_matengo_id'],
-    ['path', 'id_matengo_path'],
-    ['entity_id', 'category_matengo_id'],
+    ['parent_id', 'parent_magento_id'],
+    ['path', 'id_magento_path'],
+    ['entity_id', 'category_magento_id'],
     ['position', 'position'],
     ['level', 'level'],
     ['children_count', 'product_count'],

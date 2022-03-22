@@ -75,6 +75,9 @@ export class UpdateProductDto {
   meta_description: string;
 
   @IsOptional()
+  meta_keywords: string;
+
+  @IsOptional()
   alias: string;
 
   @IsOptional()

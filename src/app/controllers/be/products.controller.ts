@@ -113,13 +113,13 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
   }
 
-  @Put('/:sku/delete-images')
+  @Put('/:identifier/delete-images')
   async deleteProductImage(
-    @Param('sku') sku: string,
+    @Param('identifier') identifier: string | number,
     @Res() res: Response,
     @Body() data: DeleteProductImageDto,
   ) {
-    let message = await this.service.deleteProductImage(sku, data);
+    let message = await this.service.deleteProductImage(identifier, data);
     return this.responseSuccess(res, null, message);
   }
 

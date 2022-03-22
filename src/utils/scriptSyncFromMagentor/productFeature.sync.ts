@@ -1,7 +1,7 @@
 export const sqlGetFeatureValues =
   'SELECT * FROM `ddv_eav_attribute` AS ea JOIN `ddv_eav_attribute_option` AS eao ON ea.attribute_id = eao.attribute_id JOIN `ddv_eav_attribute_option_value` AS eaov ON eao.option_id = eaov.option_id';
 
-export const covertProductFeaturesFromMagento = (matengoData) => {
+export const covertProductFeaturesFromMagento = (magentoData) => {
   const mappingData = new Map([
     ['entity_type_id', 'feature_type'],
     ['attribute_code', 'feature_code'],
@@ -11,12 +11,12 @@ export const covertProductFeaturesFromMagento = (matengoData) => {
     ['value', 'variant'],
   ]);
   let cmsData = {};
-  for (let [matengo, cms] of mappingData) {
-    if (matengo === 'frontend_input') {
-      cmsData[cms] = matengoData[matengo] === 'select' ? 'Y' : 'N';
+  for (let [magento, cms] of mappingData) {
+    if (magento === 'frontend_input') {
+      cmsData[cms] = magentoData[magento] === 'select' ? 'Y' : 'N';
       continue;
     }
-    cmsData[cms] = matengoData[matengo];
+    cmsData[cms] = magentoData[magento];
   }
   return cmsData;
 };

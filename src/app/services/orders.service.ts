@@ -141,12 +141,22 @@ export class OrdersService {
         }),
       };
 
-      const newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+      const orderProductItem = await this.productRepo.findOne({
+        select: '*',
+        join: productJoiner,
+        where: { product_id: orderItem.product_id },
+      });
+
+      let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+
+      newOrderDetail['product_id'] = orderProductItem['product_appcore_id'];
 
       result['order_items'] = result['order_items']
         ? [...result['order_items'], newOrderDetail]
         : [newOrderDetail];
     }
+
+    console.log(result);
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
