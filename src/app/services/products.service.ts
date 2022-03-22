@@ -1766,9 +1766,13 @@ export class ProductService {
 
             // Truyền thêm table product group vào product Detail
             productInfoDetail = { ...productItem, ...productInfoDetail };
-
+            console.log(
+              1772,
+              product.product_id,
+              productInfoDetail.parent_product_id,
+            );
             // Lấy các SP con
-            if (product.product_id === productInfoDetail.parent_product_id) {
+            if (product.product_id == productInfoDetail.parent_product_id) {
               // Lấy thuộc tính SP
               let features = await this.productFeatureValueRepo.find({
                 select: productFeatureValuesSelector,
@@ -1806,22 +1810,15 @@ export class ProductService {
                 productInfoDetail.product_id,
               );
 
+              console.log(1809, productInfoDetail.product_id);
+
               productInfoDetail['inventories'] = productsStores.length
                 ? productsStores
                 : null;
 
               product['children_products'] = product['children_products']
-                ? [
-                    ...product['children_products'],
-                    {
-                      ...productInfoDetail,
-                    },
-                  ]
-                : [
-                    {
-                      ...productInfoDetail,
-                    },
-                  ];
+                ? [...product['children_products'], productInfoDetail]
+                : [productInfoDetail];
             }
             // Lấy các SP liên quan
             if (
@@ -2166,13 +2163,16 @@ export class ProductService {
 
   async searchList(params) {
     let { page, limit, q } = params;
-    console.log(q);
+
     page = +page || 1;
     limit = +limit || 10;
+    let skip = (page - 1) * limit;
     const productLists = await this.productRepo.find({
       select: '*',
       join: productSearchJoiner,
       where: productSearch(q),
+      skip,
+      limit,
     });
     return productLists;
   }

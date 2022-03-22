@@ -53,6 +53,7 @@ export class ProductsEntity {
   buy_now_url: string = '';
   other_appcore_id: string = '';
   url_media: string = '';
+  type: string = '1';
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

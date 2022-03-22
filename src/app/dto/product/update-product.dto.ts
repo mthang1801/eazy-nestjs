@@ -100,6 +100,9 @@ export class UpdateProductDto {
 
   @IsOptional()
   url_media: string;
+
+  @IsOptional()
+  type: string = '1';
 }
 
 class ProductFeatureDto {
