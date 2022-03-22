@@ -64,7 +64,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/:id/product-stores')
+  @Get('/:id/products-stores')
   async getProductsStores(
     @Param('id') id: string,
     @Res() res: Response,

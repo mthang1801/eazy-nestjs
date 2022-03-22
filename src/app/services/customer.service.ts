@@ -399,11 +399,6 @@ export class CustomerService {
   async itgCreate(data: CreateCustomerAppcoreDto) {
     const { passwordHash, salt } = saltHashPassword(defaultPassword);
 
-    const user = await this.userRepo.findOne({ phone: data.phone });
-    if (user) {
-      throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
-    }
-
     const userAppcore = await this.userRepo.findOne({
       user_appcore_id: data.user_appcore_id,
     });
@@ -411,58 +406,91 @@ export class CustomerService {
       throw new HttpException('UserAppcore đã tồn tại', 409);
     }
 
-    if (data.email) {
-      const userEmail = await this.userRepo.findOne({ email: data.email });
-      if (userEmail) {
-        throw new HttpException('Email đã tồn tại', 409);
-      }
-    }
-
     data['birthday'] = convertNullDatetimeData(data['birthday']);
     data['created_at'] = convertNullDatetimeData(data['created_at']);
     data['updated_at'] = convertNullDatetimeData(data['updated_at']);
 
-    const userData = {
-      ...new UserEntity(),
-      ...this.userRepo.setData(data),
-      password: passwordHash,
-      salt: salt,
-      status: UserStatusEnum.Deactive,
-    };
+    let result;
+    const user = await this.userRepo.findOne({ phone: data.phone });
+    if (user) {
+      const userData = this.userDataRepo.setData(data);
+      const updatedUser = await this.userDataRepo.update(
+        { phone: data.phone },
+        userData,
+      );
+      result = { ...updatedUser };
+    } else {
+      const userData = {
+        ...new UserEntity(),
+        ...this.userRepo.setData(data),
+        password: passwordHash,
+        salt: salt,
+        status: UserStatusEnum.Deactive,
+      };
 
-    const newUser = await this.userRepo.create(userData);
+      const newUser = await this.userRepo.create(userData);
 
-    let result = { ...newUser };
+      result = { ...newUser };
+    }
 
-    const userProfileData = {
-      ...new UserProfileEntity(),
-      ...this.userProfileRepo.setData(data),
+    let userProfile = await this.userProfileRepo.findOne({
       user_id: result.user_id,
-    };
+    });
+    if (userProfile) {
+      const updatedUserProfileData = this.userProfileRepo.setData(data);
+      if (Object.entries(updatedUserProfileData).length) {
+        await this.userProfileRepo.update(
+          { user_id: result.user_id },
+          updatedUserProfileData,
+        );
+      }
+    } else {
+      const userProfileData = {
+        ...new UserProfileEntity(),
+        ...this.userProfileRepo.setData(data),
+        user_id: result.user_id,
+      };
+      await this.userProfileRepo.create(userProfileData);
+    }
 
-    const newUserProfile = await this.userProfileRepo.create(userProfileData);
+    let userData = await this.userDataRepo.findOne({ user_id: result.user_id });
+    if (userData) {
+      const updatedUserDataData = this.userDataRepo.setData(data);
+      if (Object.entries(updatedUserDataData).length) {
+        await this.userDataRepo.update(
+          { user_id: result.user_id },
+          updatedUserDataData,
+        );
+      }
+    } else {
+      const userDataData = {
+        ...new UserDataEntity(),
+        ...this.userDataRepo.setData(data),
+        user_id: result.user_id,
+      };
+      await this.userDataRepo.create(userDataData);
+    }
 
-    result = { ...result, profile: newUserProfile };
-
-    const userDataData = {
-      ...new UserDataEntity(),
-      ...this.userDataRepo.setData(data),
+    let userLoyalty = await this.userLoyalRepo.findOne({
       user_id: result.user_id,
-    };
+    });
+    if (userLoyalty) {
+      const updatedUserLoyaltyData = this.userLoyalRepo.setData(data);
+      if (Object.entries(updatedUserLoyaltyData).length) {
+        await this.userLoyalRepo.update(
+          { user_id: result.user_id },
+          updatedUserLoyaltyData,
+        );
+      }
+    } else {
+      const userLoyaltyData = {
+        ...new UserLoyaltyEntity(),
+        ...this.userLoyalRepo.setData(data),
+        user_id: result.user_id,
+      };
 
-    const newUserData = await this.userDataRepo.create(userDataData);
-
-    result = { ...result, data: newUserData };
-
-    const userLoyaltyData = {
-      ...new UserLoyaltyEntity(),
-      ...this.userLoyalRepo.setData(data),
-      user_id: result.user_id,
-    };
-
-    const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
-
-    result = { ...result, loyalty: newUserLoyalty };
+      await this.userLoyalRepo.create(userLoyaltyData);
+    }
 
     if (data['image_path']) {
       const customerImage = await this.imageRepo.create({

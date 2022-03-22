@@ -451,7 +451,7 @@ export class CategoryService {
     const categories = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.level`]: 0 },
+      where: { [`${Table.CATEGORIES}.level`]: 1 },
     });
     for (let category of categories) {
       const categoriesList = await this.getCategoriesChildrenRecursive(

@@ -32,7 +32,7 @@ export class CreateCustomerAppcoreDto {
   b_ward: string;
 
   @IsOptional()
-  address: string;
+  b_address: string;
 
   @IsOptional()
   created_at: string;

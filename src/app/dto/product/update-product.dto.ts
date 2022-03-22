@@ -92,7 +92,11 @@ export class UpdateProductDto {
   @IsOptional()
   children_products: UpdateProductDto[];
 
+  @IsOptional()
   images: string[];
+
+  @IsOptional()
+  url_media: string;
 }
 
 class ProductFeatureDto {

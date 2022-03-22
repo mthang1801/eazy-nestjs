@@ -52,6 +52,7 @@ export class ProductsEntity {
   facebook_obj_type: string = '';
   buy_now_url: string = '';
   other_appcore_id: string = '';
+  url_media: string = '';
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

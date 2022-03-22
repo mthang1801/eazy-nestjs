@@ -1565,6 +1565,7 @@ export class ProductService {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
     }
 
+    console.log(product);
     let response;
 
     if (product.product_type === 3) {
