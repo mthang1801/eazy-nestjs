@@ -190,7 +190,7 @@ class ProductOrder {
   amount: number = 1;
 
   @IsOptional()
-  product_code: string = '';
+  product_appcore_id: string = '';
 
   @IsOptional()
   is_gift_taken: null | number = 0;

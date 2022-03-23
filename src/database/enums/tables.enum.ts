@@ -6,6 +6,7 @@ export enum Table {
   USER_MAILING_LISTS = 'ddv_user_mailing_lists',
   USER_DATA = 'ddv_user_data',
   USER_LOYALTY = 'ddv_user_loyalty',
+  USER_LOYALTY_HISTORY = 'ddv_user_loyalty_histories',
 
   //============== User group ==============
   USER_GROUPS = 'ddv_usergroups',

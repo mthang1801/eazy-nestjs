@@ -6,6 +6,7 @@ import { CustomerService } from '../../services/customer.service';
 import { UpdateCustomerAppcoreDto } from '../../dto/customer/update-customerAppcore.dto';
 import { CreateCustomerAppcoreDto } from '../../dto/customer/crate-customerAppcore.dto';
 import { UpdateCustomerLoyalty } from 'src/app/dto/customer/update-customerLoyalty.appcore.dto';
+import { CreateCustomerLoyalHistoryDto } from '../../dto/customer/crate-customerLoyalHistory';
 @Controller('/itg/v1/customers')
 export class CustomerController extends BaseController {
   constructor(private service: CustomerService) {
@@ -48,5 +49,25 @@ export class CustomerController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.itgGet(customer_appcore_id);
     return this.responseSuccess(res, result);
+  }
+
+  @Post(':customer_appcore_id/loyalty')
+  async postLoytalty(
+    @Param('customer_appcore_id') customer_appcore_id: string,
+    @Res() res: Response,
+    @Body('point') point: number,
+  ): Promise<IResponse> {
+    await this.service.itgPostLoyalty(customer_appcore_id, point);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Post(':customer_appcore_id/loyalty-history')
+  async postLoyaltyHistory(
+    @Param('customer_appcore_id') customer_appcore_id: string,
+    @Res() res: Response,
+    @Body() data: CreateCustomerLoyalHistoryDto,
+  ): Promise<IResponse> {
+    await this.service.itgPostLoyaltyHistory(customer_appcore_id, data);
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 }

@@ -55,6 +55,9 @@ import {
 } from 'src/database/constant/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
 import { Not, Equal } from '../../database/find-options/operators';
+import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
+import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
+import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
 
 @Injectable()
 export class CustomerService {
@@ -66,6 +69,7 @@ export class CustomerService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
+    private userLoyalHistory: UserLoyaltyHistoryRepository<UserLoyaltyHistoryEntity>,
   ) {}
 
   async create(creator, data: CreateCustomerDto) {
@@ -655,5 +659,51 @@ export class CustomerService {
         await this.userLoyalRepo.delete({ user_id: customer.user_id });
       }
     }
+  }
+
+  async itgPostLoyalty(customer_appcore_id: string, point: number) {
+    const user = await this.userRepo.findOne({
+      user_appcore_id: customer_appcore_id,
+    });
+    if (!user) {
+      throw new HttpException('Không tìm thấy KH', 404);
+    }
+    const userLoyalty = await this.userLoyalRepo.findOne({
+      user_id: user.user_id,
+    });
+    if (userLoyalty) {
+      await this.userLoyalRepo.update(
+        { user_id: user.user_id },
+        { loyalty_point: point, updated_at: convertToMySQLDateTime() },
+      );
+    } else {
+      const newUserLoyalty = {
+        ...new UserLoyaltyEntity(),
+        loyalty_point: point,
+        user_id: user.user_id,
+      };
+      await this.userLoyalRepo.create(newUserLoyalty);
+    }
+  }
+
+  async itgPostLoyaltyHistory(
+    customer_appcore_id,
+    data: CreateCustomerLoyalHistoryDto,
+  ) {
+    const user = await this.userRepo.findOne({
+      user_appcore_id: customer_appcore_id,
+    });
+    if (!user) {
+      throw new HttpException('Không tìm thấy KH', 404);
+    }
+
+    data['created_at'] = convertNullDatetimeData(data['created_at']);
+
+    const userLoyalHist = {
+      ...new UserLoyaltyHistoryEntity(),
+      ...this.userLoyalHistory.setData(data),
+      user_id: user.user_id,
+    };
+    await this.userLoyalHistory.create(userLoyalHist);
   }
 }

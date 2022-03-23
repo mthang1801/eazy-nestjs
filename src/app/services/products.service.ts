@@ -386,6 +386,7 @@ export class ProductService {
       where: [
         { [`${Table.PRODUCTS}.product_id`]: identifier },
         { [`${Table.PRODUCTS}.product_code`]: identifier },
+        { [`${Table.PRODUCTS}.product_appcore_id`]: identifier },
       ],
     });
 

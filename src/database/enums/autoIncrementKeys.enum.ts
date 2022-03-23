@@ -6,6 +6,7 @@ export enum PrimaryKeys {
   ddv_user_profiles = 'profile_id',
   ddv_user_data = 'user_id',
   ddv_user_loyalty = 'loyalty_id',
+  ddv_user_loyalty_histories = 'auto_increment_id',
 
   //============== User group ==============
   ddv_usergroup_descriptions = 'list_id',

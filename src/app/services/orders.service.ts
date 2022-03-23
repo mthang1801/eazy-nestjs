@@ -105,10 +105,15 @@ export class OrdersService {
       }
     }
 
+    data.s_city = data.s_city || data.b_city;
+    data.s_ward = data.s_ward || data.b_ward;
+    data.s_district = data.s_district || data.b_district;
+    data.s_phone = data.s_phone || data.b_phone;
+    data.s_address = data.s_address || data.b_address;
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
-      is_sync: 0,
     };
 
     if (!user['user_appcore_id']) {
@@ -151,16 +156,28 @@ export class OrdersService {
         ...this.orderDetailRepo.setData({
           ...result,
           ...orderItem,
-          product_id: orderProductItem.product_appcore_id,
+          product_id: orderProductItem.product_id,
+          product_appcore_id: orderProductItem.product_appcore_id,
           status: CommonStatus.Active,
         }),
       };
 
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
-
+      console.log(newOrderDetail);
       result['order_items'] = result['order_items']
-        ? [...result['order_items'], newOrderDetail]
-        : [newOrderDetail];
+        ? [
+            ...result['order_items'],
+            {
+              ...newOrderDetail,
+              product_id: newOrderDetail.product_appcore_id,
+            },
+          ]
+        : [
+            {
+              ...newOrderDetail,
+              product_id: newOrderDetail.product_appcore_id,
+            },
+          ];
     }
 
     //============ Push data to Appcore ==================
@@ -180,51 +197,19 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-      const orderAppcoreId = response.data.data;
-      console.log(orderAppcoreId);
-
-      const getOrderDetailsResponse = await axios(
-        configGetOrderFromAppcore(orderAppcoreId),
+      const orderAppcoreResponse = response.data.data;
+      await this.orderRepo.update(
+        { order_id: result.order_id },
+        { order_code: orderAppcoreResponse.orderId, is_sync: 0 },
       );
-
-      const orderInfoDetails = getOrderDetailsResponse.data.data.filter(
-        ({ id }) => id === orderAppcoreId,
-      )[0];
-
-      if (orderInfoDetails) {
-        const order_code = orderAppcoreId;
-        const orderCodeItems = result['order_items'].map((orderItem) => {
-          const orderAppcoreItem = orderInfoDetails['orderItems'].find(
-            ({ productId }) => productId == orderItem.product_id,
-          );
-          if (orderAppcoreItem) {
-            return {
-              order_item_id: orderItem.item_id,
-              order_item_appcore_id: orderAppcoreItem.id,
-            };
-          }
-          return {
-            order_item_id: orderItem.item_id,
-            order_item_appcore_id: null,
-          };
-        });
-
-        // update order code
-        await this.orderRepo.update(
-          { order_id: result.order_id },
-          { order_code, is_sync: 0 },
+      for (let orderItem of orderAppcoreResponse['orderItemIds']) {
+        await this.orderDetailRepo.update(
+          {
+            order_id: result.order_id,
+            product_appcore_id: orderItem.productId,
+          },
+          { order_item_appcore_id: orderItem.orderItemId },
         );
-
-        if (orderCodeItems?.length) {
-          for (let { order_item_id, order_item_appcore_id } of orderCodeItems) {
-            await this.orderDetailRepo.update(
-              {
-                item_id: order_item_id,
-              },
-              { order_item_appcore_id },
-            );
-          }
-        }
       }
     } catch (error) {
       throw new HttpException(
@@ -432,6 +417,8 @@ export class OrdersService {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
 
+    console.log(order);
+
     const orderItems = await this.orderDetailRepo.find({
       order_id: order.order_id,
     });
@@ -441,7 +428,7 @@ export class OrdersService {
           select: `product`,
           join: productSearchJoiner,
           where: [
-            { product_id: orderItem.product_id },
+            { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
             { product_appcore_id: orderItem.product_id },
           ],
         });
@@ -463,6 +450,8 @@ export class OrdersService {
           : [orderItem];
       }
     }
+
+    return order;
   }
 
   async itgCreate(data: CreateOrderAppcoreDto) {

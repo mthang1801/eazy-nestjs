@@ -186,7 +186,7 @@ class ProductOrder {
   product_type: number = 1;
 
   @IsOptional()
-  product_code: string = '';
+  product_appcore_id: string = '';
 
   @IsOptional()
   repurchase_price: number = 0;

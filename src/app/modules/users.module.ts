@@ -9,6 +9,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserMailingListRepository } from '../repositories/userMailingLists.repository';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 @Module({
   imports: [MailModule, UserGroupsModule],
   exports: [
@@ -18,6 +19,7 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
     UserDataRepository,
     UserMailingListRepository,
     UserLoyaltyRepository,
+    UserLoyaltyHistoryRepository,
   ],
   providers: [
     UsersService,
@@ -26,6 +28,7 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
     UserDataRepository,
     UserMailingListRepository,
     UserLoyaltyRepository,
+    UserLoyaltyHistoryRepository,
   ],
   controllers: [UsersControllerBe, UsersControllerFe],
 })
