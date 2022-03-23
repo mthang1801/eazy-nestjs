@@ -54,6 +54,7 @@ export class ProductsEntity {
   other_appcore_id: string = '';
   url_media: string = '';
   type: string = '1';
+  open_new_tab: string = 'N';
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

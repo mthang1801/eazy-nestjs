@@ -13,4 +13,9 @@ export class ProductDescriptionsEntity {
   page_title: string = '';
   age_warning_message: string = '';
   promo_text: string = '';
+  other_info: string = '';
+  product_hover: string = '';
+  promotion_note: string = '';
+  promotion_info: string = '';
+  online_gifts: string = '';
 }

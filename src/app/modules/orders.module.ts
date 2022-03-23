@@ -16,11 +16,13 @@ import { StatusModule } from './status.module';
 import { StoreModule } from './store.module';
 import { CustomerModule } from './customer.module';
 import { CartModule } from './cart.module';
+import { OrderSyncController } from '../controllers/sync/order.controller';
 @Module({
   controllers: [
     OrderControllerBE,
     OrderIntegrationController,
     OrdersControllerFE,
+    OrderSyncController,
   ],
   providers: [
     OrdersService,

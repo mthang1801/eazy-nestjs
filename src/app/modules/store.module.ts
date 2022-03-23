@@ -1,5 +1,6 @@
 import { Module, Global } from '@nestjs/common';
 import { StoreController } from '../controllers/be/store.controller';
+import { StoreSyncController } from '../controllers/sync/store.controller';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationDescriptionsRepository } from '../repositories/storeLocationDescriptions.repository';
 import { StoreService } from '../services/store.service';
@@ -16,6 +17,6 @@ import { StoreService } from '../services/store.service';
     StoreLocationRepository,
     StoreLocationDescriptionsRepository,
   ],
-  controllers: [StoreController],
+  controllers: [StoreController, StoreSyncController],
 })
 export class StoreModule {}

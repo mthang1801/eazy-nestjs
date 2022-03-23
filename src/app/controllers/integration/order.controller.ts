@@ -33,10 +33,13 @@ export class OrderIntegrationController extends BaseController {
     super();
   }
 
-  @Get()
-  async getSync(@Res() res: Response): Promise<IResponse> {
-    await this.service.itgGet();
-    return this.responseSuccess(res, null, 'Đồng bộ đơn hàng thành công');
+  @Get(':order_code')
+  async getByOrderCode(
+    @Res() res: Response,
+    @Param('order_code') order_code: number,
+  ): Promise<IResponse> {
+    const result = await this.service.itgGet(order_code);
+    return this.responseSuccess(res, result);
   }
 
   @Post()
@@ -61,6 +64,16 @@ export class OrderIntegrationController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.create(body);
     return this.responseSuccess(res, result, 'Tạo thành công');
+  }
+
+  @Put('/order-status/:order_code')
+  async updateOrderStatus(
+    @Res() res: Response,
+    @Param('order_code') order_code: number,
+    @Body('order_status') order_status: string,
+  ) {
+    await this.service.updateOrderStatus(order_code, order_status);
+    return this.responseSuccess(res, null, 'Thành công');
   }
 
   @Put('/:order_code')

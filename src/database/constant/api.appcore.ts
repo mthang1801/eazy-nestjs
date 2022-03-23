@@ -21,3 +21,5 @@ export const GET_PRODUCTS_COMBO_STORES_API = (product_id) =>
 
 export const GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API = (pageNumber) =>
   `${CORE_API}/products?page=${pageNumber}`;
+
+export const GET_STORES_API = `${CORE_API}/depots`;

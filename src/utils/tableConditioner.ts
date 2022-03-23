@@ -106,9 +106,7 @@ export const productsListsSearchFilter = (
     arraySearch = [
       ...arraySearch,
       { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-      { [`${Table.PRODUCTS}.barcode`]: Like(search) },
       { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-      { [`${Table.PRODUCTS}.slug`]: Like(search) },
     ];
   }
 

@@ -71,6 +71,7 @@ import { CartRepository } from '../repositories/cart.repository';
 import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
+import { productSearchJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class OrdersService {
@@ -139,31 +140,28 @@ export class OrdersService {
 
     let result = await this.orderRepo.create(orderData);
     for (let orderItem of data.order_items) {
-      let orderDetailData = {
-        ...new OrderDetailsEntity(),
-        ...this.orderDetailRepo.setData({
-          ...result,
-          ...orderItem,
-          status: CommonStatus.Active,
-        }),
-      };
-
       const orderProductItem = await this.productRepo.findOne({
         select: '*',
         join: productJoiner,
         where: { product_id: orderItem.product_id },
       });
 
-      let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+      let orderDetailData = {
+        ...new OrderDetailsEntity(),
+        ...this.orderDetailRepo.setData({
+          ...result,
+          ...orderItem,
+          product_id: orderProductItem.product_appcore_id,
+          status: CommonStatus.Active,
+        }),
+      };
 
-      newOrderDetail['product_id'] = orderProductItem['product_appcore_id'];
+      let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
 
       result['order_items'] = result['order_items']
         ? [...result['order_items'], newOrderDetail]
         : [newOrderDetail];
     }
-
-    console.log(result);
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -182,53 +180,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-      const orderAppcoreId = response.data.data;
-
-      const getOrderDetailsResponse = await axios(
-        configGetOrderFromAppcore(orderAppcoreId),
-      );
-
-      const orderInfoDetails = getOrderDetailsResponse.data.data.filter(
-        ({ id }) => id === orderAppcoreId,
-      )[0];
-
-      if (orderInfoDetails) {
-        const order_code = orderAppcoreId;
-        const orderCodeItems = result['order_items'].map((orderItem) => {
-          const orderAppcoreItem = orderInfoDetails['orderItems'].find(
-            ({ productId }) => productId == orderItem.product_id,
-          );
-          if (orderAppcoreItem) {
-            return {
-              order_item_id: orderItem.item_id,
-              order_item_appcore_id: orderAppcoreItem.id,
-            };
-          }
-          return {
-            order_item_id: orderItem.item_id,
-            order_item_appcore_id: null,
-          };
-        });
-
-        // update order code
-        await this.orderRepo.update(
-          { order_id: result.order_id },
-          { order_code },
-        );
-
-        if (orderCodeItems?.length) {
-          for (let { order_item_id, order_item_appcore_id } of orderCodeItems) {
-            await this.orderDetailRepo.update(
-              {
-                item_id: order_item_id,
-              },
-              { order_item_appcore_id },
-            );
-          }
-        }
-      }
     } catch (error) {
-      console.log(error);
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
           error?.response?.data?.message || error.message
@@ -393,7 +345,7 @@ export class OrdersService {
     }
   }
 
-  async itgGet() {
+  async syncGet() {
     try {
       const response = await axios({
         url: `${GET_ORDERS_FROM_APPCORE_API}?page=10`,
@@ -428,15 +380,55 @@ export class OrdersService {
     }
   }
 
+  async itgGet(order_code) {
+    const order = await this.orderRepo.findOne({ order_code });
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+
+    const orderItems = await this.orderDetailRepo.find({
+      order_id: order.order_id,
+    });
+    if (orderItems.length) {
+      for (let orderItem of orderItems) {
+        const product = await this.productRepo.findOne({
+          select: `product`,
+          join: productSearchJoiner,
+          where: [
+            { product_id: orderItem.product_id },
+            { product_appcore_id: orderItem.product_id },
+          ],
+        });
+        if (product) {
+          const productImageLink = await this.imageLinkRepo.findOne({
+            object_type: ImageObjectType.PRODUCT,
+            object_id: product.product_id,
+          });
+          if (productImageLink) {
+            const productImage = await this.imageRepo.findOne({
+              image_id: productImageLink.image_id,
+            });
+            product['image'] = { ...productImageLink, ...productImage };
+          }
+        }
+        orderItem = { ...orderItem, ...product };
+        order['order_items'] = order['order_items']
+          ? [...order['order_items'], orderItem]
+          : [orderItem];
+      }
+    }
+  }
+
   async itgCreate(data: CreateOrderAppcoreDto) {
     const order = await this.orderRepo.findOne({
-      order_code: data.order_code,
+      select: '*',
+      where: [
+        { order_code: data.order_code },
+        { ref_order_id: data.ref_order_id },
+      ],
     });
     if (order) {
-      throw new HttpException(
-        'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
-        409,
-      );
+      return await this.itgUpdate(data.ref_order_id, data);
     }
 
     const orderData = {
@@ -490,14 +482,17 @@ export class OrdersService {
     return result;
   }
 
-  async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
-    const order = await this.orderRepo.findOne({ order_code });
+  async itgUpdate(order_code: string, data) {
+    const order = await this.orderRepo.findOne({
+      select: '*',
+      where: [{ order_code }, { ref_order_id: order_code }],
+    });
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
 
     let result = { ...order };
-    const orderData = await this.orderRepo.setData({ ...data });
+    const orderData = await this.orderRepo.setData({ ...data, is_sync: 0 });
 
     if (data.user_appcore_id) {
       const user = await this.userRepo.findOne({
@@ -805,5 +800,16 @@ export class OrdersService {
 
     order['order_items'] = orderDetails;
     return order;
+  }
+
+  async updateOrderStatus(order_code, order_status) {
+    const order = await this.orderRepo.findOne({ order_code });
+    if (!order) {
+      throw new HttpException(
+        `Không tìm thấy đơn hàng có mã ${order_code}`,
+        404,
+      );
+    }
+    await this.orderRepo.update({ order_code }, { status: order_status });
   }
 }

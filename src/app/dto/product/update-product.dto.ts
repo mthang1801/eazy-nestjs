@@ -102,7 +102,25 @@ export class UpdateProductDto {
   url_media: string;
 
   @IsOptional()
-  type: string = '1';
+  type: string;
+
+  @IsOptional()
+  other_info: string;
+
+  @IsOptional()
+  product_hover: string;
+
+  @IsOptional()
+  promotion_note: string;
+
+  @IsOptional()
+  promotion_info: string;
+
+  @IsOptional()
+  online_gifts: string;
+
+  @IsOptional()
+  open_new_tab: string;
 }
 
 class ProductFeatureDto {

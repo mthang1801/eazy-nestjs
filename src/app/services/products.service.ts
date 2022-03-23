@@ -1765,11 +1765,24 @@ export class ProductService {
 
             // Truyền thêm table product group vào product Detail
             productInfoDetail = { ...productItem, ...productInfoDetail };
-            console.log(
-              1772,
-              product.product_id,
-              productInfoDetail.parent_product_id,
-            );
+            // Tìm SP cha
+            if (product.parent_product_id) {
+              let parentProduct = await this.productRepo.findOne({
+                select: '*',
+                join: {
+                  [JoinTable.innerJoin]: {
+                    [Table.PRODUCT_DESCRIPTION]: {
+                      fieldJoin: 'product_id',
+                      rootJoin: 'product_id',
+                    },
+                  },
+                },
+                where: {
+                  [`${Table.PRODUCTS}.product_id`]: product.parent_product_id,
+                },
+              });
+              product['parentProduct'] = parentProduct;
+            }
             // Lấy các SP con
             if (product.product_id == productInfoDetail.parent_product_id) {
               // Lấy thuộc tính SP
@@ -1808,8 +1821,6 @@ export class ProductService {
               const productsStores = await this.getProductsStores(
                 productInfoDetail.product_id,
               );
-
-              console.log(1809, productInfoDetail.product_id);
 
               productInfoDetail['inventories'] = productsStores.length
                 ? productsStores
