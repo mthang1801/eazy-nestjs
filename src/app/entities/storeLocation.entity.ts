@@ -1,3 +1,4 @@
+import { convertToMySQLDateTime } from '../../utils/helper';
 export class StoreLocationEntity {
   store_location_id: number = 0;
   company_id: number = 0;
@@ -14,4 +15,8 @@ export class StoreLocationEntity {
   status: string = 'A';
   main_destination_id: number = 0;
   pickup_destinations_ids: string = '';
+  product_count: number = 0;
+  employee_id: number = 0;
+  open_at: string = '';
+  close_at: string = '';
 }

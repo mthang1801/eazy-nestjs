@@ -340,7 +340,9 @@ export class ProductService {
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
-    let filterConditions = {};
+    let filterConditions = {
+      [`${Table.PRODUCTS}.amount`]: MoreThan(1),
+    };
 
     if (category_ids) {
       filterConditions['category_id'] = category_ids.split(',');
@@ -357,8 +359,6 @@ export class ProductService {
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productsSearchOnOrderJoiner,
       where: productSearchFilterOnOrder(search, filterConditions),
-      skip,
-      limit,
     });
 
     return {

@@ -17,6 +17,9 @@ import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
 import { storesLocationJoiner } from 'src/utils/joinTable';
 import { storeLocationSearchFilter } from 'src/utils/tableConditioner';
+import { DatabaseService } from '../../database/database.service';
+import { ProductStoreRepository } from '../repositories/productStore.repository';
+import { ProductStoreEntity } from '../entities/productStore.entity';
 
 @Injectable()
 export class StoreService {
@@ -26,6 +29,8 @@ export class StoreService {
     private districtRepo: DistrictRepository<DistrictEntity>,
     private cityRepo: CityRepository<CityEntity>,
     private wardRepo: WardRepository<WardEntity>,
+    private databaseService: DatabaseService,
+    private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
   ) {}
 
   async getAll() {
@@ -74,5 +79,27 @@ export class StoreService {
       },
       stores: storesList,
     };
+  }
+
+  async getProductCount() {
+    const storesList = await this.storeLocationDescRepo.find();
+    if (storesList.length) {
+      for (let storeItem of storesList) {
+        let totalAmount = 0;
+        const productsStore = await this.productStoreRepo.find({
+          select: 'amount',
+          where: { store_location_id: storeItem.store_location_id },
+        });
+        if (productsStore) {
+          for (let { amount } of productsStore) {
+            totalAmount += amount;
+          }
+          await this.storeLocationRepo.update(
+            { store_location_id: storeItem.store_location_id },
+            { product_count: totalAmount },
+          );
+        }
+      }
+    }
   }
 }
