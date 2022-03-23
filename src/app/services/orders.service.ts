@@ -95,7 +95,7 @@ export class OrdersService {
     private customerService: CustomerService,
   ) {}
 
-  async create(data: CreateOrderDto) {
+  async CMScreate(data: CreateOrderDto) {
     let user: any = await this.userRepo.findById(data.user_id);
     if (!user) {
       user = await this.userRepo.findOne({ phone: data.b_phone });
@@ -105,11 +105,17 @@ export class OrdersService {
       }
     }
 
+    await this.createOrder(user, data);
+  }
+
+  async createOrder(user, data) {
     data.s_city = data.s_city || data.b_city;
     data.s_ward = data.s_ward || data.b_ward;
     data.s_district = data.s_district || data.b_district;
     data.s_phone = data.s_phone || data.b_phone;
     data.s_address = data.s_address || data.b_address;
+    data.store_id = data.store_id || 67017;
+    data.utm_source = data.utm_source || 10;
 
     const orderData = {
       ...new OrderEntity(),
@@ -119,6 +125,7 @@ export class OrdersService {
     if (!user['user_appcore_id']) {
       throw new HttpException('User_appcore_id không được nhận diện.', 400);
     }
+
     orderData['user_appcore_id'] = user['user_appcore_id'];
     orderData['user_id'] = user['user_id'];
 
@@ -180,6 +187,8 @@ export class OrdersService {
           ];
     }
 
+    console.log(convertDataToIntegrate(result));
+
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
       method: 'POST',
@@ -189,11 +198,6 @@ export class OrdersService {
       },
       data: convertDataToIntegrate(result),
     };
-
-    const configGetOrderFromAppcore = (orderId): any => ({
-      method: 'GET',
-      url: GET_ORDER_BY_ID_FROM_APPCORE_API(orderId),
-    });
 
     try {
       const response = await axios(configPushOrderToAppcore);
@@ -223,19 +227,29 @@ export class OrdersService {
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
     let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
-    if (user['user_appcore_id']) {
+    if (!user['user_appcore_id']) {
       await this.customerService.createCustomerToAppcore(user);
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
     }
+
     const cart = await this.cartRepo.findOne({ user_id: user.user_id });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
 
-    const cartItems = await this.cartItemRepo.find({ cart_id: cart.cart_id });
+    const cartItems = await this.cartItemRepo.find({
+      select: 'product_id, amount',
+      where: { cart_id: cart.cart_id },
+    });
     if (!cartItems.length) {
       throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
     }
+
+    console.log(cartItems);
+
+    const sendData = { ...data, order_items: cartItems };
+
+    await this.createOrder(user, sendData);
   }
 
   async createCustomer(data: CreateOrderDto) {

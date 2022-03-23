@@ -30,7 +30,7 @@ export class OrderController extends BaseController {
 
   @Post()
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
-    const result = await this.service.create(body);
+    const result = await this.service.CMScreate(body);
     return this.responseSuccess(res, result, 'Tạo thành công');
   }
 

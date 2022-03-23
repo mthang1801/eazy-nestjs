@@ -204,9 +204,9 @@ export const convertDataToIntegrate = (data) => {
     itgData['customerGender'] = data['gender']; //Giới tính khách hàng
   }
 
-  if (data['id_card']) {
-    itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
-  }
+  // if (data['id_card']) {
+  //   itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
+  // }
 
   itgData['refOrderId'] = data['ref_order_id']; //Mã đơn hàng của đối tác *
 

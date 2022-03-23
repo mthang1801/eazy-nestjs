@@ -57,15 +57,6 @@ export class OrderIntegrationController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/create')
-  async createTest(
-    @Res() res,
-    @Body() body: CreateOrderDto,
-  ): Promise<IResponse> {
-    const result = await this.service.create(body);
-    return this.responseSuccess(res, result, 'Tạo thành công');
-  }
-
   @Put('/order-status/:order_code')
   async updateOrderStatus(
     @Res() res: Response,
