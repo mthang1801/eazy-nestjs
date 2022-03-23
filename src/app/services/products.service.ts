@@ -1163,7 +1163,6 @@ export class ProductService {
   }
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
-    console.log('update');
     let convertedData = { ...data };
     if (!isConverted) {
       convertedData = itgConvertProductsFromAppcore(data);
@@ -2203,6 +2202,43 @@ export class ProductService {
             amount: productItem.product_type !== 3 ? totalProduct : 0,
             combo_amount: productItem.product_type === 3 ? totalProduct : 0,
           },
+        );
+      }
+    }
+  }
+
+  async countProductByCategory() {
+    const categories = await this.categoryRepo.find();
+
+    if (categories.length) {
+      for (let categoryItem of categories) {
+        let childrensCategories = await this.childrenCategories(
+          categoryItem.category_id,
+        );
+        let categoriesFamily = [
+          categoryItem.category_id,
+          ...childrensCategories.map(({ category_id }) => category_id),
+        ];
+        let totalProducts = 0;
+        console.log(categoriesFamily);
+        for (let categoryId of categoriesFamily) {
+          const productsList = await this.productCategoryRepo.find({
+            select: '*',
+            join: {
+              [JoinTable.innerJoin]: {
+                [Table.PRODUCTS]: {
+                  fieldJoin: 'product_id',
+                  rootJoin: 'product_id',
+                },
+              },
+            },
+            where: { category_id: categoryId },
+          });
+          totalProducts += productsList.length;
+        }
+        await this.categoryRepo.update(
+          { category_id: categoryItem.category_id },
+          { product_count: totalProducts },
         );
       }
     }

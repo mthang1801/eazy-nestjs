@@ -15,6 +15,7 @@ import { Response } from 'express';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { Body } from '@nestjs/common';
 import { AuthGuard } from 'src/middlewares/fe.auth';
+import { CreateOrderFEDto } from 'src/app/dto/orders/create-order.frontend.dto';
 @Controller('/fe/v1/orders')
 export class OrdersController extends BaseController {
   constructor(private service: OrdersService) {
@@ -25,10 +26,10 @@ export class OrdersController extends BaseController {
   @UseGuards(AuthGuard)
   async create(
     @Res() res,
-    @Body() body: CreateOrderDto,
+    @Body() data: CreateOrderFEDto,
     @Req() req,
   ): Promise<IResponse> {
-    const result = await this.service.createFE(body, req.user);
+    const result = await this.service.FEcreate(data, req.user);
     return this.responseSuccess(res, result, 'Tạo thành công');
   }
 

@@ -15,6 +15,7 @@ import { UsersModule } from './users.module';
 import { StatusModule } from './status.module';
 import { StoreModule } from './store.module';
 import { CustomerModule } from './customer.module';
+import { CartModule } from './cart.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -46,6 +47,7 @@ import { CustomerModule } from './customer.module';
     StatusModule,
     StoreModule,
     forwardRef(() => CustomerModule),
+    CartModule,
   ],
 })
 export class OrdersModule {}
