@@ -55,6 +55,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/search-on-order')
+  async searchOnOrdes(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.searchOnOrder(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':identifier')
   async get(
     @Param('identifier') identifier: number | string,

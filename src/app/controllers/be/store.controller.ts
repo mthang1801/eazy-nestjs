@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, Query } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 
 import { Response } from 'express';
@@ -12,8 +12,14 @@ export class StoreController extends BaseController {
   }
 
   @Get()
-  async getList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getList();
+  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/all')
+  async getAll(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getAll();
     return this.responseSuccess(res, result);
   }
 }

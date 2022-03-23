@@ -43,9 +43,11 @@ import {
   productGroupProductsJoiner,
   productInfoJoiner,
   productSearchJoiner,
+  productsSearchOnOrderJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
+  productSearchFilterOnOrder,
   productsFamilyFilterConditioner,
   productsGroupFilterConditioner,
   productsListCategorySearchFilter,
@@ -332,6 +334,43 @@ export class ProductService {
     return products;
   }
 
+  async searchOnOrder(params) {
+    let { page, limit, search, category_ids } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    let skip = (page - 1) * limit;
+
+    let filterConditions = {};
+
+    if (category_ids) {
+      filterConditions['category_id'] = category_ids.split(',');
+    }
+
+    let productsList = await this.productRepo.find({
+      select: '*',
+      join: productsSearchOnOrderJoiner,
+      where: productSearchFilterOnOrder(search, filterConditions),
+      skip,
+      limit,
+    });
+    let count = await this.productRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productsSearchOnOrderJoiner,
+      where: productSearchFilterOnOrder(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      products: productsList,
+    };
+  }
+
   async get(identifier: number | string): Promise<any> {
     // get Product item
 
@@ -486,12 +525,12 @@ export class ProductService {
     // determine product type and  get Image
     for (let productItem of productLists) {
       if (
-        !productItem.parent_product_id &&
+        productItem.parent_product_id == 0 &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 1; //Sản phẩm cha
       } else if (
-        productItem.parent_product_id &&
+        productItem.parent_product_id != 0 &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 2; // Sản phẩm con
@@ -1912,6 +1951,23 @@ export class ProductService {
         },
         where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
       });
+    }
+
+    //determine type of product
+    if (
+      product.parent_product_id == 0 &&
+      (product.product_type == 1 || product.product_type == 2)
+    ) {
+      product['productType'] = 1; //Sản phẩm cha
+    } else if (
+      product.parent_product_id != 0 &&
+      (product.product_type == 1 || product.product_type == 2)
+    ) {
+      product['productType'] = 2; // Sản phẩm con
+    } else if (product.product_type == 3) {
+      product['productType'] = 3; //SP combo
+    } else {
+      product['productType'] = 4; // SP độc lập
     }
 
     const categoriesList = await this.parentCategories(currentCategory);

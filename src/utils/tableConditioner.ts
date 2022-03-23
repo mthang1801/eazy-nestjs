@@ -307,3 +307,35 @@ export const categoriesSearchFilter = (search = '', filterConditions = {}) => {
   }
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const productSearchFilterOnOrder = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const storeLocationSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.STORE_LOCATIONS}.city_name`]: Like(search) },
+      { [`${Table.STORE_LOCATIONS}.district_name`]: Like(search) },
+      { [`${Table.STORE_LOCATION_DESCRIPTIONS}.store_name`]: Like(search) },
+      { [`${Table.STORE_LOCATION_DESCRIPTIONS}.short_name`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

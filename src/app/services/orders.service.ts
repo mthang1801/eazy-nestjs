@@ -180,6 +180,52 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
+      const orderAppcoreId = response.data.data;
+      console.log(orderAppcoreId);
+
+      const getOrderDetailsResponse = await axios(
+        configGetOrderFromAppcore(orderAppcoreId),
+      );
+
+      const orderInfoDetails = getOrderDetailsResponse.data.data.filter(
+        ({ id }) => id === orderAppcoreId,
+      )[0];
+
+      if (orderInfoDetails) {
+        const order_code = orderAppcoreId;
+        const orderCodeItems = result['order_items'].map((orderItem) => {
+          const orderAppcoreItem = orderInfoDetails['orderItems'].find(
+            ({ productId }) => productId == orderItem.product_id,
+          );
+          if (orderAppcoreItem) {
+            return {
+              order_item_id: orderItem.item_id,
+              order_item_appcore_id: orderAppcoreItem.id,
+            };
+          }
+          return {
+            order_item_id: orderItem.item_id,
+            order_item_appcore_id: null,
+          };
+        });
+
+        // update order code
+        await this.orderRepo.update(
+          { order_id: result.order_id },
+          { order_code, is_sync: 0 },
+        );
+
+        if (orderCodeItems?.length) {
+          for (let { order_item_id, order_item_appcore_id } of orderCodeItems) {
+            await this.orderDetailRepo.update(
+              {
+                item_id: order_item_id,
+              },
+              { order_item_appcore_id },
+            );
+          }
+        }
+      }
     } catch (error) {
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
@@ -421,14 +467,13 @@ export class OrdersService {
 
   async itgCreate(data: CreateOrderAppcoreDto) {
     const order = await this.orderRepo.findOne({
-      select: '*',
-      where: [
-        { order_code: data.order_code },
-        { ref_order_id: data.ref_order_id },
-      ],
+      order_code: data.order_code,
     });
     if (order) {
-      return await this.itgUpdate(data.ref_order_id, data);
+      throw new HttpException(
+        'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
+        409,
+      );
     }
 
     const orderData = {
@@ -482,17 +527,14 @@ export class OrdersService {
     return result;
   }
 
-  async itgUpdate(order_code: string, data) {
-    const order = await this.orderRepo.findOne({
-      select: '*',
-      where: [{ order_code }, { ref_order_id: order_code }],
-    });
+  async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
+    const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
 
     let result = { ...order };
-    const orderData = await this.orderRepo.setData({ ...data, is_sync: 0 });
+    const orderData = await this.orderRepo.setData({ ...data });
 
     if (data.user_appcore_id) {
       const user = await this.userRepo.findOne({

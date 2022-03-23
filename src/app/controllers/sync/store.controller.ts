@@ -7,9 +7,4 @@ export class StoreSyncController extends BaseController {
   constructor(private service: StoreService) {
     super();
   }
-  @Get()
-  async get(@Res() res) {
-    await this.service.syncGet();
-    return this.responseSuccess(res, null, 'Thành công.');
-  }
 }
