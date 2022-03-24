@@ -206,4 +206,7 @@ class ProductOrder {
 
   @IsOptional()
   status: string = 'A';
+
+  @IsOptional()
+  product_code: string;
 }

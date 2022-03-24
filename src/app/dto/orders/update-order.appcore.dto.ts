@@ -205,4 +205,7 @@ class ProductOrder {
 
   @IsOptional()
   deleted: boolean;
+
+  @IsOptional()
+  product_code: string;
 }
