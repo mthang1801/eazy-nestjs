@@ -36,10 +36,10 @@ export class OrdersController extends BaseController {
   @Get()
   async get(
     @Query('phone') phone: string,
-    @Query('order_id') order_id: number,
+    @Query('order_code') order_code: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.getByPhoneAndId(phone, order_id);
+    const result = await this.service.getByPhoneAndId(phone, order_code);
     return this.responseSuccess(res, result);
   }
 

@@ -116,7 +116,7 @@ import {
   itgConvertProductsFromAppcore,
 } from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
-import * as mockProductsData from 'src/database/constant/_productsData.json';
+// import * as mockProductsData from 'src/database/constant/_productsData.json';
 import { productByCategoryJoiner } from '../../utils/joinTable';
 
 @Injectable()
@@ -566,7 +566,18 @@ export class ProductService {
     };
   }
 
-  async groupingProducts(product_id: number) {}
+  async groupingProducts(product_id: number) {
+    const product = await this.productRepo.findOne({ product_id });
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+    if (product.product_type === 3) {
+      throw new HttpException(
+        'Sản phẩm combo không thể dời đến nhóm SP khác',
+        403,
+      );
+    }
+  }
 
   async childrenCategories(categoryId, categoriesList = []) {
     let categories = await this.categoryRepo.find({

@@ -670,9 +670,9 @@ export class OrdersService {
     }
   }
 
-  async getByPhoneAndId(phone: string, order_id: number) {
+  async getByPhoneAndId(phone: string, order_code: number) {
     const order = await this.orderRepo.findOne({
-      order_id,
+      order_code,
       b_phone: phone,
     });
 
