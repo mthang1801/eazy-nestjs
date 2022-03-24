@@ -112,13 +112,14 @@ export class OrdersService {
   }
 
   async createOrder(user, data) {
-    data.s_city = data.s_city || data.b_city;
-    data.s_ward = data.s_ward || data.b_ward;
-    data.s_district = data.s_district || data.b_district;
-    data.s_phone = data.s_phone || data.b_phone;
-    data.s_address = data.s_address || data.b_address;
-    data.store_id = data.store_id || 67017;
-    data.utm_source = data.utm_source || 10;
+    console.log(data);
+    data['s_city'] = data['s_city'] || data['b_city'];
+    data['s_ward'] = data['s_ward'] || data['b_ward'];
+    data['s_district'] = data['s_district'] || data['b_district'];
+    data['s_phone'] = data['s_phone'] || data['b_phone'];
+    data['s_address'] = data['s_address'] || data['b_address'];
+    data['store_id'] = data['store_id'] || 67107;
+    data['utm_source'] = data['utm_source'] || 10;
 
     const orderData = {
       ...new OrderEntity(),
@@ -154,13 +155,20 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
-    for (let orderItem of data.order_items) {
+    for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
-        select: '*',
-        join: productJoiner,
-        where: { product_id: orderItem.product_id },
+        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        join: { [JoinTable.innerJoin]: productJoiner },
+        where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
+      const totalPrice =
+        ((orderProductItem['price'] *
+          (100 - orderProductItem['percentage_discount'])) /
+          100) *
+        orderItem['amount'];
+
+      console.log(totalPrice);
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -168,6 +176,7 @@ export class OrdersService {
           ...orderItem,
           product_id: orderProductItem.product_id,
           product_appcore_id: orderProductItem.product_appcore_id,
+          price: totalPrice,
           status: CommonStatus.Active,
         }),
       };
@@ -244,15 +253,36 @@ export class OrdersService {
       select: 'product_id, amount',
       where: { cart_id: cart.cart_id },
     });
+
     if (!cartItems.length) {
       throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
     }
 
-    console.log(cartItems);
-
     const sendData = { ...data, order_items: cartItems };
 
     await this.createOrder(user, sendData);
+
+    const userProfile = await this.userProfileRepo.findOne({
+      user_id: user.user_id,
+    });
+    userProfile['b_firstname'] = data.b_firstname;
+    userProfile['b_lastname'] = data.b_lastname;
+    userProfile['b_phone'] = data.b_phone;
+    userProfile['b_city'] = data.b_city;
+    userProfile['b_district'] = data.b_district;
+    userProfile['b_ward'] = data.b_ward;
+    userProfile['b_address'] = data.b_address;
+    userProfile['profile_name'] = `${data.b_firstname} ${data.b_lastname}`;
+
+    userProfile['s_firstname'] = userProfile['s_firstname'] || data.b_firstname;
+    userProfile['s_lastname'] = userProfile['s_lastname'] || data.b_lastname;
+    userProfile['s_phone'] = userProfile['s_phone'] || data.b_phone;
+    userProfile['s_city'] = userProfile['s_city'] || data.b_city;
+    userProfile['s_district'] = userProfile['s_district'] || data.b_district;
+    userProfile['s_ward'] = userProfile['s_ward'] || data.b_ward;
+    userProfile['s_address'] = userProfile['s_address'] || data.b_address;
+
+    await this.userProfileRepo.update({ user_id: user.user_id }, userProfile);
   }
 
   async createCustomer(data: CreateOrderDto) {
