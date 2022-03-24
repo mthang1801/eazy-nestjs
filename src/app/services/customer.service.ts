@@ -666,7 +666,7 @@ export class CustomerService {
       user_appcore_id: customer_appcore_id,
     });
     if (!user) {
-      throw new HttpException('Không tìm thấy KH', 404);
+      return;
     }
     const userLoyalty = await this.userLoyalRepo.findOne({
       user_id: user.user_id,
@@ -694,7 +694,7 @@ export class CustomerService {
       user_appcore_id: customer_appcore_id,
     });
     if (!user) {
-      throw new HttpException('Không tìm thấy KH', 404);
+      return;
     }
 
     data['created_at'] = convertNullDatetimeData(data['created_at']);
