@@ -265,24 +265,32 @@ export class OrdersService {
     const userProfile = await this.userProfileRepo.findOne({
       user_id: user.user_id,
     });
-    userProfile['b_firstname'] = data.b_firstname;
-    userProfile['b_lastname'] = data.b_lastname;
+    userProfile['b_firstname'] = data.b_firstname || '';
+    userProfile['b_lastname'] = data.b_lastname || '';
     userProfile['b_phone'] = data.b_phone;
     userProfile['b_city'] = data.b_city;
     userProfile['b_district'] = data.b_district;
     userProfile['b_ward'] = data.b_ward;
     userProfile['b_address'] = data.b_address;
-    userProfile['profile_name'] = `${data.b_firstname} ${data.b_lastname}`;
+    userProfile['profile_name'] = `${data.b_firstname || ''} ${
+      data.b_lastname || ''
+    }`;
 
-    userProfile['s_firstname'] = userProfile['s_firstname'] || data.b_firstname;
-    userProfile['s_lastname'] = userProfile['s_lastname'] || data.b_lastname;
-    userProfile['s_phone'] = userProfile['s_phone'] || data.b_phone;
-    userProfile['s_city'] = userProfile['s_city'] || data.b_city;
-    userProfile['s_district'] = userProfile['s_district'] || data.b_district;
-    userProfile['s_ward'] = userProfile['s_ward'] || data.b_ward;
-    userProfile['s_address'] = userProfile['s_address'] || data.b_address;
+    userProfile['s_firstname'] =
+      userProfile['s_firstname'] || data.b_firstname || '';
+    userProfile['s_lastname'] =
+      userProfile['s_lastname'] || data.b_lastname || '';
+    userProfile['s_phone'] = userProfile['s_phone'] || data.b_phone || '';
+    userProfile['s_city'] = userProfile['s_city'] || data.b_city || '';
+    userProfile['s_district'] =
+      userProfile['s_district'] || data.b_district || '';
+    userProfile['s_ward'] = userProfile['s_ward'] || data.b_ward || '';
+    userProfile['s_address'] = userProfile['s_address'] || data.b_address || '';
 
     await this.userProfileRepo.update({ user_id: user.user_id }, userProfile);
+
+    await this.cartRepo.delete({ cart_id: cart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
   }
 
   async createCustomer(data: CreateOrderDto) {
@@ -463,8 +471,6 @@ export class OrdersService {
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
-
-    console.log(434, order);
 
     const orderItems = await this.orderDetailRepo.find({
       order_id: order.order_id,
