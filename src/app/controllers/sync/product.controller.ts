@@ -12,4 +12,10 @@ export class ProductSyncController extends BaseController {
     await this.service.getProductsAmountFromStores();
     return this.responseSuccess(res, null, 'Thành công.');
   }
+
+  @Get('/utils')
+  async utilFunctions(@Res() res) {
+    await this.service.utilFunctions();
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
 }

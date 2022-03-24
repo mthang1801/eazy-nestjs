@@ -17,6 +17,7 @@ import { StoreModule } from './store.module';
 import { CustomerModule } from './customer.module';
 import { CartModule } from './cart.module';
 import { OrderSyncController } from '../controllers/sync/order.controller';
+import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -33,6 +34,7 @@ import { OrderSyncController } from '../controllers/sync/order.controller';
     OrderDataRepository,
     ProductsRepository,
     UserProfileRepository,
+    OrderHistoryRepository,
   ],
   exports: [
     OrdersService,
@@ -42,6 +44,7 @@ import { OrderSyncController } from '../controllers/sync/order.controller';
     OrderTransactionRepository,
     OrderDataRepository,
     UserProfileRepository,
+    OrderHistoryRepository,
   ],
   imports: [
     OrderStatusModule,

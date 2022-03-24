@@ -43,7 +43,7 @@ import {
   UserStatusEnum,
   UserTypeEnum,
 } from 'src/database/enums/tableFieldEnum/user.enum';
-import { CreateCustomerAppcoreDto } from '../dto/customer/crate-customerAppcore.dto';
+import { CreateCustomerAppcoreDto } from '../dto/customer/create-customerAppcore.dto';
 import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
 import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { sortBy } from 'lodash';
@@ -146,8 +146,9 @@ export class CustomerService {
         method: 'POST',
         data: customerAppcoreData,
       });
+      console.log(response);
       const data = response.data;
-
+      console.log(data);
       const user_appcore_id = data.data.id;
       const updatedUser = await this.userRepo.update(
         { user_id: user.user_id },

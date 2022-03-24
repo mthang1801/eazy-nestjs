@@ -35,6 +35,7 @@ import {
   productFeatureVariantSearchFilter,
 } from 'src/utils/tableConditioner';
 import { DatabaseService } from 'src/database/database.service';
+import { Equal, Not } from '../../database/find-options/operators';
 
 import {
   covertProductFeaturesFromMagento,
@@ -60,6 +61,13 @@ export class ProductFeatureService {
   async create(
     data: CreateProductFeatureDto,
   ): Promise<IProductFeaturesResponse> {
+    const checkFeatureCodeExist = await this.productFeaturesRepo.findOne({
+      feature_code: data.feature_code,
+    });
+    if (checkFeatureCodeExist) {
+      throw new HttpException('Feature code đã tồn tại', 409);
+    }
+
     // create a new record on feature and feature_description
     const productFeatureData = this.productFeaturesRepo.setData(data);
 
@@ -323,6 +331,16 @@ export class ProductFeatureService {
     );
     if (!checkProductFeatureExist) {
       throw new HttpException('Không tìm thấy thuộc tính sản phẩm.', 404);
+    }
+
+    if (data.feature_code) {
+      const checkFeatureCode = await this.productFeaturesRepo.findOne({
+        feature_id: Not(Equal(id)),
+        feature_code: data.feature_code,
+      });
+      if (checkFeatureCode) {
+        throw new HttpException('Feature code đã tồn tại', 409);
+      }
     }
 
     const productFeatureData = {

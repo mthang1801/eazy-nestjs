@@ -118,6 +118,7 @@ import {
 // import { productsData } from 'src/database/constant/product';
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
 import { productByCategoryJoiner } from '../../utils/joinTable';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class ProductService {
@@ -148,6 +149,7 @@ export class ProductService {
     private storeDescRepo: StoreLocationDescriptionsRepository<StoreLocationDescriptionEntity>,
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
+    private databaseService: DatabaseService,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -1697,7 +1699,15 @@ export class ProductService {
                 productStoreItem.store_location_id,
             },
           });
-          result = [...result, { ...productStoreItem, store }];
+          let storeObj = {
+            productId: product.product_id,
+            storeId: store['store_location_id'],
+            storeName: store['store_name'],
+            storeAddress: store['pickup_address'],
+            storeLatitude: store['latitude'],
+            storeLongitude: store['longitude'],
+          };
+          result = [...result, { ...productStoreItem, ...storeObj }];
         }
       }
     }
@@ -2273,6 +2283,10 @@ export class ProductService {
 
     if (categories.length) {
       for (let categoryItem of categories) {
+        await this.categoryRepo.update(
+          { category_id: categoryItem.category_id },
+          { product_count: 0 },
+        );
         let childrensCategories = await this.childrenCategories(
           categoryItem.category_id,
         );
@@ -2302,6 +2316,24 @@ export class ProductService {
           { product_count: totalProducts },
         );
       }
+    }
+  }
+
+  async utilFunctions() {
+    let mappingData = new Map([
+      [480334, 68984],
+      [480340, 68986],
+      [480412, 68985],
+      [502696, 68984],
+      [508986, 68984],
+      [502667, 68986],
+      [502320, 68985],
+    ]);
+    for (let [oldId, newId] of mappingData) {
+      await this.productCategoryRepo.update(
+        { category_id: oldId },
+        { category_id: newId },
+      );
     }
   }
 }

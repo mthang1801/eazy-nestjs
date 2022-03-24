@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { CustomerService } from '../../services/customer.service';
 import { UpdateCustomerAppcoreDto } from '../../dto/customer/update-customerAppcore.dto';
-import { CreateCustomerAppcoreDto } from '../../dto/customer/crate-customerAppcore.dto';
+import { CreateCustomerAppcoreDto } from '../../dto/customer/create-customerAppcore.dto';
 import { UpdateCustomerLoyalty } from 'src/app/dto/customer/update-customerLoyalty.appcore.dto';
 import { CreateCustomerLoyalHistoryDto } from '../../dto/customer/crate-customerLoyalHistory';
 @Controller('/itg/v1/customers')
