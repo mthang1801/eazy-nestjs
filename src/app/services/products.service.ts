@@ -1707,7 +1707,7 @@ export class ProductService {
 
   async getProductDetails(product, showListCategories = false) {
     let status = product['status'];
-    product['images'] = [];
+
     const productImages = await this.imageLinkRepo.find({
       select: ['image_id'],
       where: {
@@ -1965,6 +1965,9 @@ export class ProductService {
     const parentCategories = categoriesList.slice(1);
 
     product['status'] = status;
+
+    const productsStores = await this.getProductsStores(product.product_id);
+    product['stores'] = productsStores || [];
 
     return {
       currentCategory: showListCategories ? currentCategory : categoriesList[0],
