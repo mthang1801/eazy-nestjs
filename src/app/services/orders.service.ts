@@ -34,7 +34,10 @@ import {
   productJoiner,
   statusJoiner,
 } from '../../utils/joinTable';
-import { itgOrderFromAppcore } from 'src/utils/integrateFunctions';
+import {
+  itgOrderFromAppcore,
+  mappingStatusOrder,
+} from 'src/utils/integrateFunctions';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import e from 'express';
@@ -431,7 +434,7 @@ export class OrdersService {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
 
-    console.log(order);
+    console.log(434, order);
 
     const orderItems = await this.orderDetailRepo.find({
       order_id: order.order_id,
@@ -537,6 +540,11 @@ export class OrdersService {
     }
 
     let result = { ...order };
+
+    if (data.status) {
+      data['status'] = mappingStatusOrder(data.status);
+    }
+
     const orderData = await this.orderRepo.setData({ ...data });
 
     if (data.user_appcore_id) {
@@ -615,7 +623,7 @@ export class OrdersService {
         select: '*',
         where: { order_id: order.order_id },
       });
-      console.log(updatedOrderItems);
+
       const total = updatedOrderItems.reduce(
         (acc, ele) => acc + ele.price * ele.amount,
         0,

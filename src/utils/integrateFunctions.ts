@@ -357,3 +357,31 @@ export const convertGetProductsFromAppcore = (appCoreData) => {
 
   return cmsData;
 };
+
+export const mappingStatusOrder = (coreStatus) => {
+  let result;
+  switch (coreStatus) {
+    case 2:
+      result = '3';
+      break;
+    case 12:
+      result = '3';
+      break;
+    case 13:
+      result = '3';
+      break;
+    case 14:
+      result = '3';
+      break;
+    case 15:
+      result = '3';
+      break;
+    case 11:
+      result = '8';
+      break;
+    default:
+      result = coreStatus;
+  }
+  console.log(result);
+  return result;
+};
