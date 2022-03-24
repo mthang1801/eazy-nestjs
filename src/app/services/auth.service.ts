@@ -119,6 +119,8 @@ export class AuthService {
       b_firstname: firstname,
       b_lastname: lastname,
       b_phone: phone,
+      s_firstname: firstname,
+      s_lastname: lastname,
       profile_name: `${firstname} ${lastname}`,
     });
 
@@ -236,6 +238,8 @@ export class AuthService {
         user_id: userExists.user_id,
         b_firstname: userExists.firstname,
         b_lastname: userExists.lastname,
+        s_firstname: userExists.firstname,
+        s_lastname: userExists.lastname,
         profile_name: `${userExists.firstname} ${userExists.lastname}`,
       });
 

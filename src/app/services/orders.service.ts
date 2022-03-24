@@ -113,7 +113,6 @@ export class OrdersService {
   }
 
   async createOrder(user, data) {
-    console.log(data);
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
     data['s_district'] = data['s_district'] || data['b_district'];
@@ -169,7 +168,6 @@ export class OrdersService {
           100) *
         orderItem['amount'];
 
-      console.log(totalPrice);
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -177,13 +175,13 @@ export class OrdersService {
           ...orderItem,
           product_id: orderProductItem.product_id,
           product_appcore_id: orderProductItem.product_appcore_id,
-          price: totalPrice,
+          price: orderProductItem['price'],
           status: CommonStatus.Active,
         }),
       };
 
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
-      console.log(newOrderDetail);
+
       result['order_items'] = result['order_items']
         ? [
             ...result['order_items'],
@@ -199,8 +197,6 @@ export class OrdersService {
             },
           ];
     }
-
-    console.log(convertDataToIntegrate(result));
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -519,9 +515,14 @@ export class OrdersService {
       );
     }
 
+    if (data.status) {
+      data['status'] = mappingStatusOrder(data['status']);
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
+      is_sync: 0,
     };
 
     orderData['total'] = 0;

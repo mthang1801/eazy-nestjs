@@ -438,6 +438,6 @@ export const mappingStatusOrder = (coreStatus) => {
     default:
       result = coreStatus;
   }
-  console.log(result);
+
   return result;
 };
