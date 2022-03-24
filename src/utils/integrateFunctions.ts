@@ -286,6 +286,8 @@ export const itgConvertProductsFromAppcore = (data) => {
     ['product_id', 'product_appcore_id'],
     ['parent_product_id', 'parent_product_appcore_id'],
     ['category_id', 'category_id'],
+    ['product', 'product_appcore_name'],
+    ['product', 'product_appcore_name'],
   ]);
   let convertedData = { ...data };
   for (let [fromData, toData] of mappingData) {

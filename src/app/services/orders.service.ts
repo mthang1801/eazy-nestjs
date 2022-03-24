@@ -748,7 +748,7 @@ export class OrdersService {
             [JoinTable.leftJoin]: statusJoiner,
           },
           where: {
-            [`${Table.STATUS}.status`]: orderItem.status,
+            [`${Table.STATUS}.status_value`]: orderItem.status,
             [`${Table.STATUS}.type`]: StatusType.Order,
           },
         });
@@ -757,27 +757,28 @@ export class OrdersService {
           orderItem['status'] = status;
         }
       }
-      // Lấy địa chỉ theo id
-      if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
-        const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
-        if (city) {
-          orderItem['b_city'] = city['city_name'];
-        }
-      }
-      if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
-        const district = await this.districtRepo.findOne({
-          id: orderItem['b_district'],
-        });
-        if (district) {
-          orderItem['b_district'] = district['district_name'];
-        }
-      }
-      if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
-        const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
-        if (ward) {
-          orderItem['b_ward'] = ward['ward_name'];
-        }
-      }
+
+      // // Lấy địa chỉ theo id
+      // if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
+      //   const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
+      //   if (city) {
+      //     orderItem['b_city'] = city['city_name'];
+      //   }
+      // }
+      // if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
+      //   const district = await this.districtRepo.findOne({
+      //     id: orderItem['b_district'],
+      //   });
+      //   if (district) {
+      //     orderItem['b_district'] = district['district_name'];
+      //   }
+      // }
+      // if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
+      //   const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
+      //   if (ward) {
+      //     orderItem['b_ward'] = ward['ward_name'];
+      //   }
+      // }
     }
 
     const count = await this.orderRepo.find({

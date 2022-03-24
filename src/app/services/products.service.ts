@@ -951,7 +951,6 @@ export class ProductService {
   }
 
   async itgCreate(data): Promise<any> {
-    console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
 
     if (convertedData.product_appcore_id) {
