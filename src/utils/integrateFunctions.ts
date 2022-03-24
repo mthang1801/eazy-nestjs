@@ -157,10 +157,7 @@ export const itgCreateCustomerFromAppcore = (coreData) => {
     ['b_district', 'b_district'],
     ['b_ward', 'b_ward'],
     ['b_address', 'b_address'],
-    ['b_city', 's_city'],
-    ['b_district', 's_district'],
-    ['b_ward', 's_ward'],
-    ['b_address', 's_address'],
+    ['address', 'b_address'],
     ['created_at', 'created_at'],
     ['updated_at', 'updated_at'],
     ['type', 'type'],
@@ -171,16 +168,49 @@ export const itgCreateCustomerFromAppcore = (coreData) => {
       cmsData[cms] = convertNullDatetimeData(coreData[core]);
       continue;
     }
-    if (core === 'b_phone') {
-      cmsData[cms] = coreData[core] || coreData['phone'];
-      continue;
-    }
+
     if (core === 'gender') {
       cmsData[cms] = coreData[core] == true ? 1 : 0;
       continue;
     }
+    if (core === 'firstname') {
+      cmsData['b_firstname'] = coreData[core];
+      cmsData['s_firstname'] = coreData[core];
+    }
+    if (core === 'lastname') {
+      cmsData['b_lastname'] = coreData[core];
+      cmsData['s_lastname'] = coreData[core];
+    }
+
+    if (core === 'b_city') {
+      cmsData['s_city'] = coreData[core];
+    }
+    if (core === 'b_district') {
+      cmsData['s_district'] = coreData[core];
+    }
+    if (core === 'b_ward') {
+      cmsData['s_ward'] = coreData[core];
+    }
+    if (core === 'b_address' && coreData[core]) {
+      cmsData['s_address'] = coreData[core];
+    }
+
+    if (core === 'address' && coreData[core]) {
+      cmsData['s_address'] = coreData[core];
+      cmsData['b_address'] = coreData[core];
+    }
+
+    if (core === 'phone') {
+      cmsData['b_phone'] = coreData[core];
+      cmsData['s_phone'] = coreData[core];
+    }
     cmsData[cms] = coreData[core];
   }
+
+  cmsData['profile_name'] = `${cmsData['firstname'] || ''} ${
+    cmsData['lastname'] || ''
+  }`;
+
   return cmsData;
 };
 
@@ -191,18 +221,13 @@ export const itgUpdateCustomerFromAppcore = (coreData) => {
     ['gender', 'gender'],
     ['email', 'email'],
     ['birthday', 'birthday'],
-    ['b_phone', 'b_phone'],
     ['b_city', 'b_city'],
     ['b_district', 'b_district'],
     ['b_ward', 'b_ward'],
     ['b_address', 'b_address'],
-    ['b_phone', 's_phone'],
-    ['b_city', 's_city'],
-    ['b_district', 's_district'],
-    ['b_ward', 's_ward'],
-    ['b_address', 's_address'],
     ['created_at', 'created_at'],
     ['updated_at', 'updated_at'],
+    ['address', 'b_address'],
     ['type', 'type'],
   ]);
   let cmsData = {};
@@ -211,6 +236,34 @@ export const itgUpdateCustomerFromAppcore = (coreData) => {
       cmsData[cms] = convertNullDatetimeData(coreData[core]);
       continue;
     }
+
+    if (core === 'firstname' && coreData[core]) {
+      cmsData['b_firstname'] = coreData[core];
+      cmsData['s_firstname'] = coreData[core];
+    }
+    if (core === 'lastname' && coreData[core]) {
+      cmsData['b_lastname'] = coreData[core];
+      cmsData['s_lastname'] = coreData[core];
+    }
+
+    if (core === 'b_city' && coreData[core]) {
+      cmsData['s_city'] = coreData[core];
+    }
+    if (core === 'b_district' && coreData[core]) {
+      cmsData['s_district'] = coreData[core];
+    }
+    if (core === 'b_ward' && coreData[core]) {
+      cmsData['s_ward'] = coreData[core];
+    }
+    if (core === 'b_address' && coreData[core]) {
+      cmsData['s_address'] = coreData[core];
+    }
+
+    if (core === 'address' && coreData[core]) {
+      cmsData['s_address'] = coreData[core];
+      cmsData['b_address'] = coreData[core];
+    }
+
     if (core === 'gender') {
       cmsData[cms] = coreData[core] == true ? 1 : 0;
       continue;
@@ -218,6 +271,7 @@ export const itgUpdateCustomerFromAppcore = (coreData) => {
 
     cmsData[cms] = coreData[core];
   }
+
   return cmsData;
 };
 

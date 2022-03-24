@@ -60,4 +60,7 @@ export class CreateCustomerAppcoreDto {
 
   @IsOptional()
   type: number;
+
+  @IsOptional()
+  address: string;
 }

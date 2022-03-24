@@ -54,4 +54,7 @@ export class UpdateCustomerAppcoreDto {
 
   @IsOptional()
   type: number;
+
+  @IsOptional()
+  address: string;
 }
