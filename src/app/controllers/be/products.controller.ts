@@ -49,12 +49,13 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('grouping-products/:product_id')
+  @Post('grouping-products/:start_product_id')
   async groupingProducts(
     @Res() res: Response,
-    @Param('product_id') product_id: number,
+    @Param('start_product_id') start_product_id: number,
+    @Body('dest_product_id') dest_product_id: number,
   ): Promise<IResponse> {
-    await this.service.groupingProducts(product_id);
+    await this.service.groupingProducts(start_product_id, dest_product_id);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 

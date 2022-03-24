@@ -568,16 +568,117 @@ export class ProductService {
     };
   }
 
-  async groupingProducts(product_id: number) {
-    const product = await this.productRepo.findOne({ product_id });
+  async groupingProducts(start_product_id: number, dest_product_id: number) {
+    const product = await this.productRepo.findOne({
+      product_id: start_product_id,
+    });
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
-    if (product.product_type === 3) {
+    if (product.product_type == 3) {
       throw new HttpException(
         'Sản phẩm combo không thể dời đến nhóm SP khác',
         403,
       );
+    }
+
+    const destProduct = await this.productRepo.findOne({
+      product_id: dest_product_id,
+    });
+    if (!destProduct) {
+      throw new HttpException('Không tìm thấy SP đích', 404);
+    }
+
+    if (destProduct.product_type == 3) {
+      throw new HttpException(
+        'Sản phẩm combo không thể dời đến nhóm SP khác',
+        403,
+      );
+    }
+
+    if (
+      (product.product_type == 2 || product.product_type == 1) &&
+      (destProduct.product_type == 2 || destProduct.product_type == 1)
+    ) {
+      // Xác định SP là cha hay SP con
+
+      let startGroup;
+      if (!product.parent_product_id) {
+        startGroup = await this.productVariationGroupRepo.findOne({
+          product_root_id: product.product_id,
+        });
+      } else {
+        startGroup = await this.productVariationGroupRepo.findOne({
+          product_root_id: product.parent_product_id,
+        });
+      }
+
+      if (!startGroup) return;
+
+      let destGroup;
+      if (!destProduct.parent_product_id) {
+        destGroup = await this.productVariationGroupRepo.findOne({
+          product_root_id: destProduct.product_id,
+        });
+      } else {
+        destGroup = await this.productVariationGroupRepo.findOne({
+          product_root_id: destProduct.parent_product_id,
+        });
+      }
+
+      if (!destProduct) return;
+
+      const startProductsList =
+        await this.productVariationGroupProductsRepo.find({
+          group_id: startGroup.group_id,
+        });
+      const destProductsList =
+        await this.productVariationGroupProductsRepo.find({
+          group_id: destGroup.group_id,
+        });
+
+      let willAddProductsInStartGroup = destProductsList.filter(
+        ({ product_id }) =>
+          !startProductsList.some(
+            ({ product_id: startProductId }) => startProductId == product_id,
+          ),
+      );
+
+      let willAddProductsInDestGroup = startProductsList.filter(
+        ({ product_id }) =>
+          !destProductsList.some(
+            ({ product_id: destProductId }) => destProductId == product_id,
+          ),
+      );
+
+      for (let [i, productItem] of willAddProductsInStartGroup.entries()) {
+        if (
+          productItem.parent_product_id == 0 ||
+          !productItem.parent_product_id
+        ) {
+          if (!productItem.product_group_name) {
+            productItem.product_group_name = `Loại - ${i + 1}`;
+          }
+          await this.productVariationGroupProductsRepo.create({
+            ...productItem,
+            group_id: startGroup.group_id,
+          });
+        }
+      }
+      for (let [i, productItem] of willAddProductsInDestGroup.entries()) {
+        if (
+          productItem.parent_product_id == 0 ||
+          !productItem.parent_product_id
+        ) {
+          if (!productItem.product_group_name) {
+            productItem.product_group_name = `Loại - ${i + 1}`;
+          }
+          await this.productVariationGroupProductsRepo.create({
+            ...productItem,
+            group_id: destGroup.group_id,
+          });
+        }
+      }
     }
   }
 
