@@ -259,6 +259,23 @@ export const statusJoiner = {
   },
 };
 
+export const orderDetailsJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.ORDER_DETAILS}.product_id`,
+    },
+  },
+};
+
 export const orderJoiner = {
   [JoinTable.leftJoin]: {
     [Table.STORE_LOCATIONS]: {

@@ -30,6 +30,7 @@ import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
 import { StatusType, CommonStatus } from '../../database/enums/status.enum';
 import {
+  orderDetailsJoiner,
   orderJoiner,
   productJoiner,
   statusJoiner,
@@ -844,7 +845,7 @@ export class OrdersService {
         [JoinTable.leftJoin]: statusJoiner,
       },
       where: {
-        [`${Table.STATUS}.status`]: order.status,
+        [`${Table.STATUS}.status_value`]: order.status,
         [`${Table.STATUS}.type`]: StatusType.Order,
       },
     });
@@ -855,18 +856,7 @@ export class OrdersService {
 
     const orderDetails = await this.orderDetailRepo.find({
       select: `${Table.PRODUCTS}.slug, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCTS]: {
-            fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-            rootJoin: `${Table.ORDER_DETAILS}.product_id`,
-          },
-        },
-      },
+      join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
         [`${Table.ORDER_DETAILS}.status`]: 'A',
@@ -875,6 +865,7 @@ export class OrdersService {
 
     if (orderDetails.length) {
       for (let orderDetail of orderDetails) {
+        orderDetail['image'] = null;
         const productImage = await this.imageLinkRepo.findOne({
           object_id: orderDetail.product_id,
           object_type: ImageObjectType.PRODUCT,

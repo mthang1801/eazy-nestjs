@@ -246,10 +246,10 @@ export class BaseRepositorty<T> {
     Object.entries(params).forEach(([key, val], i) => {
       if (i === 0) {
         sql +=
-          typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
+          typeof val === 'number' ? `${key} = ${val}` : `${key} = "${val}"`;
       } else {
         sql +=
-          typeof val === 'number' ? `, ${key} = ${val}` : `, ${key} = '${val}'`;
+          typeof val === 'number' ? `, ${key} = ${val}` : `, ${key} = "${val}"`;
       }
     });
     sql += ' WHERE ';
@@ -258,16 +258,16 @@ export class BaseRepositorty<T> {
       Object.entries(id).forEach(([key, val], i) => {
         if (i === 0) {
           sql +=
-            typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
+            typeof val === 'number' ? `${key} = ${val}` : `${key} = "${val}"`;
         } else {
           sql +=
             typeof val === 'number'
               ? ` AND ${key} = ${val}`
-              : ` AND ${key} = '${val}'`;
+              : ` AND ${key} = "${val}"`;
         }
       });
     } else {
-      sql += ` ${PrimaryKeys[this.table]} = '${id}'`;
+      sql += ` ${PrimaryKeys[this.table]} = ` + !isNaN(id * 1) ? id : `"${id}"`;
     }
 
     await this.databaseService.executeQueryWritePool(sql);

@@ -5,6 +5,7 @@ export class ProductDescriptionsEntity {
   product: string = '';
   shortname: string = '';
   alias: string = '';
+  product_core_name: string = '';
   short_description: string = '';
   full_description: string = '';
   meta_keywords: string = '';

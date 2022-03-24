@@ -116,7 +116,7 @@ import {
   itgConvertProductsFromAppcore,
 } from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
-// import * as mockProductsData from 'src/database/constant/_productsData.json';
+import * as mockProductsData from 'src/database/constant/_productsData.json';
 import { productByCategoryJoiner } from '../../utils/joinTable';
 
 @Injectable()
@@ -565,6 +565,8 @@ export class ProductService {
       products: productLists,
     };
   }
+
+  async groupingProducts(product_id: number) {}
 
   async childrenCategories(categoryId, categoriesList = []) {
     let categories = await this.categoryRepo.find({
@@ -1638,15 +1640,16 @@ export class ProductService {
 
     if (product.product_type === 3) {
       response = await axios({
-        url: GET_PRODUCTS_COMBO_STORES_API(id),
+        url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
       });
     } else {
       response = await axios({
-        url: GET_PRODUCTS_STORES_API(id),
+        url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
       });
     }
 
     const productsStocks = response?.data?.data;
+
     let result = [];
 
     if (
@@ -1655,33 +1658,10 @@ export class ProductService {
       Object.entries(productsStocks).length
     ) {
       for (let [key, val] of Object.entries(productsStocks)) {
-        if (val['inStockQuantity'] < 1 || typeof val !== 'object') continue;
-
-        const store = await this.storeRepo.findOne({
-          select: '*',
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.STORE_LOCATION_DESCRIPTIONS]: {
-                fieldJoin: 'store_location_id',
-                rootJoin: 'store_location_id',
-              },
-            },
-          },
-          where: {
-            [`${Table.STORE_LOCATIONS}.store_location_id`]: key,
-          },
-        });
-
-        result = [
-          ...result,
-          {
-            product_id: val['productId'],
-            store_location_id: val['storeId'],
-            amount: val['inStockQuantity'],
-            store,
-          },
-        ];
+        let resVal: any = val;
+        result = [...result, { ...resVal, productId: id }];
       }
+      return result;
     } else {
       const productsStores = await this.productStoreRepo.find({
         select: '*',

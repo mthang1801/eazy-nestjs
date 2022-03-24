@@ -38,7 +38,7 @@ export class OrderIntegrationController extends BaseController {
     @Res() res: Response,
     @Param('order_code') order_code: number,
   ): Promise<IResponse> {
-    const result = await this.service.itgGet(order_code);
+    const result = await this.service.getByOrderCode(order_code);
     return this.responseSuccess(res, result);
   }
 

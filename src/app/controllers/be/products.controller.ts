@@ -49,6 +49,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Post('grouping-products/:product_id')
+  async groupingProducts(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+  ): Promise<IResponse> {
+    await this.service.groupingProducts(product_id);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
   @Get('/parents')
   async getParentsList(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getParentsList();

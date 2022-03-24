@@ -61,4 +61,13 @@ export class OrdersController extends BaseController {
     const result = await this.service.getOrderDetails(order_id);
     return this.responseSuccess(res, result);
   }
+
+  @Get('/:order_code')
+  async getByOrderCode(
+    @Res() res,
+    @Param('order_code') order_code: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getByOrderCode(order_code);
+    return this.responseSuccess(res, result);
+  }
 }
