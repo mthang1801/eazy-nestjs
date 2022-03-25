@@ -55,6 +55,7 @@ export class ProductsEntity {
   url_media: string = '';
   type: string = '1';
   open_new_tab: string = 'N';
+  promotion_accessory_id: number = 0;
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

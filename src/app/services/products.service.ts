@@ -1128,11 +1128,11 @@ export class ProductService {
       product_id: result.product_id,
     };
 
-    const newProduictPrice = await this.productPriceRepo.create(
+    const newProductPrice = await this.productPriceRepo.create(
       productPriceData,
     );
 
-    result = { ...result, ...newProduictPrice };
+    result = { ...result, ...newProductPrice };
 
     //sale
     const productSaleData = {
