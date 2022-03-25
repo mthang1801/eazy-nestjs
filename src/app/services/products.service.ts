@@ -1344,7 +1344,7 @@ export class ProductService {
       }
     }
 
-    // await this.requestIntegrateParentProduct();
+    await this.requestIntegrateParentProduct();
     return result;
   }
 
@@ -1670,7 +1670,7 @@ export class ProductService {
       }
     }
 
-    // await this.requestIntegrateParentProduct();
+    await this.requestIntegrateParentProduct();
 
     return result;
   }
