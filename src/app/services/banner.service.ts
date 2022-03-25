@@ -273,6 +273,7 @@ export class bannerService {
       return bannerItems;
     }
 
+    let result = [];
     for (let bannerItem of bannerItems) {
       bannerItem['image'] = null;
       const bannerImageLink = await this.imageLinkRepo.findOne({
@@ -285,7 +286,18 @@ export class bannerService {
         });
         bannerItem['image'] = { ...bannerImageLink, ...bannerImage };
       }
+
+      let banner = await this.bannerRepo.findOne({
+        select: '*',
+        join: bannerJoiner,
+        where: { [`${Table.BANNER}.banner_id`]: bannerItem['banner_id'] },
+      });
+
+      if (banner) {
+        result = [...result, { ...bannerItem, ...banner }];
+      }
     }
-    return bannerItems;
+
+    return result;
   }
 }
