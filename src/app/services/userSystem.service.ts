@@ -174,20 +174,65 @@ export class UserSystemService {
       join: userJoiner,
       where: { phone: data.phone },
     });
+
+    if (data.email) {
+      const checkUserEmailExist = await this.userRepository.findOne({
+        email: data.email,
+      });
+      if (checkUserEmailExist) {
+        throw new HttpException('Email đã tồn tại', 409);
+      }
+    }
+
     let result: any = {};
+
+    let userProfile = {};
+    if (data.firstname) {
+      userProfile['b_firstname'] = data.firstname;
+      userProfile['s_firstname'] = data.firstname;
+    }
+    if (data.lastname) {
+      userProfile['s_lastname'] = data.lastname;
+      userProfile['s_lastname'] = data.lastname;
+    }
+    if (data.phone) {
+      userProfile['b_phone'] = data.phone;
+      userProfile['s_phone'] = data.phone;
+    }
+
     if (user) {
       if (user.user_type === UserTypeEnum.Employee) {
         throw new HttpException('Người dùng này đã nằm trong hệ thống', 400);
       }
+      const userData = this.userRepository.setData(data);
       await this.userRepository.update(
         { user_id: user.user_id },
         {
+          ...userData,
           user_type: UserTypeEnum.Employee,
           store_id: data.store_id,
           status: data.status,
           updated_at: convertToMySQLDateTime(),
         },
       );
+
+      const userProfile = await this.userProfileRepository.findOne({
+        user_id: user.user_id,
+      });
+      if (!userProfile) {
+        const newUserPrtofileData = {
+          ...new UserProfileEntity(),
+          ...userProfile,
+          user_id: user.user_id,
+        };
+        await this.userProfileRepository.create(newUserPrtofileData);
+      } else {
+        await this.userProfileRepository.update(
+          { user_id: user.user_id },
+          userProfile,
+        );
+      }
+
       result = { ...user };
     } else {
       const { passwordHash, salt } = saltHashPassword(data.password);

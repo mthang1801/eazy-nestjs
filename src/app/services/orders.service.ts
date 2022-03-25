@@ -76,7 +76,9 @@ import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { productSearchJoiner } from '../../utils/joinTable';
-import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
+import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
+import { OrderHistoryEntity } from '../entities/orderHistory.entity';
+import { convertToMySQLDateTime } from '../../utils/helper';
 
 @Injectable()
 export class OrdersService {
@@ -98,6 +100,7 @@ export class OrdersService {
     private cartRepo: CartRepository<CartEntity>,
     private cartItemRepo: CartItemRepository<CartItemEntity>,
     private customerService: CustomerService,
+    private orderHistoryRepo: OrderHistoryRepository<OrderHistoryEntity>,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -124,7 +127,7 @@ export class OrdersService {
     await this.createOrder(user, data, isSentCustomer);
   }
 
-  async createOrder(user, data, is_sent_customer_address = false) {
+  async createOrder(user, data, isSentCustomer = false) {
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
     data['s_district'] = data['s_district'] || data['b_district'];
@@ -167,6 +170,9 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
+    // create order histories
+    const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
+    await this.orderHistoryRepo.create(orderHistoryData);
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
@@ -187,13 +193,13 @@ export class OrdersService {
           ...orderItem,
           product_id: orderProductItem.product_id,
           product_appcore_id: orderProductItem.product_appcore_id,
-          price: totalPrice,
+          price: orderProductItem['price'],
           status: CommonStatus.Active,
         }),
       };
 
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
-      console.log(newOrderDetail);
+
       result['order_items'] = result['order_items']
         ? [
             ...result['order_items'],
@@ -210,11 +216,9 @@ export class OrdersService {
           ];
     }
 
-    if (is_sent_customer_address) {
+    if (isSentCustomer) {
       result['is_sent_customer_address'] = 1;
     }
-
-    console.log(result);
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -229,9 +233,13 @@ export class OrdersService {
     try {
       const response = await axios(configPushOrderToAppcore);
       const orderAppcoreResponse = response.data.data;
-      await this.orderRepo.update(
+      const udpatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },
-        { order_code: orderAppcoreResponse.orderId, is_sync: 0 },
+        {
+          order_code: orderAppcoreResponse.orderId,
+          is_sync: 0,
+          updated_date: convertToMySQLDateTime(),
+        },
       );
       for (let orderItem of orderAppcoreResponse['orderItemIds']) {
         await this.orderDetailRepo.update(
@@ -242,6 +250,9 @@ export class OrdersService {
           { order_item_appcore_id: orderItem.orderItemId },
         );
       }
+      // update order history
+
+      await this.orderHistoryRepo.create(udpatedOrder);
     } catch (error) {
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
@@ -528,9 +539,14 @@ export class OrdersService {
       );
     }
 
+    if (data.status) {
+      data['status'] = mappingStatusOrder(data['status']);
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
+      is_sync: 0,
     };
 
     orderData['total'] = 0;
@@ -774,27 +790,27 @@ export class OrdersService {
         }
       }
 
-      // // Lấy địa chỉ theo id
-      // if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
-      //   const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
-      //   if (city) {
-      //     orderItem['b_city'] = city['city_name'];
-      //   }
-      // }
-      // if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
-      //   const district = await this.districtRepo.findOne({
-      //     id: orderItem['b_district'],
-      //   });
-      //   if (district) {
-      //     orderItem['b_district'] = district['district_name'];
-      //   }
-      // }
-      // if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
-      //   const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
-      //   if (ward) {
-      //     orderItem['b_ward'] = ward['ward_name'];
-      //   }
-      // }
+      // Lấy địa chỉ theo id
+      if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
+        const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
+        if (city) {
+          orderItem['b_city'] = city['city_name'];
+        }
+      }
+      if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
+        const district = await this.districtRepo.findOne({
+          id: orderItem['b_district'],
+        });
+        if (district) {
+          orderItem['b_district'] = district['district_name'];
+        }
+      }
+      if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
+        const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
+        if (ward) {
+          orderItem['b_ward'] = ward['ward_name'];
+        }
+      }
     }
 
     const count = await this.orderRepo.find({

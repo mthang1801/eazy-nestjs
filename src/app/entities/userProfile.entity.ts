@@ -11,7 +11,7 @@ export class UserProfileEntity {
   b_ward: string = '';
   b_county: string = '';
   b_state: string = '';
-  b_country: string = '';
+  b_country: string = 'vi';
   b_zipcode: string = '';
   b_phone: string = '';
   s_firstname: string = '';
@@ -23,7 +23,7 @@ export class UserProfileEntity {
   s_ward: string = '';
   s_county: string = '';
   s_state: string = '';
-  s_country: string = '';
+  s_country: string = 'vi';
   s_zipcode: string = '';
   s_phone: string = '';
   s_address_type: string = '';
