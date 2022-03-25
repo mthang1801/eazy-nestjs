@@ -1085,11 +1085,7 @@ export class ProductService {
     let result = await this.productRepo.create(productData);
 
     // Nếu sp con -> tìm id sp cha để update vào
-    if (
-      convertedData.parent_product_appcore_id != null ||
-      convertedData.parent_product_appcore_id != 0
-    ) {
-      console.log(1082, convertedData);
+    if (convertedData['parent_product_appcore_id']) {
       //Nếu parent product tồn tại thì update, nếu chưa tồn tại thì tạo cấu hình
       let parentProduct = await this.productRepo.findOne({
         product_appcore_id: convertedData.parent_product_appcore_id,
