@@ -339,3 +339,15 @@ export const storeLocationSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const stickerFilterSearch = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.STICKER}.sticker_name`]: Like(search) },
+      { [`${Table.STICKER}.sticker_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

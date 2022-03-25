@@ -181,12 +181,6 @@ export class OrdersService {
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
-      const totalPrice =
-        ((orderProductItem['price'] *
-          (100 - orderProductItem['percentage_discount'])) /
-          100) *
-        orderItem['amount'];
-
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -220,6 +214,7 @@ export class OrdersService {
     if (isSentCustomer) {
       result['is_sent_customer_address'] = 1;
     }
+    console.log(convertDataToIntegrate(result));
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -254,6 +249,7 @@ export class OrdersService {
       // update order history
       await this.orderHistoryRepo.create(updatedOrder);
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
           error?.response?.data?.message || error.message

@@ -379,9 +379,6 @@ export const itgConvertProductsFromAppcore = (data) => {
       convertedData['page_title'] = convertedData[fromData];
       convertedData['promo_text'] = convertedData[fromData];
     }
-    if (fromData === 'product_appcore_name') {
-      convertedData['product'] = convertedData[fromData];
-    }
 
     convertedData[toData] = convertedData[fromData];
     delete convertedData[fromData];

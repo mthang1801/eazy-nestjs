@@ -38,6 +38,7 @@ import { StatusModule } from './status.module';
 import { ProductGroupModule } from './productGroup.module';
 import { UploadModule } from './upload.module';
 import { CartModule } from './cart.module';
+import { StickerModule } from './sticker.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -78,6 +79,7 @@ import { CartModule } from './cart.module';
     LocatorModule,
     ProductGroupModule,
     CartModule,
+    StickerModule,
   ],
   providers: [
     {

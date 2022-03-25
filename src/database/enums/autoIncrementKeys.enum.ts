@@ -31,6 +31,9 @@ export enum PrimaryKeys {
   ddv_images = 'image_id',
   ddv_images_links = 'pair_id',
 
+  //============== Sticker =============
+  ddv_stickers = 'sticker_id',
+
   //============== Category ==============
   ddv_categories = 'category_id',
   ddv_category_descriptions = 'category_description_id',

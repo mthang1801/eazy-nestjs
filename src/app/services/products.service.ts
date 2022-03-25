@@ -2338,12 +2338,13 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
     const productLists = await this.productRepo.find({
-      select: '*',
+      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug`,
       join: productSearchJoiner,
       where: productSearch(q),
       skip,
       limit,
     });
+
     return productLists;
   }
 

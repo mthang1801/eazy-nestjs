@@ -32,6 +32,9 @@ export enum Table {
   IMAGE = 'ddv_images',
   IMAGE_LINK = 'ddv_images_links',
 
+  //============== Sticker =============
+  STICKER = 'ddv_stickers',
+
   //============== Payment ==============
   PAYMENT_DESCRIPTION = 'ddv_payment_descriptions',
   PAYMENT = 'ddv_payments',
