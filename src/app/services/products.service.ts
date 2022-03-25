@@ -1062,6 +1062,29 @@ export class ProductService {
     return result;
   }
 
+  async requestIntegrateParentProduct() {
+    const childrenProductsList = await this.productRepo.find({
+      where: {
+        parent_product_appcore_id: Not(IsNull()),
+        parent_product_id: 0,
+      },
+    });
+
+    if (childrenProductsList) {
+      for (let childProduct of childrenProductsList) {
+        const parentProduct = await this.productRepo.findOne({
+          product_appcore_id: childProduct['parent_product_appcore_id'],
+        });
+        if (parentProduct) {
+          await this.productRepo.update(
+            { product_id: childProduct.product_id },
+            { parent_product_id: parentProduct.product_id },
+          );
+        }
+      }
+    }
+  }
+
   async itgCreate(data): Promise<any> {
     console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
@@ -1318,6 +1341,8 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
+
+    await this.requestIntegrateParentProduct();
     return result;
   }
 
@@ -1642,6 +1667,8 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
+
+    await this.requestIntegrateParentProduct();
 
     return result;
   }
