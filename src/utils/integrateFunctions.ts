@@ -1,4 +1,9 @@
-import { convertNullDatetimeData, convertToMySQLDateTime } from './helper';
+import {
+  convertNullDatetimeData,
+  convertToMySQLDateTime,
+  convertToSlug,
+  removeVietnameseTones,
+} from './helper';
 
 import * as moment from 'moment';
 
@@ -336,13 +341,15 @@ export const itgCreateCategoryFromAppcore = (coreData) => {
 };
 
 export const itgConvertProductsFromAppcore = (data) => {
+  console.log(data);
   const mappingData = new Map([
     ['product_id', 'product_appcore_id'],
+    ['porodict_id', 'product_appcore_id'],
     ['parent_product_id', 'parent_product_appcore_id'],
     ['category_id', 'category_id'],
-    ['product', 'product_appcore_name'],
-    ['product', 'product_appcore_name'],
+    ['product', 'product'],
     ['tax_name', 'tax_name'],
+    ['product_appcore_name', 'product_core_name'],
   ]);
   let convertedData = { ...data };
   for (let [fromData, toData] of mappingData) {
@@ -358,6 +365,24 @@ export const itgConvertProductsFromAppcore = (data) => {
         .join('')
         .trim();
     }
+
+    if (fromData === 'porodict_id' && convertedData[fromData]) {
+      console.log(convertedData[fromData]);
+      convertedData[toData] = convertedData[fromData];
+      continue;
+    }
+
+    if (fromData === 'product') {
+      convertedData['product_core_name'] = convertedData[fromData];
+      convertedData['shortname'] = convertedData[fromData];
+      convertedData['short_description'] = convertedData[fromData];
+      convertedData['page_title'] = convertedData[fromData];
+      convertedData['promo_text'] = convertedData[fromData];
+    }
+    if (fromData === 'product_appcore_name') {
+      convertedData['product'] = convertedData[fromData];
+    }
+
     convertedData[toData] = convertedData[fromData];
     delete convertedData[fromData];
   }
@@ -378,6 +403,11 @@ export const itgConvertProductsFromAppcore = (data) => {
     }
   }
 
+  if (convertedData['product']) {
+    convertedData['slug'] = convertToSlug(
+      removeVietnameseTones(convertedData['product']),
+    );
+  }
   return convertedData;
 };
 

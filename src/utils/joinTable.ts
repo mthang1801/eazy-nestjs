@@ -152,6 +152,15 @@ export const productJoiner = {
   },
 };
 
+export const userGroupJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.USER_GROUP_DESCRIPTIONS]: {
+      fieldJoin: 'usergroup_id',
+      rootJoin: 'usergroup_id',
+    },
+  },
+};
+
 export const productGroupProductsJoiner = {
   [Table.PRODUCTS]: {
     fieldJoin: `${Table.PRODUCTS}.product_id`,

@@ -10,7 +10,12 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
-import { Like, IsNull } from '../../database/find-options/operators';
+import {
+  Like,
+  IsNull,
+  Not,
+  Equal,
+} from '../../database/find-options/operators';
 import { CreateUserGroupsDto } from '../dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
@@ -26,6 +31,7 @@ import { SortBy } from '../../database/enums/sortBy.enum';
 import { PrivilegeRepository } from '../repositories/privilege.repository';
 import { PrivilegeEntity } from '../entities/privilege.entity';
 import { convertToMySQLDateTime } from 'src/utils/helper';
+import { userGroupJoiner } from 'src/utils/joinTable';
 
 @Injectable()
 export class UserGroupsService {
@@ -40,6 +46,21 @@ export class UserGroupsService {
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
+    const userGroupDB = await this.userGroupRepo.find({
+      select: '*',
+      join: userGroupJoiner,
+    });
+
+    if (
+      userGroupDB.some(
+        ({ usergroup }) =>
+          usergroup.toLowerCase().trim() ===
+          data.usergroup.toLowerCase().trim(),
+      )
+    ) {
+      throw new HttpException('Người dùng hệ thống đã tồn tại', 409);
+    }
+
     const userGroupData = {
       ...new UserGroupEntity(),
       ...this.userGroupRepo.setData(data),
@@ -211,6 +232,22 @@ export class UserGroupsService {
 
     if (!currentUserGroup) {
       throw new HttpException('Không tìm thấy usergroup', 404);
+    }
+
+    const userGroupDB = await this.userGroupRepo.find({
+      select: '*',
+      join: userGroupJoiner,
+    });
+
+    if (
+      data.usergroup &&
+      userGroupDB.some(
+        ({ usergroup }) =>
+          usergroup.toLowerCase().trim() ===
+          data.usergroup.toLowerCase().trim(),
+      )
+    ) {
+      throw new HttpException('Người dùng hệ thống đã tồn tại', 409);
     }
 
     let result = { ...currentUserGroup };

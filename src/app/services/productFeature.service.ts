@@ -376,7 +376,7 @@ export class ProductFeatureService {
       where: { feature_id: id },
     });
     // Nếu trong danh sách cập nhật không có variant_id, sẽ được liệt kê vào danh sách sẽ xoá
-    let willDeleteVariants = [];
+    // let willDeleteVariants = [];
 
     currentVariantLists = currentVariantLists.map(
       ({ variant_id }) => variant_id,
@@ -403,37 +403,37 @@ export class ProductFeatureService {
     }
 
     // Xoá các variants không nằm trong variant update
-    willDeleteVariants = currentVariantLists.filter(
-      (variantId) =>
-        !willUpdateVariants.some(({ variant_id }) => variantId === variant_id),
-    );
+    // willDeleteVariants = currentVariantLists.filter(
+    //   (variantId) =>
+    //     !willUpdateVariants.some(({ variant_id }) => variantId === variant_id),
+    // );
 
     // Kiểm tra các variant này có tồn tại trong bảng ddv_product_features_values hay chưa, nếu có thì không được xoá
-    for (let variantId of willDeleteVariants) {
-      let checkVariantExists = await this.productFeatureValuesRepo.findOne({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-              fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
-              rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
-            },
-          },
-        },
-        where: { [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId },
-      });
+    // for (let variantId of willDeleteVariants) {
+    //   let checkVariantExists = await this.productFeatureValuesRepo.findOne({
+    //     select: ['*'],
+    //     join: {
+    //       [JoinTable.leftJoin]: {
+    //         [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    //           fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+    //           rootJoin: `${Table.PRODUCT_FEATURE_VALUES}.variant_id`,
+    //         },
+    //       },
+    //     },
+    //     where: { [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId },
+    //   });
 
-      if (checkVariantExists) {
-        logErrorsDelete =
-          logErrorsDelete === '' ? `Không thể xoá variant : ` : logErrorsDelete;
-        logErrorsDelete += `${checkVariantExists.value} (${checkVariantExists.variant_id}), `;
-        continue;
-      }
-      await this.productFeatureVariantsRepo.delete({ variant_id: variantId });
-      await this.productFeatureVariantDescriptionRepo.delete({
-        variant_id: variantId,
-      });
-    }
+    //   if (checkVariantExists) {
+    //     logErrorsDelete =
+    //       logErrorsDelete === '' ? `Không thể xoá variant : ` : logErrorsDelete;
+    //     logErrorsDelete += `${checkVariantExists.value} (${checkVariantExists.variant_id}), `;
+    //     continue;
+    //   }
+    //   await this.productFeatureVariantsRepo.delete({ variant_id: variantId });
+    //   await this.productFeatureVariantDescriptionRepo.delete({
+    //     variant_id: variantId,
+    //   });
+    // }
 
     const setVarianItem = async (
       variantItem,
