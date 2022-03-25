@@ -149,7 +149,7 @@ export class CustomerService {
       console.log(response);
       const data = response.data;
       console.log(data);
-      const user_appcore_id = data.data.id;
+      const user_appcore_id = data.data;
       const updatedUser = await this.userRepo.update(
         { user_id: user.user_id },
         { user_appcore_id, updated_at: convertToMySQLDateTime() },
