@@ -1098,7 +1098,7 @@ export class ProductService {
         parentProduct = await this.productRepo.create(parentProductData);
       }
 
-      const updatedCurrentProduct = await this.productRepo.update(
+      await this.productRepo.update(
         { product_id: result.product_id },
         { parent_product_id: parentProduct.product_id },
       );
@@ -1364,7 +1364,6 @@ export class ProductService {
       const newProductDescData = {
         ...new ProductDescriptionsEntity(),
         ...this.productDescriptionsRepo.setData(convertedData),
-        product_id: result.product_id,
       };
       const newProductDesc = await this.productDescriptionsRepo.create(
         newProductDescData,
@@ -1391,7 +1390,6 @@ export class ProductService {
       const newProductPriceData = {
         ...new ProductPricesEntity(),
         ...this.productPriceRepo.setData(convertedData),
-        product_id: result.product_id,
       };
       const newProductPrice = await this.productPriceRepo.create(
         newProductPriceData,
@@ -1417,7 +1415,6 @@ export class ProductService {
       const newProductSaleData = {
         ...new ProductSalesEntity(),
         ...this.productSaleRepo.setData(convertedData),
-        product_id: result.product_id,
       };
       const newProductSale = await this.productSaleRepo.create(
         newProductSaleData,
@@ -1449,7 +1446,6 @@ export class ProductService {
       const newProductCategoryData = {
         ...new ProductsCategoriesEntity(),
         ...this.productCategoryRepo.setData(convertedData),
-        product_id: result.product_id,
       };
       const newProductCategory = await this.productCategoryRepo.create(
         newProductCategoryData,
