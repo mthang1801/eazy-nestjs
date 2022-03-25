@@ -1063,8 +1063,9 @@ export class ProductService {
   }
 
   async itgCreate(data): Promise<any> {
+    console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
-
+    console.log(convertedData);
     if (convertedData.product_appcore_id) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData.product_appcore_id,
@@ -1082,9 +1083,12 @@ export class ProductService {
     };
 
     let result = await this.productRepo.create(productData);
-
+    console.log(result);
     // Nếu sp con -> tìm id sp cha để update vào
-    if (result.parent_product_appcore_id) {
+    if (
+      result.parent_product_appcore_id != null ||
+      result.parent_product_appcore_id != 0
+    ) {
       //Nếu parent product tồn tại thì update, nếu chưa tồn tại thì tạo cấu hình
       let parentProduct = await this.productRepo.findOne({
         product_appcore_id: result.parent_product_appcore_id,
@@ -1105,55 +1109,108 @@ export class ProductService {
     }
 
     // set product description
-    const productDescData = {
-      ...new ProductDescriptionsEntity(),
-      ...this.productDescriptionsRepo.setData(convertedData),
+    let productDesc = await this.productDescriptionsRepo.findOne({
       product_id: result.product_id,
-    };
+    });
+    if (productDesc) {
+      let productDescData = this.productDescriptionsRepo.setData(convertedData);
+      if (Object.entries(productDescData).length) {
+        await this.productDescriptionsRepo.update(
+          {
+            product_id: result.product_id,
+          },
+          productDescData,
+        );
+      }
+    } else {
+      const productDescData = {
+        ...new ProductDescriptionsEntity(),
+        ...this.productDescriptionsRepo.setData(convertedData),
+        product_id: result.product_id,
+      };
 
-    const newProductsDesc = await this.productDescriptionsRepo.create(
-      productDescData,
-    );
-
-    result = { ...result, ...newProductsDesc };
+      const newProductsDesc = await this.productDescriptionsRepo.create(
+        productDescData,
+      );
+    }
 
     //price
-    const productPriceData = {
-      ...new ProductPricesEntity(),
-      ...this.productPriceRepo.setData(convertedData),
+    let productPrice = await this.productPriceRepo.findOne({
       product_id: result.product_id,
-    };
+    });
 
-    const newProductPrice = await this.productPriceRepo.create(
-      productPriceData,
-    );
+    if (productPrice) {
+      const productPriceData = this.productPriceRepo.setData({
+        product_id: result.product_id,
+      });
+      if (Object.entries(productPriceData).length) {
+        await this.productPriceRepo.update(
+          { product_id: result.product_id },
+          productPriceData,
+        );
+      }
+    } else {
+      const productPriceData = {
+        ...new ProductPricesEntity(),
+        ...this.productPriceRepo.setData(convertedData),
+        product_id: result.product_id,
+      };
 
-    result = { ...result, ...newProductPrice };
+      const newProductPrice = await this.productPriceRepo.create(
+        productPriceData,
+      );
+    }
 
     //sale
-    const productSaleData = {
-      ...new ProductSalesEntity(),
-      ...this.productSaleRepo.setData(convertedData),
+    let productSale = await this.productSaleRepo.findOne({
       product_id: result.product_id,
-    };
+    });
+    if (productSale) {
+      const productSaleData = this.productSaleRepo.setData(convertedData);
+      if (Object.entries(productSaleData).length) {
+        await this.productSaleRepo.update(
+          { product_id: result.product_id },
+          productSaleData,
+        );
+      }
+    } else {
+      const productSaleData = {
+        ...new ProductSalesEntity(),
+        ...this.productSaleRepo.setData(convertedData),
+        product_id: result.product_id,
+      };
 
-    const productSale = await this.productSaleRepo.create(productSaleData);
-
-    result = { ...result, ...productSale };
+      await this.productSaleRepo.create(productSaleData);
+    }
 
     // category
 
-    const productCategoryData = {
-      ...new ProductsCategoriesEntity(),
-      ...this.productCategoryRepo.setData(convertedData),
+    let productCategory = await this.productCategoryRepo.findOne({
+      category_id: convertedData['category_id'],
       product_id: result.product_id,
-    };
+    });
+    if (productCategory) {
+      const productCategoryData =
+        this.productCategoryRepo.setData(convertedData);
+      if (Object.entries(productCategoryData).length) {
+        await this.productCategoryRepo.update(
+          {
+            product_id: result.product_id,
+            category_id: convertedData['category_id'],
+          },
+          productCategoryData,
+        );
+      }
+    } else {
+      const productCategoryData = {
+        ...new ProductsCategoriesEntity(),
+        ...this.productCategoryRepo.setData(convertedData),
+        product_id: result.product_id,
+        category_id: convertedData['category_id'],
+      };
 
-    const productCategory = await this.productCategoryRepo.createSync(
-      productCategoryData,
-    );
-
-    result = { ...result, ...productCategory };
+      await this.productCategoryRepo.createSync(productCategoryData);
+    }
 
     if (convertedData?.images?.length) {
       for (let [i, imagePath] of convertedData.images.entries()) {
@@ -1314,10 +1371,12 @@ export class ProductService {
   }
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
+    console.log('update');
     let convertedData = { ...data };
     if (!isConverted) {
       convertedData = itgConvertProductsFromAppcore(data);
     }
+    console.log(convertedData);
     const product = await this.productRepo.findOne({
       select: '*',
       join: productJoiner,
@@ -1333,12 +1392,12 @@ export class ProductService {
     }
 
     let result = { ...product };
-    if (convertedData['parent_product_appcore_id']) {
+    if (convertedData['`parent_product_appcore_id`']) {
       const parentProduct = await this.productRepo.findOne({
         product_appcore_id: convertedData['parent_product_appcore_id'],
       });
       if (parentProduct) {
-        convertedData['parent_id'] = parentProduct['product_id'];
+        convertedData['parent_product_id'] = parentProduct['product_id'];
       }
     }
     const productData = this.productRepo.setData(convertedData);
@@ -1348,8 +1407,6 @@ export class ProductService {
         { product_id: result.product_id },
         productData,
       );
-
-      result = { ...result, ...updatedProduct };
     }
 
     // set product description
@@ -1365,12 +1422,12 @@ export class ProductService {
           { product_id: result.product_id },
           productDescData,
         );
-        result = { ...result, ...updatedProductsDesc };
       }
     } else {
       const newProductDescData = {
         ...new ProductDescriptionsEntity(),
         ...this.productDescriptionsRepo.setData(convertedData),
+        product_id: result.product_id,
       };
       const newProductDesc = await this.productDescriptionsRepo.create(
         newProductDescData,
@@ -1390,18 +1447,14 @@ export class ProductService {
           { product_id: result.product_id },
           productPriceData,
         );
-
-        result = { ...result, ...updatedProductPrice };
       }
     } else {
       const newProductPriceData = {
         ...new ProductPricesEntity(),
         ...this.productPriceRepo.setData(convertedData),
+        product_id: result.product_id,
       };
-      const newProductPrice = await this.productPriceRepo.create(
-        newProductPriceData,
-      );
-      result = { ...result, ...newProductPrice };
+      await this.productPriceRepo.create(newProductPriceData);
     }
 
     //sale
@@ -1412,21 +1465,18 @@ export class ProductService {
       const productSale = this.productSaleRepo.setData(convertedData);
 
       if (Object.entries(productSale).length) {
-        const updatedProductSale = await this.productSaleRepo.update(
+        await this.productSaleRepo.update(
           { product_id: result.product_id },
           productSale,
         );
-        result = { ...result, ...updatedProductSale };
       }
     } else {
       const newProductSaleData = {
         ...new ProductSalesEntity(),
         ...this.productSaleRepo.setData(convertedData),
+        product_id: result.product_id,
       };
-      const newProductSale = await this.productSaleRepo.create(
-        newProductSaleData,
-      );
-      result = { ...result, ...newProductSale };
+      await this.productSaleRepo.create(newProductSaleData);
     }
 
     let productCategory = await this.productCategoryRepo.findOne({
@@ -1437,27 +1487,22 @@ export class ProductService {
       const productCategoryData =
         this.productCategoryRepo.setData(convertedData);
       if (Object.entries(productCategoryData).length) {
-        const productCategory = await this.productCategoryRepo.findOne({
-          category_id: result.category_id,
-          product_id: result.product_id,
-        });
-        if (productCategory) {
-          const updatedProductCategory = await this.productCategoryRepo.update(
-            { category_id: result.category_id, product_id: result.product_id },
-            productCategoryData,
-          );
-          result = { ...result, ...updatedProductCategory };
-        }
+        await this.productCategoryRepo.update(
+          {
+            category_id: convertedData.category_id,
+            product_id: result.product_id,
+          },
+          productCategoryData,
+        );
       }
     } else {
       const newProductCategoryData = {
         ...new ProductsCategoriesEntity(),
         ...this.productCategoryRepo.setData(convertedData),
+        product_id: result.product_id,
+        category_id: convertedData.category_id,
       };
-      const newProductCategory = await this.productCategoryRepo.create(
-        newProductCategoryData,
-      );
-      result = { ...result, ...newProductCategory };
+      await this.productCategoryRepo.create(newProductCategoryData);
     }
 
     if (convertedData?.product_features?.length) {

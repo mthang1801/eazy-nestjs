@@ -214,7 +214,6 @@ export class OrdersService {
     if (isSentCustomer) {
       result['is_sent_customer_address'] = 1;
     }
-    console.log(convertDataToIntegrate(result));
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {

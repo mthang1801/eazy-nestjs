@@ -341,15 +341,12 @@ export const itgCreateCategoryFromAppcore = (coreData) => {
 };
 
 export const itgConvertProductsFromAppcore = (data) => {
-  console.log(data);
   const mappingData = new Map([
     ['product_id', 'product_appcore_id'],
-    ['porodict_id', 'product_appcore_id'],
     ['parent_product_id', 'parent_product_appcore_id'],
     ['category_id', 'category_id'],
     ['product', 'product'],
     ['tax_name', 'tax_name'],
-    ['product_appcore_name', 'product_core_name'],
   ]);
   let convertedData = { ...data };
   for (let [fromData, toData] of mappingData) {
@@ -381,7 +378,6 @@ export const itgConvertProductsFromAppcore = (data) => {
     }
 
     convertedData[toData] = convertedData[fromData];
-    delete convertedData[fromData];
   }
 
   const mappingComboData = new Map([
@@ -405,6 +401,9 @@ export const itgConvertProductsFromAppcore = (data) => {
       removeVietnameseTones(convertedData['product']),
     );
   }
+
+  delete convertedData['product_id'];
+  delete convertedData['parent_product_id'];
   return convertedData;
 };
 
