@@ -1063,15 +1063,17 @@ export class ProductService {
   }
 
   async requestIntegrateParentProduct() {
+    console.log('request');
     const childrenProductsList = await this.productRepo.find({
       where: {
-        parent_product_appcore_id: Not(IsNull()),
+        parent_product_appcore_id: [Not(IsNull()), Equal('')],
         parent_product_id: 0,
       },
     });
 
     if (childrenProductsList) {
       for (let childProduct of childrenProductsList) {
+        console.log(childProduct);
         const parentProduct = await this.productRepo.findOne({
           product_appcore_id: childProduct['parent_product_appcore_id'],
         });
@@ -1342,7 +1344,7 @@ export class ProductService {
       }
     }
 
-    await this.requestIntegrateParentProduct();
+    // await this.requestIntegrateParentProduct();
     return result;
   }
 
@@ -1668,7 +1670,7 @@ export class ProductService {
       }
     }
 
-    await this.requestIntegrateParentProduct();
+    // await this.requestIntegrateParentProduct();
 
     return result;
   }
