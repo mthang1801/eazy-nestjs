@@ -258,10 +258,6 @@ export class ProductService {
         }
       }
     }
-
-    // await this.moveParentChildenProductsIntoAnotherGroup(50000178, 9, '128GB');
-    // await this.moveParentChildenProductsIntoAnotherGroup(50000183, 9);
-    // await this.moveParentChildenProductsIntoAnotherGroup(50000184, 9, '256GB');
   }
 
   async createProductFeatures(
@@ -1068,7 +1064,7 @@ export class ProductService {
 
   async itgCreate(data): Promise<any> {
     const convertedData = itgConvertProductsFromAppcore(data);
-
+    console.log(convertedData);
     if (convertedData.product_appcore_id) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData.product_appcore_id,

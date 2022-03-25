@@ -155,6 +155,19 @@ export class ShippingService {
         await this.shippingServiceDescriptionRepo.create(newServiceDescData);
       }
     }
+
+    if (data.image_path) {
+      const imageLink = await this.imageLinkRepo.findOne({
+        object_type: ImageObjectType.LOGO,
+        object_id: id,
+      });
+      if (imageLink) {
+        await this.imageRepo.update(
+          { image_id: imageLink.image_id },
+          { image_path: data.image_path },
+        );
+      }
+    }
   }
 
   async getList(params) {

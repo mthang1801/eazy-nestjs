@@ -342,6 +342,7 @@ export const itgConvertProductsFromAppcore = (data) => {
     ['category_id', 'category_id'],
     ['product', 'product_appcore_name'],
     ['product', 'product_appcore_name'],
+    ['tax_name', 'tax_name'],
   ]);
   let convertedData = { ...data };
   for (let [fromData, toData] of mappingData) {
@@ -350,6 +351,12 @@ export const itgConvertProductsFromAppcore = (data) => {
         ? 0
         : convertedData[fromData];
       continue;
+    }
+    if (fromData === 'tax_name' && convertedData[fromData]) {
+      convertedData['color'] = convertedData[fromData]
+        .split('-')
+        .join('')
+        .trim();
     }
     convertedData[toData] = convertedData[fromData];
     delete convertedData[fromData];

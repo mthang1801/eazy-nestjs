@@ -173,6 +173,7 @@ export class OrdersService {
     // create order histories
     const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
     await this.orderHistoryRepo.create(orderHistoryData);
+
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
@@ -233,7 +234,7 @@ export class OrdersService {
     try {
       const response = await axios(configPushOrderToAppcore);
       const orderAppcoreResponse = response.data.data;
-      const udpatedOrder = await this.orderRepo.update(
+      const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },
         {
           order_code: orderAppcoreResponse.orderId,
@@ -251,8 +252,7 @@ export class OrdersService {
         );
       }
       // update order history
-
-      await this.orderHistoryRepo.create(udpatedOrder);
+      await this.orderHistoryRepo.create(updatedOrder);
     } catch (error) {
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
@@ -576,6 +576,10 @@ export class OrdersService {
 
     let result = await this.orderRepo.create(orderData);
 
+    // create order histories
+    const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
+    await this.orderHistoryRepo.create(orderHistoryData);
+
     if (data.order_items.length) {
       for (let orderItem of data.order_items) {
         let orderDetailData = {
@@ -624,6 +628,10 @@ export class OrdersService {
         orderData,
       );
       result = { ...result, ...updatedOrder };
+
+      // create order histories
+      const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
+      await this.orderHistoryRepo.create(orderHistoryData);
     }
 
     const orderItemsList = await this.orderDetailRepo.find({
@@ -698,7 +706,7 @@ export class OrdersService {
   async getByPhoneAndId(phone: string, order_code: number) {
     const order = await this.orderRepo.findOne({
       order_code,
-      b_phone: phone,
+      s_phone: phone,
     });
 
     if (!order) {
