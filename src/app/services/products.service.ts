@@ -1333,7 +1333,14 @@ export class ProductService {
     }
 
     let result = { ...product };
-
+    if (convertedData['parent_product_appcore_id']) {
+      const parentProduct = await this.productRepo.findOne({
+        product_appcore_id: convertedData['parent_product_appcore_id'],
+      });
+      if (parentProduct) {
+        convertedData['parent_id'] = parentProduct['product_id'];
+      }
+    }
     const productData = this.productRepo.setData(convertedData);
 
     if (Object.entries(productData).length) {
