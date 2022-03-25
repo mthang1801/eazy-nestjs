@@ -76,6 +76,7 @@ import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { productSearchJoiner } from '../../utils/joinTable';
+import { ConfigurationServicePlaceholders } from 'aws-sdk/lib/config_service_placeholders';
 
 @Injectable()
 export class OrdersService {
@@ -109,11 +110,21 @@ export class OrdersService {
       }
     }
 
-    await this.createOrder(user, data);
+    let isSentCustomer = false;
+    if (
+      data.s_city &&
+      data.s_district &&
+      data.s_ward &&
+      data.s_ward &&
+      data.s_address
+    ) {
+      isSentCustomer = true;
+    }
+
+    await this.createOrder(user, data, isSentCustomer);
   }
 
-  async createOrder(user, data) {
-    console.log(data);
+  async createOrder(user, data, is_sent_customer_address = false) {
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
     data['s_district'] = data['s_district'] || data['b_district'];
@@ -169,7 +180,6 @@ export class OrdersService {
           100) *
         orderItem['amount'];
 
-      console.log(totalPrice);
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -200,7 +210,11 @@ export class OrdersService {
           ];
     }
 
-    console.log(convertDataToIntegrate(result));
+    if (is_sent_customer_address) {
+      result['is_sent_customer_address'] = 1;
+    }
+
+    console.log(result);
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -240,9 +254,17 @@ export class OrdersService {
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
     let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+
     if (!user['user_appcore_id']) {
       await this.customerService.createCustomerToAppcore(user);
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+    }
+
+    if (!user) {
+      throw new HttpException(
+        'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
+        400,
+      );
     }
 
     const cart = await this.cartRepo.findOne({ user_id: user.user_id });
@@ -261,32 +283,19 @@ export class OrdersService {
 
     const sendData = { ...data, order_items: cartItems };
 
-    await this.createOrder(user, sendData);
+    await this.createOrder(user, sendData, true);
 
     const userProfile = await this.userProfileRepo.findOne({
       user_id: user.user_id,
     });
-    userProfile['b_firstname'] = data.b_firstname || '';
-    userProfile['b_lastname'] = data.b_lastname || '';
-    userProfile['b_phone'] = data.b_phone;
-    userProfile['b_city'] = data.b_city;
-    userProfile['b_district'] = data.b_district;
-    userProfile['b_ward'] = data.b_ward;
-    userProfile['b_address'] = data.b_address;
-    userProfile['profile_name'] = `${data.b_firstname || ''} ${
-      data.b_lastname || ''
-    }`;
 
-    userProfile['s_firstname'] =
-      userProfile['s_firstname'] || data.b_firstname || '';
-    userProfile['s_lastname'] =
-      userProfile['s_lastname'] || data.b_lastname || '';
-    userProfile['s_phone'] = userProfile['s_phone'] || data.b_phone || '';
-    userProfile['s_city'] = userProfile['s_city'] || data.b_city || '';
-    userProfile['s_district'] =
-      userProfile['s_district'] || data.b_district || '';
-    userProfile['s_ward'] = userProfile['s_ward'] || data.b_ward || '';
-    userProfile['s_address'] = userProfile['s_address'] || data.b_address || '';
+    userProfile['s_firstname'] = data.s_firstname || userProfile['s_firstname'];
+    userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
+    userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
+    userProfile['s_city'] = data.s_city || userProfile['s_city'];
+    userProfile['s_district'] = data.s_district || userProfile['s_district'];
+    userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
+    userProfile['s_address'] = data.s_address || userProfile['s_address'];
 
     await this.userProfileRepo.update({ user_id: user.user_id }, userProfile);
 

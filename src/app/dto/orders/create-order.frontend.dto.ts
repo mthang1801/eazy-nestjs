@@ -10,16 +10,16 @@ export class CreateOrderFEDto {
   @IsOptional()
   b_phone: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_city: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_district: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_ward: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   b_address: string;
 
   @IsOptional()

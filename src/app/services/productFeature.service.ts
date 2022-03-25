@@ -332,7 +332,7 @@ export class ProductFeatureService {
     let updatedFeature = {};
     if (Object.entries(productFeatureData).length) {
       updatedFeature = await this.productFeaturesRepo.update(
-        id,
+        { feature_id: id },
         productFeatureData,
       );
     }

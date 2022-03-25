@@ -190,6 +190,9 @@ class ProductOrder {
   amount: number = 1;
 
   @IsOptional()
+  product_code: string;
+
+  @IsOptional()
   product_appcore_id: string = '';
 
   @IsOptional()

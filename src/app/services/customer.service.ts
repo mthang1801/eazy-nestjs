@@ -146,20 +146,23 @@ export class CustomerService {
         method: 'POST',
         data: customerAppcoreData,
       });
+
       const data = response.data;
 
-      const user_appcore_id = data.data.id;
+      const user_appcore_id = data.data;
+
       const updatedUser = await this.userRepo.update(
         { user_id: user.user_id },
         { user_appcore_id, updated_at: convertToMySQLDateTime() },
       );
     } catch (error) {
-      if (deleteWhenFalse) {
-        await this.userRepo.delete({ user_id: user.user_id });
-        await this.userProfileRepo.delete({ user_id: user.user_id });
-        await this.userDataRepo.delete({ user_id: user.user_id });
-        await this.userLoyalRepo.delete({ user_id: user.user_id });
-      }
+      console.log(error);
+      // if (deleteWhenFalse) {
+      //   await this.userRepo.delete({ user_id: user.user_id });
+      //   await this.userProfileRepo.delete({ user_id: user.user_id });
+      //   await this.userDataRepo.delete({ user_id: user.user_id });
+      //   await this.userLoyalRepo.delete({ user_id: user.user_id });
+      // }
 
       throw new HttpException(
         error?.response?.data?.message || error.response,
