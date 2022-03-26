@@ -36,6 +36,7 @@ import {
   statusJoiner,
 } from '../../utils/joinTable';
 import {
+  convertOrderDataFromAppcore,
   itgOrderFromAppcore,
   mappingStatusOrder,
 } from 'src/utils/integrateFunctions';
@@ -524,8 +525,9 @@ export class OrdersService {
   }
 
   async itgCreate(data: CreateOrderAppcoreDto) {
+    const convertedData = convertOrderDataFromAppcore(data);
     const order = await this.orderRepo.findOne({
-      order_code: data.order_code,
+      order_code: convertedData.order_code,
     });
     if (order) {
       throw new HttpException(
@@ -534,20 +536,20 @@ export class OrdersService {
       );
     }
 
-    if (data.status) {
-      data['status'] = mappingStatusOrder(data['status']);
+    if (convertedData.status) {
+      convertedData['status'] = mappingStatusOrder(convertedData['status']);
     }
 
     const orderData = {
       ...new OrderEntity(),
-      ...this.orderRepo.setData(data),
+      ...this.orderRepo.setData(convertedData),
       is_sync: 0,
     };
 
     orderData['total'] = 0;
 
-    if (data?.order_items?.length) {
-      for (let orderItem of data.order_items) {
+    if (convertedData?.order_items?.length) {
+      for (let orderItem of convertedData.order_items) {
         const orderDetail = await this.orderDetailRepo.findOne({
           order_item_appcore_id: orderItem.order_item_appcore_id,
         });
@@ -559,7 +561,7 @@ export class OrdersService {
     }
 
     const user = await this.userRepo.findOne({
-      user_appcore_id: data.user_appcore_id,
+      user_appcore_id: convertedData.user_appcore_id,
     });
     if (user) {
       orderData['user_id'] = user.user_id;
@@ -576,7 +578,7 @@ export class OrdersService {
     await this.orderHistoryRepo.create(orderHistoryData);
 
     if (data.order_items.length) {
-      for (let orderItem of data.order_items) {
+      for (let orderItem of convertedData.order_items) {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
@@ -595,6 +597,7 @@ export class OrdersService {
   }
 
   async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
+    const convertedData = convertOrderDataFromAppcore(data);
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
@@ -602,15 +605,15 @@ export class OrdersService {
 
     let result = { ...order };
 
-    if (data.status) {
-      data['status'] = mappingStatusOrder(data.status);
+    if (convertedData.status) {
+      convertedData['status'] = mappingStatusOrder(convertedData.status);
     }
 
-    const orderData = await this.orderRepo.setData({ ...data });
+    const orderData = await this.orderRepo.setData({ ...convertedData });
 
-    if (data.user_appcore_id) {
+    if (convertedData.user_appcore_id) {
       const user = await this.userRepo.findOne({
-        user_appcore_id: data.user_appcore_id,
+        user_appcore_id: convertedData.user_appcore_id,
       });
       if (user) {
         orderData['user_id'] = user.user_id;
@@ -634,11 +637,11 @@ export class OrdersService {
       where: { order_id: order.order_id },
     });
 
-    if (data?.order_items?.length) {
+    if (convertedData?.order_items?.length) {
       let willRemoveOrderItems = [];
       let willAddNewOrderItems = [];
       let willUpdateOrderItems = [];
-      for (let orderItem of data.order_items) {
+      for (let orderItem of convertedData.order_items) {
         if (
           !orderItemsList.some(
             ({ order_item_appcore_id }) =>

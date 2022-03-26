@@ -65,6 +65,9 @@ export class CreateOrderAppcoreDto {
   shipping_id: string = ''; //Mã vận đơn
 
   @IsOptional()
+  shipping_service_id: number; //Mã dịch vụ vận chuyển
+
+  @IsOptional()
   shipping_cost: number = 0; //Phí trả khách hàng phải trả
 
   @IsOptional()

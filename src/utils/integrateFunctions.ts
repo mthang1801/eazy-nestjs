@@ -382,7 +382,7 @@ export const itgConvertProductsFromAppcore = (data) => {
 
   const mappingComboData = new Map([
     ['product_id', 'product_appcore_id'],
-    ['product_combo_id', 'parent_product_appcore_id'],
+    // ['product_combo_id', 'parent_product_appcore_id'],
     ['id', 'other_appcore_id'],
     ['quantity', 'amount'],
   ]);
@@ -449,7 +449,7 @@ export const convertGetProductsFromAppcore = (appCoreData) => {
 
 export const mappingStatusOrder = (coreStatus) => {
   let result;
-  switch (coreStatus) {
+  switch (+coreStatus) {
     case 2:
       result = '3';
       break;
@@ -473,4 +473,42 @@ export const mappingStatusOrder = (coreStatus) => {
   }
 
   return result;
+};
+
+export const convertOrderDataFromAppcore = (coreData) => {
+  let mappingData = new Map([
+    ['b_firstname', 'b_firstname'],
+    ['b_lasttname', 'b_lasttname'],
+    ['b_phone', 'b_phone'],
+    ['b_city', 'b_city'],
+    ['b_district', 'b_district'],
+    ['b_ward', 'b_ward'],
+    ['b_address', 'b_address'],
+  ]);
+  let cmsData = { ...coreData };
+  for (let [core, cms] of mappingData) {
+    if (core === 'b_firstname' && coreData[core] && !cmsData['s_firstname']) {
+      cmsData['s_firstname'] = coreData[core];
+    }
+    if (core === 'b_lastname' && coreData[core] && !cmsData['s_lastname']) {
+      cmsData['s_lastname'] = coreData[core];
+    }
+    if (core === 'b_phone' && coreData[core] && !cmsData['s_phone']) {
+      cmsData['s_phone'] = coreData[core];
+    }
+    if (core === 'b_city' && coreData[core] && !cmsData['s_city']) {
+      cmsData['s_city'] = coreData[core];
+    }
+    if (core === 'b_district' && coreData[core] && !cmsData['s_district']) {
+      cmsData['s_district'] = coreData[core];
+    }
+    if (core === 'b_ward' && coreData[core] && !cmsData['s_ward']) {
+      cmsData['s_ward'] = coreData[core];
+    }
+    if (core === 'b_address' && coreData[core] && !cmsData['s_address']) {
+      cmsData['s_address'] = coreData[core];
+    }
+  }
+
+  return cmsData;
 };
