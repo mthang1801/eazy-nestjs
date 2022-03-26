@@ -28,6 +28,8 @@ import { ProductStoreRepository } from '../repositories/productStore.repository'
 import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';
 import { ProductSyncController } from '../controllers/sync/product.controller';
 import { StickerModule } from './sticker.module';
+import { ProductTesterController } from '../controllers/tester/product.controller';
+import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 
 @Module({
   imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
@@ -46,6 +48,7 @@ import { StickerModule } from './sticker.module';
     ProductSalesRepository,
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
+    ProductVariationGroupIndexRepository,
     ProductVariationGroupFeaturesRepository,
     ProductsCategoriesRepository,
     ProductFeaturesRepository,
@@ -71,6 +74,7 @@ import { StickerModule } from './sticker.module';
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
     ProductVariationGroupFeaturesRepository,
+    ProductVariationGroupIndexRepository,
     ProductsCategoriesRepository,
     ProductFeaturesRepository,
     ProductFeatureDescriptionsRepository,
@@ -84,6 +88,7 @@ import { StickerModule } from './sticker.module';
     ProductsControllerFE,
     ProductIntegrationController,
     ProductSyncController,
+    ProductTesterController,
   ],
 })
 export class ProductsModule {}

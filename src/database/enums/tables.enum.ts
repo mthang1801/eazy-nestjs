@@ -70,6 +70,7 @@ export enum Table {
   PRODUCT_VARIATION_GROUPS = 'ddv_product_variation_groups',
   PRODUCT_VARIATION_GROUP_PRODUCTS = 'ddv_product_variation_group_products',
   PRODUCT_VARIATION_GROUP_FEATURES = 'ddv_product_variation_group_features',
+  PRODUCT_VARIATION_GROUP_INDEX = 'ddv_product_variation_index_groups',
   PRODUCT_STORES = 'ddv_product_stores',
   PRODUCT_STORE_HISTORIES = 'ddv_product_store_histories',
 

@@ -1,4 +1,4 @@
-import { HttpModule, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth.module';
 import { UsersModule } from './users.module';
@@ -26,7 +26,8 @@ import { UserGroupLinksModule } from './usergroupLinks.module';
 import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
 import { OrdersModule } from './orders.module';
 import { ProductsModule } from './products.module';
-
+import * as winston from 'winston';
+import { WinstonModule } from 'nest-winston';
 import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
 import { QueueModule } from './queue.module';
@@ -39,12 +40,32 @@ import { ProductGroupModule } from './productGroup.module';
 import { UploadModule } from './upload.module';
 import { CartModule } from './cart.module';
 import { StickerModule } from './sticker.module';
+import * as path from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       load: [appConfig, databaseConfig, authConfig, mailConfig],
+    }),
+    WinstonModule.forRoot({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json(),
+      ),
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({
+          dirname: path.join(__dirname, '../../../logs/debug'), //path to where save loggin result
+          filename: 'debug.log', //name of file where will be saved logging result
+          level: 'debug',
+        }),
+        new winston.transports.File({
+          dirname: path.join(__dirname, '../../../logs/info'),
+          filename: 'info.log',
+          level: 'info',
+        }),
+      ],
     }),
     MulterModule.registerAsync({
       useFactory: () => ({

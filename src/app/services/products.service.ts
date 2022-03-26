@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpService } from '@nestjs/common';
+import { Injectable, HttpException, HttpService, Inject } from '@nestjs/common';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { ProductOptionsInventoryEntity } from '../entities/productOptionsInventory.entity';
 import { ProductPointPriceEntity } from '../entities/productPointPrices.entity';
@@ -119,7 +119,9 @@ import {
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
 import { productByCategoryJoiner } from '../../utils/joinTable';
 import { DatabaseService } from '../../database/database.service';
-
+import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
+import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
+import { Logger } from 'winston';
 @Injectable()
 export class ProductService {
   constructor(
@@ -143,6 +145,7 @@ export class ProductService {
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
+    private productGroupIndexRepo: ProductVariationGroupIndexRepository<ProductVariationGroupIndexEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
@@ -150,6 +153,8 @@ export class ProductService {
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
     private databaseService: DatabaseService,
+    @Inject('winston')
+    private readonly logger: Logger,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -2363,20 +2368,87 @@ export class ProductService {
   }
 
   async utilFunctions() {
-    let mappingData = new Map([
-      [480334, 68984],
-      [480340, 68986],
-      [480412, 68985],
-      [502696, 68984],
-      [508986, 68984],
-      [502667, 68986],
-      [502320, 68985],
-    ]);
-    for (let [oldId, newId] of mappingData) {
-      await this.productCategoryRepo.update(
-        { category_id: oldId },
-        { category_id: newId },
-      );
+    let pages = 20;
+    let result = [];
+    for (let page = 1; page <= pages; page++) {
+      const response = await axios({
+        url: `http://mb.viendidong.com/web-tester/v1/api/brands?param=%7B%22page%22:${page},%22pageSize%22:20,%22name%22:%22%22%7D`,
+        headers: {
+          Authorization:
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
+        },
+      });
+      let data = response.data;
+
+      if (data['brands']) {
+        result = [...result, ...data['brands']];
+      }
     }
+    await fs.writeFile(
+      'src/database/constant/brands.json',
+      JSON.stringify(result),
+      (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log('File written successfully\n');
+          console.log('The written has the following contents:');
+          console.log(fs.readFileSync('movies.txt', 'utf8'));
+        }
+      },
+    );
+  }
+
+  async grouping(group_ids: number[]) {
+    this.logger.info('Returning suggestions...');
+    let groups = group_ids.join(',');
+    const checkGroups = await this.productGroupIndexRepo.findOne({ group_ids });
+    if (checkGroups) {
+      throw new HttpException('Nhóm SP đã tồn tại', 409);
+    }
+    await this.productGroupIndexRepo.createSync({
+      group_ids: groups,
+      created_at: convertToMySQLDateTime(),
+      updated_at: convertToMySQLDateTime(),
+    });
+  }
+
+  async upateGrouping(index_id: number, group_ids: number[]) {
+    const currentGroup = await this.productGroupIndexRepo.findById(index_id);
+    if (currentGroup) {
+      throw new HttpException('Không tìm thấy nhóm SP', 404);
+    }
+    await this.productGroupIndexRepo.update(
+      {
+        index_id,
+      },
+      {
+        group_ids: group_ids.join(','),
+        updated_at: convertToMySQLDateTime(),
+      },
+    );
+  }
+
+  async getListGroupingIndex(params) {
+    this.logger.info('Returning suggestions...');
+    let { page, limit } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    let skip = (page - 1) * limit;
+
+    const groupsList = await this.productGroupIndexRepo.find({
+      select: '*',
+      skip,
+      limit,
+    });
+
+    let count = await this.productGroupIndexRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCT_VARIATION_GROUP_INDEX}.index_id)) as total`,
+    });
+
+    return {
+      total: count[0].total,
+      groups: groupsList,
+    };
   }
 }
