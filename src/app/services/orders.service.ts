@@ -526,10 +526,9 @@ export class OrdersService {
 
   async itgCreate(data: CreateOrderAppcoreDto) {
     console.log('create');
-    console.log(data);
 
     const convertedData = convertOrderDataFromAppcore(data);
-    console.log(convertedData);
+
     const order = await this.orderRepo.findOne({
       order_code: convertedData.order_code,
     });
@@ -581,7 +580,7 @@ export class OrdersService {
     const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
     await this.orderHistoryRepo.create(orderHistoryData);
 
-    if (data.order_items.length) {
+    if (convertedData?.order_items?.length) {
       for (let orderItem of convertedData.order_items) {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
@@ -602,10 +601,9 @@ export class OrdersService {
 
   async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
     console.log('update');
-    console.log(data);
 
     const convertedData = convertOrderDataFromAppcore(data);
-    console.log(convertedData);
+
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
