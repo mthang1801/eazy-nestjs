@@ -526,9 +526,9 @@ export class OrdersService {
 
   async itgCreate(data: CreateOrderAppcoreDto) {
     console.log('create');
-
+    console.log(data);
     const convertedData = convertOrderDataFromAppcore(data);
-
+    console.log(convertedData);
     const order = await this.orderRepo.findOne({
       order_code: convertedData.order_code,
     });
@@ -570,8 +570,11 @@ export class OrdersService {
       orderData['user_id'] = user.user_id;
     }
 
-    for (let orderItem of data.order_items) {
-      orderData['total'] += orderItem.price * orderItem.amount;
+    orderData['total'] = 0;
+    if (convertedData?.order_items) {
+      for (let orderItem of convertedData?.order_items) {
+        orderData['total'] += orderItem.price * orderItem.amount;
+      }
     }
 
     let result = await this.orderRepo.create(orderData);
