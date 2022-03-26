@@ -11,9 +11,12 @@ export class OrderEntity {
   store_id: number = 0;
   total: number = 0;
   subtotal: number = 0;
+  coupon_code: string = '';
   discount: number = 0;
   discount_type: number = 1;
+  order_type: number = 1;
   subtotal_discount: number = 0;
+
   payment_surcharge: number = 0;
   shipping_id: string = '';
   warranty_note: string = '';
@@ -66,10 +69,11 @@ export class OrderEntity {
   transfer_amount: number = 0;
   transfer_account_id: number = 0;
   transfer_ref_code: null | string = '';
+  credit_account_id: number = 0;
+  credit_fee_account_id: number = 0;
   credit_amount: number = 0;
   credit_code: null | string = '';
   credit_card_no: null | string = '';
-  credit_fee_account_id: number = 0;
   installed_money_amount: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;
@@ -87,6 +91,10 @@ export class OrderEntity {
   other_fees: number = 0;
   user_appcore_id: number = 0;
   is_sync: number = 1;
+  installment_promotion_code: string = '';
+  installment_interest_rate: string = '';
+  installment_interest_rate_code: string = '';
+  installment_tenor_code: string = '';
   ref_order_id: string = generateRandomString();
   created_date: string = convertToMySQLDateTime();
   updated_date: string = convertToMySQLDateTime();

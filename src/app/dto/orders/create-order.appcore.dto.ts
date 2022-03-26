@@ -48,6 +48,9 @@ export class CreateOrderAppcoreDto {
   order_type: number = 4; //Loại đơn: 1.Mua tại quầy,2. Đặt trước, 3. Chuyển hàng, 4 Trực tuyến
 
   @IsOptional()
+  total: number = 0;
+
+  @IsOptional()
   status: number = 1;
 
   @IsOptional()
@@ -74,7 +77,7 @@ export class CreateOrderAppcoreDto {
   shipping_fee: number = 0; //Phí ship của hãng vận chuyển
 
   @IsOptional()
-  cash_account_id: number = 0;
+  cash_account_id: number = 0; //Mã tài khoản tiền mặt
 
   @IsOptional()
   internal_note: string = ''; //Nhân viên nội bộ note
@@ -83,25 +86,31 @@ export class CreateOrderAppcoreDto {
   discount_type: number = 1;
 
   @IsOptional()
-  disposit_amount: number = 0; //tiền cọc
+  discount: number = 0;
 
   @IsOptional()
-  transfer_amount: number = 0; //Tiền chuyển khoản
+  disposit_amount: number = 0; //tiền cọc
 
   @IsOptional()
   transfer_account_id: number = 0; //Mã tiền chuyển khoản
 
   @IsOptional()
+  transfer_amount: number = 0; //Tiền chuyển khoản
+
+  @IsOptional()
   transfer_ref_code: string = ''; //Ma tham chiếu
+
+  @IsOptional()
+  transfer_no: number = 0;
+
+  @IsOptional()
+  transfer_bank: string = '';
 
   @IsOptional()
   credit_account_id: null | number = 0;
 
   @IsOptional()
   credit_amount: number = 0; //Tiền quẹt thẻ
-
-  @IsOptional()
-  credit_fee_account_id: null | number = 0;
 
   @IsOptional()
   credit_code: null | string;
@@ -111,6 +120,9 @@ export class CreateOrderAppcoreDto {
 
   @IsOptional()
   pay_credit_type: null | number = 1;
+
+  @IsOptional()
+  credit_fee_account_id: null | number = 0;
 
   @IsOptional()
   installed_money_amount: number = 0;
@@ -123,9 +135,6 @@ export class CreateOrderAppcoreDto {
 
   @IsOptional()
   id_card: string = '';
-
-  @IsOptional()
-  discount: number = 0;
 
   @IsOptional()
   coupon_code: string = '';
@@ -161,22 +170,25 @@ export class CreateOrderAppcoreDto {
   s_phone: string = '';
 
   @IsOptional()
-  order_code: number = 0;
+  transfer_code: string = ''; // Mã vận đơn
 
-  @IsOptional()
-  transfer_code: string = '';
+  @IsNotEmpty()
+  order_code: number = 0;
 
   @IsOptional()
   other_fees: number = 0;
 
   @IsOptional()
-  transfer_no: number = 0;
+  installment_promotion_code: string = '';
 
   @IsOptional()
-  transfer_bank: string = '';
+  installment_interest_rate: string = '';
 
   @IsOptional()
-  total: number = 0;
+  installment_interest_rate_code: string = '';
+
+  @IsOptional()
+  installment_tenor_code: string = '';
 }
 
 class ProductOrder {
@@ -187,6 +199,9 @@ class ProductOrder {
   product_id: string;
 
   @IsOptional()
+  product_appcore_id: string;
+
+  @IsOptional()
   price: number;
 
   @IsOptional()
@@ -194,9 +209,6 @@ class ProductOrder {
 
   @IsOptional()
   product_code: string;
-
-  @IsOptional()
-  product_appcore_id: string = '';
 
   @IsOptional()
   is_gift_taken: null | number = 0;
@@ -212,4 +224,7 @@ class ProductOrder {
 
   @IsOptional()
   status: string = 'A';
+
+  @IsOptional()
+  discount: number = 0;
 }
