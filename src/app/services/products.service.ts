@@ -1090,7 +1090,7 @@ export class ProductService {
   async itgCreate(data): Promise<any> {
     console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
-    console.log(convertedData);
+
     if (convertedData['product_appcore_id']) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData['product_appcore_id'],
@@ -1322,18 +1322,11 @@ export class ProductService {
     }
 
     let result = { ...product };
-    // if (convertedData['parent_product_appcore_id']) {
-    //   const parentProduct = await this.productRepo.findOne({
-    //     product_appcore_id: convertedData['parent_product_appcore_id'],
-    //   });
-    //   if (parentProduct) {
-    //     convertedData['parent_product_id'] = parentProduct['product_id'];
-    //   }
-    // }
+
     const productData = this.productRepo.setData(convertedData);
 
     if (Object.entries(productData).length) {
-      const updatedProduct = await this.productRepo.update(
+      await this.productRepo.update(
         { product_id: result.product_id },
         productData,
       );

@@ -27,9 +27,10 @@ import { StoreModule } from './store.module';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';
 import { ProductSyncController } from '../controllers/sync/product.controller';
+import { StickerModule } from './sticker.module';
 
 @Module({
-  imports: [forwardRef(() => CategoryModule)],
+  imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
   providers: [
     ProductService,
     ProductsRepository,

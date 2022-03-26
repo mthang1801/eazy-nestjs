@@ -406,3 +406,12 @@ export const storesLocationJoiner = {
     },
   },
 };
+
+export const productStickerJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.STICKER]: {
+      fieldJoin: `${Table.STICKER}.sticker_id`,
+      rootJoin: `${Table.PRODUCT_STICKER}.sticker_id`,
+    },
+  },
+};

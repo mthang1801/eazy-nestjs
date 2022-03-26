@@ -34,6 +34,7 @@ export enum Table {
 
   //============== Sticker =============
   STICKER = 'ddv_stickers',
+  PRODUCT_STICKER = 'ddv_product_stickers',
 
   //============== Payment ==============
   PAYMENT_DESCRIPTION = 'ddv_payment_descriptions',

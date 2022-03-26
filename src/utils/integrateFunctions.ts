@@ -363,7 +363,7 @@ export const itgConvertProductsFromAppcore = (data) => {
         .trim();
     }
 
-    if (fromData === 'product') {
+    if (fromData === 'product' && convertedData[fromData]) {
       convertedData['product_core_name'] = convertedData[fromData];
       convertedData['shortname'] = convertedData[fromData];
       convertedData['short_description'] = convertedData[fromData];

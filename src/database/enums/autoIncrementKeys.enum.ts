@@ -33,6 +33,7 @@ export enum PrimaryKeys {
 
   //============== Sticker =============
   ddv_stickers = 'sticker_id',
+  ddv_product_stickers = 'id',
 
   //============== Category ==============
   ddv_categories = 'category_id',
