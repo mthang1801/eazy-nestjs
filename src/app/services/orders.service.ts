@@ -525,6 +525,8 @@ export class OrdersService {
   }
 
   async itgCreate(data: CreateOrderAppcoreDto) {
+    console.log('create');
+    console.log(data);
     const convertedData = convertOrderDataFromAppcore(data);
     const order = await this.orderRepo.findOne({
       order_code: convertedData.order_code,
@@ -549,7 +551,7 @@ export class OrdersService {
     orderData['total'] = 0;
 
     if (convertedData?.order_items?.length) {
-      for (let orderItem of convertedData.order_items) {
+      for (let orderItem of convertedData['order_items']) {
         const orderDetail = await this.orderDetailRepo.findOne({
           order_item_appcore_id: orderItem.order_item_appcore_id,
         });
@@ -597,6 +599,9 @@ export class OrdersService {
   }
 
   async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
+    console.log('update');
+    console.log(data);
+
     const convertedData = convertOrderDataFromAppcore(data);
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
