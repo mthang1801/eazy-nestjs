@@ -551,7 +551,7 @@ export class OrdersService {
 
     orderData['total'] = 0;
 
-    if (convertedData?.order_items?.length) {
+    if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData['order_items']) {
         const orderDetail = await this.orderDetailRepo.findOne({
           order_item_appcore_id: orderItem.order_item_appcore_id,
@@ -571,7 +571,7 @@ export class OrdersService {
     }
 
     orderData['total'] = 0;
-    if (convertedData?.order_items) {
+    if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData?.order_items) {
         orderData['total'] += orderItem.price * orderItem.amount;
       }
@@ -583,8 +583,8 @@ export class OrdersService {
     const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
     await this.orderHistoryRepo.create(orderHistoryData);
 
-    if (convertedData?.order_items?.length) {
-      for (let orderItem of convertedData.order_items) {
+    if (convertedData['order_items'] && convertedData['order_items'].length) {
+      for (let orderItem of convertedData['order_items']) {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
@@ -646,7 +646,7 @@ export class OrdersService {
       where: { order_id: order.order_id },
     });
 
-    if (convertedData?.order_items?.length) {
+    if (convertedData['order_items'] && convertedData['order_items'].length) {
       let willRemoveOrderItems = [];
       let willAddNewOrderItems = [];
       let willUpdateOrderItems = [];
