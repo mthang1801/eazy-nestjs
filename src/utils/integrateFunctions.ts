@@ -363,12 +363,6 @@ export const itgConvertProductsFromAppcore = (data) => {
         .trim();
     }
 
-    if (fromData === 'porodict_id' && convertedData[fromData]) {
-      console.log(convertedData[fromData]);
-      convertedData[toData] = convertedData[fromData];
-      continue;
-    }
-
     if (fromData === 'product') {
       convertedData['product_core_name'] = convertedData[fromData];
       convertedData['shortname'] = convertedData[fromData];

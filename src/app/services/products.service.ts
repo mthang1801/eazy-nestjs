@@ -1091,13 +1091,13 @@ export class ProductService {
     console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
     console.log(convertedData);
-    if (convertedData.product_appcore_id) {
+    if (convertedData['product_appcore_id']) {
       let product = await this.productRepo.findOne({
-        product_appcore_id: convertedData.product_appcore_id,
+        product_appcore_id: convertedData['product_appcore_id'],
       });
 
       if (product) {
-        return this.itgUpdate(product.product_id, convertedData, true);
+        return this.itgUpdate(product['product_id'], convertedData, true);
       }
     }
 
@@ -1109,144 +1109,48 @@ export class ProductService {
 
     let result = await this.productRepo.create(productData);
 
-    // Nếu sp con -> tìm id sp cha để update vào
-    if (convertedData['parent_product_appcore_id']) {
-      //Nếu parent product tồn tại thì update, nếu chưa tồn tại thì tạo cấu hình
-      let parentProduct = await this.productRepo.findOne({
-        product_appcore_id: convertedData.parent_product_appcore_id,
-      });
-
-      if (!parentProduct) {
-        let parentProductData = {
-          ...new ProductsEntity(),
-          product_appcore_id: convertedData.parent_product_appcore_id,
-        };
-        parentProduct = await this.productRepo.create(parentProductData);
-      }
-
-      await this.productRepo.update(
-        { product_id: result.product_id },
-        { parent_product_id: parentProduct.product_id },
-      );
-    }
-
     // set product description
-    let productDesc = await this.productDescriptionsRepo.findOne({
-      product_id: result.product_id,
-    });
-    if (productDesc) {
-      let productDescData = this.productDescriptionsRepo.setData(convertedData);
-      if (Object.entries(productDescData).length) {
-        await this.productDescriptionsRepo.update(
-          {
-            product_id: result.product_id,
-          },
-          productDescData,
-        );
-      }
-    } else {
-      const productDescData = {
-        ...new ProductDescriptionsEntity(),
-        ...this.productDescriptionsRepo.setData(convertedData),
-        product_id: result.product_id,
-      };
+    const productDescData = {
+      ...new ProductDescriptionsEntity(),
+      ...this.productDescriptionsRepo.setData(convertedData),
+      product_id: result['product_id'],
+    };
 
-      const newProductsDesc = await this.productDescriptionsRepo.create(
-        productDescData,
-      );
-    }
+    await this.productDescriptionsRepo.createSync(productDescData);
 
     //price
-    let productPrice = await this.productPriceRepo.findOne({
+    const productPriceData = {
+      ...new ProductPricesEntity(),
+      ...this.productPriceRepo.setData(convertedData),
       product_id: result.product_id,
-    });
+    };
 
-    if (productPrice) {
-      const productPriceData = this.productPriceRepo.setData({
-        product_id: result.product_id,
-      });
-      if (Object.entries(productPriceData).length) {
-        await this.productPriceRepo.update(
-          { product_id: result.product_id },
-          productPriceData,
-        );
-      }
-    } else {
-      const productPriceData = {
-        ...new ProductPricesEntity(),
-        ...this.productPriceRepo.setData(convertedData),
-        product_id: result.product_id,
-      };
-
-      const newProductPrice = await this.productPriceRepo.create(
-        productPriceData,
-      );
-    }
+    await this.productPriceRepo.createSync(productPriceData);
 
     //sale
-    let productSale = await this.productSaleRepo.findOne({
+    const productSaleData = {
+      ...new ProductSalesEntity(),
+      ...this.productSaleRepo.setData(convertedData),
       product_id: result.product_id,
-    });
-    if (productSale) {
-      const productSaleData = this.productSaleRepo.setData(convertedData);
-      if (Object.entries(productSaleData).length) {
-        await this.productSaleRepo.update(
-          { product_id: result.product_id },
-          productSaleData,
-        );
-      }
-    } else {
-      const productSaleData = {
-        ...new ProductSalesEntity(),
-        ...this.productSaleRepo.setData(convertedData),
-        product_id: result.product_id,
-      };
+    };
 
-      await this.productSaleRepo.create(productSaleData);
-    }
+    await this.productSaleRepo.createSync(productSaleData);
 
     // category
 
-    let productCategory = await this.productCategoryRepo.findOne({
-      category_id: convertedData['category_id'],
+    const productCategoryData = {
+      ...new ProductsCategoriesEntity(),
+      ...this.productCategoryRepo.setData(convertedData),
       product_id: result.product_id,
-    });
-    if (productCategory) {
-      const productCategoryData =
-        this.productCategoryRepo.setData(convertedData);
-      if (Object.entries(productCategoryData).length) {
-        await this.productCategoryRepo.update(
-          {
-            product_id: result.product_id,
-            category_id: convertedData['category_id'],
-          },
-          productCategoryData,
-        );
-      }
-    } else {
-      const productCategoryData = {
-        ...new ProductsCategoriesEntity(),
-        ...this.productCategoryRepo.setData(convertedData),
-        product_id: result.product_id,
-        category_id: convertedData['category_id'],
-      };
+      category_id: convertedData['category_id'],
+    };
 
-      await this.productCategoryRepo.createSync(productCategoryData);
-    }
+    await this.productCategoryRepo.createSync(productCategoryData);
 
-    if (convertedData?.images?.length) {
-      for (let [i, imagePath] of convertedData.images.entries()) {
-        const newImage = await this.imageRepo.create({ image_path: imagePath });
-        const newImageLink = await this.imageLinkRepo.create({
-          object_id: result.product_id,
-          object_type: ImageObjectType.PRODUCT,
-          image_id: newImage.image_id,
-          position: i,
-        });
-      }
-    }
-
-    if (convertedData?.product_features?.length) {
+    if (
+      convertedData['product_features'] &&
+      convertedData['product_features'].length
+    ) {
       for (let {
         feature_code,
         variant_code,
@@ -1291,7 +1195,7 @@ export class ProductService {
       }
     }
 
-    if (convertedData?.combo_items?.length) {
+    if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Nếu là SP combo, tạo group
       let productGroup = await this.productVariationGroupRepo.create({
         code: generateRandomString(),
@@ -1311,7 +1215,7 @@ export class ProductService {
 
       result['combo_items'] = [];
 
-      for (let [i, productItem] of convertedData.combo_items.entries()) {
+      for (let [i, productItem] of convertedData['combo_items'].entries()) {
         let productComboItem = await this.productRepo.findOne({
           product_appcore_id: productItem.product_appcore_id,
         });
@@ -1319,6 +1223,7 @@ export class ProductService {
           const productComboItemData = {
             ...new ProductsEntity(),
             ...this.productRepo.setData(productItem),
+            product_type: 3,
           };
 
           productComboItem = await this.productRepo.create(
@@ -1330,13 +1235,15 @@ export class ProductService {
             product: `${result.product} combo ${i}`,
             product_id: productComboItem.product_id,
           };
-          await this.productDescriptionsRepo.create(productComboItemDescData);
+          await this.productDescriptionsRepo.createSync(
+            productComboItemDescData,
+          );
         }
 
         const newGroupProductItem =
           await this.productVariationGroupProductsRepo.create({
-            product_id: productComboItem.product_id,
-            parent_product_id: result.product_id,
+            product_id: productComboItem['product_id'],
+            parent_product_id: result['product_id'],
             group_id: productGroup.group_id,
             quantity: productComboItem.quantity || 1,
           });
@@ -1345,7 +1252,6 @@ export class ProductService {
     }
 
     await this.requestIntegrateParentProduct();
-    return result;
   }
 
   async callSync(): Promise<void> {
@@ -1416,14 +1322,14 @@ export class ProductService {
     }
 
     let result = { ...product };
-    if (convertedData['`parent_product_appcore_id`']) {
-      const parentProduct = await this.productRepo.findOne({
-        product_appcore_id: convertedData['parent_product_appcore_id'],
-      });
-      if (parentProduct) {
-        convertedData['parent_product_id'] = parentProduct['product_id'];
-      }
-    }
+    // if (convertedData['parent_product_appcore_id']) {
+    //   const parentProduct = await this.productRepo.findOne({
+    //     product_appcore_id: convertedData['parent_product_appcore_id'],
+    //   });
+    //   if (parentProduct) {
+    //     convertedData['parent_product_id'] = parentProduct['product_id'];
+    //   }
+    // }
     const productData = this.productRepo.setData(convertedData);
 
     if (Object.entries(productData).length) {
@@ -1442,7 +1348,7 @@ export class ProductService {
         this.productDescriptionsRepo.setData(convertedData);
 
       if (Object.entries(productDescData).length) {
-        const updatedProductsDesc = await this.productDescriptionsRepo.update(
+        await this.productDescriptionsRepo.update(
           { product_id: result.product_id },
           productDescData,
         );
@@ -1453,10 +1359,7 @@ export class ProductService {
         ...this.productDescriptionsRepo.setData(convertedData),
         product_id: result.product_id,
       };
-      const newProductDesc = await this.productDescriptionsRepo.create(
-        newProductDescData,
-      );
-      result = { ...result, ...newProductDesc };
+      await this.productDescriptionsRepo.createSync(newProductDescData);
     }
 
     //price
@@ -1467,7 +1370,7 @@ export class ProductService {
       const productPriceData = this.productPriceRepo.setData(convertedData);
 
       if (Object.entries(productPriceData).length) {
-        const updatedProductPrice = await this.productPriceRepo.update(
+        await this.productPriceRepo.update(
           { product_id: result.product_id },
           productPriceData,
         );
@@ -1478,7 +1381,7 @@ export class ProductService {
         ...this.productPriceRepo.setData(convertedData),
         product_id: result.product_id,
       };
-      await this.productPriceRepo.create(newProductPriceData);
+      await this.productPriceRepo.createSync(newProductPriceData);
     }
 
     //sale
@@ -1504,8 +1407,8 @@ export class ProductService {
     }
 
     let productCategory = await this.productCategoryRepo.findOne({
-      product_id: result.product_id,
-      category_id: convertedData.category_id,
+      product_id: result['product_id'],
+      category_id: convertedData['category_id'],
     });
     if (productCategory) {
       const productCategoryData =
@@ -1513,8 +1416,8 @@ export class ProductService {
       if (Object.entries(productCategoryData).length) {
         await this.productCategoryRepo.update(
           {
-            category_id: convertedData.category_id,
-            product_id: result.product_id,
+            category_id: convertedData['category_id'],
+            product_id: result['product_id'],
           },
           productCategoryData,
         );
@@ -1526,10 +1429,13 @@ export class ProductService {
         product_id: result.product_id,
         category_id: convertedData.category_id,
       };
-      await this.productCategoryRepo.create(newProductCategoryData);
+      await this.productCategoryRepo.createSync(newProductCategoryData);
     }
 
-    if (convertedData?.product_features?.length) {
+    if (
+      convertedData['product_features'] &&
+      convertedData['product_features'].length
+    ) {
       await this.productFeatureValueRepo.delete({
         product_id: result.product_id,
       });
@@ -1575,34 +1481,7 @@ export class ProductService {
       }
     }
 
-    if (convertedData?.images?.length) {
-      // Delete old images
-      const oldImageLinks = await this.imageLinkRepo.find({
-        select: '*',
-        where: {
-          object_id: result.product_id,
-          object_type: ImageObjectType.PRODUCT,
-        },
-      });
-      if (oldImageLinks.length) {
-        for (let oldImageLink of oldImageLinks) {
-          await this.imageLinkRepo.delete({ pair_id: oldImageLink.pair_id });
-          await this.imageRepo.delete({ image_id: oldImageLink.image_id });
-        }
-      }
-
-      for (let [i, imagePath] of convertedData.images.entries()) {
-        const newImage = await this.imageRepo.create({ image_path: imagePath });
-        const newImageLink = await this.imageLinkRepo.create({
-          object_id: result.product_id,
-          object_type: ImageObjectType.PRODUCT,
-          image_id: newImage.image_id,
-          position: i,
-        });
-      }
-    }
-
-    if (convertedData?.combo_items?.length) {
+    if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Delete old group
       const oldGroup = await this.productVariationGroupRepo.findOne({
         product_root_id: result.product_id,
@@ -1622,7 +1501,7 @@ export class ProductService {
       // Nếu là SP combo, tạo group
       let productGroup = await this.productVariationGroupRepo.create({
         code: generateRandomString(),
-        product_root_id: result.product_id,
+        product_root_id: result['product_id'],
         group_type: 2,
         created_at: convertToMySQLDateTime(),
         updated_at: convertToMySQLDateTime(),
@@ -1645,6 +1524,7 @@ export class ProductService {
           const productComboItemData = {
             ...new ProductsEntity(),
             ...productItem,
+            product_type: 3,
           };
 
           productComboItem = await this.productRepo.create(
@@ -1671,8 +1551,6 @@ export class ProductService {
     }
 
     await this.requestIntegrateParentProduct();
-
-    return result;
   }
 
   async clearAll() {

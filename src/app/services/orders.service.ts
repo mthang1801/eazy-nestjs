@@ -559,7 +559,8 @@ export class OrdersService {
         if (orderDetail) {
           throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
         }
-        orderData['total'] += orderItem['price'] * orderItem['amount'];
+        orderData['total'] +=
+          orderItem['price'] * orderItem['amount'] - orderItem['discount'];
       }
     }
 
@@ -702,7 +703,7 @@ export class OrdersService {
       });
 
       const total = updatedOrderItems.reduce(
-        (acc, ele) => acc + ele.price * ele.amount,
+        (acc, ele) => acc + ele.price * ele.amount - ele.discount,
         0,
       );
 
