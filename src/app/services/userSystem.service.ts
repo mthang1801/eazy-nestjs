@@ -95,8 +95,8 @@ export class UserSystemService {
       join: userSystemStoreJoiner,
       where: userSystemSearchFilter(search, filterCondition),
       orderBy: [
-        { field: 'updated_at', sortBy: SortBy.DESC },
-        { field: 'created_at', sortBy: SortBy.DESC },
+        { field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC },
       ],
       skip,
       limit,

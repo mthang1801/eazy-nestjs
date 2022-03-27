@@ -207,7 +207,7 @@ export class UserGroupsService {
         },
       },
       orderBy: [
-        { field: 'updated_at', sortBy: SortBy.DESC },
+        { field: `${Table.USER_GROUPS}.updated_at`, sortBy: SortBy.DESC },
         { field: 'created_at', sortBy: SortBy.DESC },
       ],
       where: userGroupSearchByNameCode(search, filterConditions),
