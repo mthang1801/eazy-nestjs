@@ -8,6 +8,8 @@ import { ProductService } from '../services/products.service';
 import { ProductsModule } from './products.module';
 import { CategoryController as CategoryControllerIntegration } from '../controllers/integration/category.controller';
 import { CategorySyncController } from '../controllers/sync/category.controller';
+import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
+import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
 
 @Module({
   imports: [forwardRef(() => ProductsModule)],
@@ -16,8 +18,16 @@ import { CategorySyncController } from '../controllers/sync/category.controller'
     CategoryDescriptionRepository,
     CategoryRepository,
     ProductService,
+    CatalogCategoryRepository,
+    CatalogCategoryDescriptionRepository,
   ],
-  exports: [CategoryService, CategoryDescriptionRepository, CategoryRepository],
+  exports: [
+    CategoryService,
+    CategoryDescriptionRepository,
+    CategoryRepository,
+    CatalogCategoryRepository,
+    CatalogCategoryDescriptionRepository,
+  ],
   controllers: [
     CategoryControllerBE,
     CategoryControllerFE,

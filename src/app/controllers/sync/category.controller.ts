@@ -28,4 +28,10 @@ export class CategorySyncController extends BaseController {
     await this.productService.countProductByCategory();
     return this.responseSuccess(res, null, 'Hoàn tất.');
   }
+
+  @Get('imports')
+  async imports(@Res() res: Response): Promise<IResponse> {
+    await this.service.syncImports();
+    return this.responseSuccess(res, null, 'Hoàn tất.');
+  }
 }

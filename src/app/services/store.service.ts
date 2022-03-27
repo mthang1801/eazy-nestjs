@@ -20,7 +20,11 @@ import { storeLocationSearchFilter } from 'src/utils/tableConditioner';
 import { DatabaseService } from '../../database/database.service';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { ProductStoreEntity } from '../entities/productStore.entity';
-
+import * as storesData from 'src/database/constant/stores.json';
+import {
+  convertToMySQLDateTime,
+  convertNullDatetimeData,
+} from '../../utils/helper';
 @Injectable()
 export class StoreService {
   constructor(
@@ -100,6 +104,67 @@ export class StoreService {
           );
         }
       }
+    }
+  }
+
+  async clearAll() {
+    await this.storeLocationDescRepo.writeExec(
+      `TRUNCATE TABLE ${Table.STORE_LOCATION_DESCRIPTIONS}`,
+    );
+    await this.storeLocationRepo.writeExec(
+      `TRUNCATE TABLE ${Table.STORE_LOCATIONS}`,
+    );
+  }
+
+  async importStores() {
+    await this.clearAll();
+    const storesAppcore = storesData;
+
+    const mappingData = new Map([
+      ['id', 'store_location_id'],
+      ['name', 'store_name'],
+      ['address', 'pickup_address'],
+      ['district', 'district_id'],
+      ['city', 'city_id'],
+      ['isActive', 'status'],
+      ['createdAt', 'created_at'],
+      ['updatedAt', 'updated_at'],
+      ['shortName', 'short_name'],
+      ['companyId', 'company_id'],
+      ['position', 'position'],
+      ['latitude', 'latitude'],
+      ['longitude', 'longitude'],
+      ['cityName', 'city_name'],
+      ['districtName', 'district_name'],
+      ['districtId', 'district_id'],
+      ['cityId', 'city_id'],
+      ['companyName', 'company_name'],
+      ['areaName', 'arena_name'],
+      ['areaId', 'area_id'],
+      ['storeTypeName', 'type_name'],
+    ]);
+
+    for (let storeAppcore of storesAppcore) {
+      let cmsData = {};
+      for (let [core, cms] of mappingData) {
+        cmsData[cms] = storeAppcore[core];
+      }
+      const storeLocationData = {
+        ...new StoreLocationEntity(),
+        ...this.storeLocationRepo.setData(cmsData),
+        created_at: convertNullDatetimeData(cmsData['created_at']),
+        updated_at: convertNullDatetimeData(cmsData['updated_at']),
+      };
+
+      await this.storeLocationRepo.createSync(storeLocationData);
+
+      const storeLocationDataDesc = {
+        ...new StoreLocationDescriptionEntity(),
+        ...this.storeLocationDescRepo.setData(cmsData),
+        store_location_id: cmsData['store_location_id'],
+      };
+
+      await this.storeLocationDescRepo.createSync(storeLocationDataDesc);
     }
   }
 }

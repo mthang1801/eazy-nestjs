@@ -50,8 +50,11 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('count-products')
-  async countProducts(): Promise<void> {}
+  @Get('catalog')
+  async getCatalog(@Res() res: Response, @Query() params) {
+    const result = await this.service.getCatalog(params);
+    return this.responseSuccess(res, result);
+  }
 
   /**
    * Fetch list categories in ddv_categories table

@@ -34,9 +34,19 @@ import {
 } from '../../utils/scriptSyncFromMagentor/category.sync';
 import { categoriesSearchFilter } from 'src/utils/tableConditioner';
 import {
+  sqlGetCatalogCategoryName,
+  sqlGetCatalogCategoryUrlKey,
+} from '../../utils/scriptSyncFromMagentor/catalogCategoy';
+
+import {
   itgCreateCategoryFromAppcore,
   itgCreateCustomerFromAppcore,
 } from 'src/utils/integrateFunctions';
+import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
+import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
+import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
+import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDescription.entity';
+import { sqlGetCatalogCategoryUrlPath } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -47,6 +57,8 @@ export class CategoryService {
     private imageRepository: ImagesRepository<ImagesEntity>,
     private imageLinkRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private databaseService: DatabaseService,
+    private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
+    private catalogCategoryDescRepo: CatalogCategoryDescriptionRepository<CatalogCategoryDescriptionEntity>,
   ) {}
 
   async create(data: CreateCategoryV2Dto): Promise<any> {
@@ -576,4 +588,58 @@ export class CategoryService {
       await this.itgCreate(categoryItem);
     }
   }
+
+  async getCatalog(params) {
+    let { level, all, page, limit } = params;
+    level = +level || 2;
+    all =
+      all && (all.toString() == 'true' || all.toString() == 'false')
+        ? all
+        : null;
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+    if (all) {
+      let catalogsList = await this.catalogCategoryRepo.find({
+        select: '*',
+        skip,
+        limit,
+      });
+
+      let count = await this.catalogCategoryRepo.find({
+        select: `COUNT(DISTINCT(entity_id)) as total`,
+      });
+
+      return {
+        paging: {
+          currentPage: page,
+          pageSize: limit,
+          total: count[0].total,
+        },
+        categories: catalogsList,
+      };
+    }
+    let catalogsList = await this.catalogCategoryRepo.find({
+      select: '*',
+      where: { level },
+      skip,
+      limit,
+    });
+
+    let count = await this.catalogCategoryRepo.find({
+      select: `COUNT(DISTINCT(entity_id)) as total`,
+      where: { level },
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      categories: catalogsList,
+    };
+  }
+
+  async syncImports() {}
 }
