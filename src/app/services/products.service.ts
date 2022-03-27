@@ -121,7 +121,7 @@ import { productByCategoryJoiner } from '../../utils/joinTable';
 import { DatabaseService } from '../../database/database.service';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
-import { Logger } from 'winston';
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -153,8 +153,6 @@ export class ProductService {
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
     private databaseService: DatabaseService,
-    @Inject('winston')
-    private readonly logger: Logger,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -2391,7 +2389,6 @@ export class ProductService {
   }
 
   async grouping(group_ids: number[]) {
-    this.logger.info('Returning suggestions...');
     let groups = group_ids.join(',');
     const checkGroups = await this.productGroupIndexRepo.findOne({ group_ids });
     if (checkGroups) {
@@ -2421,7 +2418,6 @@ export class ProductService {
   }
 
   async getListGroupingIndex(params) {
-    this.logger.info('Returning suggestions...');
     let { page, limit } = params;
     page = +page || 1;
     limit = +limit || 20;
