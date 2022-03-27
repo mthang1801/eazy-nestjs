@@ -33,6 +33,10 @@ export const productFullJoiner = {
     fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
     rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
   },
+  [Table.CATEGORIES]: {
+    fieldJoin: `${Table.CATEGORIES}.category_id`,
+    rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+  },
 };
 
 export const productFeaturesJoiner = {

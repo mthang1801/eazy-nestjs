@@ -44,6 +44,7 @@ import {
   productInfoJoiner,
   productSearchJoiner,
   productsSearchOnOrderJoiner,
+  productByCategoryJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -117,7 +118,7 @@ import {
 } from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
 // import * as mockProductsData from 'src/database/constant/_productsData.json';
-import { productByCategoryJoiner } from '../../utils/joinTable';
+
 import { DatabaseService } from '../../database/database.service';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
@@ -2357,34 +2358,13 @@ export class ProductService {
   }
 
   async utilFunctions() {
-    let pages = 20;
-    let result = [];
-    for (let page = 1; page <= pages; page++) {
-      const response = await axios({
-        url: `http://mb.viendidong.com/web-tester/v1/api/brands?param=%7B%22page%22:${page},%22pageSize%22:20,%22name%22:%22%22%7D`,
-        headers: {
-          Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
-        },
-      });
-      let data = response.data;
-
-      if (data['brands']) {
-        result = [...result, ...data['brands']];
-      }
-    }
-    await fs.writeFile(
-      'src/database/constant/brands.json',
-      JSON.stringify(result),
-      (err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log('File written successfully\n');
-          console.log('The written has the following contents:');
-          console.log(fs.readFileSync('movies.txt', 'utf8'));
-        }
-      },
+    await this.productCategoryRepo.update(
+      { category_id: 68961 },
+      { category_id: 480184 },
+    );
+    await this.productCategoryRepo.update(
+      { category_id: 68979 },
+      { category_id: 480186 },
     );
   }
 
@@ -2437,5 +2417,175 @@ export class ProductService {
       total: count[0].total,
       groups: groupsList,
     };
+  }
+
+  async testGetBySlug(slug) {
+    let product = await this.productRepo.findOne({ slug });
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    let result: any = {};
+
+    if (product.product_type >= 4) {
+      result = await this.productRepo.findOne({
+        select: `*,${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as categorySlug`,
+        join: { [JoinTable.leftJoin]: productFullJoiner },
+        where: { [`${Table.PRODUCTS}.product_id`]: product.product_id },
+      });
+
+      // get Image
+      result['image'] = await this.getProductImage(result.product_id);
+      result['productFeatures'] = await this.getProductFeatures(
+        result.product_id,
+      );
+      result['productType'] = 4;
+      result['prodyctTypeName'] = 'Sản phẩm độc lập';
+    }
+
+    if (product.product_type == 3) {
+      let group = await this.productVariationGroupRepo.findOne({
+        product_root_id: product.product_id,
+      });
+      if (!group) {
+        let groupProducts =
+          await this.productVariationGroupProductsRepo.findOne({
+            product_id: product.product_id,
+          });
+        group = await this.productVariationGroupRepo.findOne({
+          group_id: groupProducts.group_id,
+        });
+        if (!group) {
+          throw new HttpException('Không tìm thấy SP combo', 404);
+        }
+      }
+      let productsComboList = await this.productVariationGroupProductsRepo.find(
+        {
+          where: { group_id: group.group_id },
+        },
+      );
+
+      if (productsComboList.length) {
+        for (let productComboItem of productsComboList) {
+          let productCombo = await this.productRepo.findOne({
+            select: `*,${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as categorySlug`,
+            join: { [JoinTable.leftJoin]: productFullJoiner },
+            where: {
+              [`${Table.PRODUCTS}.product_id`]: productComboItem.product_id,
+            },
+          });
+
+          if (productComboItem.product_id == group.product_root_id) {
+            result['configurableProduct'] = productCombo;
+          } else {
+            // get image
+            productCombo['image'] = await this.getProductImage(
+              productCombo.product_id,
+            );
+
+            result['comboItems'] = result['comboItems']
+              ? [...result['comboItems'], productCombo]
+              : [productCombo];
+          }
+        }
+      }
+
+      result['productType'] = 3;
+      result['prodyctTypeName'] = 'Sản phẩm combo';
+    }
+
+    if (product.product_type == 1 || product.product_type == 2) {
+      product['productType'] = 1;
+      product['productTypeName'] = 'Sản phẩm cha';
+      if (product.parent_product_id > 0) {
+        let parentProduct = await this.productRepo.findOne({
+          product_id: product.parent_product_id,
+        });
+        if (parentProduct) {
+          product = parentProduct;
+        }
+        product['productType'] = 2;
+        product['productTypeName'] = 'Sản phẩm con';
+      }
+
+      let group = await this.productVariationGroupRepo.findOne({
+        product_root_id: product.product_id,
+      });
+      if (!group) {
+        throw new HttpException('Không tìm thấy SP', 404);
+      }
+
+      let productsInGroup = await this.productVariationGroupProductsRepo.find({
+        where: { group_id: group.group_id },
+      });
+      if (productsInGroup.length) {
+        for (let productItem of productsInGroup) {
+          let productInfo = await this.productRepo.findOne({
+            select: `*,${Table.PRODUCTS}.*,  ${Table.CATEGORIES}.slug as categorySlug`,
+            join: { [JoinTable.leftJoin]: productFullJoiner },
+            where: {
+              [`${Table.PRODUCTS}.product_id`]: productItem.product_id,
+            },
+          });
+
+          // Get Image
+          productInfo['image'] = await this.getProductImage(
+            productInfo.product_id,
+          );
+          // Get Features
+          productInfo['productFeatures'] = await this.getProductFeatures(
+            productInfo.product_id,
+          );
+
+          if (productInfo.product_id == group.product_root_id) {
+            product = { ...productInfo };
+          } else if (
+            productInfo.product_id != group.product_root_id &&
+            productItem.group_product_type == 1
+          ) {
+            product['childrenProducts'] = product['childrenProducts']
+              ? [...product['childrenProducts'], productInfo]
+              : [productInfo];
+          } else if (
+            productInfo.product_id != group.product_root_id &&
+            productItem.group_product_type == 2
+          ) {
+            product['accessory_products'] = product['accessory_products']
+              ? [...product['accessory_products'], productInfo]
+              : [productInfo];
+          }
+        }
+      }
+
+      result = { ...product };
+    }
+
+    return result;
+  }
+
+  async getProductImage(product_id) {
+    let result = null;
+    const imageLink = await this.imageLinkRepo.findOne({
+      object_id: product_id,
+      object_type: ImageObjectType.PRODUCT,
+    });
+    if (imageLink) {
+      let image = await this.imageRepo.findOne({
+        image_id: imageLink.image_id,
+      });
+      result = { ...imageLink, ...image };
+    }
+
+    return result;
+  }
+
+  async getProductFeatures(product_id) {
+    const productFeatures = await this.productFeatureValueRepo.find({
+      select: '*',
+      join: { [JoinTable.leftJoin]: productFeaturesJoiner },
+      where: { [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product_id },
+    });
+
+    return productFeatures;
   }
 }

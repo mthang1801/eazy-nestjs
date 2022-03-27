@@ -659,13 +659,13 @@ export class CategoryService {
         ['name', 'category'],
         ['level', 'level'],
         ['parentId', 'parent_id'],
-        ['code', 'slug'],
       ]);
       let cmsData = {};
       for (let [core, cms] of mappingData) {
-        if (core === 'code') {
-          cmsData[cms] = convertToSlug(removeVietnameseTones(coreData[core]));
-          continue;
+        if (core === 'name') {
+          cmsData['slug'] = convertToSlug(
+            removeVietnameseTones(coreData[core]),
+          );
         }
         cmsData[cms] = coreData[core];
       }

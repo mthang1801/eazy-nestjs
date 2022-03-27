@@ -146,7 +146,7 @@ export class CustomerService {
         method: 'POST',
         data: customerAppcoreData,
       });
-      console.log(response);
+
       const data = response.data;
       console.log(data);
       const user_appcore_id = data.data;
@@ -437,8 +437,8 @@ export class CustomerService {
     let result;
     const user = await this.userRepo.findOne({ phone: data.phone });
     if (user) {
-      const userData = this.userDataRepo.setData(convertedData);
-      const updatedUser = await this.userDataRepo.update(
+      const userData = this.userRepo.setData(convertedData);
+      const updatedUser = await this.userRepo.update(
         { phone: data.phone },
         userData,
       );

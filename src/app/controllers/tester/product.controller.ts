@@ -11,6 +11,7 @@ import {
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { BaseController } from '../../../base/base.controllers';
 import { ProductService } from '../../services/products.service';
+import { Response } from 'express';
 
 @Controller('/web-tester/v1/products')
 export class ProductTesterController extends BaseController {
@@ -40,6 +41,15 @@ export class ProductTesterController extends BaseController {
   @Get('/groupings')
   async getList(@Query() params, @Res() res): Promise<IResponse> {
     const result = await this.service.getListGroupingIndex(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':slug')
+  async getBySlug(
+    @Res() res: Response,
+    @Param('slug') slug: string,
+  ): Promise<IResponse> {
+    const result = await this.service.testGetBySlug(slug);
     return this.responseSuccess(res, result);
   }
 }
