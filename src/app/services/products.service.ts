@@ -1680,78 +1680,6 @@ export class ProductService {
     return 'Xoá ảnh thành công.';
   }
 
-  async getProductsStores(id: string) {
-    const product = await this.productRepo.findOne({ product_id: id });
-    if (!product) {
-      throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
-    }
-
-    let response;
-
-    if (product.product_type === 3) {
-      response = await axios({
-        url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
-      });
-    } else {
-      response = await axios({
-        url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
-      });
-    }
-
-    const productsStocks = response?.data?.data;
-
-    let result = [];
-
-    if (
-      productsStocks &&
-      typeof productsStocks === 'object' &&
-      Object.entries(productsStocks).length
-    ) {
-      for (let [key, val] of Object.entries(productsStocks)) {
-        let resVal: any = val;
-        result = [...result, { ...resVal, productId: id }];
-      }
-      return result;
-    } else {
-      const productsStores = await this.productStoreRepo.find({
-        select: '*',
-        orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
-        where: { product_id: id, amount: MoreThan(0) },
-      });
-
-      if (productsStores.length) {
-        for (let productStoreItem of productsStores) {
-          const store = await this.storeRepo.findOne({
-            select: '*',
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.STORE_LOCATION_DESCRIPTIONS]: {
-                  fieldJoin: 'store_location_id',
-                  rootJoin: 'store_location_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.STORE_LOCATIONS}.store_location_id`]:
-                productStoreItem.store_location_id,
-            },
-          });
-          let storeObj = {
-            productId: product.product_id,
-            storeId: store['store_location_id'],
-            storeName: store['store_name'],
-            storeAddress: store['pickup_address'],
-            storeLatitude: store['latitude'],
-            storeLongitude: store['longitude'],
-          };
-          result = [...result, { ...productStoreItem, ...storeObj }];
-        }
-      }
-    }
-
-    return result;
-  }
-
   async getProductDetails(product, showListCategories = false) {
     let status = product['status'];
 
@@ -2374,16 +2302,27 @@ export class ProductService {
     if (checkGroups) {
       throw new HttpException('Nhóm SP đã tồn tại', 409);
     }
-    await this.productGroupIndexRepo.createSync({
+    const newGroupIndex = await this.productGroupIndexRepo.create({
       group_ids: groups,
       created_at: convertToMySQLDateTime(),
       updated_at: convertToMySQLDateTime(),
     });
+    for (let groupId of group_ids) {
+      await this.productVariationGroupRepo.update(
+        { group_id: groupId },
+        { index_id: newGroupIndex.index_id },
+      );
+    }
   }
 
   async upateGrouping(index_id: number, group_ids: number[]) {
-    const currentGroup = await this.productGroupIndexRepo.findById(index_id);
-    if (currentGroup) {
+    if (!group_ids.length) {
+      return;
+    }
+    const currentGroupIndex = await this.productGroupIndexRepo.findById(
+      index_id,
+    );
+    if (currentGroupIndex) {
       throw new HttpException('Không tìm thấy nhóm SP', 404);
     }
     await this.productGroupIndexRepo.update(
@@ -2395,6 +2334,17 @@ export class ProductService {
         updated_at: convertToMySQLDateTime(),
       },
     );
+
+    await this.productVariationGroupRepo.update(
+      { index_id },
+      { index_id: null },
+    );
+    for (let groupId of group_ids) {
+      await this.productVariationGroupRepo.update(
+        { group_id: groupId },
+        { index_id: index_id },
+      );
+    }
   }
 
   async getListGroupingIndex(params) {
@@ -2495,8 +2445,6 @@ export class ProductService {
     }
 
     if (product.product_type == 1 || product.product_type == 2) {
-      product['productType'] = 1;
-      product['productTypeName'] = 'Sản phẩm cha';
       if (product.parent_product_id > 0) {
         let parentProduct = await this.productRepo.findOne({
           product_id: product.parent_product_id,
@@ -2504,9 +2452,9 @@ export class ProductService {
         if (parentProduct) {
           product = parentProduct;
         }
-        product['productType'] = 2;
-        product['productTypeName'] = 'Sản phẩm con';
       }
+
+      product['stores'] = await this.getProductsStores(product.product_id);
 
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: product.product_id,
@@ -2537,6 +2485,11 @@ export class ProductService {
             productInfo.product_id,
           );
 
+          productInfo['stores'] = await this.getProductsStores(
+            productInfo.product_id,
+          );
+
+          // Get children and accessory products
           if (productInfo.product_id == group.product_root_id) {
             product = { ...productInfo };
           } else if (
@@ -2553,6 +2506,45 @@ export class ProductService {
             product['accessory_products'] = product['accessory_products']
               ? [...product['accessory_products'], productInfo]
               : [productInfo];
+          }
+        }
+      }
+
+      // Find relevant products
+      if (group.index_id) {
+        let relevantGroups = await this.productVariationGroupRepo.find({
+          select: '*',
+          where: {
+            index_id: group.index_id,
+          },
+        });
+        relevantGroups = [
+          group,
+          ...relevantGroups.filter(
+            ({ group_id }) => group_id !== group.group_id,
+          ),
+        ];
+
+        if (relevantGroups.length) {
+          for (let relevantGroupItem of relevantGroups) {
+            if (relevantGroupItem.product_root_id) {
+              let productRoot = await this.productRepo.findOne({
+                select: '*',
+                join: { [JoinTable.innerJoin]: productFullJoiner },
+                where: {
+                  [`${Table.PRODUCTS}.product_id`]:
+                    relevantGroupItem.product_root_id,
+                },
+              });
+              if (productRoot) {
+                productRoot['image'] = await this.getProductImage(
+                  productRoot.product_id,
+                );
+              }
+              product['relevantProducts'] = product['relevantProducts']
+                ? [...product['relevantProducts'], productRoot]
+                : [productRoot];
+            }
           }
         }
       }
@@ -2587,5 +2579,77 @@ export class ProductService {
     });
 
     return productFeatures;
+  }
+
+  async getProductsStores(id: string) {
+    const product = await this.productRepo.findOne({ product_id: id });
+    if (!product) {
+      throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
+    }
+
+    let response;
+
+    if (product.product_type === 3) {
+      response = await axios({
+        url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
+      });
+    } else {
+      response = await axios({
+        url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
+      });
+    }
+
+    const productsStocks = response?.data?.data;
+
+    let result = [];
+
+    if (
+      productsStocks &&
+      typeof productsStocks === 'object' &&
+      Object.entries(productsStocks).length
+    ) {
+      for (let [key, val] of Object.entries(productsStocks)) {
+        let resVal: any = val;
+        result = [...result, { ...resVal, productId: id }];
+      }
+      return result;
+    } else {
+      const productsStores = await this.productStoreRepo.find({
+        select: '*',
+        orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
+        where: { product_id: id, amount: MoreThan(0) },
+      });
+
+      if (productsStores.length) {
+        for (let productStoreItem of productsStores) {
+          const store = await this.storeRepo.findOne({
+            select: '*',
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                  fieldJoin: 'store_location_id',
+                  rootJoin: 'store_location_id',
+                },
+              },
+            },
+            where: {
+              [`${Table.STORE_LOCATIONS}.store_location_id`]:
+                productStoreItem.store_location_id,
+            },
+          });
+          let storeObj = {
+            productId: product.product_id,
+            storeId: store['store_location_id'],
+            storeName: store['store_name'],
+            storeAddress: store['pickup_address'],
+            storeLatitude: store['latitude'],
+            storeLongitude: store['longitude'],
+          };
+          result = [...result, { ...productStoreItem, ...storeObj }];
+        }
+      }
+    }
+
+    return result;
   }
 }

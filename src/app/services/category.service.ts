@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
 import {
+  convertNullDatetimeData,
   convertToMySQLDateTime,
   convertToSlug,
   removeVietnameseTones,
@@ -116,7 +117,7 @@ export class CategoryService {
 
   async itgCreate(data) {
     if (data['display_at']) {
-      data['display_at'] = convertToMySQLDateTime(data['display_at']);
+      data['display_at'] = convertNullDatetimeData(data['display_at']);
     }
 
     const categoryData = {
