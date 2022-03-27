@@ -47,6 +47,7 @@ import { CatalogCategoryRepository } from '../repositories/catalogCategory.repos
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
 import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDescription.entity';
 import { sqlGetCatalogCategoryUrlPath } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
+import axios from 'axios';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -402,7 +403,7 @@ export class CategoryService {
     for (let categoryRoot of categoriesListRoot) {
       const categoriesList = await this.getCategoriesChildrenRecursive(
         categoryRoot,
-        2,
+        Infinity,
         true,
       );
       let count = 0;
@@ -641,5 +642,44 @@ export class CategoryService {
     };
   }
 
-  async syncImports() {}
+  async syncImports() {
+    await this.clearAll();
+    const response = await axios({
+      url: 'http://mb.viendidong.com/web-tester/v1/api/category',
+      headers: {
+        Authorization:
+          'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
+      },
+    });
+    const data = response.data.data;
+
+    for (let coreData of data['list_caterogy']) {
+      const mappingData = new Map([
+        ['id', 'category_id'],
+        ['name', 'category'],
+        ['level', 'level'],
+        ['parentId', 'parent_id'],
+        ['code', 'slug'],
+      ]);
+      let cmsData = {};
+      for (let [core, cms] of mappingData) {
+        if (core === 'code') {
+          cmsData[cms] = convertToSlug(removeVietnameseTones(coreData[core]));
+          continue;
+        }
+        cmsData[cms] = coreData[core];
+      }
+      const categoryData = {
+        ...new CategoryEntity(),
+        ...this.categoryRepository.setData(cmsData),
+      };
+      await this.categoryRepository.createSync(categoryData);
+
+      const categoryDescData = {
+        ...new CategoryDescriptionEntity(),
+        ...this.categoryDescriptionRepo.setData(cmsData),
+      };
+      await this.categoryDescriptionRepo.createSync(categoryDescData);
+    }
+  }
 }

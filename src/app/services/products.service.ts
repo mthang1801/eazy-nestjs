@@ -167,7 +167,7 @@ export class ProductService {
     });
 
     parentProductsList = parentProductsList.filter(
-      ({ product_type }) => product_type != 4,
+      ({ product_type }) => product_type != 4 && product_type !== 3,
     );
 
     // Kiểm tra xem các parent này đã tạo group hay chưa, nếu đã tạo rồi thì bỏ qua, nếu chưa thì sẽ tạo mới
@@ -187,32 +187,24 @@ export class ProductService {
           parent_product_id: parentProductItem.parent_product_id,
           group_id: newProductGroup.group_id,
         });
-      }
-    }
 
-    // Tìm ds các SP con, sau đó tim group chứa SP cha, kiểm tra SP con đã chứa trong đó hay chưa, nếu chưa thì thêm vào
-    const childrenProductsList = await this.productRepo.find({
-      select: ['*'],
-      where: { [`${Table.PRODUCTS}.parent_product_id`]: Not(Equal(0)) },
-    });
-    for (let childProduct of childrenProductsList) {
-      // Kiểm tra nhóm của parent product đã tồn tại hay chưa, nếu tồn tại rồi thì đưa vào trong, nếu chưa thì bỏ qua
-      const parentProductGroup = await this.productVariationGroupRepo.findOne({
-        product_root_id: childProduct.parent_product_id,
-      });
-      if (parentProductGroup) {
-        // Kiểm tra SP con đã nằm trong group product của SP cha hay chưa, nếu chưa thì thêm, nếu có bỏ qua
-        const childProductGroupProduct =
-          await this.productVariationGroupProductsRepo.findOne({
-            group_id: parentProductGroup.group_id,
-            product_id: childProduct.product_id,
-          });
-        if (!childProductGroupProduct) {
-          await this.productVariationGroupProductsRepo.createSync({
-            group_id: parentProductGroup.group_id,
-            parent_product_id: childProduct.parent_product_id,
-            product_id: childProduct.product_id,
-          });
+        // Tìm ds các SP con, sau đó tim group chứa SP cha, kiểm tra SP con đã chứa trong đó hay chưa, nếu chưa thì thêm vào
+        const childrenProductsList = await this.productRepo.find({
+          select: '*',
+          where: {
+            [`${Table.PRODUCTS}.parent_product_id`]:
+              parentProductItem.product_id,
+          },
+        });
+
+        if (childrenProductsList.length) {
+          for (let childProduct of childrenProductsList) {
+            await this.productVariationGroupProductsRepo.create({
+              group_id: newProductGroup.group_id,
+              product_id: childProduct.product_id,
+              parent_product_id: childProduct.parent_product_id,
+            });
+          }
         }
       }
     }
@@ -221,7 +213,7 @@ export class ProductService {
     // Đồng bộ thuộc tính SP
     // Lấy Danh sách các group -> group products -> lấy danh sách các SP trong group -> Lấy danh sách các feature trong product feature values
     let groupLists = await this.productVariationGroupRepo.find({
-      select: ['group_id'],
+      select: 'group_id',
     });
 
     for (let { group_id } of groupLists) {
@@ -1093,7 +1085,6 @@ export class ProductService {
   }
 
   async itgCreate(data): Promise<any> {
-    console.log('create');
     const convertedData = itgConvertProductsFromAppcore(data);
 
     if (convertedData['product_appcore_id']) {
@@ -1265,7 +1256,7 @@ export class ProductService {
     // for (let productItem of mockProductsData) {
     //   await this.itgCreate(productItem);
     // }
-    // await this.syncProductsIntoGroup();
+    await this.syncProductsIntoGroup();
     // await this.itgGenerateSlug();
     //=========== update ===========
     // for (let productItem of mockProductsData) {
