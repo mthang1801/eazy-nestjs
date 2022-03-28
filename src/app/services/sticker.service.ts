@@ -82,39 +82,25 @@ export class StickerService {
     await this.stickerRepo.update({ sticker_id }, stickerUpdated);
   }
 
-  async createProductSticker(product_id, data: CreateProductStickerDto) {
-    const product = await this.productRepo.findOne({ product_id });
-    if (!product) {
-      throw new HttpException('Không tìm thấy sp', 404);
-    }
-    if (data.product_stickers && data?.product_stickers?.length) {
-      await this.productStickerRepo.delete({
-        product_id,
-      });
-      for (let productStickerItem of data.product_stickers.reverse()) {
-        let checkExist = await this.productStickerRepo.findOne({
-          product_id,
-          position_id: productStickerItem.position_id,
-          sticker_id: productStickerItem.sticker_id,
-        });
-
-        if (checkExist) {
-          continue;
-        }
-        const productStickerData = this.productStickerRepo.setData({
-          ...productStickerItem,
-          start_at: moment(productStickerItem.start_at).format(
+  async createProductSticker(data: CreateProductStickerDto) {
+    for (let productId of data.product_ids) {
+      const product = await this.productRepo.findById(productId);
+      if (!product) {
+        continue;
+      }
+      await this.productStickerRepo.delete({ product_id: productId });
+      for (let productSticker of data.product_stickers) {
+        const productStickerData = {
+          ...new ProductStickerEntity(),
+          ...this.productStickerRepo.setData(productSticker),
+          start_at: moment(productSticker.start_at).format(
             'YYYY-MM-DD HH:mm:ss',
           ),
-          end_at: moment(productStickerItem.end_at).format(
-            'YYYY-MM-DD HH:mm:ss',
-          ),
-          product_id,
-        });
+          end_at: moment(productSticker.end_at).format('YYYY-MM-DD HH:mm:ss'),
+          product_id: productId,
+        };
 
-        await this.productStickerRepo.createSync({
-          ...productStickerData,
-        });
+        await this.productStickerRepo.createSync(productStickerData);
       }
     }
   }

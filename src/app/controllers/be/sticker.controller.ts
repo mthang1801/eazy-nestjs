@@ -37,13 +37,12 @@ export class StickerController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/product/:product_id')
+  @Post('/products')
   async createProductSticker(
     @Res() res: Response,
-    @Param('product_id') product_id: number,
     @Body() data: CreateProductStickerDto,
   ): Promise<IResponse> {
-    await this.service.createProductSticker(product_id, data);
+    await this.service.createProductSticker(data);
     return this.responseSuccess(res, null, 'Tạo thành công.');
   }
 

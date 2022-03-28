@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { convertToMySQLDateTime } from '../../../utils/helper';
 import {
   IsIn,
   IsNotEmpty,
@@ -8,6 +9,9 @@ import {
 } from 'class-validator';
 
 export class CreateProductStickerDto {
+  @ArrayNotEmpty()
+  product_ids: number[];
+
   @ArrayNotEmpty()
   @ValidateNested()
   @Type(() => ProductStickerItem)
@@ -25,9 +29,9 @@ export class ProductStickerItem {
   @IsIn([1, 2, 3, 4])
   position_id: number; //1: TOP_LEFT, 2: TOP_RIGHT, 3: BOTTOM_LEFT, 4: BOTTOM_RIGHT
 
-  @IsNotEmpty()
-  start_at: string;
+  @IsOptional()
+  start_at: string = convertToMySQLDateTime();
 
-  @IsNotEmpty()
-  end_at: string;
+  @IsOptional()
+  end_at: string = convertToMySQLDateTime();
 }
