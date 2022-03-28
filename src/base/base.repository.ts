@@ -269,12 +269,14 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
+    console.log(fmtParams);
 
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
+      // console.log(key, val, val === '', !!val, +val === 0);
       if (i === 0) {
         sql +=
-          val == 0
+          +val === 0 && val !== ''
             ? `${key} = 0`
             : !val
             ? `${key} = ''`
@@ -283,7 +285,7 @@ export class BaseRepositorty<T> {
             : `${key} = '${val}'`;
       } else {
         sql +=
-          val == 0
+          +val === 0 && val !== ''
             ? `, ${key} = 0`
             : !val
             ? `, ${key} = ''`
@@ -298,7 +300,7 @@ export class BaseRepositorty<T> {
       Object.entries(id).forEach(([key, val], i) => {
         if (i === 0) {
           sql +=
-            val == 0
+            +val === 0 && val !== ''
               ? `${key} = 0`
               : !val
               ? `${key} = ''`
@@ -307,7 +309,7 @@ export class BaseRepositorty<T> {
               : `${key} = '${val}'`;
         } else {
           sql +=
-            val == 0
+            +val === 0 && val !== ''
               ? ` AND ${key} = 0`
               : !val
               ? ` AND ${key} = ''`

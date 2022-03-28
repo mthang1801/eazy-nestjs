@@ -246,7 +246,7 @@ export class CustomerService {
       throw new HttpException('Không tìm thấy người dùng.', 404);
     }
     if (data.email) {
-      if (user.email) {
+      if (user.email && data.email !== user.email) {
         throw new HttpException('Không thể cập nhật email', 403);
       }
       const userEmail = await this.userRepo.findOne({ email: data.email });

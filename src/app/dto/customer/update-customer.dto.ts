@@ -9,7 +9,7 @@ export class UpdateCustomerDTO {
   user_type: string;
 
   @IsOptional()
-  @IsEmail()
+  // @IsEmail()
   email: string;
 
   @IsOptional()
