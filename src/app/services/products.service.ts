@@ -1765,8 +1765,10 @@ export class ProductService {
           { meta_image: imageUrl[0] },
         );
       }
+      await fsExtra.unlink(file.path);
     } catch (error) {
       console.log(error);
+      await fsExtra.unlink(file.path);
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||
