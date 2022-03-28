@@ -3,6 +3,7 @@ import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
+import { preprocessAddTextDataToMysql } from '../utils/helper';
 import {
   convertToMySQLDateTime,
   preprocessDatabaseBeforeResponse,
@@ -65,17 +66,25 @@ export class BaseRepositorty<T> {
         HttpStatus.BAD_REQUEST,
       );
     }
+    let fmtParams: any = {};
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val === 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
 
     let sql = `INSERT INTO ${this.table} SET ? `;
 
-    await this.databaseService.executeQueryWritePool(sql, params);
+    await this.databaseService.executeQueryWritePool(sql, fmtParams);
 
     const res = await this.databaseService.executeQueryWritePool(
       'SELECT LAST_INSERT_ID();',
     );
 
     if (res[0][0]['LAST_INSERT_ID()'] === 0) {
-      return this.findOne({ where: params });
+      return this.findOne({ where: fmtParams });
     }
 
     return this.findById(res[0][0]['LAST_INSERT_ID()']);
@@ -96,9 +105,18 @@ export class BaseRepositorty<T> {
       );
     }
 
+    let fmtParams: any = {};
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val == 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
     let sql = `INSERT INTO ${this.table} SET ? `;
 
-    await this.databaseService.executeQueryWritePool(sql, params);
+    await this.databaseService.executeQueryWritePool(sql, fmtParams);
   }
 
   /**
@@ -242,14 +260,38 @@ export class BaseRepositorty<T> {
       );
     }
 
+    let fmtParams: any = { ...params };
+
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val == 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
+    console.log('fmt', fmtParams);
+
     let sql = `UPDATE ${this.table} SET `;
-    Object.entries(params).forEach(([key, val], i) => {
+    Object.entries(fmtParams).forEach(([key, val], i) => {
       if (i === 0) {
         sql +=
-          typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
+          val == 0
+            ? `${key} = 0`
+            : !val
+            ? `${key} = ''`
+            : !isNaN(+val * 1)
+            ? `${key} = ${val}`
+            : `${key} = '${val}'`;
       } else {
         sql +=
-          typeof val === 'number' ? `, ${key} = ${val}` : `, ${key} = '${val}'`;
+          val == 0
+            ? `, ${key} = 0`
+            : !val
+            ? `, ${key} = ''`
+            : !isNaN(+val * 1)
+            ? `, ${key} = ${val}`
+            : `, ${key} = '${val}'`;
       }
     });
     sql += ' WHERE ';
@@ -258,10 +300,20 @@ export class BaseRepositorty<T> {
       Object.entries(id).forEach(([key, val], i) => {
         if (i === 0) {
           sql +=
-            typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
+            val == 0
+              ? `${key} = 0`
+              : !val
+              ? `${key} = ''`
+              : !isNaN(+val * 1)
+              ? `${key} = ${val}`
+              : `${key} = '${val}'`;
         } else {
           sql +=
-            typeof val === 'number'
+            val == 0
+              ? ` AND ${key} = 0`
+              : !val
+              ? ` AND ${key} = ''`
+              : !isNaN(+val * 1)
               ? ` AND ${key} = ${val}`
               : ` AND ${key} = '${val}'`;
         }

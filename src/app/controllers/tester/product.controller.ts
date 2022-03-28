@@ -52,4 +52,9 @@ export class ProductTesterController extends BaseController {
     const result = await this.service.testGetBySlug(slug);
     return this.responseSuccess(res, result);
   }
+
+  @Post('/create')
+  async create() {
+    await this.service.testCreate();
+  }
 }

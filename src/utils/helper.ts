@@ -43,17 +43,32 @@ export const preprocessDatabaseBeforeResponse = (data) => {
   if (!data || (typeof data === 'object' && !Object.entries(data).length)) {
     return null;
   }
+
   let dataObject = { ...data };
-  if (dataObject['created_at']) {
-    dataObject['created_at'] = convertToMySQLDateTime(
-      new Date(dataObject['created_at']),
-    );
+
+  function* iterate_object(o) {
+    var keys = Object.keys(o);
+    for (var i = 0; i < keys.length; i++) {
+      yield [keys[i], o[keys[i]]];
+    }
   }
-  if (dataObject['updated_at']) {
-    dataObject['updated_at'] = convertToMySQLDateTime(
-      new Date(dataObject['updated_at']),
-    );
+
+  for (let [key, val] of iterate_object(dataObject)) {
+    if (key === 'created_at') {
+      dataObject[key] = convertToMySQLDateTime(new Date(dataObject[key]));
+      continue;
+    }
+    if (key === 'updated_at') {
+      dataObject[key] = convertToMySQLDateTime(new Date(dataObject[key]));
+      continue;
+    }
+
+    if (val && typeof val === 'string') {
+      dataObject[key] = processGetTextDataFromMysql(val);
+      continue;
+    }
   }
+
   return dataObject;
 };
 
@@ -122,3 +137,26 @@ export const convertNullData = (data) => (data ? data : null);
 
 export const convertNullDatetimeData = (data) =>
   data ? convertToMySQLDateTime(new Date(data)) : null;
+
+const quotation = `"`;
+const replaceQuotation = '_quot';
+const apostrophe = `'`;
+const replaceApostrophe = '_apos';
+
+export const preprocessAddTextDataToMysql = (data: any) => {
+  if (data && typeof data == 'string') {
+    return data
+      .replace(new RegExp(quotation, 'g'), replaceQuotation)
+      .replace(new RegExp(apostrophe, 'g'), replaceApostrophe);
+  }
+  return data;
+};
+
+export const processGetTextDataFromMysql = (data) =>
+  data && typeof data === 'string'
+    ? data
+        .replace(new RegExp(replaceQuotation), quotation)
+        .replace(new RegExp(replaceApostrophe), apostrophe)
+    : data && !isNaN(+data * 1)
+    ? +data
+    : '';
