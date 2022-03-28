@@ -516,7 +516,10 @@ export class ProductService {
       join: {
         [JoinTable.innerJoin]: productJoiner,
       },
-      orderBy: [{ field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC }],
+      orderBy: [
+        { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC },
+      ],
       where: categoriesList.length
         ? productsListCategorySearchFilter(
             categoriesList,
@@ -528,41 +531,37 @@ export class ProductService {
       limit,
     });
 
-    if (productLists.length) {
-      for (let productItem of productLists) {
-        const currentCategory = await this.categoryRepo.findOne({
-          select: '*',
-          join: {
-            [JoinTable.innerJoin]: {
-              [Table.PRODUCTS_CATEGORIES]: {
-                fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
-              [Table.CATEGORY_DESCRIPTIONS]: {
-                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
-            },
-          },
-          where: categoriesList.length
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
-        });
+    // if (productLists.length) {
+    //   for (let productItem of productLists) {
+    //     const currentCategory = await this.categoryRepo.findOne({
+    //       select: '*',
+    //       join: {
+    //         [JoinTable.innerJoin]: {
+    //           [Table.PRODUCTS_CATEGORIES]: {
+    //             fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    //             rootJoin: `${Table.CATEGORIES}.category_id`,
+    //           },
+    //           [Table.CATEGORY_DESCRIPTIONS]: {
+    //             fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+    //             rootJoin: `${Table.CATEGORIES}.category_id`,
+    //           },
+    //         },
+    //       },
+    //       where: {
+    //         [`${Table.PRODUCTS_CATEGORIES}.product_id`]: productItem.product_id,
+    //       },
+    //     });
 
-        if (currentCategory) {
-          productItem['currentCategory'] = currentCategory;
-        }
-      }
-    }
+    //     if (currentCategory) {
+    //       productItem['currentCategory'] = currentCategory;
+    //     }
+    //   }
+    // }
 
     let count = await this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: {
-        [JoinTable.leftJoin]: productJoiner,
+        [JoinTable.innerJoin]: productJoiner,
       },
       where: categoriesList.length
         ? productsListCategorySearchFilter(
@@ -2748,11 +2747,12 @@ export class ProductService {
   }
 
   async testCreate() {
-    const testSample = `this is the sample <p><a href="https://app.slack.com/client/TN4T8GXS6/C01TX2SCFL0">link image</a></p>, you are 'sa  new await process 13" 566' <p>D&ugrave;ng thử&nbsp;<strong>7 ng&agrave;y</strong>&nbsp;miễn ph&iacute;. 1 Đổi 1 trong v&ograve;ng<strong>&nbsp;33 ng&agrave;y</strong>. Bảo h&agrave;nh pin&nbsp;<strong>06 th&aacute;ng</strong>&nbsp;1 đổi 1 Miễn Ph&iacute;.&nbsp;Bảo h&agrave;nh mặc định 06 th&aacute;ng.</p>  <p><strong>iPhone 13&nbsp;128GB Ch&iacute;nh h&atilde;ng (VN/A)</strong>&nbsp;b&aacute;n tại Di Động Việt - Đại l&yacute; uỷ quyền ch&iacute;nh thức của Apple tại Việt Nam, iPhone 13 mini l&agrave; phi&ecirc;n bản quốc tế 2 sim (Nano + Esim) ch&iacute;nh h&atilde;ng VN/A. M&aacute;y chưa Active + nguy&ecirc;n seal hộp, mới 100% (Fullbox)</p>
-    <p>iPhone 13&nbsp;128GB Ch&iacute;nh h&atilde;ng (VN/A) l&agrave; phi&ecirc;n bản được ph&acirc;n phối ch&iacute;nh thức bởi Apple Việt Nam, được bảo h&agrave;nh<strong>&nbsp;12 th&aacute;ng</strong>&nbsp;tại Trung t&acirc;m Uỷ quyền cao cấp nhất của Apple tại Việt Nam v&agrave; tr&ecirc;n to&agrave;n cầu miễn ph&iacute;. Đồng thời hưởng nhiều ưu đ&atilde;i, khuyến m&atilde;i hấp dẫn tại Di Động Việt.</p>`;
-    const res = await this.productDescriptionsRepo.findOne({
-      product_id: 890328421,
-    });
-    console.log(res);
+    let products = await this.productRepo.find();
+    for (let productItem of products) {
+      await this.productRepo.update(
+        { product_id: productItem.product_id },
+        { catalog_category_id: 3 },
+      );
+    }
   }
 }

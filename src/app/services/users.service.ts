@@ -11,6 +11,7 @@ import { MailService } from './mail.service';
 import { UserRepository } from '../repositories/user.repository';
 import { Table } from '../../database/enums/index';
 import {
+  convertNullDatetimeData,
   convertToMySQLDateTime,
   preprocessUserResult,
 } from '../../utils/helper';
@@ -118,29 +119,53 @@ export class UsersService {
     user_id: number,
     data: UpdateUserProfileDto,
   ): Promise<void> {
-    let user = await this.userProfileRepository.findOne({ user_id });
+    let user = await this.userRepository.findOne({ user_id });
+
     if (!user) {
       throw new HttpException('Không tìm thấy thông tin người dùng', 404);
     }
-    const userProfileData = this.userProfileRepository.setData(data);
-    if (!Object.entries(userProfileData).length) {
-      return;
+
+    if (data.email && user['email']) {
+      throw new HttpException('Tài khoản đã có email, không thể thay đổi', 401);
     }
-    await this.userProfileRepository.update({ user_id }, userProfileData);
+
+    const userData = {
+      ...this.userRepository.setData(data),
+      updated_at: convertToMySQLDateTime(),
+    };
+    await this.userRepository.update({ user_id }, userData);
+
+    const userProfile = await this.userProfileRepository.findOne({ user_id });
+    if (userProfile) {
+      const userProfileData = this.userProfileRepository.setData(data);
+      if (!Object.entries(userProfileData).length) {
+        return;
+      }
+      await await this.userProfileRepository.update(
+        { user_id },
+        userProfileData,
+      );
+    } else {
+      const newUserProfileData = {
+        ...new UserProfileEntity(),
+        ...this.userProfileRepository.setData(data),
+        user_id,
+      };
+      await this.userProfileRepository.createSync(newUserProfileData);
+    }
 
     user = await this.userRepository.findOne({
       select: '*',
       join: userJoiner,
       where: { [`${Table.USERS}.user_id`]: user_id },
     });
-    console.log(user);
 
-    const customerDataToAppcore = itgCustomerToAppcore(user);
+    const userDataToAppcore = itgCustomerToAppcore(user);
 
     await axios({
       url: `${CREATE_CUSTOMER_API}/${user.user_appcore_id}`,
       method: 'PUT',
-      data: customerDataToAppcore,
+      data: userDataToAppcore,
     });
   }
 

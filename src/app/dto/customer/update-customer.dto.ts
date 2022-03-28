@@ -1,4 +1,4 @@
-import { IsOptional, MaxLength } from 'class-validator';
+import { IsDateString, IsOptional, MaxLength } from 'class-validator';
 
 export class UpdateCustomerDTO {
   @IsOptional()
@@ -27,6 +27,7 @@ export class UpdateCustomerDTO {
   gender: string;
 
   @IsOptional()
+  @IsDateString()
   birthday: string;
 
   @IsOptional()

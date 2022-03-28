@@ -61,7 +61,7 @@ export class CustomerController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.update(user_id, body);
 
-    return this.responseSuccess(res, result, `action update customer`);
+    return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 
   @Get('/:user_id/orders')

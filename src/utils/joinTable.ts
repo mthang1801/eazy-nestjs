@@ -162,6 +162,10 @@ export const productJoiner = {
     fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
+  [Table.CATEGORIES]: {
+    fieldJoin: `${Table.CATEGORIES}.category_id`,
+    rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+  },
 };
 
 export const userGroupJoiner = {

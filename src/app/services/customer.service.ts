@@ -252,7 +252,9 @@ export class CustomerService {
     }
 
     let result = { ...user };
-    data['birthday'] = convertNullDatetimeData(data['birthday']);
+    if (data['birthday']) {
+      data['birthday'] = convertNullDatetimeData(data['birthday']);
+    }
 
     const userData = this.userRepo.setData(data);
 

@@ -296,7 +296,7 @@ export const itgCustomerToAppcore = (data) => {
   let cData = {};
   for (let [app, core] of dataMapping) {
     if (app === 'fullName') {
-      cData[core] = data['firstname'] + ' ' + data['lastname'];
+      cData[core] = data['b_firstname'] + ' ' + data['b_lastname'];
       continue;
     }
     if (app === 'status') {
