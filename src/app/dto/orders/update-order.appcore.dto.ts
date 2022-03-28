@@ -230,4 +230,7 @@ class ProductOrder {
 
   @IsOptional()
   discount: number = 0;
+
+  @IsOptional()
+  discount_type: number = 1;
 }

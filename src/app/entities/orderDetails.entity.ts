@@ -12,4 +12,5 @@ export class OrderDetailsEntity {
   extra: string = '';
   note: string = '';
   status: string = 'A';
+  discount_type: number = 1;
 }

@@ -447,7 +447,16 @@ export class ProductService {
   }
 
   async getList(params: any): Promise<any> {
-    let { page, limit, search, status, category_id } = params;
+    let {
+      page,
+      limit,
+      search,
+      status,
+      category_id,
+      product_status,
+      product_type,
+      productType,
+    } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
@@ -455,6 +464,28 @@ export class ProductService {
     let filterCondition = {};
     if (status) {
       filterCondition[`${Table.PRODUCTS}.status`] = status;
+    }
+    if (product_status) {
+      filterCondition[`${Table}.product_status`] = product_status;
+    }
+    if (product_type) {
+      filterCondition[`${Table}.product_type`] = product_type;
+    }
+    if (productType) {
+      if (productType == 1) {
+        filterCondition[`${Table}.product_type`] = LessThan(3);
+        filterCondition[`${Table}.parent_product_id`] = 0;
+      }
+      if (productType == 2) {
+        filterCondition[`${Table}.product_type`] = LessThan(3);
+        filterCondition[`${Table}.parent_product_id`] = MoreThan(0);
+      }
+      if (productType == 3) {
+        filterCondition[`${Table}.product_type`] = 3;
+      }
+      if (productType == 4) {
+        filterCondition[`${Table}.product_type`] = MoreThan(3);
+      }
     }
 
     let categoriesList = [];
@@ -499,7 +530,13 @@ export class ProductService {
               },
             },
           },
-          where: { product_id: productItem.product_id },
+          where: categoriesList.length
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
         });
 
         if (currentCategory) {
@@ -1235,6 +1272,7 @@ export class ProductService {
           const productComboItemDescData = {
             ...new ProductDescriptionsEntity(),
             ...this.productDescriptionsRepo.setData(productItem),
+            product_core_name: productItem.product || '',
             product_id: productComboItem.product_id,
           };
           await this.productDescriptionsRepo.createSync(

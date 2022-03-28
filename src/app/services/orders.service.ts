@@ -114,26 +114,17 @@ export class OrdersService {
       }
     }
 
-    let isSentCustomer = false;
-    if (
-      data.s_city &&
-      data.s_district &&
-      data.s_ward &&
-      data.s_ward &&
-      data.s_address
-    ) {
-      isSentCustomer = true;
-    }
-
-    await this.createOrder(user, data, isSentCustomer);
+    await this.createOrder(user, data);
   }
 
-  async createOrder(user, data, isSentCustomer = false) {
+  async createOrder(user, data) {
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
     data['s_district'] = data['s_district'] || data['b_district'];
     data['s_phone'] = data['s_phone'] || data['b_phone'];
     data['s_address'] = data['s_address'] || data['b_address'];
+    data['s_firstname'] = data['s_firstname'] || data['b_firstname'];
+    data['s_lastname'] = data['s_lastname'] || data['b_lastname'];
     data['store_id'] = data['store_id'] || 67107;
     data['utm_source'] = data['utm_source'] || 10;
 
@@ -157,6 +148,13 @@ export class OrdersService {
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
+      if (
+        productInfo?.parent_product_id == 0 ||
+        !productInfo?.parent_product_id
+      ) {
+        throw new HttpException('Không thể dùng SP cha', 401);
+      }
+
       if (!productInfo) {
         throw new HttpException(
           `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
@@ -165,10 +163,16 @@ export class OrdersService {
       }
 
       orderData['total'] +=
-        ((productInfo['price'] * (100 - productInfo['percentage_discount'])) /
-          100) *
-        orderItem.amount;
+        (productInfo['price'] *
+          orderItem.amount *
+          (100 - productInfo['percentage_discount'])) /
+        100;
     }
+
+    orderData['total'] =
+      orderData['discount_type'] == 1
+        ? orderData['total'] - orderData['discount']
+        : (orderData['total'] * (100 - orderData['discount'])) / 100;
 
     let result = await this.orderRepo.create(orderData);
     // create order histories
@@ -210,10 +214,6 @@ export class OrdersService {
               product_id: newOrderDetail.product_appcore_id,
             },
           ];
-    }
-
-    if (isSentCustomer) {
-      result['is_sent_customer_address'] = 1;
     }
 
     //============ Push data to Appcore ==================
@@ -290,7 +290,7 @@ export class OrdersService {
 
     const sendData = { ...data, order_items: cartItems };
 
-    await this.createOrder(user, sendData, true);
+    await this.createOrder(user, sendData);
 
     const userProfile = await this.userProfileRepo.findOne({
       user_id: user.user_id,
@@ -560,7 +560,12 @@ export class OrdersService {
           throw new HttpException('Mã chi tiết đơn hàng đã tồn tại', 409);
         }
         orderData['total'] +=
-          orderItem['price'] * orderItem['amount'] - orderItem['discount'];
+          orderData['discount_type'] == 1
+            ? orderItem['price'] * orderItem['amount'] - orderItem['discount']
+            : (orderData['price'] *
+                orderItem['amount'] *
+                (100 - orderItem['discount'])) /
+              100;
       }
     }
 
@@ -569,13 +574,6 @@ export class OrdersService {
     });
     if (user) {
       orderData['user_id'] = user.user_id;
-    }
-
-    orderData['total'] = 0;
-    if (convertedData['order_items'] && convertedData['order_items'].length) {
-      for (let orderItem of convertedData?.order_items) {
-        orderData['total'] += orderItem.price * orderItem.amount;
-      }
     }
 
     let result = await this.orderRepo.create(orderData);
@@ -692,6 +690,7 @@ export class OrdersService {
         const orderItemData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData(orderItem),
+
           order_id: order.order_id,
         };
         await this.orderDetailRepo.create(orderItemData);
@@ -703,7 +702,11 @@ export class OrdersService {
       });
 
       const total = updatedOrderItems.reduce(
-        (acc, ele) => acc + ele.price * ele.amount - ele.discount,
+        (acc, ele) =>
+          ele['discount_type'] == 1
+            ? acc + ele['price'] * ele['amount'] - ele['discount']
+            : acc +
+              (ele['price'] * ele['amount'] * (100 - ele['discount'])) / 100,
         0,
       );
 
