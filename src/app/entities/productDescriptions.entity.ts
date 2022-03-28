@@ -19,4 +19,5 @@ export class ProductDescriptionsEntity {
   promotion_note: string = '';
   promotion_info: string = '';
   online_gifts: string = '';
+  meta_image: string = '';
 }

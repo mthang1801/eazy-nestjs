@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Res,
+  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -15,7 +16,7 @@ import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
 import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { DeleteProductImageDto } from '../../dto/product/delete-productImage.dto';
 import { UpdateProductDto } from '../../dto/product/update-product.dto';
@@ -131,6 +132,38 @@ export class ProductsController extends BaseController {
   ) {
     const result = await this.service.uploadImages(files, sku);
     return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
+  }
+
+  @Post('upload-meta-image/:product_id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadMetaImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+    @Param('product_id') product_id: string,
+  ) {
+    await this.service.uploadMetaImage(file, product_id);
+    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+  }
+
+  @Delete('meta-image/:product_id')
+  async deleteMetaImage(
+    @Res() res: Response,
+    @Param('product_id') product_id: string,
+  ) {
+    await this.service.deleteMetaImage(product_id);
+    return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
   @Put('/:identifier/delete-images')

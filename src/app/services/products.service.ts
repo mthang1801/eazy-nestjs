@@ -127,6 +127,7 @@ import { DatabaseService } from '../../database/database.service';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
 import { processGetTextDataFromMysql } from '../../utils/helper';
+import { join } from 'path';
 
 @Injectable()
 export class ProductService {
@@ -1726,6 +1727,62 @@ export class ProductService {
         error.response.status,
       );
     }
+  }
+
+  async uploadMetaImage(file, product_id) {
+    const product = await this.productRepo.findById(product_id);
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+    const productDesc = await this.productDescriptionsRepo.findOne({
+      product_id,
+    });
+    if (!productDesc) {
+      const newProductDescData = {
+        ...new ProductDescriptionsEntity(),
+        product_id,
+      };
+      await this.productDescriptionsRepo.createSync(newProductDescData);
+    }
+
+    try {
+      let data = new FormData();
+      data.append('files', fs.createReadStream(file.path));
+      let config: any = {
+        method: 'post',
+        url: UPLOAD_IMAGE_API,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...data.getHeaders(),
+        },
+        data,
+      };
+      const response = await axios(config);
+      const imageUrl = response.data.data;
+      if (imageUrl && imageUrl.length) {
+        await this.productDescriptionsRepo.update(
+          { product_id },
+          { meta_image: imageUrl[0] },
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra : ${
+          error?.response?.data?.message ||
+          error?.response?.data ||
+          error.message
+        }`,
+        error.response.status,
+      );
+    }
+  }
+
+  async deleteMetaImage(product_id) {
+    await this.productDescriptionsRepo.update(
+      { product_id },
+      { meta_image: '(NULL)' },
+    );
   }
 
   async deleteProductImage(
