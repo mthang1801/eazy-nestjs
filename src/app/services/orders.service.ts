@@ -589,6 +589,7 @@ export class OrdersService {
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+          product_appcore_id: orderItem['product_id'],
         };
 
         const newOrderDetail = await this.orderDetailRepo.create(
@@ -692,7 +693,7 @@ export class OrdersService {
         const orderItemData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData(orderItem),
-
+          product_appcore_id: orderItem['product_id'],
           order_id: order.order_id,
         };
         await this.orderDetailRepo.create(orderItemData);

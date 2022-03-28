@@ -336,7 +336,7 @@ export class CustomerService {
   async updateCustomerToAppcore(customer) {
     try {
       const customerDataToAppcore = itgCustomerToAppcore(customer);
-
+      console.log(customerDataToAppcore);
       await axios({
         url: `${CREATE_CUSTOMER_API}/${customer.user_appcore_id}`,
         method: 'PUT',

@@ -291,6 +291,7 @@ export const itgCustomerToAppcore = (data) => {
     ['b_district', 'districtId'],
     ['b_ward', 'wardId'],
     ['b_address', 'address'],
+    ['note', 'note'],
   ]);
 
   let cData = {};
