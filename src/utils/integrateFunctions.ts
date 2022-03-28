@@ -294,6 +294,7 @@ export const itgCustomerToAppcore = (data) => {
   ]);
 
   let cData = {};
+
   for (let [app, core] of dataMapping) {
     if (app === 'fullName') {
       cData[core] = data['b_firstname'] + ' ' + data['b_lastname'];
@@ -307,16 +308,18 @@ export const itgCustomerToAppcore = (data) => {
       cData[core] = +data[app];
       continue;
     }
-    if (app === 'email' && !data[app]) {
-      delete data[app];
+    if (app === 'email' && data[app]) {
+      console.log(data[app]);
+      cData[core] = data[app];
       continue;
     }
     if (app === 'birthday' && data[app]) {
       cData[core] = moment(data[app]).format('YYYY-MM-DD');
       continue;
     }
-    cData[core] = data[app] ?? null;
+    cData[core] = data[app];
   }
+
   return cData;
 };
 

@@ -315,13 +315,14 @@ export class CustomerService {
   async updateCustomerToAppcore(customer) {
     try {
       const customerDataToAppcore = itgCustomerToAppcore(customer);
-      console.log(customerDataToAppcore);
+
       await axios({
         url: `${CREATE_CUSTOMER_API}/${customer.user_appcore_id}`,
         method: 'PUT',
         data: customerDataToAppcore,
       });
     } catch (error) {
+      console.log(error);
       throw new HttpException('Cập nhật tới Appcore không thành công', 400);
     }
   }
