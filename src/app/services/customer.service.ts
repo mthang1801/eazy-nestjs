@@ -193,7 +193,10 @@ export class CustomerService {
     let customersList = await this.userRepo.find({
       select: ['*', `${Table.USERS}.*`],
       join: userJoiner,
-      orderBy: [{ field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC }],
+      orderBy: [
+        { field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC },
+      ],
       where: customersListSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -256,15 +259,13 @@ export class CustomerService {
       data['birthday'] = convertNullDatetimeData(data['birthday']);
     }
 
-    const userData = this.userRepo.setData(data);
+    const userData = {
+      ...this.userRepo.setData(data),
+      updated_at: convertToMySQLDateTime(),
+    };
 
-    if (Object.entries(userData).length) {
-      const updatedUser = await this.userRepo.update(
-        { user_id },
-        { ...userData, updated_at: convertToMySQLDateTime() },
-      );
-      result = { ...result, ...updatedUser };
-    }
+    const updatedUser = await this.userRepo.update({ user_id }, userData);
+    result = { ...result, ...updatedUser };
 
     const userProfileData = this.userProfileRepo.setData(data);
     if (Object.entries(userProfileData).length) {
