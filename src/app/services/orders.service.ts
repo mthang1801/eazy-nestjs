@@ -216,6 +216,8 @@ export class OrdersService {
           ];
     }
 
+    console.log(convertDataToIntegrate(result));
+
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
       method: 'POST',

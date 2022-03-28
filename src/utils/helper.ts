@@ -152,11 +152,11 @@ export const preprocessAddTextDataToMysql = (data: any) => {
   return data;
 };
 
-export const processGetTextDataFromMysql = (data) =>
-  data && typeof data === 'string'
-    ? data
-        .replace(new RegExp(replaceQuotation), quotation)
-        .replace(new RegExp(replaceApostrophe), apostrophe)
-    : data && !isNaN(+data * 1)
-    ? +data
-    : '';
+export const processGetTextDataFromMysql = (data) => {
+  if (data && typeof data == 'string') {
+    return data
+      .replace(new RegExp(replaceQuotation, 'g'), quotation)
+      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe);
+  }
+  return data;
+};

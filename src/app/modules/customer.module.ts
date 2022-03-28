@@ -1,4 +1,4 @@
-import { Module, Global } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { UsersModule } from './users.module';
 import { CustomerController as CustomerControllerBE } from '../controllers/be/customer.controller';
 import { CustomerService } from '../services/customer.service';
@@ -15,6 +15,6 @@ import { CustomerControllers } from '../controllers/sync/customers.controller';
   ],
   providers: [CustomerService],
   exports: [CustomerService],
-  imports: [UsersModule, MailModule, OrdersModule],
+  imports: [MailModule, OrdersModule, UsersModule],
 })
 export class CustomerModule {}

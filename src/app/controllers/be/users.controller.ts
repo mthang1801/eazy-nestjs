@@ -44,16 +44,6 @@ export class UsersController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put('/profile/:phone')
-  async updateProfile(
-    @Param('phone') phone: string,
-    @Body() data: UpdateUserProfileDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    await this.service.updateProfile(phone, data);
-    return this.responseSuccess(res, '', 'Cập nhật thành công.');
-  }
-
   @Put(':id')
   @UseGuards(AuthGuard)
   async update(

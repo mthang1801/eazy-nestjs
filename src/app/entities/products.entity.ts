@@ -58,6 +58,8 @@ export class ProductsEntity {
   color: string = '';
   size: string = '';
   promotion_accessory_id: number = 0;
+  status_type: string = '1';
+  catalog_category_id: number = 3;
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();

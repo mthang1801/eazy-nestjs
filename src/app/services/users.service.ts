@@ -32,6 +32,10 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { LimitOnUpdateNotSupportedError } from 'typeorm';
+import { userJoiner } from 'src/utils/joinTable';
+import { itgCustomerToAppcore } from 'src/utils/integrateFunctions';
+import { CREATE_CUSTOMER_API } from 'src/database/constant/api.appcore';
+import axios from 'axios';
 
 @Injectable()
 export class UsersService {
@@ -111,21 +115,33 @@ export class UsersService {
   }
 
   async updateProfile(
-    phone: string,
+    user_id: number,
     data: UpdateUserProfileDto,
   ): Promise<void> {
-    const user = await this.userRepository.findOne({ phone });
+    let user = await this.userProfileRepository.findOne({ user_id });
     if (!user) {
-      throw new HttpException('Không tìm thấy người dùng', 404);
+      throw new HttpException('Không tìm thấy thông tin người dùng', 404);
     }
-
     const userProfileData = this.userProfileRepository.setData(data);
-    if (Object.entries(userProfileData).length) {
-      await this.userProfileRepository.update(
-        { user_id: user.user_id },
-        userProfileData,
-      );
+    if (!Object.entries(userProfileData).length) {
+      return;
     }
+    await this.userProfileRepository.update({ user_id }, userProfileData);
+
+    user = await this.userRepository.findOne({
+      select: '*',
+      join: userJoiner,
+      where: { [`${Table.USERS}.user_id`]: user_id },
+    });
+    console.log(user);
+
+    const customerDataToAppcore = itgCustomerToAppcore(user);
+
+    await axios({
+      url: `${CREATE_CUSTOMER_API}/${user.user_appcore_id}`,
+      method: 'PUT',
+      data: customerDataToAppcore,
+    });
   }
 
   async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {

@@ -171,6 +171,9 @@ export class CreateProductDto {
 
   @IsOptional()
   color: string = '';
+
+  @IsOptional()
+  status_type: string;
 }
 
 class ProductFeatureDto {

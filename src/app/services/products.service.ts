@@ -378,6 +378,7 @@ export class ProductService {
         '*',
         `${Table.PRODUCT_DESCRIPTION}.*`,
         `${Table.PRODUCTS}.status`,
+        `${Table.PRODUCTS}.parent_product_id`,
       ],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
@@ -401,6 +402,8 @@ export class ProductService {
         '*',
         `${Table.PRODUCT_DESCRIPTION}.*`,
         `${Table.PRODUCTS}.status`,
+        `${Table.PRODUCTS}.slug as slug`,
+        `${Table.CATEGORIES}.slug as categorySlug`,
       ],
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
@@ -456,6 +459,8 @@ export class ProductService {
       product_status,
       product_type,
       productType,
+      status_type,
+      catalog_category_id,
     } = params;
     page = +page || 1;
     limit = +limit || 20;
@@ -466,26 +471,35 @@ export class ProductService {
       filterCondition[`${Table.PRODUCTS}.status`] = status;
     }
     if (product_status) {
-      filterCondition[`${Table}.product_status`] = product_status;
+      filterCondition[`${Table.PRODUCTS}.product_status`] = product_status;
     }
     if (product_type) {
-      filterCondition[`${Table}.product_type`] = product_type;
+      filterCondition[`${Table.PRODUCTS}.product_type`] = product_type;
     }
     if (productType) {
       if (productType == 1) {
-        filterCondition[`${Table}.product_type`] = LessThan(3);
-        filterCondition[`${Table}.parent_product_id`] = 0;
+        filterCondition[`${Table.PRODUCTS}.product_type`] = LessThan(3);
+        filterCondition[`${Table.PRODUCTS}.parent_product_id`] = 0;
       }
       if (productType == 2) {
-        filterCondition[`${Table}.product_type`] = LessThan(3);
-        filterCondition[`${Table}.parent_product_id`] = MoreThan(0);
+        filterCondition[`${Table.PRODUCTS}.product_type`] = LessThan(3);
+        filterCondition[`${Table.PRODUCTS}.parent_product_id`] = MoreThan(0);
       }
       if (productType == 3) {
-        filterCondition[`${Table}.product_type`] = 3;
+        filterCondition[`${Table.PRODUCTS}.product_type`] = 3;
       }
       if (productType == 4) {
-        filterCondition[`${Table}.product_type`] = MoreThan(3);
+        filterCondition[`${Table.PRODUCTS}.product_type`] = MoreThan(3);
       }
+    }
+
+    if (catalog_category_id) {
+      filterCondition[`${Table.PRODUCTS}.catalog_category_id`] =
+        catalog_category_id;
+    }
+
+    if (status_type) {
+      filterCondition[`${Table.PRODUCTS}.status_type`] = status_type;
     }
 
     let categoriesList = [];
@@ -562,7 +576,8 @@ export class ProductService {
     // determine product type and  get Image
     for (let productItem of productLists) {
       if (
-        productItem.parent_product_id == 0 &&
+        (productItem.parent_product_id == 0 ||
+          !productItem['parent_product_id']) &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 1; //Sản phẩm cha
@@ -1992,21 +2007,9 @@ export class ProductService {
     }
 
     //determine type of product
-    if (
-      product.parent_product_id == 0 &&
-      (product.product_type == 1 || product.product_type == 2)
-    ) {
-      product['productType'] = 1; //Sản phẩm cha
-    } else if (
-      product.parent_product_id != 0 &&
-      (product.product_type == 1 || product.product_type == 2)
-    ) {
-      product['productType'] = 2; // Sản phẩm con
-    } else if (product.product_type == 3) {
-      product['productType'] = 3; //SP combo
-    } else {
-      product['productType'] = 4; // SP độc lập
-    }
+
+    product['productType'] = this.determineProductType(product);
+    console.log(product['productType']);
 
     const categoriesList = await this.parentCategories(currentCategory);
     const parentCategories = categoriesList.slice(1);
@@ -2021,6 +2024,25 @@ export class ProductService {
       parentCategories,
       product,
     };
+  }
+
+  determineProductType(product) {
+    console.log(product.product_type, product.parent_product_id);
+    if (
+      product.parent_product_id == 0 &&
+      (product.product_type == 1 || product.product_type == 2)
+    ) {
+      return 1; //Sản phẩm cha
+    } else if (
+      product.parent_product_id != 0 &&
+      (product.product_type == 1 || product.product_type == 2)
+    ) {
+      return 2; // Sản phẩm con
+    } else if (product.product_type == 3) {
+      return 3; //SP combo
+    } else {
+      return 4; // SP độc lập
+    }
   }
 
   async moveParentChildenProductsIntoAnotherGroup(

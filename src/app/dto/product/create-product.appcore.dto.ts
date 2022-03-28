@@ -101,6 +101,9 @@ export class CreateProductAppcoreDto {
   @ValidateNested()
   @Type(() => ProductFeature)
   product_features: ProductFeature[];
+
+  @IsOptional()
+  status_type: string;
 }
 
 class ProductFeature {

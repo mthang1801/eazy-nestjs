@@ -20,10 +20,10 @@ export class UpdateUserProfileDto {
   b_city: string;
 
   @IsOptional()
-  b_county: string;
+  b_district: string;
 
   @IsOptional()
-  b_state: string;
+  b_ward: string;
 
   @IsOptional()
   b_country: string;
@@ -50,10 +50,10 @@ export class UpdateUserProfileDto {
   s_city: string;
 
   @IsOptional()
-  s_county: string;
+  s_district: string;
 
   @IsOptional()
-  s_state: string;
+  s_ward: string;
 
   @IsOptional()
   s_country: string;

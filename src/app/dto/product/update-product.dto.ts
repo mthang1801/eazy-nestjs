@@ -121,6 +121,12 @@ export class UpdateProductDto {
 
   @IsOptional()
   open_new_tab: string;
+
+  @IsOptional()
+  status_type: string;
+
+  @IsOptional()
+  catalog_category_id: number;
 }
 
 class ProductFeatureDto {

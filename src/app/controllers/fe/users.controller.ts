@@ -40,13 +40,13 @@ export class UsersController extends BaseController {
     return this.responseSuccess(res, { userData: user });
   }
 
-  @Put('/profile/:phone')
+  @Put(':user_id/profile')
   async updateProfile(
-    @Param('phone') phone: string,
+    @Param('user_id') user_id: number,
     @Body() data: UpdateUserProfileDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.updateProfile(phone, data);
+    const result = await this.service.updateProfile(user_id, data);
     return this.responseSuccess(res, result, 'Cập nhật thành công.');
   }
 }

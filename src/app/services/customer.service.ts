@@ -148,7 +148,7 @@ export class CustomerService {
       });
 
       const data = response.data;
-      console.log(data);
+
       const user_appcore_id = data.data;
       const updatedUser = await this.userRepo.update(
         { user_id: user.user_id },
@@ -156,12 +156,6 @@ export class CustomerService {
       );
     } catch (error) {
       console.log(error);
-      // if (deleteWhenFalse) {
-      //   await this.userRepo.delete({ user_id: user.user_id });
-      //   await this.userProfileRepo.delete({ user_id: user.user_id });
-      //   await this.userDataRepo.delete({ user_id: user.user_id });
-      //   await this.userLoyalRepo.delete({ user_id: user.user_id });
-      // }
 
       throw new HttpException(
         error?.response?.data?.message || error.response,
