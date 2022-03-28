@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional, MaxLength } from 'class-validator';
+import { IsDateString, IsOptional, MaxLength, IsEmail } from 'class-validator';
 
 export class UpdateCustomerDTO {
   @IsOptional()
@@ -9,6 +9,7 @@ export class UpdateCustomerDTO {
   user_type: string;
 
   @IsOptional()
+  @IsEmail()
   email: string;
 
   @IsOptional()

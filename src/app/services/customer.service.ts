@@ -241,6 +241,7 @@ export class CustomerService {
 
   async update(user_id: string, data: UpdateCustomerDTO) {
     const user = await this.userRepo.findOne({ user_id });
+
     if (!user) {
       throw new HttpException('Không tìm thấy người dùng.', 404);
     }
