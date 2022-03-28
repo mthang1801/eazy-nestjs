@@ -1234,7 +1234,7 @@ export class ProductService {
           // description
           const productComboItemDescData = {
             ...new ProductDescriptionsEntity(),
-            product: `${result.product ? result.product : ''} combo ${i}`,
+            ...this.productDescriptionsRepo.setData(productItem),
             product_id: productComboItem.product_id,
           };
           await this.productDescriptionsRepo.createSync(
