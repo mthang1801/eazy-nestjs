@@ -26,12 +26,10 @@ export class UpdateStoreDto {
   latitude: number;
 
   @IsOptional()
-  @IsDateString()
-  open_at: Date;
+  open_at: string;
 
   @IsOptional()
-  @IsDateString()
-  close_at: Date;
+  close_at: string;
 
   @IsOptional()
   status: string = 'A';
