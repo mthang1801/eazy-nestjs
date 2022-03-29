@@ -447,34 +447,35 @@ export class ProductFeatureService {
       const productFeatureDescriptionData =
         this.productFeatureVariantDescriptionRepo.setData(variantItem);
 
-      let checkVariantNameExist = await this.productFeatureVariantsRepo.findOne(
-        {
-          select: ['*'],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
-                rootJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+      if (type === 'create') {
+        let checkVariantNameExist =
+          await this.productFeatureVariantsRepo.findOne({
+            select: ['*'],
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+                  fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+                  rootJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+                },
               },
             },
-          },
-          where: {
-            [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]: id,
-            [`${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant`]:
-              variantItem.variant,
-          },
-        },
-      );
+            where: {
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]: id,
+              [`${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant`]:
+                variantItem.variant,
+            },
+          });
 
-      if (checkVariantNameExist) {
-        logErrorsCreateUpdate =
-          logErrorsCreateUpdate === ''
-            ? `Lỗi trùng lặp, không thể cập nhật hoặc thêm mới variant có tên: ${checkVariantNameExist.variant}`
-            : logErrorsCreateUpdate + `, ${checkVariantNameExist.variant}`;
+        if (checkVariantNameExist) {
+          logErrorsCreateUpdate =
+            logErrorsCreateUpdate === ''
+              ? `Lỗi trùng lặp, không thể cập nhật hoặc thêm mới variant có tên: ${checkVariantNameExist.variant}`
+              : logErrorsCreateUpdate + `, ${checkVariantNameExist.variant}`;
 
-        variantsList = [...variantsList, { ...checkVariantNameExist }];
+          variantsList = [...variantsList, { ...checkVariantNameExist }];
 
-        return;
+          return;
+        }
       }
 
       if (type === 'update') {

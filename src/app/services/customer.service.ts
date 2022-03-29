@@ -746,8 +746,9 @@ export class CustomerService {
   }
 
   async importCustomers() {
-    let totalPage = 10;
+    let totalPage = 1000;
     for (let page = 1; page < totalPage; page++) {
+      console.log(`current page : ${page}`);
       const response = await axios({
         url: IMPORT_CUSTOMERS_API(page, 20),
         headers: {
