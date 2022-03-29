@@ -23,17 +23,17 @@ export class CreateCustomerDto {
   type: string = '1';
 
   @IsOptional()
-  b_city: string;
+  b_city: string = '';
 
   @IsOptional()
-  b_district: string;
+  b_district: string = '';
 
   @IsOptional()
-  b_ward: string;
+  b_ward: string = '';
 
   @IsOptional()
-  b_address: string;
+  b_address: string = '';
 
   @IsOptional()
-  note: string;
+  note: string = '';
 }

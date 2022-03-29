@@ -31,18 +31,21 @@ export class LocatorService {
     let citiesList = search
       ? await this.cityRepo.find({
           select: 'id, city_name',
-          where: { city_name: Like(search) },
+          where: [{ city_name: Like(search) }, { id: search }],
         })
       : await this.cityRepo.find({ select: 'id, city_name' });
 
     return citiesList;
   }
 
-  async getDistrictsList(city_id, search) {
+  async getDistrictsList(city_id, search: string | number) {
     let districtsList = search
       ? await this.districtRepo.find({
           select: 'id, district_name',
-          where: { city_id, district_name: Like(search) },
+          where: [
+            { city_id, district_name: Like(search) },
+            { city_id, id: search },
+          ],
         })
       : await this.districtRepo.find({
           select: 'id, district_name',
@@ -51,11 +54,14 @@ export class LocatorService {
     return districtsList;
   }
 
-  async getWardsList(district_id, search) {
+  async getWardsList(district_id, search: number | string) {
     let wardsList = search
       ? await this.wardRepo.find({
           select: 'id, ward_name',
-          where: { district_id, ward_name: Like(search) },
+          where: [
+            { district_id, ward_name: Like(search) },
+            { district_id, id: search },
+          ],
         })
       : await this.wardRepo.find({
           select: 'id, ward_name',

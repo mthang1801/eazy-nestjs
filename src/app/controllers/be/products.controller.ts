@@ -134,7 +134,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
   }
 
-  @Post('upload-meta-image/:product_id')
+  @Post(':product_id/upload-meta-image')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.diskStorage({

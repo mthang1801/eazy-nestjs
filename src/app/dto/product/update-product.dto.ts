@@ -127,6 +127,9 @@ export class UpdateProductDto {
 
   @IsOptional()
   catalog_category_id: number;
+
+  @IsOptional()
+  redirect_url: string;
 }
 
 class ProductFeatureDto {

@@ -36,8 +36,8 @@ export class CustomerController extends BaseController {
     @Req() req,
     @Body() data: CreateCustomerDto,
   ): Promise<IResponse> {
-    const result = await this.service.create(req.user, data);
-    return this.responseSuccess(res, result);
+    await this.service.create(req.user, data);
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 
   //@UseGuards(AuthGuard)

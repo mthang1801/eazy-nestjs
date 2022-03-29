@@ -25,6 +25,9 @@ import {
   convertToMySQLDateTime,
   convertNullDatetimeData,
 } from '../../utils/helper';
+import { CreateStoreDto } from '../dto/stores/create-store.dto';
+import { LocatorService } from './locator.service';
+import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 @Injectable()
 export class StoreService {
   constructor(
@@ -35,6 +38,7 @@ export class StoreService {
     private wardRepo: WardRepository<WardEntity>,
     private databaseService: DatabaseService,
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
+    private locatorService: LocatorService,
   ) {}
 
   async getAll() {
@@ -116,6 +120,114 @@ export class StoreService {
     );
   }
 
+  async CMScreate(data: CreateStoreDto) {
+    if (data.city_id) {
+      const city = await this.locatorService.getCitiesList(data.city_id);
+      if (city.length) {
+        data['city_name'] = city[0].city_name;
+      }
+    }
+    if (data.city_id && data.district_id) {
+      const district = await this.locatorService.getDistrictsList(
+        data.city_id,
+        data.district_id,
+      );
+      if (district.length) {
+        data['district_name'] = district[0].district_name;
+      }
+    }
+
+    if (data.ward_id && data.city_id && data.district_id) {
+      const ward = await this.locatorService.getWardsList(
+        data.district_id,
+        data.ward_id,
+      );
+
+      if (ward.length) {
+        data['ward_name'] = ward[0].ward_name;
+      }
+    }
+
+    const storeLocationData = {
+      ...new StoreLocationEntity(),
+      ...this.storeLocationRepo.setData(data),
+    };
+
+    const newStoreLocation = await this.storeLocationRepo.create(
+      storeLocationData,
+    );
+
+    const storeLocationDesData = {
+      ...new StoreLocationDescriptionEntity(),
+      ...this.storeLocationDescRepo.setData(data),
+      store_location_id: newStoreLocation.store_location_id,
+    };
+
+    await this.storeLocationDescRepo.createSync(storeLocationDesData);
+  }
+
+  async CMSupdate(store_location_id: number, data: UpdateStoreDto) {
+    const store = await this.storeLocationRepo.findOne({ store_location_id });
+    if (!store) {
+      throw new HttpException('Không tìm thấy cửa hàng.', 404);
+    }
+
+    if (data.city_id) {
+      const city = await this.locatorService.getCitiesList(data.city_id);
+      if (city.length) {
+        data['city_name'] = city[0].city_name;
+      }
+    }
+    if (data.city_id && data.district_id) {
+      const district = await this.locatorService.getDistrictsList(
+        data.city_id,
+        data.district_id,
+      );
+      if (district.length) {
+        data['district_name'] = district[0].district_name;
+      }
+    }
+
+    if (data.ward_id && data.city_id && data.district_id) {
+      const ward = await this.locatorService.getWardsList(
+        data.district_id,
+        data.ward_id,
+      );
+
+      if (ward.length) {
+        data['ward_name'] = ward[0].ward_name;
+      }
+    }
+
+    let storeLocationData = this.storeLocationRepo.setData(data);
+    if (Object.entries(storeLocationData).length) {
+      await this.storeLocationRepo.update(
+        { store_location_id },
+        storeLocationData,
+      );
+    }
+
+    let storeLocationDesc = await this.storeLocationDescRepo.findOne({
+      store_location_id,
+    });
+    if (storeLocationDesc) {
+      let storeLocationDescData = this.storeLocationDescRepo.setData(data);
+      if (Object.entries(storeLocationDescData).length) {
+        await this.storeLocationDescRepo.update(
+          { store_location_id },
+          storeLocationDescData,
+        );
+      }
+    } else {
+      let newStoreLocationData = {
+        ...new StoreLocationDescriptionEntity(),
+        ...this.storeLocationDescRepo.setData(data),
+        store_location_id,
+      };
+      await this.storeLocationDescRepo.createSync(newStoreLocationData);
+    }
+  }
+
   async importStores() {
     // await this.clearAll();
     // const storesAppcore = storesData;
@@ -141,10 +253,15 @@ export class StoreService {
     //   ['areaName', 'arena_name'],
     //   ['areaId', 'area_id'],
     //   ['storeTypeName', 'type_name'],
+    //   ['isActive', 'status'],
     // ]);
     // for (let storeAppcore of storesAppcore) {
     //   let cmsData = {};
     //   for (let [core, cms] of mappingData) {
+    //     if (core === 'isActive') {
+    //       cmsData[cms] = storeAppcore[core] == 1 ? 'A' : 'D';
+    //       continue;
+    //     }
     //     cmsData[cms] = storeAppcore[core];
     //   }
     //   const storeLocationData = {

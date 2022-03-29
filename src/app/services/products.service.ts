@@ -462,6 +462,7 @@ export class ProductService {
       productType,
       status_type,
       catalog_category_id,
+      type,
     } = params;
     page = +page || 1;
     limit = +limit || 20;
@@ -503,6 +504,10 @@ export class ProductService {
       filterCondition[`${Table.PRODUCTS}.status_type`] = status_type;
     }
 
+    if (type) {
+      filterCondition[`${Table.PRODUCTS}.type`] = type;
+    }
+
     let categoriesList = [];
     if (category_id) {
       categoriesList = await this.childrenCategories(category_id);
@@ -531,33 +536,6 @@ export class ProductService {
       skip,
       limit,
     });
-
-    // if (productLists.length) {
-    //   for (let productItem of productLists) {
-    //     const currentCategory = await this.categoryRepo.findOne({
-    //       select: '*',
-    //       join: {
-    //         [JoinTable.innerJoin]: {
-    //           [Table.PRODUCTS_CATEGORIES]: {
-    //             fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-    //             rootJoin: `${Table.CATEGORIES}.category_id`,
-    //           },
-    //           [Table.CATEGORY_DESCRIPTIONS]: {
-    //             fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-    //             rootJoin: `${Table.CATEGORIES}.category_id`,
-    //           },
-    //         },
-    //       },
-    //       where: {
-    //         [`${Table.PRODUCTS_CATEGORIES}.product_id`]: productItem.product_id,
-    //       },
-    //     });
-
-    //     if (currentCategory) {
-    //       productItem['currentCategory'] = currentCategory;
-    //     }
-    //   }
-    // }
 
     let count = await this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
