@@ -27,9 +27,12 @@ export class UpdateStoreDto {
 
   @IsOptional()
   @IsDateString()
-  start_at: Date;
+  open_at: Date;
 
   @IsOptional()
   @IsDateString()
-  end_at: Date;
+  close_at: Date;
+
+  @IsOptional()
+  status: string = 'A';
 }

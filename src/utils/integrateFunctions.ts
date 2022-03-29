@@ -7,6 +7,8 @@ import {
 
 import * as moment from 'moment';
 import { UserRepository } from '../app/repositories/user.repository';
+import { saltHashPassword } from './cipherHelper';
+import { defaultPassword } from '../database/constant/defaultPassword';
 
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
@@ -548,6 +550,17 @@ export const importCustomersFromApocore = (coreData) => {
       continue;
     }
 
+    if (core == 'fullName' && coreData[core]) {
+      cmsData['b_firstname'] = coreData[core];
+      cmsData['s_firstname'] = coreData[core];
+      cmsData['profile_name'] = coreData[core];
+    }
+
+    if (core == 'lastname' && coreData[core]) {
+      cmsData['b_lastname'] = coreData[core];
+      cmsData['s_lastname'] = coreData[core];
+    }
+
     if (core === 'phoneNo' && coreData[core]) {
       cmsData[`b_phone`] = coreData[core];
       cmsData[`s_phone`] = coreData[core];
@@ -569,5 +582,8 @@ export const importCustomersFromApocore = (coreData) => {
     cmsData[cms] = coreData[core];
   }
 
+  const { passwordHash, salt } = saltHashPassword(defaultPassword);
+  cmsData['password'] = passwordHash;
+  cmsData['salt'] = salt;
   return cmsData;
 };

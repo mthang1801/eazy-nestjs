@@ -22,7 +22,7 @@ export class UserEntity {
   url: string = '';
   tax_exempt: string = '';
   lang_code: string = 'vi';
-  birthday: null | string = '';
+  birthday: string = convertToMySQLDateTime();
   purchase_timestamp_from: null | string;
   purchase_timestamp_to: null | string;
   responsible_email: string = '';

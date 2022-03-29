@@ -758,8 +758,8 @@ export class CustomerService {
       const customersList = response.data.data.dataset;
       for (let customer of customersList) {
         let convertedData = importCustomersFromApocore(customer);
-        console.log(convertedData);
-        // await this.createCustomerTemplate(convertedData);
+
+        await this.createCustomerTemplate(convertedData);
       }
     }
   }
