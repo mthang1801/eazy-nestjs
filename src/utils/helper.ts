@@ -144,10 +144,6 @@ const apostrophe = `'`;
 const replaceApostrophe = '_apos';
 
 export const preprocessAddTextDataToMysql = (data: any) => {
-  if (+data === 0 && data !== '') {
-    return 0;
-  }
-
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(quotation, 'g'), replaceQuotation)

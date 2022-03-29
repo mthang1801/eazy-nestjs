@@ -157,7 +157,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
   }
 
-  @Delete('meta-image/:product_id')
+  @Delete(':product_id/meta-image/')
   async deleteMetaImage(
     @Res() res: Response,
     @Param('product_id') product_id: string,
