@@ -206,12 +206,12 @@ export class OrdersService {
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
-      // if (
-      //   productInfo?.parent_product_id == 0 ||
-      //   !productInfo?.parent_product_id
-      // ) {
-      //   throw new HttpException('Không thể dùng SP cha', 401);
-      // }
+      if (
+        productInfo?.parent_product_id == 0 ||
+        !productInfo?.parent_product_id
+      ) {
+        throw new HttpException('Không thể dùng SP cha', 401);
+      }
 
       if (!productInfo) {
         throw new HttpException(
@@ -233,6 +233,7 @@ export class OrdersService {
         : (orderData['total'] * (100 - orderData['discount'])) / 100;
 
     let result = await this.orderRepo.create(orderData);
+
     // create order histories
     const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
     await this.orderHistoryRepo.create(orderHistoryData);
@@ -240,8 +241,8 @@ export class OrdersService {
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: { [JoinTable.innerJoin]: productJoiner },
-        where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
+        join: { [JoinTable.leftJoin]: productJoiner },
+        where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
       });
 
       let orderDetailData = {
@@ -273,6 +274,8 @@ export class OrdersService {
             },
           ];
     }
+
+    console.log(convertDataToIntegrate(result));
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {

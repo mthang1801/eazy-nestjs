@@ -1,10 +1,12 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { forwardRef, Module, Global } from '@nestjs/common';
 import { StickerController } from '../controllers/be/sticker.controller';
 import { ProductStickerRepository } from '../repositories/productSticker.repository';
 
 import { StickerRepository } from '../repositories/sticker.repository';
 import { StickerService } from '../services/sticker.service';
 import { ProductsModule } from './products.module';
+
+@Global()
 @Module({
   imports: [forwardRef(() => ProductsModule)],
   exports: [StickerRepository, StickerService, ProductStickerRepository],

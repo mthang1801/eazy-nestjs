@@ -167,12 +167,12 @@ export class CustomerService {
       const data = response.data;
 
       const user_appcore_id = data.data;
-      const updatedUser = await this.userRepo.update(
+      await this.userRepo.update(
         { user_id: user.user_id },
         { user_appcore_id, updated_at: convertToMySQLDateTime() },
       );
     } catch (error) {
-      console.log(error);
+      console.log('create customer', error);
 
       throw new HttpException(
         error?.response?.data?.message || error.response,

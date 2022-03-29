@@ -128,6 +128,10 @@ import { ProductVariationGroupIndexRepository } from '../repositories/productVar
 import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
 import { processGetTextDataFromMysql } from '../../utils/helper';
 import { join } from 'path';
+import { ProductStickerRepository } from '../repositories/productSticker.repository';
+import { ProductStickerEntity } from '../entities/productSticker.entity';
+import { StickerRepository } from '../repositories/sticker.repository';
+import { StickerEntity } from '../entities/sticker.entity';
 
 @Injectable()
 export class ProductService {
@@ -159,6 +163,8 @@ export class ProductService {
     private storeDescRepo: StoreLocationDescriptionsRepository<StoreLocationDescriptionEntity>,
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
+    private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
+    private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
   ) {}
 
@@ -2054,6 +2060,23 @@ export class ProductService {
 
     const productsStores = await this.getProductsStores(product.product_id);
     product['stores'] = productsStores || [];
+
+    //find product Stickers
+    const productStickers = await this.productStickerRepo.find({
+      product_id: product.product_id,
+    });
+    if (productStickers.length) {
+      for (let productStickerItem of productStickers) {
+        const sticker = await this.stickerRepo.findOne({
+          sticker_id: productStickerItem.sticker_id,
+        });
+        if (sticker) {
+          product['stickers'] = product['stickers']
+            ? [...product['stickers'], { ...productStickerItem, ...sticker }]
+            : [{ ...productStickerItem, ...sticker }];
+        }
+      }
+    }
 
     return {
       currentCategory: showListCategories ? currentCategory : categoriesList[0],

@@ -85,7 +85,6 @@ export class BaseRepositorty<T> {
       'SELECT LAST_INSERT_ID();',
     );
 
-    console.log(fmtParams, res);
     if (res[0][0]['LAST_INSERT_ID()'] === 0) {
       return this.findOne({ where: fmtParams });
     }

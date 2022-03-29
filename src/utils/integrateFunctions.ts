@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import { UserRepository } from '../app/repositories/user.repository';
 import { saltHashPassword } from './cipherHelper';
 import { defaultPassword } from '../database/constant/defaultPassword';
+import { validateEmail } from './helper';
 
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
@@ -312,13 +313,16 @@ export const itgCustomerToAppcore = (data) => {
       cData[core] = +data[app];
       continue;
     }
-    if (app === 'email' && data[app]) {
-      console.log(data[app]);
-      cData[core] = data[app];
+    if (app === 'email') {
+      if (validateEmail(data[app])) {
+        cData[core] = data[app];
+      }
       continue;
     }
-    if (app === 'birthday' && data[app]) {
-      cData[core] = moment(data[app]).format('YYYY-MM-DD');
+    if (app === 'birthday') {
+      if (moment(data[app]).isValid()) {
+        cData[core] = moment(data[app]).format('YYYY-MM-DD');
+      }
       continue;
     }
     cData[core] = data[app];

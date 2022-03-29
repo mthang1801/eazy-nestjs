@@ -29,6 +29,7 @@ import { CreateStoreDto } from '../dto/stores/create-store.dto';
 import { LocatorService } from './locator.service';
 import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 import * as moment from 'moment';
+import { MoreThan } from '../../database/find-options/operators';
 @Injectable()
 export class StoreService {
   constructor(
@@ -57,13 +58,18 @@ export class StoreService {
   }
 
   async getList(params) {
-    let { page, limit, search, status } = params;
+    let { page, limit, search, status, product_count } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
     let filterConditions = {};
     if (status) {
       filterConditions[`${Table.STORE_LOCATIONS}.status`] = status;
+    }
+
+    if (product_count) {
+      filterConditions[`${Table.STORE_LOCATIONS}.product_count`] =
+        MoreThan(product_count);
     }
 
     const storesList = await this.storeLocationRepo.find({

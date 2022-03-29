@@ -334,6 +334,13 @@ export const storeLocationSearchFilter = (
       { [`${Table.STORE_LOCATIONS}.district_name`]: Like(search) },
       { [`${Table.STORE_LOCATION_DESCRIPTIONS}.store_name`]: Like(search) },
       { [`${Table.STORE_LOCATION_DESCRIPTIONS}.short_name`]: Like(search) },
+      {
+        [`${Table.STORE_LOCATION_DESCRIPTIONS}.store_location_id`]:
+          Like(search),
+      },
+      {
+        [`${Table.STORE_LOCATION_DESCRIPTIONS}.pickup_phone`]: Like(search),
+      },
     ];
   }
 
