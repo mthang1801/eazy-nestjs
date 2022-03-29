@@ -15,7 +15,7 @@ import { CityRepository } from '../repositories/city.repository';
 import { CityEntity } from '../entities/cities.entity';
 import { WardRepository } from '../repositories/ward.repository';
 import { WardEntity } from '../entities/wards.entity';
-import { storesLocationJoiner } from 'src/utils/joinTable';
+import { storeLocationJoiner, storesLocationJoiner } from 'src/utils/joinTable';
 import { storeLocationSearchFilter } from 'src/utils/tableConditioner';
 import { DatabaseService } from '../../database/database.service';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
@@ -227,6 +227,16 @@ export class StoreService {
       };
       await this.storeLocationDescRepo.createSync(newStoreLocationData);
     }
+  }
+
+  async getById(store_location_id: number) {
+    return this.storeLocationRepo.findOne({
+      select: '*',
+      join: storeLocationJoiner,
+      where: {
+        [`${Table.STORE_LOCATIONS}.store_location_id`]: store_location_id,
+      },
+    });
   }
 
   async importStores() {

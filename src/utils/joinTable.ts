@@ -423,3 +423,12 @@ export const productStickerJoiner = {
     },
   },
 };
+
+export const storeLocationJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.STORE_LOCATION_DESCRIPTIONS]: {
+      fieldJoin: 'store_location_id',
+      rootJoin: 'store_location_id',
+    },
+  },
+};

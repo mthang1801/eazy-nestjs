@@ -52,4 +52,13 @@ export class StoreController extends BaseController {
     await this.service.CMSupdate(store_location_id, data);
     return this.responseSuccess(res, null, 'Thành công.');
   }
+
+  @Get(':store_location_id')
+  async getById(
+    @Res() res: Response,
+    @Param('store_location_id') store_location_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getById(store_location_id);
+    return this.responseSuccess(res, result);
+  }
 }
