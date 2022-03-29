@@ -117,6 +117,64 @@ export class OrdersService {
     await this.createOrder(user, data);
   }
 
+  async FEcreate(data: CreateOrderFEDto, userAuth) {
+    let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+
+    if (!user['user_appcore_id']) {
+      await this.customerService.createCustomerToAppcore(user);
+      user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+    }
+
+    if (!user) {
+      throw new HttpException(
+        'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
+        400,
+      );
+    }
+
+    const cart = await this.cartRepo.findOne({ user_id: user.user_id });
+    if (!cart) {
+      throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    }
+
+    const cartItems = await this.cartItemRepo.find({
+      select: 'product_id, amount',
+      where: { cart_id: cart.cart_id },
+    });
+
+    if (!cartItems.length) {
+      throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
+    }
+
+    let userProfile = await this.userProfileRepo.findOne({
+      user_id: user.user_id,
+    });
+
+    // await this.createOrder(user, sendData);
+
+    userProfile['s_firstname'] = data.s_firstname || userProfile['s_firstname'];
+    userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
+    userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
+    userProfile['s_city'] = data.s_city || userProfile['s_city'];
+    userProfile['s_district'] = data.s_district || userProfile['s_district'];
+    userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
+    userProfile['s_address'] = data.s_address || userProfile['s_address'];
+
+    userProfile = await this.userProfileRepo.update(
+      { user_id: user.user_id },
+      userProfile,
+    );
+
+    let result = { ...user, ...userProfile };
+
+    const sendData = { ...result, order_items: cartItems };
+
+    await this.createOrder(user, sendData);
+
+    await this.cartRepo.delete({ cart_id: cart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+  }
+
   async createOrder(user, data) {
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
@@ -125,9 +183,19 @@ export class OrdersService {
     data['s_address'] = data['s_address'] || data['b_address'];
     data['s_firstname'] = data['s_firstname'] || data['b_firstname'];
     data['s_lastname'] = data['s_lastname'] || data['b_lastname'];
+    data['b_city'] = data['b_city'] || data['s_city'];
+    data['b_ward'] = data['b_ward'] || data['s_ward'];
+    data['b_district'] = data['b_district'] || data['s_district'];
+    data['b_phone'] = data['b_phone'] || data['s_phone'];
+    data['b_address'] = data['b_address'] || data['s_address'];
+    data['b_firstname'] = data['b_firstname'] || data['s_firstname'];
+    data['b_lastname'] = data['b_lastname'] || data['s_lastname'];
+    data['firstname'] = data['b_firstname'] || data['s_firstname'];
+    data['lastname'] = data['b_lastname'] || data['s_lastname'];
     data['store_id'] = data['store_id'] || 67107;
     data['utm_source'] = data['utm_source'] || 10;
 
+    console.log(data);
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
@@ -216,8 +284,6 @@ export class OrdersService {
           ];
     }
 
-    console.log(convertDataToIntegrate(result));
-
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
       method: 'POST',
@@ -230,6 +296,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
+      console.log(response);
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },
@@ -259,57 +326,6 @@ export class OrdersService {
         400,
       );
     }
-  }
-
-  async FEcreate(data: CreateOrderFEDto, userAuth) {
-    let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
-
-    if (!user['user_appcore_id']) {
-      await this.customerService.createCustomerToAppcore(user);
-      user = await this.userRepo.findOne({ user_id: userAuth.user_id });
-    }
-
-    if (!user) {
-      throw new HttpException(
-        'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
-        400,
-      );
-    }
-
-    const cart = await this.cartRepo.findOne({ user_id: user.user_id });
-    if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng', 404);
-    }
-
-    const cartItems = await this.cartItemRepo.find({
-      select: 'product_id, amount',
-      where: { cart_id: cart.cart_id },
-    });
-
-    if (!cartItems.length) {
-      throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
-    }
-
-    const sendData = { ...data, order_items: cartItems };
-
-    await this.createOrder(user, sendData);
-
-    const userProfile = await this.userProfileRepo.findOne({
-      user_id: user.user_id,
-    });
-
-    userProfile['s_firstname'] = data.s_firstname || userProfile['s_firstname'];
-    userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
-    userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
-    userProfile['s_city'] = data.s_city || userProfile['s_city'];
-    userProfile['s_district'] = data.s_district || userProfile['s_district'];
-    userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
-    userProfile['s_address'] = data.s_address || userProfile['s_address'];
-
-    await this.userProfileRepo.update({ user_id: user.user_id }, userProfile);
-
-    await this.cartRepo.delete({ cart_id: cart.cart_id });
-    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
   }
 
   async createCustomer(data: CreateOrderDto) {

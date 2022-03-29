@@ -98,4 +98,7 @@ class ProductVariant {
 
   @IsOptional()
   color: string = '';
+
+  @IsOptional()
+  status: string = 'A';
 }

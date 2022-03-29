@@ -1761,7 +1761,7 @@ export class ProductService {
   async deleteMetaImage(product_id) {
     await this.productDescriptionsRepo.update(
       { product_id },
-      { meta_image: '(NULL)' },
+      { meta_image: '' },
     );
   }
 

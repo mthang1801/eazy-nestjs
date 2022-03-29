@@ -5,4 +5,5 @@ export class ProductFeatureVariantEntity {
   url: string = '';
   color: string = '';
   position: number = 0;
+  status: string = 'A';
 }

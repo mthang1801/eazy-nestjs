@@ -28,18 +28,18 @@ export class CreateOrderFEDto {
   @IsOptional()
   s_lastname: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   s_phone: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   s_city: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   s_district: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   s_ward: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   s_address: string;
 }
