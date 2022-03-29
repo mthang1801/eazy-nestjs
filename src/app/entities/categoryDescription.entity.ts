@@ -1,7 +1,7 @@
 export class CategoryDescriptionEntity {
-  category_id: number = 0;
-  lang_code: string = '';
+  lang_code: string = 'vi';
   category: string = '';
+  category_appcore: string = '';
   description: string = '';
   meta_keywords: string = '';
   meta_description: string = '';

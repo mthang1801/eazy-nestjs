@@ -40,6 +40,7 @@ import {
 } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
 
 import {
+  convertCategoryFromAppcore,
   itgCreateCategoryFromAppcore,
   itgCreateCustomerFromAppcore,
 } from 'src/utils/integrateFunctions';
@@ -104,8 +105,8 @@ export class CategoryService {
   async findAncestor(parentId: number, idPaths = '', level = 0) {
     const parent = await this.categoryRepository.findById(parentId);
     idPaths = idPaths
-      ? `${parent.category_id}/${idPaths}`
-      : `${parent.category_id}`;
+      ? `${parent['category_id']}/${idPaths}`
+      : `${parent['category_id']}`;
     level = Math.max(level, parent.level);
     if (!parent.parent_id) {
       return { idPaths, level };
@@ -116,19 +117,40 @@ export class CategoryService {
   }
 
   async itgCreate(data) {
-    if (data['display_at']) {
-      data['display_at'] = convertNullDatetimeData(data['display_at']);
-    }
+    let convertedData = convertCategoryFromAppcore(data);
 
     const categoryData = {
       ...new CategoryEntity(),
-      ...this.categoryRepository.setData(data),
+      ...this.categoryRepository.setData(convertedData),
       slug: convertToSlug(removeVietnameseTones(data['category'])),
     };
-    await this.categoryRepository.createSync(categoryData);
+    const newCategory = await this.categoryRepository.create(categoryData);
 
-    const categoryDescData = this.categoryDescriptionRepo.setData(data);
-    await this.categoryDescriptionRepo.create(categoryDescData);
+    const categoryDescData = {
+      ...new CategoryDescriptionEntity(),
+      ...this.categoryDescriptionRepo.setData(convertedData),
+      category_id: newCategory['category_id'],
+    };
+    await this.categoryDescriptionRepo.createSync(categoryDescData);
+    await this.convertAppcoreToCMSId();
+  }
+  async convertAppcoreToCMSId() {
+    let categories = await this.categoryRepository.find();
+    if (categories.length) {
+      for (let category of categories) {
+        if (category['parent_appcore_id'] && !category['parent_id']) {
+          let parentCategory = await this.categoryRepository.findOne({
+            category_appcore_id: category['parent_appcore_id'],
+          });
+          if (parentCategory) {
+            await this.categoryRepository.update(
+              { category_id: category['category_id'] },
+              { parent_id: parentCategory['category_id'] },
+            );
+          }
+        }
+      }
+    }
   }
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
@@ -656,10 +678,10 @@ export class CategoryService {
 
     for (let coreData of data['list_caterogy']) {
       const mappingData = new Map([
-        ['id', 'category_id'],
+        ['id', 'category_appcore_id'],
         ['name', 'category'],
         ['level', 'level'],
-        ['parentId', 'parent_id'],
+        ['parentId', 'parent_appcore_id'],
       ]);
       let cmsData = {};
       for (let [core, cms] of mappingData) {
@@ -667,20 +689,129 @@ export class CategoryService {
           cmsData['slug'] = convertToSlug(
             removeVietnameseTones(coreData[core]),
           );
+          cmsData['category_appcore'] = coreData[core];
         }
         cmsData[cms] = coreData[core];
       }
+
       const categoryData = {
         ...new CategoryEntity(),
         ...this.categoryRepository.setData(cmsData),
       };
-      await this.categoryRepository.createSync(categoryData);
+      const newCategory = await this.categoryRepository.create(categoryData);
 
       const categoryDescData = {
         ...new CategoryDescriptionEntity(),
         ...this.categoryDescriptionRepo.setData(cmsData),
+        category_id: newCategory['category_id'],
       };
+
       await this.categoryDescriptionRepo.createSync(categoryDescData);
+    }
+
+    const categoriesList = await this.categoryRepository.find();
+
+    for (let categoryItem of categoriesList) {
+      if (categoryItem['parent_appcore_id']) {
+        let parentCategory = await this.categoryRepository.findOne({
+          category_appcore_id: categoryItem['parent_appcore_id'],
+        });
+        if (parentCategory) {
+          await this.categoryRepository.update(
+            { category_id: categoryItem['category_id'] },
+            { parent_id: parentCategory['category_id'] },
+          );
+        }
+      }
+    }
+  }
+
+  async syncImportCatalogs() {
+    const res = await this.databaseService.executeMagentoPool(
+      sqlGetCatalogCategoryName,
+    );
+    await this.catalogCategoryRepo.writeExec(
+      `TRUNCATE TABLE ${Table.CATALOG_CATEGORIES}`,
+    );
+    await this.catalogCategoryDescRepo.writeExec(
+      `TRUNCATE TABLE ${Table.CATALOG_CATEGORY_DESCRIPTIONS}`,
+    );
+
+    const catalogCategoriesList = res[0];
+    for (let categoryItem of catalogCategoriesList) {
+      const categoryItemData = {
+        ...new CatalogCategoryEntity(),
+        ...this.catalogCategoryRepo.setData(categoryItem),
+        catalog_appcore_id: categoryItem['entity_id'],
+        parent_appcore_id: categoryItem['parent_id'],
+      };
+
+      const newCatalogCategory = await this.catalogCategoryRepo.create(
+        categoryItemData,
+      );
+
+      const catalogCategoryDescData = {
+        ...new CatalogCategoryDescriptionEntity(),
+        ...this.catalogCategoryDescRepo.setData(categoryItem),
+        catalog_appcore_name: categoryItem['value'],
+        catalog_name: categoryItem['value'],
+        catalog_id: newCatalogCategory['catalog_id'],
+      };
+
+      await this.catalogCategoryDescRepo.createSync(catalogCategoryDescData);
+    }
+
+    const resUrlKey = await this.databaseService.executeMagentoPool(
+      sqlGetCatalogCategoryUrlKey,
+    );
+
+    const catalogCategoriesKeyList = resUrlKey[0];
+    console.log(catalogCategoriesKeyList);
+    for (let categoryItem of catalogCategoriesKeyList) {
+      const category = await this.catalogCategoryRepo.findOne({
+        catalog_appcore_id: categoryItem['entity_id'],
+      });
+
+      if (category) {
+        await this.catalogCategoryDescRepo.update(
+          { catalog_id: category['catalog_id'] },
+          { url_key: categoryItem['value'] },
+        );
+      }
+    }
+
+    const resUrlPath = await this.databaseService.executeMagentoPool(
+      sqlGetCatalogCategoryUrlPath,
+    );
+
+    const catalogCategoriesPathList = resUrlPath[0];
+    for (let categoryItem of catalogCategoriesPathList) {
+      const category = await this.catalogCategoryRepo.findOne({
+        catalog_appcore_id: categoryItem['entity_id'],
+      });
+      if (category) {
+        await this.catalogCategoryDescRepo.update(
+          { catalog_id: category['catalog_id'] },
+          { url_path: categoryItem['value'] },
+        );
+      }
+    }
+
+    const catalogCategories = await this.catalogCategoryRepo.find();
+    for (let catalogItem of catalogCategories) {
+      if (catalogItem['parent_appcore_id']) {
+        let parentCatalog = await this.catalogCategoryRepo.findOne({
+          catalog_appcore_id: catalogItem['parent_appcore_id'],
+        });
+        if (parentCatalog) {
+          await this.catalogCategoryRepo.update(
+            {
+              catalog_id: catalogItem['catalog_id'],
+            },
+            { parent_id: parentCatalog['catalog_id'] },
+          );
+        }
+      }
     }
   }
 }

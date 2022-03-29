@@ -518,7 +518,7 @@ export const convertOrderDataFromAppcore = (coreData) => {
   return cmsData;
 };
 
-export const importCustomersFromApocore = (coreData) => {
+export const importCustomersFromAppcore = (coreData) => {
   const mappingData = new Map([
     ['address', 'b_address'],
     ['city', 'b_city'],
@@ -570,16 +570,11 @@ export const importCustomersFromApocore = (coreData) => {
       cmsData[`s_phone`] = coreData[core];
     }
 
-    if (
-      (core === 'createdAt' ||
-        core === 'updatedAt' ||
-        core === 'dateOfBirth') &&
-      moment(coreData[core]).isValid
-    ) {
-      cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
-      if (cmsData[cms] == 'Invalid date') {
-        delete cmsData[cms];
+    if (['createdAt', 'updatedAt', 'dateOfBirth'].includes(core)) {
+      if (moment(coreData[core]).isValid()) {
+        cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
       }
+
       continue;
     }
 
@@ -589,5 +584,32 @@ export const importCustomersFromApocore = (coreData) => {
   const { passwordHash, salt } = saltHashPassword(defaultPassword);
   cmsData['password'] = passwordHash;
   cmsData['salt'] = salt;
+  return cmsData;
+};
+
+export const convertCategoryFromAppcore = (coreData) => {
+  const mappingData = new Map([
+    ['category_id', 'category_appcore_id'],
+    ['category', 'category'],
+    ['parent_id', 'parent_appcore_id'],
+    ['display_at', 'display_at'],
+  ]);
+
+  let cmsData = { ...coreData };
+  for (let [core, cms] of mappingData) {
+    if (core === 'category') {
+      cmsData['category_appcore'] = coreData[core];
+    }
+    if (core === 'display_at') {
+      if (moment(coreData[core]).isValid()) {
+        cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
+      }
+      continue;
+    }
+    cmsData[cms] = coreData[core];
+  }
+
+  delete cmsData['category_id'];
+  delete cmsData['parent_id'];
   return cmsData;
 };

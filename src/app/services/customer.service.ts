@@ -32,7 +32,7 @@ import { saltHashPassword } from 'src/utils/cipherHelper';
 import { MailService } from './mail.service';
 import axios from 'axios';
 import {
-  importCustomersFromApocore,
+  importCustomersFromAppcore,
   itgCreateCustomerFromAppcore,
   itgCustomerFromAppcore,
   itgUpdateCustomerFromAppcore,
@@ -758,7 +758,7 @@ export class CustomerService {
       });
       const customersList = response.data.data.dataset;
       for (let customer of customersList) {
-        let convertedData = importCustomersFromApocore(customer);
+        let convertedData = importCustomersFromAppcore(customer);
         if (!convertedData['phone']) {
           continue;
         }

@@ -49,7 +49,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
-import { data } from '../../database/constant/category';
+
 import { LocatorService } from './locator.service';
 import { CityRepository } from '../repositories/city.repository';
 import { CityEntity } from '../entities/cities.entity';
@@ -174,15 +174,16 @@ export class OrdersService {
   }
 
   async createOrder(user, data) {
-    data['b_city'] = data['b_city'] || data['s_city'];
-    data['b_ward'] = data['b_ward'] || data['s_ward'];
-    data['b_district'] = data['b_district'] || data['s_district'];
-    data['b_phone'] = data['b_phone'] || data['s_phone'];
-    data['b_address'] = data['b_address'] || data['s_address'];
-    data['b_firstname'] = data['b_firstname'] || data['s_firstname'];
-    data['b_lastname'] = data['b_lastname'] || data['s_lastname'];
-    data['firstname'] = data['b_firstname'] || data['s_firstname'];
-    data['lastname'] = data['b_lastname'] || data['s_lastname'];
+    console.log(data);
+    // data['b_city'] = data['b_city'] || data['s_city'];
+    // data['b_ward'] = data['b_ward'] || data['s_ward'];
+    // data['b_district'] = data['b_district'] || data['s_district'];
+    // data['b_phone'] = data['b_phone'] || data['s_phone'];
+    // data['b_address'] = data['b_address'] || data['s_address'];
+    // data['b_firstname'] = data['b_firstname'] || data['s_firstname'];
+    // data['b_lastname'] = data['b_lastname'] || data['s_lastname'];
+    // data['firstname'] = data['b_firstname'] || data['s_firstname'];
+    // data['lastname'] = data['b_lastname'] || data['s_lastname'];
     data['store_id'] = data['store_id'] || 67107;
     data['utm_source'] = data['utm_source'] || 10;
 

@@ -1,7 +1,7 @@
 export class CatalogCategoryDescriptionEntity {
-  value_id: number = 0;
-  attribute_id: number = 0;
-  store_id: number = 0;
-  entity_id: number = 0;
-  value: string = '';
+  catalog_id: number = 0;
+  catalog_name: string = '';
+  catalog_appcore_name: string = '';
+  url_key: string = '';
+  url_path: string = '';
 }

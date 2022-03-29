@@ -275,7 +275,6 @@ export class BaseRepositorty<T> {
 
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
-      // console.log(key, val, val === '', !!val, +val === 0);
       if (i === 0) {
         sql +=
           +val === 0 && val !== ''

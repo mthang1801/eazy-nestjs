@@ -34,4 +34,10 @@ export class CategorySyncController extends BaseController {
     await this.service.syncImports();
     return this.responseSuccess(res, null, 'Hoàn tất.');
   }
+
+  @Post('catalog/imports')
+  async syncImportCatalogs(@Res() res: Response): Promise<IResponse> {
+    await this.service.syncImportCatalogs();
+    return this.responseSuccess(res, null, 'Hoàn tất.');
+  }
 }
