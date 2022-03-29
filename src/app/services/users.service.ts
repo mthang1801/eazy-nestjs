@@ -174,7 +174,7 @@ export class UsersService {
       ...dataObj,
       updated_at: convertToMySQLDateTime(),
     });
-    updatedUser['image'] = await this.getUserImage(updatedUser.user_id);
+    updatedUser['image'] = await this.getUserImage(updatedUser['user_id']);
     return preprocessUserResult(updatedUser);
   }
 

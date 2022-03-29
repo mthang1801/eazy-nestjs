@@ -102,6 +102,7 @@ export class OrdersService {
     private cartItemRepo: CartItemRepository<CartItemEntity>,
     private customerService: CustomerService,
     private orderHistoryRepo: OrderHistoryRepository<OrderHistoryEntity>,
+    private locatorService: LocatorService,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -151,8 +152,7 @@ export class OrdersService {
     });
 
     // await this.createOrder(user, sendData);
-
-    userProfile['s_firstname'] = data.s_firstname || userProfile['s_firstname'];
+    userProfile['s_firstname'] = '';
     userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
     userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
     userProfile['s_city'] = data.s_city || userProfile['s_city'];
@@ -165,9 +165,7 @@ export class OrdersService {
       userProfile,
     );
 
-    let result = { ...user, ...userProfile };
-
-    const sendData = { ...result, order_items: cartItems };
+    const sendData = { ...userProfile, order_items: cartItems };
 
     await this.createOrder(user, sendData);
 
@@ -176,13 +174,6 @@ export class OrdersService {
   }
 
   async createOrder(user, data) {
-    data['s_city'] = data['s_city'] || data['b_city'];
-    data['s_ward'] = data['s_ward'] || data['b_ward'];
-    data['s_district'] = data['s_district'] || data['b_district'];
-    data['s_phone'] = data['s_phone'] || data['b_phone'];
-    data['s_address'] = data['s_address'] || data['b_address'];
-    data['s_firstname'] = data['s_firstname'] || data['b_firstname'];
-    data['s_lastname'] = data['s_lastname'] || data['b_lastname'];
     data['b_city'] = data['b_city'] || data['s_city'];
     data['b_ward'] = data['b_ward'] || data['s_ward'];
     data['b_district'] = data['b_district'] || data['s_district'];
@@ -195,7 +186,6 @@ export class OrdersService {
     data['store_id'] = data['store_id'] || 67107;
     data['utm_source'] = data['utm_source'] || 10;
 
-    console.log(data);
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
@@ -216,12 +206,12 @@ export class OrdersService {
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
-      if (
-        productInfo?.parent_product_id == 0 ||
-        !productInfo?.parent_product_id
-      ) {
-        throw new HttpException('Không thể dùng SP cha', 401);
-      }
+      // if (
+      //   productInfo?.parent_product_id == 0 ||
+      //   !productInfo?.parent_product_id
+      // ) {
+      //   throw new HttpException('Không thể dùng SP cha', 401);
+      // }
 
       if (!productInfo) {
         throw new HttpException(
@@ -296,7 +286,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-      console.log(response);
+
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },
@@ -939,6 +929,33 @@ export class OrdersService {
           });
           orderDetail['image'] = image;
         }
+      }
+    }
+
+    if (order['s_city']) {
+      let city = await this.locatorService.getCitiesList(order['s_city']);
+      if (city.length) {
+        order['cityName'] = city[0].city_name;
+      }
+    }
+
+    if (order['s_district'] && order['s_city']) {
+      let district = await this.locatorService.getDistrictsList(
+        order['s_city'],
+        order['s_district'],
+      );
+      if (district.length) {
+        order['districtName'] = district[0].district_name;
+      }
+    }
+
+    if (order['s_ward'] && order['s_district']) {
+      let ward = await this.locatorService.getWardsList(
+        order['s_district'],
+        order['ward'],
+      );
+      if (ward.length) {
+        order['wardName'] = ward[0].ward_name;
       }
     }
 

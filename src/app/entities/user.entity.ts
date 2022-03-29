@@ -1,7 +1,6 @@
 import { convertToMySQLDateTime } from 'src/utils/helper';
 import { UserMenuEntity } from './userMenu.entity';
 export class UserEntity {
-  user_id: number = 0;
   status: string = 'A';
   user_type: string = 'C';
   user_login: string = 'SYSTEM';

@@ -76,9 +76,9 @@ export class AuthService {
   generateToken(user: UserEntity): string {
     const payload = {
       sub: {
-        user_id: user.user_id,
+        user_id: user['user_id'],
         email: user.email,
-        permission: `UID_${user.user_id}`,
+        permission: `UID_${user['user_id']}`,
       },
     };
 
@@ -115,7 +115,7 @@ export class AuthService {
 
     //create a new record at ddv_user_profiles
     const newUserProfile = await this.userService.createUserProfile({
-      user_id: user.user_id,
+      user_id: user['user_id'],
       b_firstname: firstname,
       b_lastname: lastname,
       b_phone: phone,
@@ -128,7 +128,7 @@ export class AuthService {
 
     const userData = {
       ...new UserDataEntity(),
-      user_id: result.user_id,
+      user_id: result['user_id'],
     };
     // Create a new record at ddv_user_data
     const newUserData = await this.userService.createUserData(userData);
@@ -137,7 +137,7 @@ export class AuthService {
 
     //create a new record at ddv_user_loyalty
     const newUserLoyalty = await this.userLoyaltyRepo.create({
-      user_id: result.user_id,
+      user_id: result['user_id'],
       created_at: convertToMySQLDateTime(),
       updated_at: convertToMySQLDateTime(),
     });
@@ -487,7 +487,7 @@ export class AuthService {
     // Create a record at ddv_user_mailings_list
     const newMailingList: UserMailingListsEntity =
       await this.userMailingListRepository.create({
-        subscriber_id: user.user_id,
+        subscriber_id: user['user_id'],
         activation_key: uuid().replace(/-/g, ''),
         confirmed: 0,
         type,
