@@ -6,6 +6,7 @@ import {
 } from './helper';
 
 import * as moment from 'moment';
+import { UserRepository } from '../app/repositories/user.repository';
 
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
@@ -506,6 +507,66 @@ export const convertOrderDataFromAppcore = (coreData) => {
     if (core === 'b_address' && coreData[core] && !cmsData['s_address']) {
       cmsData['s_address'] = coreData[core];
     }
+  }
+
+  return cmsData;
+};
+
+export const importCustomersFromApocore = (coreData) => {
+  const mappingData = new Map([
+    ['address', 'b_address'],
+    ['city', 'b_city'],
+    ['createdAt', 'created_at'],
+    ['dateOfBirth', 'birthday'],
+    ['district', 'b_district'],
+    ['email', 'email'],
+    ['fullName', 'firstname'],
+    ['gender', 'gender'],
+    ['id', 'user_appcore_id'],
+    ['lastName', 'lastname'],
+    ['note', 'note'],
+    ['phoneNo', 'phone'],
+    ['totalPoint', 'loyalty_point'],
+    ['type', 'type'],
+    ['updatedAt', 'updated_at'],
+    ['ward', 'b_ward'],
+  ]);
+  let cmsData = {};
+  for (let [core, cms] of mappingData) {
+    if (core === 'phoneNo' && coreData[core]) {
+      cmsData[cms] = coreData[core];
+    }
+    if (
+      (core === 'address' ||
+        core === 'city' ||
+        core === 'district' ||
+        core === 'ward') &&
+      coreData[core]
+    ) {
+      cmsData[`b_${core}`] = coreData[core];
+      cmsData[`s_${core}`] = coreData[core];
+      continue;
+    }
+
+    if (core === 'phoneNo' && coreData[core]) {
+      cmsData[`b_phone`] = coreData[core];
+      cmsData[`s_phone`] = coreData[core];
+    }
+
+    if (
+      (core === 'createdAt' ||
+        core === 'updatedAt' ||
+        core === 'dateOfBirth') &&
+      moment(coreData[core]).isValid
+    ) {
+      cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
+      if (cmsData[cms] == 'Invalid date') {
+        delete cmsData[cms];
+      }
+      continue;
+    }
+
+    cmsData[cms] = coreData[core];
   }
 
   return cmsData;

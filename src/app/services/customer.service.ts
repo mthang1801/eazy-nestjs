@@ -32,6 +32,7 @@ import { saltHashPassword } from 'src/utils/cipherHelper';
 import { MailService } from './mail.service';
 import axios from 'axios';
 import {
+  importCustomersFromApocore,
   itgCreateCustomerFromAppcore,
   itgCustomerFromAppcore,
   itgUpdateCustomerFromAppcore,
@@ -52,9 +53,10 @@ import { defaultPassword } from '../../database/constant/defaultPassword';
 import {
   CREATE_CUSTOMER_API,
   GET_CUSTOMERS_API,
+  IMPORT_CUSTOMERS_API,
 } from 'src/database/constant/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
-import { Not, Equal } from '../../database/find-options/operators';
+import { Not, Equal, MoreThan } from '../../database/find-options/operators';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
@@ -741,5 +743,50 @@ export class CustomerService {
       user_id: user.user_id,
     };
     await this.userLoyalHistory.create(userLoyalHist);
+  }
+
+  async importCustomers() {
+    let totalPage = 11;
+    for (let page = 10; page < totalPage; page++) {
+      const response = await axios({
+        url: IMPORT_CUSTOMERS_API(page),
+        headers: {
+          Authorization:
+            'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0NzkzMTcxMiwiZXhwIjoxNjQ4NTM2NTEyfQ.1XuUCtwZ0pIChivfzoJ8i38Ma8-dzzwDb7aWPrgjW5g',
+        },
+      });
+      const customersList = response.data.data.dataset;
+      for (let customer of customersList) {
+        let convertedData = importCustomersFromApocore(customer);
+        console.log(convertedData);
+        // await this.createCustomerTemplate(convertedData);
+      }
+    }
+  }
+
+  async createCustomerTemplate(customer) {
+    const newCustomerData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(customer),
+    };
+    const newCustomer = await this.userRepo.create(newCustomerData);
+    const newCustomerProfileDesc = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(customer),
+      user_id: newCustomer.user_id,
+    };
+    await this.userProfileRepo.createSync(newCustomerProfileDesc);
+    const newCustomerLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalRepo.setData(customer),
+      user_id: newCustomer.user_id,
+    };
+    await this.userLoyalRepo.createSync(newCustomerLoyaltyData);
+    const newCustomerDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(customer),
+      user_id: newCustomer.user_id,
+    };
+    await this.userDataRepo.createSync(newCustomerDataData);
   }
 }

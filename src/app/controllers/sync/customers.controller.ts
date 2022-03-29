@@ -1,4 +1,4 @@
-import { Controller, Res, Get } from '@nestjs/common';
+import { Controller, Res, Get, Post } from '@nestjs/common';
 import { BaseController } from 'src/base/base.controllers';
 import { CustomerService } from '../../services/customer.service';
 import { IResponse } from '../../interfaces/response.interface';
@@ -20,5 +20,11 @@ export class CustomerControllers extends BaseController {
       result,
       'Đồng bộ KH từ appcore thành công.',
     );
+  }
+
+  @Post('/import')
+  async importCustomers(@Res() res: Response): Promise<IResponse> {
+    await this.service.importCustomers();
+    return this.responseSuccess(res, null, 'Thành công');
   }
 }

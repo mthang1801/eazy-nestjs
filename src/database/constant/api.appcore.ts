@@ -23,3 +23,6 @@ export const GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API = (pageNumber) =>
   `${CORE_API}/products?page=${pageNumber}`;
 
 export const GET_STORES_API = `${CORE_API}/depots`;
+
+export const IMPORT_CUSTOMERS_API = (page = 1, size = 20) =>
+  `http://mb.viendidong.com/web-tester/v1/api/customer?page=${page}&size=${size}`;
