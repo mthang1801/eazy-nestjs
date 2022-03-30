@@ -117,15 +117,17 @@ export class PromotionAccessoryService {
     );
 
     await this.productPromoAccessoryRepo.delete({ accessory_id });
-    for (let productId of data.product_ids) {
-      const newProductPromotionAccessoryData = {
-        ...new ProductPromotionAccessoryEntity(),
-        accessory_id: accessory_id,
-        product_id: productId,
-      };
-      await this.productPromoAccessoryRepo.createSync(
-        newProductPromotionAccessoryData,
-      );
+    if (data.product_ids && data.product_ids.length) {
+      for (let productId of data.product_ids) {
+        const newProductPromotionAccessoryData = {
+          ...new ProductPromotionAccessoryEntity(),
+          accessory_id: accessory_id,
+          product_id: productId,
+        };
+        await this.productPromoAccessoryRepo.createSync(
+          newProductPromotionAccessoryData,
+        );
+      }
     }
   }
 
