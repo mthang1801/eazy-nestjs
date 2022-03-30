@@ -1568,7 +1568,6 @@ export class ProductService {
 
       // Nếu là SP combo, tạo group
       let productGroup = await this.productVariationGroupRepo.create({
-        code: generateRandomString(),
         product_root_id: result['product_id'],
         group_type: 2,
         created_at: convertToMySQLDateTime(),
