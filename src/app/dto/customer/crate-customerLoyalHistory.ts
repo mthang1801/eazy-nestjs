@@ -10,7 +10,7 @@ export class CreateCustomerLoyalHistoryDto {
   by_type: string;
 
   @IsOptional()
-  ref_id: number;
+  ref_id: string;
 
   @IsOptional()
   @IsDateString()

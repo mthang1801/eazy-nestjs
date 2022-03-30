@@ -4,6 +4,6 @@ export class UserLoyaltyHistoryEntity {
   point: number = 0;
   type: number = 1;
   by_type: string = '';
-  ref_id: number = 0;
+  ref_id: string = '';
   created_at: string = '';
 }

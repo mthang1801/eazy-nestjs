@@ -358,3 +358,18 @@ export const stickerFilterSearch = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const promotionAccessoriesSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.STICKER}.accessory_name`]: Like(search) },
+      { [`${Table.STICKER}.accessory_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
