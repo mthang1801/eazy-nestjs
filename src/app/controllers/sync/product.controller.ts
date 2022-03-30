@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, Post } from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
 import { BaseController } from '../../../base/base.controllers';
 
@@ -16,6 +16,12 @@ export class ProductSyncController extends BaseController {
   @Get('/utils')
   async utilFunctions(@Res() res) {
     await this.service.utilFunctions();
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Get('/import')
+  async importProducts(@Res() res) {
+    await this.service.importProducts();
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }

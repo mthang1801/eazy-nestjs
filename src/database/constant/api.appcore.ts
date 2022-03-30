@@ -26,3 +26,9 @@ export const GET_STORES_API = `${CORE_API}/depots`;
 
 export const IMPORT_CUSTOMERS_API = (page = 1, size = 20) =>
   `http://mb.viendidong.com/web-tester/v1/api/customer?page=${page}&size=${size}`;
+
+export const GET_PRODUCTS_APPCORE_LIST = (page = 1, limit = 30) =>
+  `http://mb.viendidong.com/web-tester/v1/api/product?page=${page}&limit=${limit}`;
+
+export const GET_PRODUCT_APPCORE_DETAIL = (product_appcore_id) =>
+  `http://mb.viendidong.com/web-tester/v1/api/product/${product_appcore_id}`;

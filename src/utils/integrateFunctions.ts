@@ -351,67 +351,6 @@ export const itgCreateCategoryFromAppcore = (coreData) => {
   return cmsData;
 };
 
-export const itgConvertProductsFromAppcore = (data) => {
-  const mappingData = new Map([
-    ['product_id', 'product_appcore_id'],
-    ['parent_product_id', 'parent_product_appcore_id'],
-    ['category_id', 'category_id'],
-    ['product', 'product'],
-    ['tax_name', 'tax_name'],
-  ]);
-  let convertedData = { ...data };
-  for (let [fromData, toData] of mappingData) {
-    if (fromData === 'category_id') {
-      convertedData[toData] = !convertedData[fromData]
-        ? 0
-        : convertedData[fromData];
-      continue;
-    }
-    if (fromData === 'tax_name' && convertedData[fromData]) {
-      convertedData['color'] = convertedData[fromData]
-        .split('-')
-        .join('')
-        .trim();
-    }
-
-    if (fromData === 'product' && convertedData[fromData]) {
-      convertedData['product_core_name'] = convertedData[fromData];
-      convertedData['shortname'] = convertedData[fromData];
-      convertedData['short_description'] = convertedData[fromData];
-      convertedData['page_title'] = convertedData[fromData];
-      convertedData['promo_text'] = convertedData[fromData];
-    }
-
-    convertedData[toData] = convertedData[fromData];
-  }
-
-  const mappingComboData = new Map([
-    ['product_id', 'product_appcore_id'],
-    // ['product_combo_id', 'parent_product_appcore_id'],
-    ['id', 'other_appcore_id'],
-    ['quantity', 'amount'],
-  ]);
-
-  if (convertedData['combo_items'] && convertedData['combo_items'].length) {
-    for (let convertedDataItem of convertedData['combo_items']) {
-      for (let [fromData, toData] of mappingComboData) {
-        convertedDataItem[toData] = convertedDataItem[fromData];
-        delete convertedDataItem[fromData];
-      }
-    }
-  }
-
-  if (convertedData['product']) {
-    convertedData['slug'] = convertToSlug(
-      removeVietnameseTones(convertedData['product']),
-    );
-  }
-
-  delete convertedData['product_id'];
-  delete convertedData['parent_product_id'];
-  return convertedData;
-};
-
 export const convertGetProductsFromAppcore = (appCoreData) => {
   const mappingData = new Map([
     ['id', 'product_appcore_id'],
@@ -612,4 +551,166 @@ export const convertCategoryFromAppcore = (coreData) => {
   delete cmsData['category_id'];
   delete cmsData['parent_id'];
   return cmsData;
+};
+
+export const convertProductDataFromAppcore = (coreProduct) => {
+  const mappingData = new Map([
+    ['barCode', 'barcode'],
+    ['productCode', 'product_code'],
+    ['id', 'product_id'],
+    ['parentProductId', 'parent_product_id'],
+    ['productCategoryId', 'category_id'],
+    ['productCodeVat', 'tax_ids'],
+    ['productName', 'product'],
+    ['productNameVat', 'tax_name'],
+    ['productType', 'product_type'],
+    ['originPrice', 'list_price'],
+    ['returnSellingPrice', 'collect_price'],
+    ['sellingPrice', 'price'],
+    ['wholesalePrice', 'whole_price'],
+    ['status', 'status'],
+    ['totalQuantityInStock', 'amount'],
+    ['typeOfProduct', 'product_status'],
+    ['listColor', 'color'],
+    ['listSize', 'size'],
+    ['note', 'note'],
+    ['width', 'width'],
+    ['height', 'height'],
+    ['length', 'length'],
+    ['weight', 'weight'],
+  ]);
+
+  let cmsProduct = {};
+  for (let [core, cms] of mappingData) {
+    if (core === 'status') {
+      cmsProduct[cms] = coreProduct[core] == 1 ? 'A' : 'D';
+      continue;
+    }
+    if (['listSize', 'listColor'].includes(core)) {
+      if (coreProduct[core] && coreProduct[core].length) {
+        cmsProduct[cms] = coreProduct[core][0]['name'];
+        cmsProduct['features'] = coreProduct[core][0];
+      } else {
+        cmsProduct[cms] = null;
+        cmsProduct['features'] = [];
+      }
+      continue;
+    }
+    if (core === 'productName') {
+      cmsProduct['product_core_name'] = coreProduct[core];
+    }
+    if (
+      [
+        'width',
+        'height',
+        'length',
+        'totalQuantityInStock',
+        'weight',
+        'productCategoryId',
+        'originPrice',
+        'returnSellingPrice',
+        'sellingPrice',
+        'wholesalePrice',
+      ].includes(core)
+    ) {
+      cmsProduct[cms] = +coreProduct[core] || 0;
+      continue;
+    }
+
+    if (core === 'typeOfProduct') {
+      cmsProduct[cms] = +coreProduct[core] || 1;
+      continue;
+    }
+
+    cmsProduct[cms] = coreProduct[core];
+  }
+
+  const mappdingComboItems = new Map([
+    ['id', 'id'],
+    ['productCode', 'product_code'],
+    ['productComboId', 'product_combo_id'],
+    ['productId', 'product_id'],
+    ['productName', 'product'],
+    ['quantity', 'quantity'],
+  ]);
+  if (
+    coreProduct['listProductInCombo'] &&
+    coreProduct['listProductInCombo'].length
+  ) {
+    for (let productCoreItem of coreProduct['listProductInCombo']) {
+      let productCMSItem = {};
+      for (let [core, cms] of mappdingComboItems) {
+        if (core === 'productName') {
+          productCMSItem['product_core_name'] = productCoreItem[core];
+        }
+        productCMSItem[cms] = productCoreItem[core];
+      }
+      cmsProduct['combo_items'] = cmsProduct['combo_items']
+        ? [...cmsProduct['combo_items'], productCMSItem]
+        : [productCMSItem];
+    }
+  }
+
+  return cmsProduct;
+};
+
+export const itgConvertProductsFromAppcore = (data) => {
+  const mappingData = new Map([
+    ['product_id', 'product_appcore_id'],
+    ['parent_product_id', 'parent_product_appcore_id'],
+    ['category_id', 'category_appcore_id'],
+    ['product', 'product'],
+    ['tax_name', 'tax_name'],
+  ]);
+  let convertedData = { ...data };
+  for (let [fromData, toData] of mappingData) {
+    if (fromData === 'category_id') {
+      convertedData[toData] = !convertedData[fromData]
+        ? 0
+        : convertedData[fromData];
+      continue;
+    }
+    if (fromData === 'tax_name' && convertedData[fromData]) {
+      convertedData['color'] = convertedData[fromData]
+        .split('-')
+        .join('')
+        .trim();
+    }
+
+    if (fromData === 'product' && convertedData[fromData]) {
+      convertedData['product_core_name'] = convertedData[fromData];
+      convertedData['shortname'] = convertedData[fromData];
+      convertedData['short_description'] = convertedData[fromData];
+      convertedData['page_title'] = convertedData[fromData];
+      convertedData['promo_text'] = convertedData[fromData];
+    }
+
+    convertedData[toData] = convertedData[fromData];
+  }
+
+  const mappingComboData = new Map([
+    ['product_id', 'product_appcore_id'],
+    // ['product_combo_id', 'parent_product_appcore_id'],
+    ['id', 'other_appcore_id'],
+    ['quantity', 'amount'],
+  ]);
+
+  if (convertedData['combo_items'] && convertedData['combo_items'].length) {
+    for (let convertedDataItem of convertedData['combo_items']) {
+      for (let [fromData, toData] of mappingComboData) {
+        convertedDataItem[toData] = convertedDataItem[fromData];
+        delete convertedDataItem[fromData];
+      }
+    }
+  }
+
+  if (convertedData['product']) {
+    convertedData['slug'] = convertToSlug(
+      removeVietnameseTones(convertedData['product']),
+    );
+  }
+
+  delete convertedData['product_id'];
+  delete convertedData['parent_product_id'];
+  return convertedData;
 };

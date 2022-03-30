@@ -12,7 +12,6 @@ export class ProductsEntity {
   status: string = 'A';
   company_id: number = 0;
   approved: string = 'Y';
-  list_price: number = 0;
   combo_amount: number = 0;
   amount: number = 0;
   weight: number = 0;

@@ -110,14 +110,17 @@ import { ProductStoreHistoryRepository } from '../repositories/productStoreHisto
 import { ProductStoreHistoryEntity } from '../entities/productStoreHistory.entity';
 import { CreateProductStoreDto } from '../dto/product/create-productStore.dto';
 import {
+  GET_PRODUCTS_APPCORE_LIST,
   GET_PRODUCTS_COMBO_STORES_API,
   GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API,
   GET_PRODUCTS_STORES_API,
+  GET_PRODUCT_APPCORE_DETAIL,
   UPLOAD_IMAGE_API,
 } from 'src/database/constant/api.appcore';
 import { CreateProductAppcoreDto } from '../dto/product/create-product.appcore.dto';
 import {
   convertGetProductsFromAppcore,
+  convertProductDataFromAppcore,
   itgConvertProductsFromAppcore,
 } from '../../utils/integrateFunctions';
 // import { productsData } from 'src/database/constant/product';
@@ -1638,6 +1641,9 @@ export class ProductService {
     await this.productVariationGroupFeatureRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
     );
+    await this.productVariationGroupFeatureRepo.writeExec(
+      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_INDEX}`,
+    );
   }
 
   async uploadImages(images, sku) {
@@ -2806,13 +2812,38 @@ export class ProductService {
     return result;
   }
 
-  async testCreate() {
-    let products = await this.productRepo.find();
-    for (let productItem of products) {
-      await this.productRepo.update(
-        { product_id: productItem.product_id },
-        { catalog_category_id: 3 },
-      );
+  async importProducts() {
+    this.clearAll();
+    const totalProducts = 17643;
+    const limit = 2;
+    let headers = {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
+    };
+    for (let page = 1; page <= Math.ceil(4 / limit); page++) {
+      const res = await axios({
+        url: GET_PRODUCTS_APPCORE_LIST(1, limit),
+        headers,
+      });
+
+      let listAppcoreProducts = res.data.data.list_product;
+
+      if (listAppcoreProducts && listAppcoreProducts.length) {
+        for (let productAppcoreItem of listAppcoreProducts) {
+          let res = await axios({
+            url: GET_PRODUCT_APPCORE_DETAIL(productAppcoreItem.id),
+            headers,
+          });
+          let listAppcoreProductDetail = res.data.data;
+
+          let cmsProductDetail = convertProductDataFromAppcore(
+            listAppcoreProductDetail,
+          );
+
+          await this.itgCreate(cmsProductDetail);
+        }
+      }
     }
+    // this.syncProductsIntoGroup();
   }
 }
