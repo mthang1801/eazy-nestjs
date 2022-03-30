@@ -366,8 +366,8 @@ export const promotionAccessoriesSearchFilter = (
   let arraySearch = [];
   if (search) {
     arraySearch = [
-      { [`${Table.STICKER}.accessory_name`]: Like(search) },
-      { [`${Table.STICKER}.accessory_code`]: Like(search) },
+      { [`${Table.PROMOTION_ACCESSORY}.accessory_name`]: Like(search) },
+      { [`${Table.PROMOTION_ACCESSORY}.accessory_code`]: Like(search) },
     ];
   }
 
