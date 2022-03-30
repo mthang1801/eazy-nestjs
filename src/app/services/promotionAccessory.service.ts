@@ -12,6 +12,7 @@ import { promotionAccessoriesSearchFilter } from 'src/utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -115,7 +116,7 @@ export class PromotionAccessoryService {
       updatePromoAccessoryData,
     );
 
-    await this.productPromoAccessoryRepo.delete({ accessory_id });
+    await this.promoAccessoryRepo.delete({ accessory_id });
     for (let productId of data.product_ids) {
       const newProductPromotionAccessoryData = {
         ...new ProductPromotionAccessoryEntity(),
@@ -136,6 +137,10 @@ export class PromotionAccessoryService {
     let filterConditions = {};
     const accessoriesList = await this.promoAccessoryRepo.find({
       select: '*',
+      orderBy: [
+        { [`${Table.PROMOTION_ACCESSORY}.updated_at`]: SortBy.DESC },
+        { [`${Table.PROMOTION_ACCESSORY}.created_at`]: SortBy.DESC },
+      ],
       where: promotionAccessoriesSearchFilter(search, filterConditions),
       skip,
       limit,
