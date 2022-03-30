@@ -831,6 +831,7 @@ export class ProductService {
     });
 
     for (let productItem of productsList) {
+      // get images
       const productImageLink = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
@@ -841,6 +842,9 @@ export class ProductService {
         });
         productItem['image'] = { ...productImageLink, ...productImage };
       }
+
+      //find product Stickers
+      productItem['stickers'] = await this.getProductStickers(productItem);
     }
 
     const count = await this.productRepo.find({
@@ -2072,28 +2076,36 @@ export class ProductService {
     product['stores'] = productsStores || [];
 
     //find product Stickers
-    const productStickers = await this.productStickerRepo.find({
-      where: { product_id: product.product_id },
-    });
-    console.log(2079, productStickers);
-    if (productStickers.length) {
-      for (let productStickerItem of productStickers) {
-        const sticker = await this.stickerRepo.findOne({
-          sticker_id: productStickerItem.sticker_id,
-        });
-        if (sticker) {
-          product['stickers'] = product['stickers']
-            ? [...product['stickers'], { ...productStickerItem, ...sticker }]
-            : [{ ...productStickerItem, ...sticker }];
-        }
-      }
-    }
+    product['stickers'] = await this.getProductStickers(product);
 
     return {
       currentCategory: showListCategories ? currentCategory : categoriesList[0],
       parentCategories,
       product,
     };
+  }
+
+  async getProductStickers(product) {
+    //find product Stickers
+    const productStickers = await this.productStickerRepo.find({
+      where: { product_id: product.product_id },
+    });
+
+    let stickers = [];
+
+    if (productStickers.length) {
+      for (let productStickerItem of productStickers) {
+        const sticker = await this.stickerRepo.findOne({
+          sticker_id: productStickerItem.sticker_id,
+        });
+        if (sticker) {
+          stickers = stickers
+            ? [...stickers, { ...productStickerItem, ...sticker }]
+            : [{ ...productStickerItem, ...sticker }];
+        }
+      }
+    }
+    return stickers;
   }
 
   determineProductType(product) {
