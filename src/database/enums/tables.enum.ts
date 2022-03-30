@@ -30,6 +30,10 @@ export enum Table {
   BANNER_TARGET_DESCRIPTION = 'ddv_banner_target_descriptions',
   BANNER_ITEM = 'ddv_banner_items',
 
+  //============== Promotion Accessory ==============
+  PROMOTION_ACCESSORY = 'ddv_promotion_accessories',
+  PRODUCT_PROMOTION_ACCESSORY = 'ddv_product_promotion_accessories',
+
   //============== Image ==============
   IMAGE = 'ddv_images',
   IMAGE_LINK = 'ddv_images_links',

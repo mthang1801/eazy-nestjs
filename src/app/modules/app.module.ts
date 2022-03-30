@@ -40,6 +40,7 @@ import { UploadModule } from './upload.module';
 import { CartModule } from './cart.module';
 import { StickerModule } from './sticker.module';
 import * as path from 'path';
+import { PromotionAccessoryModule } from './promotionAccessory.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -82,6 +83,7 @@ import * as path from 'path';
     ProductGroupModule,
     CartModule,
     StickerModule,
+    PromotionAccessoryModule,
   ],
   providers: [
     {

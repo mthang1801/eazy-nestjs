@@ -631,7 +631,7 @@ export class CategoryService {
       });
 
       let count = await this.catalogCategoryRepo.find({
-        select: `COUNT(DISTINCT(entity_id)) as total`,
+        select: `COUNT(DISTINCT(catalog_id)) as total`,
       });
 
       return {
@@ -651,7 +651,7 @@ export class CategoryService {
     });
 
     let count = await this.catalogCategoryRepo.find({
-      select: `COUNT(DISTINCT(entity_id)) as total`,
+      select: `COUNT(DISTINCT(catalog_id)) as total`,
       where: { level },
     });
 

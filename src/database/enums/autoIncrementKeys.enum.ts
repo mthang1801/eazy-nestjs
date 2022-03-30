@@ -52,6 +52,10 @@ export enum PrimaryKeys {
   ddv_shipping_services = 'service_id',
   ddv_shipping_service_descriptions = 'service_id',
 
+  //============== Promotion Accessories =============
+  ddv_promotion_accessories = 'accessory_id',
+  ddv_product_promotion_accessories = 'id',
+
   //============== Products ==============
   ddv_products_categories = 'list_id',
   ddv_products = 'product_id',

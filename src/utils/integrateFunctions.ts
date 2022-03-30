@@ -559,7 +559,7 @@ export const convertProductDataFromAppcore = (coreProduct) => {
     ['productCode', 'product_code'],
     ['id', 'product_id'],
     ['parentProductId', 'parent_product_id'],
-    ['productCategoryId', 'category_id'],
+    ['productCategory', 'category_id'],
     ['productCodeVat', 'tax_ids'],
     ['productName', 'product'],
     ['productNameVat', 'tax_name'],
@@ -589,10 +589,12 @@ export const convertProductDataFromAppcore = (coreProduct) => {
     if (['listSize', 'listColor'].includes(core)) {
       if (coreProduct[core] && coreProduct[core].length) {
         cmsProduct[cms] = coreProduct[core][0]['name'];
-        cmsProduct['features'] = coreProduct[core][0];
+        cmsProduct['product_features'] = cmsProduct['product_features']
+          ? [...cmsProduct['product_features'], coreProduct[core][0]]
+          : [coreProduct[core][0]];
       } else {
         cmsProduct[cms] = null;
-        cmsProduct['features'] = [];
+        cmsProduct['product_features'] = [];
       }
       continue;
     }
@@ -619,6 +621,11 @@ export const convertProductDataFromAppcore = (coreProduct) => {
 
     if (core === 'typeOfProduct') {
       cmsProduct[cms] = +coreProduct[core] || 1;
+      continue;
+    }
+
+    if (core === 'productCategory' && coreProduct['productCategory']) {
+      cmsProduct[cms] = coreProduct['productCategory'];
       continue;
     }
 
@@ -669,12 +676,6 @@ export const itgConvertProductsFromAppcore = (data) => {
         ? 0
         : convertedData[fromData];
       continue;
-    }
-    if (fromData === 'tax_name' && convertedData[fromData]) {
-      convertedData['color'] = convertedData[fromData]
-        .split('-')
-        .join('')
-        .trim();
     }
 
     if (fromData === 'product' && convertedData[fromData]) {
