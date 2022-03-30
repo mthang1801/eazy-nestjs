@@ -138,8 +138,8 @@ export class PromotionAccessoryService {
     const accessoriesList = await this.promoAccessoryRepo.find({
       select: '*',
       orderBy: [
-        { [`${Table.PROMOTION_ACCESSORY}.updated_at`]: SortBy.DESC },
-        { [`${Table.PROMOTION_ACCESSORY}.created_at`]: SortBy.DESC },
+        { field: `updated_at`, sortBy: SortBy.DESC },
+        { field: `created_at`, sortBy: SortBy.DESC },
       ],
       where: promotionAccessoriesSearchFilter(search, filterConditions),
       skip,
