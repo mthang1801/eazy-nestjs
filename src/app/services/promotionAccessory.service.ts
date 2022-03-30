@@ -74,13 +74,24 @@ export class PromotionAccessoryService {
       );
     }
 
-    let productAccessoriesList = await this.productPromoAccessoryRepo.find({
-      select: '*',
-      join: { [JoinTable.leftJoin]: productJoiner },
-      where: { accessory_id },
+    const productAccessoriesList = await this.productPromoAccessoryRepo.find({
+      select: 'product_id',
+      where: { accessory_id: promoAccessory['accessory_id'] },
     });
 
-    promoAccessory['products'] = productAccessoriesList;
+    promoAccessory['products'] = [];
+
+    let productLists = await this.productRepo.find({
+      select: '*',
+      join: { [JoinTable.leftJoin]: productJoiner },
+      where: {
+        [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
+          ({ product_id }) => product_id,
+        ),
+      },
+    });
+
+    promoAccessory['products'] = productLists;
 
     return promoAccessory;
   }
