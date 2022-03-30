@@ -388,6 +388,15 @@ export const categoryJoiner = {
   },
 };
 
+export const catalogCategoryJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CATALOG_CATEGORY_DESCRIPTIONS]: {
+      fieldJoin: 'catalog_id',
+      rootJoin: 'catalog_id',
+    },
+  },
+};
+
 export const productFeatureJoiner = {
   [JoinTable.innerJoin]: {
     [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {

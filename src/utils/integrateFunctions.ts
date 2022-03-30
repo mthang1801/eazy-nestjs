@@ -692,7 +692,7 @@ export const itgConvertProductsFromAppcore = (data) => {
   const mappingComboData = new Map([
     ['product_id', 'product_appcore_id'],
     // ['product_combo_id', 'parent_product_appcore_id'],
-    ['id', 'other_appcore_id'],
+    ['id', 'appcore_combo_setting_id'],
     ['quantity', 'amount'],
   ]);
 

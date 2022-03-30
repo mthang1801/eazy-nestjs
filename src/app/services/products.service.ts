@@ -349,7 +349,7 @@ export class ProductService {
     let skip = (page - 1) * limit;
 
     let filterConditions = {
-      [`${Table.PRODUCTS}.amount`]: MoreThan(1),
+      [`${Table.PRODUCTS}.amount`]: MoreThan(0),
     };
 
     if (category_ids) {
@@ -2147,87 +2147,8 @@ export class ProductService {
       throw new HttpException('Không thể thêm vào nhóm SP combo', 403);
     }
 
-    if (group.product_root_id == product.product_id) {
+    if (group.product_root_id == product['product_id']) {
       throw new HttpException('Không thành công', 403);
-    }
-
-    const productsInGroup = await this.productVariationGroupRepo.find({
-      select: '*',
-      where: { group_id: group.group_id },
-    });
-
-    // Đối với SP dịch vụ, không giới hạn SP trong nhóm
-    if (product.product_type == 4) {
-      if (
-        productsInGroup.some(
-          ({ product_id }) => product_id === product.product_id,
-        )
-      ) {
-        throw new HttpException('Sản phẩm đã trong nhóm', 409);
-      }
-      await this.productVariationGroupProductsRepo.create({
-        product_id: product.product_id,
-        group_id: group.group_id,
-        group_product_type: ProductGroupTypeEnum.Service,
-      });
-    }
-
-    if (product.product_type == 1) {
-      if (
-        productsInGroup.some(
-          ({ product_id }) => product_id === product.product_id,
-        )
-      ) {
-        throw new HttpException('Sản phẩm đã trong nhóm', 409);
-      }
-
-      await this.productVariationGroupProductsRepo.create({
-        product_id: product.product_id,
-        group_id: group.group_id,
-        group_product_type: ProductGroupTypeEnum.Accessory,
-      });
-    }
-
-    if (product.product_type == 2) {
-      if (product.parent_product_id)
-        throw new HttpException(
-          'SP không phải là SP cha, không thể đổi nhóm',
-          403,
-        );
-      let oldGroup;
-      let productsList = [];
-      productsList = [{ ...product }];
-      const childrenProducts = await this.productRepo.find({
-        select: '*',
-        where: { parent_product_id: product.product_id },
-      });
-      productsList = [...productsList, ...childrenProducts];
-
-      oldGroup = await this.productVariationGroupRepo.findOne({
-        product_root_id: product.product_id,
-      });
-
-      if (oldGroup) {
-        await this.productVariationGroupRepo.delete({
-          group_id: oldGroup.group_id,
-        });
-        await this.productVariationGroupProductsRepo.delete({
-          group_id: oldGroup.group_id,
-        });
-        await this.productVariationGroupFeatureRepo.delete({
-          group_id: oldGroup.group_id,
-        });
-
-        // Thêm SP mới vào danh sách
-        for (let productItem of productsList) {
-          await this.productVariationGroupProductsRepo.create({
-            product_id: productItem.product_id,
-            parent_product_id: productItem.parent_product_id,
-            product_group_name: productGroupName,
-            group_id: group.group_id,
-          });
-        }
-      }
     }
   }
 

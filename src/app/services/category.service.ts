@@ -27,7 +27,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
 import { data as categoryData } from '../../database/constant/category';
-import { categoryJoiner } from 'src/utils/joinTable';
+import { catalogCategoryJoiner, categoryJoiner } from 'src/utils/joinTable';
 import { DatabaseService } from 'src/database/database.service';
 import {
   sqlSyncGetCategoryFromMagento,
@@ -626,6 +626,7 @@ export class CategoryService {
     if (all) {
       let catalogsList = await this.catalogCategoryRepo.find({
         select: '*',
+        join: catalogCategoryJoiner,
         skip,
         limit,
       });
@@ -645,6 +646,7 @@ export class CategoryService {
     }
     let catalogsList = await this.catalogCategoryRepo.find({
       select: '*',
+      join: catalogCategoryJoiner,
       where: { level },
       skip,
       limit,
@@ -766,7 +768,6 @@ export class CategoryService {
     );
 
     const catalogCategoriesKeyList = resUrlKey[0];
-    console.log(catalogCategoriesKeyList);
     for (let categoryItem of catalogCategoriesKeyList) {
       const category = await this.catalogCategoryRepo.findOne({
         catalog_appcore_id: categoryItem['entity_id'],
