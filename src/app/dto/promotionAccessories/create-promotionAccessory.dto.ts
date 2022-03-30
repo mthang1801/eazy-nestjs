@@ -16,7 +16,7 @@ export class CreatePromotionAccessoryDto {
   product_ids: number[];
 
   @IsOptional()
-  status: string = 'A';
+  accessory_status: string = 'A';
 
   @IsOptional()
   @IsDateString()

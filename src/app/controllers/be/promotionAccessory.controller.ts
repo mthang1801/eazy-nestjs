@@ -28,6 +28,12 @@ export class PromotionAccessoriesController extends BaseController {
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
+  @Get()
+  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':accessory_id')
   async get(
     @Res() res: Response,
@@ -44,12 +50,6 @@ export class PromotionAccessoriesController extends BaseController {
     @Body() data: UpdatePromotionAccessoryDto,
   ): Promise<IResponse> {
     const result = await this.service.update(accessory_id, data);
-    return this.responseSuccess(res, result);
-  }
-
-  @Get()
-  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 }

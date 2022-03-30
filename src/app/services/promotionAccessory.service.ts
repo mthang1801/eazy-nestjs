@@ -19,7 +19,7 @@ export class PromotionAccessoryService {
   ) {}
 
   async create(data: CreatePromotionAccessoryDto) {
-    const promotionAccessory = await this.productPromoAccessoryRepo.findOne({
+    const promotionAccessory = await this.promoAccessoryRepo.findOne({
       accessory_code: data.accessory_code,
     });
     if (promotionAccessory) {
