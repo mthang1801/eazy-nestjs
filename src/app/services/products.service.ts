@@ -135,6 +135,7 @@ import { ProductStickerRepository } from '../repositories/productSticker.reposit
 import { ProductStickerEntity } from '../entities/productSticker.entity';
 import { StickerRepository } from '../repositories/sticker.repository';
 import { StickerEntity } from '../entities/sticker.entity';
+import * as moment from 'moment';
 
 @Injectable()
 export class ProductService {
@@ -2088,7 +2089,10 @@ export class ProductService {
   async getProductStickers(product) {
     //find product Stickers
     const productStickers = await this.productStickerRepo.find({
-      where: { product_id: product.product_id },
+      where: {
+        product_id: product.product_id,
+        end_at: MoreThan(moment(new Date()).format('YYYY-MM-DD HH:mm:ss')),
+      },
     });
 
     let stickers = [];

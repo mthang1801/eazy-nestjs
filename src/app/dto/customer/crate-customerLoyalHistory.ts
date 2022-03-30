@@ -1,10 +1,10 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateCustomerLoyalHistoryDto {
   @IsNotEmpty()
   point: number;
 
   @IsOptional()
-  type: string;
+  type: number;
 
   @IsOptional()
   by_type: string;
@@ -13,5 +13,6 @@ export class CreateCustomerLoyalHistoryDto {
   ref_id: number;
 
   @IsOptional()
+  @IsDateString()
   created_at: string;
 }

@@ -60,6 +60,7 @@ import { Not, Equal, MoreThan } from '../../database/find-options/operators';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
+import moment from 'moment';
 
 @Injectable()
 export class CustomerService {
@@ -709,6 +710,7 @@ export class CustomerService {
     const userLoyalty = await this.userLoyalRepo.findOne({
       user_id: user.user_id,
     });
+
     if (userLoyalty) {
       await this.userLoyalRepo.update(
         { user_id: user.user_id },
@@ -731,11 +733,10 @@ export class CustomerService {
     const user = await this.userRepo.findOne({
       user_appcore_id: customer_appcore_id,
     });
+
     if (!user) {
       return;
     }
-
-    data['created_at'] = convertNullDatetimeData(data['created_at']);
 
     const userLoyalHist = {
       ...new UserLoyaltyHistoryEntity(),
