@@ -12,7 +12,7 @@ export class CreatePromotionAccessoryDto {
   @IsNotEmpty()
   accessory_name: string;
 
-  @IsOptional()
+  @ArrayNotEmpty()
   product_ids: number[];
 
   @IsOptional()
