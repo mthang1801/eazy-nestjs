@@ -116,7 +116,7 @@ export class PromotionAccessoryService {
       updatePromoAccessoryData,
     );
 
-    await this.promoAccessoryRepo.delete({ accessory_id });
+    await this.productPromoAccessoryRepo.delete({ accessory_id });
     for (let productId of data.product_ids) {
       const newProductPromotionAccessoryData = {
         ...new ProductPromotionAccessoryEntity(),
