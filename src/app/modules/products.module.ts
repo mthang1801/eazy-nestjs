@@ -30,6 +30,8 @@ import { ProductSyncController } from '../controllers/sync/product.controller';
 import { StickerModule } from './sticker.module';
 import { ProductTesterController } from '../controllers/tester/product.controller';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
+import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
+import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 
 @Module({
   imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],

@@ -441,3 +441,20 @@ export const storeLocationJoiner = {
     },
   },
 };
+
+export const productPromotionAccessoriesJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PROMOTION_ACCESSORY]: {
+      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`,
+      rootJoin: `${Table.PROMOTION_ACCESSORY}.accessory_id`,
+    },
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+  },
+};

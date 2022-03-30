@@ -17,6 +17,7 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantsEntity } from '../entities/productOptionVariants.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
+import { parse, stringify, toJSON, fromJSON } from 'flatted';
 import {
   convertToMySQLDateTime,
   generateRandomString,
@@ -49,6 +50,7 @@ import {
   productSearchJoiner,
   productsSearchOnOrderJoiner,
   productByCategoryJoiner,
+  productPromotionAccessoriesJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -136,6 +138,10 @@ import { ProductStickerEntity } from '../entities/productSticker.entity';
 import { StickerRepository } from '../repositories/sticker.repository';
 import { StickerEntity } from '../entities/sticker.entity';
 import * as moment from 'moment';
+import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
+import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
+import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
+import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
 
 @Injectable()
 export class ProductService {
@@ -170,6 +176,8 @@ export class ProductService {
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
     private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
+    private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
+    private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -395,7 +403,6 @@ export class ProductService {
       },
       where: [
         { [`${Table.PRODUCTS}.product_id`]: identifier },
-        { [`${Table.PRODUCTS}.product_code`]: identifier },
         { [`${Table.PRODUCTS}.product_appcore_id`]: identifier },
       ],
     });
@@ -2025,36 +2032,10 @@ export class ProductService {
                 : [productInfoDetail];
             }
             // Lấy các SP liên quan
-            if (
-              !productInfoDetail.parent_product_id &&
-              productInfoDetail.product_type != 1
-            ) {
-              product['relevant_products'] = product['relevant_products']
-                ? [...product['relevant_products'], productInfoDetail]
-                : [productInfoDetail];
-            }
-            // Lấy SP hoặc Phụ kiện đi kèm
-            if (
-              productInfoDetail.product_id !== product.product_id &&
-              !productInfoDetail.parent_product_id &&
-              productInfoDetail.product_type == 1
-            ) {
-              productInfoDetail['image'] = null;
-              const productImage = await this.imageLinkRepo.findOne({
-                object_id: product.product_id,
-                object_type: ImageObjectType.PRODUCT,
-                position: 0,
-              });
-              if (productImage) {
-                const image = await this.imageRepo.findOne({
-                  image_id: productImage.image_id,
-                });
-                productInfoDetail['image'] = image;
-              }
-              product['accessory_products'] = product['accessory_products']
-                ? [...product['accessory_products'], productInfoDetail]
-                : [productInfoDetail];
-            }
+            productInfoDetail['accessory_products'] =
+              await this.getPromotionAccessoriesByProductId(
+                productInfoDetail.product_id,
+              );
           }
         }
       }
@@ -2108,8 +2089,11 @@ export class ProductService {
       });
     }
 
-    //determine type of product
+    // get promotion accessories
+    product['accessory_products'] =
+      await this.getPromotionAccessoriesByProductId(product.product_id);
 
+    //determine type of product
     product['productType'] = this.determineProductType(product);
 
     const categoriesList = await this.parentCategories(currentCategory);
@@ -2251,35 +2235,42 @@ export class ProductService {
           continue;
         }
         let response;
-        if (product.product_type == 3) {
-          response = await axios({
-            url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
-          });
-        } else {
-          response = await axios({
-            url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
-          });
-        }
-
-        const { data } = response.data;
-
-        if (data && Object.entries(data).length) {
-          for (let dataItem of Object.values(data)) {
-            await this.productStoreRepo.create({
-              store_location_id: dataItem['storeId'],
-              product_id: product.product_id,
-              amount: dataItem['inStockQuantity'],
-              created_at: convertToMySQLDateTime(),
-              updated_at: convertToMySQLDateTime(),
+        try {
+          if (product.product_type == 3) {
+            response = await axios({
+              url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
             });
-            await this.productStoreHistoryRepo.create({
-              store_location_id: dataItem['storeId'],
-              product_id: product.product_id,
-              amount: dataItem['inStockQuantity'],
-              created_at: convertToMySQLDateTime(),
-              updated_at: convertToMySQLDateTime(),
+          } else {
+            response = await axios({
+              url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
             });
           }
+
+          if (!response?.data?.data) {
+            continue;
+          }
+          const data = response.data.data;
+          console.log(2270, data);
+          if (data && Object.entries(data).length) {
+            for (let dataItem of Object.values(data)) {
+              await this.productStoreRepo.create({
+                store_location_id: dataItem['storeId'],
+                product_id: product.product_id,
+                amount: dataItem['inStockQuantity'],
+                created_at: convertToMySQLDateTime(),
+                updated_at: convertToMySQLDateTime(),
+              });
+              await this.productStoreHistoryRepo.create({
+                store_location_id: dataItem['storeId'],
+                product_id: product.product_id,
+                amount: dataItem['inStockQuantity'],
+                created_at: convertToMySQLDateTime(),
+                updated_at: convertToMySQLDateTime(),
+              });
+            }
+          }
+        } catch (error) {
+          console.log(error);
         }
       }
     }
@@ -2492,6 +2483,41 @@ export class ProductService {
     }
   }
 
+  async importProductStocksAmount() {
+    const products = await this.productRepo.find();
+
+    for (let product of products) {
+      if (!product.product_id || !product.product_appcore_id) {
+        continue;
+      }
+      let response: any;
+      if (product.product_type == 3) {
+        response = await axios({
+          url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
+        });
+      } else {
+        response = await axios({
+          url: GET_PRODUCTS_STORES_API(product.product_appcore_id),
+        });
+      }
+
+      const data = response.data.data;
+      console.log(data);
+      // if (Object.entries(data).length) {
+      //   for (let dataItem of Object.values(data)) {
+      //     if (dataItem['inStockQuantity'] < 0 || !dataItem['storeId']) {
+      //       continue;
+      //     }
+      //     await this.productStoreRepo.create({
+      //       store_location_id: dataItem['storeId'],
+      //       product_id: product.product_id,
+      //       amount: dataItem['inStockQuantity'],
+      //     });
+      //   }
+      // }
+    }
+  }
+
   async getListGroupingIndex(params) {
     let { page, limit } = params;
     page = +page || 1;
@@ -2635,25 +2661,16 @@ export class ProductService {
           );
 
           // Get children and accessory products
-          if (productInfo.product_id == group.product_root_id) {
-            product = { ...productInfo };
-          } else if (
-            productInfo.product_id != group.product_root_id &&
-            productItem.group_product_type == 1
-          ) {
-            product['childrenProducts'] = product['childrenProducts']
-              ? [...product['childrenProducts'], productInfo]
-              : [productInfo];
-          } else if (
-            productInfo.product_id != group.product_root_id &&
-            productItem.group_product_type == 2
-          ) {
-            product['accessory_products'] = product['accessory_products']
-              ? [...product['accessory_products'], productInfo]
-              : [productInfo];
-          }
+          productInfo['accessory_products'] =
+            await this.getPromotionAccessoriesByProductId(
+              productInfo.product_id,
+            );
         }
       }
+
+      // Get Promotion accessory
+      product['accessory_products'] =
+        await this.getPromotionAccessoriesByProductId(product.product_id);
 
       // Find relevant products
       if (group.index_id) {
@@ -2798,6 +2815,18 @@ export class ProductService {
     return result;
   }
 
+  async getPromotionAccessoriesByProductId(product_id: number) {
+    const accessoriesProducts = await this.productPromoAccessoryRepo.find({
+      select: '*',
+      join: productPromotionAccessoriesJoiner,
+      where: {
+        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`]: product_id,
+      },
+    });
+
+    return accessoriesProducts;
+  }
+
   async importProducts() {
     // this.clearAll();
     // const totalProducts = 17643;
@@ -2813,9 +2842,7 @@ export class ProductService {
     //     url: GET_PRODUCTS_APPCORE_LIST(page, limit),
     //     headers,
     //   });
-
     //   let listAppcoreProducts = res.data.data.list_product;
-
     //   if (listAppcoreProducts && listAppcoreProducts.length) {
     //     for (let productAppcoreItem of listAppcoreProducts) {
     //       let res = await axios({
@@ -2823,15 +2850,13 @@ export class ProductService {
     //         headers,
     //       });
     //       let listAppcoreProductDetail = res.data.data;
-
     //       let cmsProductDetail = convertProductDataFromAppcore(
     //         listAppcoreProductDetail,
     //       );
-
     //       await this.itgCreate(cmsProductDetail);
     //     }
     //   }
     // }
-    this.syncProductsIntoGroup();
+    // this.syncProductsIntoGroup();
   }
 }

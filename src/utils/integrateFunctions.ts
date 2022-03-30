@@ -663,7 +663,7 @@ export const convertProductDataFromAppcore = (coreProduct) => {
 
 export const itgConvertProductsFromAppcore = (data) => {
   const mappingData = new Map([
-    ['product_id', 'product_appcore_id'],
+    // ['product_id', 'product_appcore_id'],
     ['parent_product_id', 'parent_product_appcore_id'],
     ['category_id', 'category_appcore_id'],
     ['product', 'product'],

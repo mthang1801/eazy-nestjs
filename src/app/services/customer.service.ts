@@ -448,7 +448,7 @@ export class CustomerService {
     const customer = await this.userRepo.findOne({
       select: '*',
       join: userJoiner,
-      where: { user_appcore_id },
+      where: { [`${Table.USERS}.user_appcore_id`]: user_appcore_id },
     });
     if (!customer) {
       throw new HttpException(

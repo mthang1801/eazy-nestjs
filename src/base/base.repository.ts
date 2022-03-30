@@ -75,8 +75,6 @@ export class BaseRepositorty<T> {
       }
     }
 
-    console.log(fmtParams);
-
     let sql = `INSERT INTO ${this.table} SET ? `;
 
     await this.databaseService.executeQueryWritePool(sql, fmtParams);
@@ -271,8 +269,6 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
-    console.log(fmtParams);
-
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
       if (i === 0) {

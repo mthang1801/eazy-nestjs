@@ -19,6 +19,12 @@ export class ProductSyncController extends BaseController {
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
+  @Get('/stocks-amount')
+  async importProductStocksAmount(@Res() res) {
+    await this.service.itgGetProductsStores();
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
   @Get('/import')
   async importProducts(@Res() res) {
     await this.service.importProducts();

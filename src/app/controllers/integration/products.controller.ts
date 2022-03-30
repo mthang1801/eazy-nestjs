@@ -57,7 +57,7 @@ export class ProductIntegrationController extends BaseController {
    */
   @Get('/products-stores')
   async getProductsStores(@Res() res: Response): Promise<IResponse> {
-    await this.service.itgGetProductsStores();
+    await this.service.importProducts();
     return this.responseSuccess(res, null, 'Lấy tồn kho hoàn tất.');
   }
 
