@@ -12,6 +12,7 @@ export class ProductsEntity {
   company_id: number = 0;
   approved: string = 'Y';
   combo_amount: number = 0;
+  thumbnail: string = '';
   amount: number = 0;
   weight: number = 0;
   length: number = 0;

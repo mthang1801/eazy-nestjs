@@ -1780,11 +1780,55 @@ export class ProductService {
     }
   }
 
+  async uploadThumbnail(file, product_id) {
+    const product = await this.productRepo.findById(product_id);
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    try {
+      let data = new FormData();
+      data.append('files', fs.createReadStream(file.path));
+      let config: any = {
+        method: 'post',
+        url: UPLOAD_IMAGE_API,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...data.getHeaders(),
+        },
+        data,
+      };
+      const response = await axios(config);
+      const imageUrl = response.data.data;
+      if (imageUrl && imageUrl.length) {
+        await this.productRepo.update(
+          { product_id },
+          { thumbnail: imageUrl[0] },
+        );
+      }
+      await fsExtra.unlink(file.path);
+    } catch (error) {
+      console.log(error);
+      await fsExtra.unlink(file.path);
+      throw new HttpException(
+        `Có lỗi xảy ra : ${
+          error?.response?.data?.message ||
+          error?.response?.data ||
+          error.message
+        }`,
+        error.response.status,
+      );
+    }
+  }
+
   async deleteMetaImage(product_id) {
     await this.productDescriptionsRepo.update(
       { product_id },
       { meta_image: '' },
     );
+  }
+  async deleteThumbnail(product_id) {
+    await this.productRepo.update({ product_id }, { thumbnail: '' });
   }
 
   async deleteProductImage(

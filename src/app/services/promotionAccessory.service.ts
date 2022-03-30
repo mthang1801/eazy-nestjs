@@ -106,7 +106,7 @@ export class PromotionAccessoryService {
     }
 
     const updatePromoAccessoryData = {
-      ...this.promoAccessoryRepo.setData(accessory_id),
+      ...this.promoAccessoryRepo.setData(data),
       updated_at: convertToMySQLDateTime(),
     };
 
@@ -160,5 +160,34 @@ export class PromotionAccessoryService {
         total: count[0].total,
       },
     };
+  }
+
+  async getByProductId(product_id) {
+    const product = await this.productRepo.findOne({ product_id });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    const accessoriesProducts = await this.productPromoAccessoryRepo.find({
+      select: '*',
+      join: {
+        [JoinTable.innerJoin]: {
+          [Table.PROMOTION_ACCESSORY]: {
+            fieldJoin: 'accessory_id',
+            rootJoin: 'accessory_id',
+          },
+          [Table.PRODUCTS]: {
+            fieldJoin: `${Table.PRODUCTS}.product_id`,
+            rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+          },
+        },
+      },
+      where: {
+        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`]: product_id,
+      },
+    });
+
+    return accessoriesProducts;
   }
 }

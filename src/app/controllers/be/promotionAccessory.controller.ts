@@ -52,4 +52,13 @@ export class PromotionAccessoriesController extends BaseController {
     const result = await this.service.update(accessory_id, data);
     return this.responseSuccess(res, result);
   }
+
+  @Get('products/:product_id')
+  async getByProductId(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getByProductId(product_id);
+    return this.responseSuccess(res, result);
+  }
 }

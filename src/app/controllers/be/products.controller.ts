@@ -157,12 +157,44 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
   }
 
+  @Post(':product_id/upload-thumbnail')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadThumbnail(
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+    @Param('product_id') product_id: string,
+  ) {
+    await this.service.uploadThumbnail(file, product_id);
+    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+  }
+
   @Delete(':product_id/meta-image/')
   async deleteMetaImage(
     @Res() res: Response,
     @Param('product_id') product_id: string,
   ) {
     await this.service.deleteMetaImage(product_id);
+    return this.responseSuccess(res, null, 'Xoá thành công.');
+  }
+
+  @Delete(':product_id/thumbnail/')
+  async deleteThumbnail(
+    @Res() res: Response,
+    @Param('product_id') product_id: string,
+  ) {
+    await this.service.deleteThumbnail(product_id);
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
