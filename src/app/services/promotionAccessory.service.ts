@@ -10,12 +10,15 @@ import { UpdatePromotionAccessoryDto } from '../dto/promotionAccessories/update-
 import { convertToMySQLDateTime } from '../../utils/helper';
 import { promotionAccessoriesSearchFilter } from 'src/utils/tableConditioner';
 import { Table } from 'src/database/enums';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
 
 @Injectable()
 export class PromotionAccessoryService {
   constructor(
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
+    private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
   async create(data: CreatePromotionAccessoryDto) {
@@ -30,10 +33,12 @@ export class PromotionAccessoryService {
     }
 
     for (let productId of data.product_ids) {
-      const product = await this.productPromoAccessoryRepo.findById(productId);
+      const product = await this.productRepo.findOne({
+        product_id: productId,
+      });
       if (!product) {
         throw new HttpException(
-          `Sản phẩm có id ${product['product_id']} không tồn tại`,
+          `Sản phẩm có id ${productId} không tồn tại`,
           404,
         );
       }
@@ -53,6 +58,7 @@ export class PromotionAccessoryService {
         accessory_id: newPromotionAccessory.accessory_id,
         product_id: productId,
       };
+      console.log(newProductPromotionAccessoryData);
       await this.productPromoAccessoryRepo.createSync(
         newProductPromotionAccessoryData,
       );

@@ -3,11 +3,13 @@ import { PromotionAccessoryService } from '../services/promotionAccessory.servic
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { PromotionAccessoriesController } from '../controllers/be/promotionAccessory.controller';
+import { ProductsRepository } from '../repositories/products.repository';
 @Module({
   providers: [
     PromotionAccessoryService,
     PromotionAccessoryRepository,
     ProductPromotionAccessoryRepository,
+    ProductsRepository,
   ],
   exports: [
     PromotionAccessoryService,
