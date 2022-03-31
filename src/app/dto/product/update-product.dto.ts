@@ -130,6 +130,12 @@ export class UpdateProductDto {
 
   @IsOptional()
   redirect_url: string;
+
+  @IsOptional()
+  is_installment: string;
+
+  @IsOptional()
+  promotion_accessory_id: string;
 }
 
 class ProductFeatureDto {
