@@ -25,7 +25,7 @@ export class ProductFeatureController extends BaseController {
   @Post()
   async create(@Body() data, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.createSync(data);
-    return this.responseSuccess(res, result, 'Sync hoàn tất');
+    return this.responseSuccess(res, result, 'Thành công');
   }
 
   @Get()

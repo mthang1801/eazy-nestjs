@@ -210,6 +210,7 @@ export class CustomerService {
     let customersList = await this.userRepo.find({
       select: ['*', `${Table.USERS}.*`],
       join: userJoiner,
+      orderBy: [{ field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC }],
       where: customersListSearchFilter(search, filterConditions),
       skip,
       limit,
