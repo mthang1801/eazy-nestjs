@@ -50,6 +50,7 @@ import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCat
 import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDescription.entity';
 import { sqlGetCatalogCategoryUrlPath } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
 import axios from 'axios';
+import { SortBy } from '../../database/enums/sortBy.enum';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -118,6 +119,9 @@ export class CategoryService {
 
   async itgCreate(data) {
     let convertedData = convertCategoryFromAppcore(data);
+    if (!convertedData['category']) {
+      throw new HttpException('Category cần có tên', 400);
+    }
 
     const categoryData = {
       ...new CategoryEntity(),
@@ -134,6 +138,39 @@ export class CategoryService {
     await this.categoryDescriptionRepo.createSync(categoryDescData);
     await this.convertAppcoreToCMSId();
   }
+
+  async itgUpdate(category_appcore_id, data) {
+    let convertedData = convertCategoryFromAppcore(data);
+
+    const category = await this.categoryRepository.findOne({
+      category_appcore_id,
+    });
+    if (!category) {
+      throw new HttpException('Không tìm thấy danh mục', 404);
+    }
+    const updatedCategoryData = {
+      ...this.categoryRepository.setData(convertedData),
+      updated_at: convertToMySQLDateTime(),
+    };
+
+    await this.categoryRepository.update(
+      { category_id: category['category_id'] },
+      updatedCategoryData,
+    );
+
+    const updatedCategoryDesData = {
+      ...this.categoryDescriptionRepo.setData(convertedData),
+    };
+
+    if (Object.entries(updatedCategoryDesData).length) {
+      await this.categoryDescriptionRepo.update(
+        { category_id: category['category_id'] },
+        updatedCategoryDesData,
+      );
+    }
+    await this.convertAppcoreToCMSId();
+  }
+
   async convertAppcoreToCMSId() {
     let categories = await this.categoryRepository.find();
     if (categories.length) {
@@ -367,6 +404,10 @@ export class CategoryService {
       const categories = await this.categoryRepository.find({
         select: '*',
         join: categoryJoiner,
+        orderBy: [
+          { field: 'updated_at', sortBy: SortBy.DESC },
+          { field: 'created_at', sortBy: SortBy.DESC },
+        ],
         where: categoriesSearchFilter(search, filterCondition),
         skip,
         limit,

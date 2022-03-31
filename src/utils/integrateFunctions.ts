@@ -536,16 +536,18 @@ export const convertCategoryFromAppcore = (coreData) => {
 
   let cmsData = { ...coreData };
   for (let [core, cms] of mappingData) {
-    if (core === 'category') {
+    if (core === 'category' && coreData[core]) {
       cmsData['category_appcore'] = coreData[core];
     }
-    if (core === 'display_at') {
+    if (core === 'display_at' && coreData[core]) {
       if (moment(coreData[core]).isValid()) {
         cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
       }
       continue;
     }
-    cmsData[cms] = coreData[core];
+    if (coreData[core]) {
+      cmsData[cms] = coreData[core];
+    }
   }
 
   delete cmsData['category_id'];

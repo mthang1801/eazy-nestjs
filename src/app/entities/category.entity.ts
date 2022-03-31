@@ -20,5 +20,6 @@ export class CategoryEntity {
   parent_magento_id: number = 0;
   feature_id: number = 0;
   created_at: string = convertToMySQLDateTime();
+  updated_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
 }

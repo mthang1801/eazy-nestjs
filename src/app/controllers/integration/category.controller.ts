@@ -19,6 +19,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 import { ProductService } from 'src/app/services/products.service';
+import { UpdateCategoryAppcoreDto } from 'src/app/dto/category/update-category.appcore.dto';
 
 /**
  * Controller for Category
@@ -45,8 +46,18 @@ export class CategoryController extends BaseController {
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const createdCategory = await this.service.itgCreate(categoryDto);
-    return this.responseSuccess(res, createdCategory);
+    await this.service.itgCreate(categoryDto);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Put(':category_appcore_id')
+  async update(
+    @Body() data: UpdateCategoryAppcoreDto,
+    @Res() res: Response,
+    @Param('category_appcore_id') category_appcore_id: number,
+  ): Promise<IResponse> {
+    await this.service.itgUpdate(category_appcore_id, data);
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 
   /**
@@ -74,22 +85,22 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, categoryRes);
   }
 
-  /**
-   * Update records by category_id in ddv_categories table
-   * @param categoryDto
-   * @param id
-   * @param res
-   * @returns
-   */
-  @Put('/:id')
-  async update(
-    @Body() categoryDto: UpdateCategoryDto,
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const updatedCategory = await this.service.update(id, categoryDto);
-    return this.responseSuccess(res, updatedCategory);
-  }
+  // /**
+  //  * Update records by category_id in ddv_categories table
+  //  * @param categoryDto
+  //  * @param id
+  //  * @param res
+  //  * @returns
+  //  */
+  // @Put('/:id')
+  // async update(
+  //   @Body() categoryDto: UpdateCategoryDto,
+  //   @Param('id') id: number,
+  //   @Res() res: Response,
+  // ): Promise<IResponse> {
+  //   const updatedCategory = await this.service.update(id, categoryDto);
+  //   return this.responseSuccess(res, updatedCategory);
+  // }
 
   @Delete('/:id')
   async delete(
