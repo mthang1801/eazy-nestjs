@@ -45,13 +45,18 @@ export class PromotionAccessoryService {
       }
     }
 
+    console.log(data);
+
     const newPromotionAccessoryData = {
       ...new PromotionAccessoryEntity(),
       ...this.promoAccessoryRepo.setData(data),
     };
+    console.log(newPromotionAccessoryData);
     const newPromotionAccessory = await this.promoAccessoryRepo.create(
       newPromotionAccessoryData,
     );
+
+    console.log(newPromotionAccessory);
 
     for (let productId of data.product_ids) {
       const newProductPromotionAccessoryData = {
