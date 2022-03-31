@@ -3,7 +3,10 @@ import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
-import { preprocessAddTextDataToMysql } from '../utils/helper';
+import {
+  formatTypeValueToInSertSQL,
+  preprocessAddTextDataToMysql,
+} from '../utils/helper';
 import {
   convertToMySQLDateTime,
   preprocessDatabaseBeforeResponse,
@@ -74,6 +77,8 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
+
+    console.log(fmtParams);
 
     let sql = `INSERT INTO ${this.table} SET ? `;
 
@@ -269,26 +274,13 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
+
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
       if (i === 0) {
-        sql +=
-          +val === 0 && val !== ''
-            ? `${key} = 0`
-            : !val
-            ? `${key} = ''`
-            : !isNaN(+val * 1)
-            ? `${key} = ${val}`
-            : `${key} = '${val}'`;
+        sql += formatTypeValueToInSertSQL(key, val);
       } else {
-        sql +=
-          +val === 0 && val !== ''
-            ? `, ${key} = 0`
-            : !val
-            ? `, ${key} = ''`
-            : !isNaN(+val * 1)
-            ? `, ${key} = ${val}`
-            : `, ${key} = '${val}'`;
+        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
       }
     });
     sql += ' WHERE ';
@@ -296,23 +288,9 @@ export class BaseRepositorty<T> {
     if (typeof id === 'object') {
       Object.entries(id).forEach(([key, val], i) => {
         if (i === 0) {
-          sql +=
-            +val === 0 && val !== ''
-              ? `${key} = 0`
-              : !val
-              ? `${key} = ''`
-              : !isNaN(+val * 1)
-              ? `${key} = ${val}`
-              : `${key} = '${val}'`;
+          sql += formatTypeValueToInSertSQL(key, val);
         } else {
-          sql +=
-            +val === 0 && val !== ''
-              ? ` AND ${key} = 0`
-              : !val
-              ? ` AND ${key} = ''`
-              : !isNaN(+val * 1)
-              ? ` AND ${key} = ${val}`
-              : ` AND ${key} = '${val}'`;
+          sql += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
         }
       });
     } else {
@@ -351,7 +329,7 @@ export class BaseRepositorty<T> {
               queryString +=
                 typeof val === 'number'
                   ? ` OR ${key} = ${val}`
-                  : `OR ${key} = '${val}'`;
+                  : ` OR ${key} = '${val}'`;
             }
           });
         }

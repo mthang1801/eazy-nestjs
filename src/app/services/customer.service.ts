@@ -555,7 +555,7 @@ export class CustomerService {
 
   async itgUpdate(user_appcore_id: number, data: UpdateCustomerAppcoreDto) {
     const convertedData = itgUpdateCustomerFromAppcore(data);
-    console.log(convertedData);
+
     const user = await this.userRepo.findOne({
       user_appcore_id,
     });

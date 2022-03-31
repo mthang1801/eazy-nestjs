@@ -3038,4 +3038,19 @@ export class ProductService {
       await this.categoryRepo.update({ category_id }, { product_count: total });
     }
   }
+
+  async testSql() {
+    const newGroup1 = await this.productGroupIndexRepo.create({
+      group_ids: null,
+      type: 1,
+    });
+    const newGroup2 = await this.productGroupIndexRepo.create({
+      group_ids: null,
+      type: 1,
+    });
+    await this.productGroupIndexRepo.update(
+      { index_id: newGroup1.index_id },
+      { group_ids: '0112379128', type: 3 },
+    );
+  }
 }
