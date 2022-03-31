@@ -96,4 +96,7 @@ export class CreateCategoryDto {
 
   @IsOptional()
   image: string = '';
+
+  @IsOptional()
+  redirect_url: string = '';
 }

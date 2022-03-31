@@ -143,7 +143,10 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
-import { sqlReportTotalProductAmountFromStores } from 'src/utils/analysis/sqlProductAmount';
+import {
+  sqlReportTotalProductAmountFromStores,
+  sqlReportTotalProductsInCategories,
+} from 'src/utils/analysis/sqlProductAmount';
 
 @Injectable()
 export class ProductService {
@@ -3000,6 +3003,29 @@ export class ProductService {
         error.response.data.message,
         error.response.status,
       );
+    }
+  }
+
+  async reportCountTotalFromCategories() {
+    const categoriesList = await this.categoryRepo.find();
+    for (let { category_id } of categoriesList) {
+      let childrenCategories = await this.childrenCategories(category_id);
+
+      let categories = [
+        ...new Set([
+          category_id,
+          ...childrenCategories.map(({ category_id }) => category_id),
+        ]),
+      ];
+      if (!categories.length) {
+        continue;
+      }
+
+      const response = await this.databaseService.executeQueryReadPool(
+        sqlReportTotalProductsInCategories(categories),
+      );
+      const total = await response[0][0].total;
+      await this.categoryRepo.update({ category_id }, { product_count: total });
     }
   }
 }

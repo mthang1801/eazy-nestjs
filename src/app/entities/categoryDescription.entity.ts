@@ -7,4 +7,6 @@ export class CategoryDescriptionEntity {
   meta_description: string = '';
   page_title: string = '';
   age_warning_message: string = '';
+  redirect_url: string = '';
+  meta_image: string = '';
 }

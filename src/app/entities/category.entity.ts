@@ -19,6 +19,7 @@ export class CategoryEntity {
   id_magento_path: string = '';
   parent_magento_id: number = 0;
   feature_id: number = 0;
+  icon: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();

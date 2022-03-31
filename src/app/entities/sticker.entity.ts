@@ -4,7 +4,7 @@ export class StickerEntity {
   sticker_code: string = '';
   sticker_name: string = '';
   description: string = '';
-  status: string = 'A';
+  sticker_status: string = 'A';
   url_image: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();

@@ -51,6 +51,10 @@ import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDes
 import { sqlGetCatalogCategoryUrlPath } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
 import axios from 'axios';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { UPLOAD_IMAGE_API } from '../../database/constant/api.appcore';
+import * as fsExtra from 'fs-extra';
+import * as FormData from 'form-data';
+import * as fs from 'fs';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -390,6 +394,114 @@ export class CategoryService {
     }
 
     return result;
+  }
+
+  async uploadMetaImage(file, category_id) {
+    const category = await this.categoryRepository.findOne({ category_id });
+    if (!category) {
+      throw new HttpException('Không tìm thấy Category.', 404);
+    }
+    const categoryDesc = await this.categoryDescriptionRepo.findOne({
+      category_id,
+    });
+    if (!categoryDesc) {
+      const newCateoryDescData = {
+        ...new CategoryDescriptionEntity(),
+        category_id,
+      };
+      await this.categoryDescriptionRepo.createSync(newCateoryDescData);
+    }
+
+    try {
+      let data = new FormData();
+      data.append('files', fs.createReadStream(file.path));
+
+      let config: any = {
+        method: 'post',
+        url: UPLOAD_IMAGE_API,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...data.getHeaders(),
+        },
+        data,
+      };
+      const response = await axios(config);
+      const imageUrl = response.data.data;
+      if (imageUrl && imageUrl.length) {
+        await this.categoryDescriptionRepo.update(
+          { category_id },
+          { meta_image: imageUrl[0] },
+        );
+      }
+      await fsExtra.unlink(file.path);
+    } catch (error) {
+      await fsExtra.unlink(file.path);
+      throw new HttpException(
+        `Có lỗi xảy ra : ${
+          error?.response?.data?.message ||
+          error?.response?.data ||
+          error.message
+        }`,
+        error.response.status,
+      );
+    }
+  }
+
+  async deleteMetaImage(category_id) {
+    return this.categoryDescriptionRepo.update(
+      { category_id },
+      { meta_image: '' },
+    );
+  }
+
+  async uploadIcon(file, category_id) {
+    const category = await this.categoryRepository.findOne({ category_id });
+    if (!category) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    try {
+      let data = new FormData();
+      data.append('files', fs.createReadStream(file.path));
+      let config: any = {
+        method: 'post',
+        url: UPLOAD_IMAGE_API,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...data.getHeaders(),
+        },
+        data,
+      };
+      const response = await axios(config);
+      const imageUrl = response.data.data;
+      if (imageUrl && imageUrl.length) {
+        await this.categoryRepository.update(
+          { category_id },
+          { icon: imageUrl[0] },
+        );
+      }
+      await fsExtra.unlink(file.path);
+    } catch (error) {
+      console.log(error);
+      await fsExtra.unlink(file.path);
+      throw new HttpException(
+        `Có lỗi xảy ra : ${
+          error?.response?.data?.message ||
+          error?.response?.data ||
+          error.message
+        }`,
+        error.response.status,
+      );
+    }
+  }
+
+  async deleteIcon(category_id) {
+    return this.categoryRepository.update(
+      {
+        category_id,
+      },
+      { icon: '' },
+    );
   }
 
   async getList(params) {

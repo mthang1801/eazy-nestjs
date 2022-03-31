@@ -9,9 +9,17 @@ export class ProductsReportController extends BaseController {
     super();
   }
 
-  @Get('/total')
+  @Get('/stocks')
   async reportCountTotalFromStores(@Res() res: Response): Promise<IResponse> {
     await this.service.reportCountTotalFromStores();
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Get('/categories')
+  async reportCountTotalFromCategories(
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.reportCountTotalFromCategories();
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }

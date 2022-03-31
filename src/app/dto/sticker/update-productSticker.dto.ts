@@ -19,7 +19,7 @@ export class ProductStickerItem {
   sticker_id: number;
 
   @IsOptional()
-  status: string = 'A';
+  status: string;
 
   @IsNotEmpty()
   @IsIn([1, 2, 3, 4])

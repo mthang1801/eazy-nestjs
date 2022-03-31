@@ -13,5 +13,5 @@ export class UpdateStickerDto {
   url_image: string;
 
   @IsOptional()
-  status: string;
+  sticker_status: string;
 }

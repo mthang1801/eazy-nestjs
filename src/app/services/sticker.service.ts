@@ -115,7 +115,7 @@ export class StickerService {
       join: productStickerJoiner,
       where: {
         [`${Table.PRODUCT_STICKER}.product_id`]: product_id,
-        [`${Table.STICKER}.status`]: 'A',
+        [`${Table.STICKER}.sticker_status`]: 'A',
       },
     });
   }

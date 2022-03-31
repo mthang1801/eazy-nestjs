@@ -159,10 +159,7 @@ export class PromotionAccessoryService {
     let filterConditions = {};
     const accessoriesList = await this.promoAccessoryRepo.find({
       select: '*',
-      orderBy: [
-        { field: `updated_at`, sortBy: SortBy.DESC },
-        { field: `created_at`, sortBy: SortBy.DESC },
-      ],
+      orderBy: [{ field: `updated_at`, sortBy: SortBy.DESC }],
       where: promotionAccessoriesSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -177,7 +174,9 @@ export class PromotionAccessoryService {
         select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id) as total `,
         where: { accessory_id: accessoryItem.accessory_id },
       });
-      console.log(productsCount);
+      accessoryItem['display_at'] = moment(accessoryItem['display_at']).format(
+        'YYYY-DD-MM HH:mm:ss',
+      );
       accessoryItem['productAmount'] = productsCount[0].total;
     }
     return {

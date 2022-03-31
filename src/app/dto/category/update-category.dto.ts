@@ -90,4 +90,7 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   image: string;
+
+  @IsOptional()
+  redirect_url: string;
 }

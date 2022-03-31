@@ -10,6 +10,8 @@ import {
   UseGuards,
   Delete,
   UsePipes,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { CategoryService } from '../../services/category.service';
@@ -20,6 +22,8 @@ import { Response } from 'express';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 import { ProductService } from 'src/app/services/products.service';
 import { CreateCategoryV2Dto } from 'src/app/dto/category/create-category.v2.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as multer from 'multer';
 
 /**
  * Controller for Category
@@ -105,6 +109,70 @@ export class CategoryController extends BaseController {
   ): Promise<IResponse> {
     const updatedCategory = await this.service.update(id, categoryDto);
     return this.responseSuccess(res, updatedCategory);
+  }
+
+  @Post(':category_id/upload-meta-image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadMetaImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+    @Param('category_id') category_id: string,
+  ) {
+    await this.service.uploadMetaImage(file, category_id);
+    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+  }
+
+  @Post(':category_id/upload-icon')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, './uploads'),
+        filename: (req, file, cb) => {
+          const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${
+            file.originalname
+          }`;
+          return cb(null, filename);
+        },
+      }),
+    }),
+  )
+  async uploadIcon(
+    @UploadedFile() file: Express.Multer.File,
+    @Res() res: Response,
+    @Param('category_id') category_id: string,
+  ) {
+    await this.service.uploadIcon(file, category_id);
+    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+  }
+
+  @Delete(':category_id/meta-image/')
+  async deleteMetaImage(
+    @Res() res: Response,
+    @Param('category_id') category_id: string,
+  ) {
+    await this.service.deleteMetaImage(category_id);
+    return this.responseSuccess(res, null, 'Xoá thành công.');
+  }
+
+  @Delete(':category_id/icon/')
+  async deleteIcon(
+    @Res() res: Response,
+    @Param('category_id') category_id: string,
+  ) {
+    await this.service.deleteIcon(category_id);
+    return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
   @Delete('/:id')

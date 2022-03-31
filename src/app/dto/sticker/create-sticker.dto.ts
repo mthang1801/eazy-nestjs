@@ -11,4 +11,7 @@ export class CreateStickerDto {
 
   @IsNotEmpty()
   url_image: string;
+
+  @IsOptional()
+  sticker_status: string;
 }
