@@ -168,6 +168,29 @@ export const productJoiner = {
   },
 };
 
+export const productStickersJoiner = {
+  [Table.PRODUCT_DESCRIPTION]: {
+    fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+  [Table.PRODUCT_PRICES]: {
+    fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+  [Table.PRODUCTS_CATEGORIES]: {
+    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    rootJoin: `${Table.PRODUCTS}.product_id`,
+  },
+  [Table.CATEGORIES]: {
+    fieldJoin: `${Table.CATEGORIES}.category_id`,
+    rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+  },
+  [Table.PRODUCT_STICKER]: {
+    fieldJoin: `${Table.PRODUCTS}.product_id`,
+    rootJoin: `${Table.STICKER}.product_id`,
+  },
+};
+
 export const userGroupJoiner = {
   [JoinTable.innerJoin]: {
     [Table.USER_GROUP_DESCRIPTIONS]: {

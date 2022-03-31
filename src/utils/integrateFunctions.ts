@@ -565,7 +565,7 @@ export const convertProductDataFromAppcore = (coreProduct) => {
     ['productCodeVat', 'tax_ids'],
     ['productName', 'product'],
     ['productNameVat', 'tax_name'],
-    ['productType', 'product_type'],
+    ['productType', 'status_type'],
     ['originPrice', 'list_price'],
     ['returnSellingPrice', 'collect_price'],
     ['sellingPrice', 'price'],

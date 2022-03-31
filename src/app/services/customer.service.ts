@@ -204,17 +204,12 @@ export class CustomerService {
 
     const count = await this.userRepo.find({
       select: [`COUNT(DISTINCT(${Table.USERS}.user_id)) as total`],
-      join: userJoiner,
       where: customersListSearchFilter(search, filterConditions),
     });
 
     let customersList = await this.userRepo.find({
       select: ['*', `${Table.USERS}.*`],
       join: userJoiner,
-      orderBy: [
-        { field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC },
-        { field: `${Table.USERS}.created_at`, sortBy: SortBy.DESC },
-      ],
       where: customersListSearchFilter(search, filterConditions),
       skip,
       limit,

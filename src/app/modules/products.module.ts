@@ -32,6 +32,7 @@ import { ProductTesterController } from '../controllers/tester/product.controlle
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
+import { ProductsReportController } from '../controllers/report/product.controller';
 
 @Module({
   imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
@@ -91,6 +92,7 @@ import { ProductPromotionAccessoryRepository } from '../repositories/productProm
     ProductIntegrationController,
     ProductSyncController,
     ProductTesterController,
+    ProductsReportController,
   ],
 })
 export class ProductsModule {}

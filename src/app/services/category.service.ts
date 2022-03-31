@@ -118,6 +118,13 @@ export class CategoryService {
   }
 
   async itgCreate(data) {
+    const category = await this.categoryRepository.findOne({
+      category_appcore_id: data.category_id,
+    });
+    if (category) {
+      return await this.itgUpdate(data.category_id, data);
+    }
+
     let convertedData = convertCategoryFromAppcore(data);
     if (!convertedData['category']) {
       throw new HttpException('Category cần có tên', 400);
@@ -140,15 +147,17 @@ export class CategoryService {
   }
 
   async itgUpdate(category_appcore_id, data) {
-    let convertedData = convertCategoryFromAppcore(data);
-
     const category = await this.categoryRepository.findOne({
       category_appcore_id,
     });
+
     if (!category) {
-      throw new HttpException('Không tìm thấy danh mục', 404);
+      return this.itgCreate({ category_id: category_appcore_id, ...data });
     }
-    const updatedCategoryData = {
+    let convertedData = convertCategoryFromAppcore(data);
+
+    let updatedCategoryData = {};
+    updatedCategoryData = {
       ...this.categoryRepository.setData(convertedData),
       updated_at: convertToMySQLDateTime(),
     };

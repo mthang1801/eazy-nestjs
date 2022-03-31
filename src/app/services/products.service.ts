@@ -51,6 +51,7 @@ import {
   productsSearchOnOrderJoiner,
   productByCategoryJoiner,
   productPromotionAccessoriesJoiner,
+  productStickerJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -142,6 +143,7 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import { sqlReportTotalProductAmountFromStores } from 'src/utils/analysis/sqlProductAmount';
 
 @Injectable()
 export class ProductService {
@@ -476,24 +478,33 @@ export class ProductService {
       product_status,
       product_type,
       productType,
-      status_type,
-      catalog_category_id,
-      type,
+      status_type, // Trạng thái SP Like, Demo
+      catalog_category_id, // danh mục ngành hàng
+      type, // Loại hàng cty, xách tay
+      promotion_accessory_id, // Tên bộ phụ kiện đi kèm
+      created_at, // Ngày tạo
+      updated_at, //Ngày cập nhật
+      sticker_id,
     } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
+    //  Filter trạng thái hiển thị
     if (status) {
       filterCondition[`${Table.PRODUCTS}.status`] = status;
     }
+    // Filter trạng thái SP
     if (product_status) {
       filterCondition[`${Table.PRODUCTS}.product_status`] = product_status;
     }
+    // Filter loại SP
     if (product_type) {
       filterCondition[`${Table.PRODUCTS}.product_type`] = product_type;
     }
+
+    // Filter Sản phẩm thuộc về Sp cha hay SP con, combo hay độc lập
     if (productType) {
       if (productType == 1) {
         filterCondition[`${Table.PRODUCTS}.product_type`] = LessThan(3);
@@ -511,17 +522,41 @@ export class ProductService {
       }
     }
 
+    // Filter danh mục
     if (catalog_category_id) {
       filterCondition[`${Table.PRODUCTS}.catalog_category_id`] =
         catalog_category_id;
     }
 
+    // Filter tinhf trang Demo, Like
     if (status_type) {
       filterCondition[`${Table.PRODUCTS}.status_type`] = status_type;
     }
 
+    // Loại hàng cty, xách tay
     if (type) {
       filterCondition[`${Table.PRODUCTS}.type`] = type;
+    }
+
+    // Phụ kiện đi kèm
+    if (promotion_accessory_id) {
+      filterCondition[`${Table.PRODUCTS}.promotion_accessory_id`] =
+        promotion_accessory_id;
+    }
+
+    // Ngay tạo
+    if (created_at) {
+      filterCondition[`${Table.PRODUCTS}.created_at`] = Like(created_at);
+    }
+
+    // Ngày cập nhật
+    if (updated_at) {
+      filterCondition[`${Table.PRODUCTS}.updated_at`] = Like(updated_at);
+    }
+
+    // Theo sticker
+    if (sticker_id) {
+      filterCondition[`${Table.PRODUCT_STICKER}.sticker_id`] = sticker_id;
     }
 
     let categoriesList = [];
@@ -536,7 +571,7 @@ export class ProductService {
     const productLists = await this.productRepo.find({
       select: getProductsListSelector,
       join: {
-        [JoinTable.innerJoin]: productJoiner,
+        [JoinTable.leftJoin]: sticker_id ? productStickerJoiner : productJoiner,
       },
       orderBy: [
         { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
@@ -556,7 +591,7 @@ export class ProductService {
     let count = await this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: {
-        [JoinTable.innerJoin]: productJoiner,
+        [JoinTable.leftJoin]: sticker_id ? productStickerJoiner : productJoiner,
       },
       where: categoriesList.length
         ? productsListCategorySearchFilter(
@@ -1386,12 +1421,6 @@ export class ProductService {
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
     console.log('Update Product Itg');
-    let convertedData = { ...data };
-    if (!isConverted) {
-      convertedData = itgConvertProductsFromAppcore(data);
-    }
-    delete convertedData['product_appcore_id'];
-
     const product = await this.productRepo.findOne({
       select: '*',
       join: productJoiner,
@@ -1403,8 +1432,14 @@ export class ProductService {
     });
 
     if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
+      return this.itgCreate({ product_appcore_id: identifier, ...data });
     }
+
+    let convertedData = { ...data };
+    if (!isConverted) {
+      convertedData = itgConvertProductsFromAppcore(data);
+    }
+    delete convertedData['product_appcore_id'];
 
     if (convertedData.combo_items && convertedData.combo_items.length) {
       for (let comboItem of convertedData.combo_items) {
@@ -2944,5 +2979,27 @@ export class ProductService {
     //   }
     // }
     // this.syncProductsIntoGroup();
+  }
+
+  async reportCountTotalFromStores() {
+    try {
+      const response: any = await this.databaseService.executeQueryReadPool(
+        sqlReportTotalProductAmountFromStores,
+      );
+      if (!response[0]) {
+        return;
+      }
+
+      let result = response[0];
+      for (let { product_id, total } of result) {
+        await this.productRepo.update({ product_id }, { amount: total });
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
+    }
   }
 }

@@ -13,6 +13,7 @@ import { Table } from 'src/database/enums';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import * as moment from 'moment';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -45,7 +46,9 @@ export class PromotionAccessoryService {
       }
     }
 
-    console.log(data);
+    if (data.display_at) {
+      data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
+    }
 
     const newPromotionAccessoryData = {
       ...new PromotionAccessoryEntity(),
@@ -72,7 +75,9 @@ export class PromotionAccessoryService {
   }
 
   async get(accessory_id: number) {
-    const promoAccessory = await this.promoAccessoryRepo.findById(accessory_id);
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
     if (!promoAccessory) {
       throw new HttpException(
         'Không tìm thấy nhóm SP phụ kiện khuyến mãi',
@@ -80,11 +85,17 @@ export class PromotionAccessoryService {
       );
     }
 
+    if (promoAccessory['display_at']) {
+      promoAccessory['display_at'] = moment(
+        promoAccessory['display_at'],
+      ).format('YYYY-MM-DD HH:mm:ss');
+    }
+
     const productAccessoriesList = await this.productPromoAccessoryRepo.find({
       select: 'product_id',
       where: { accessory_id },
     });
-    console.log(productAccessoriesList);
+
     promoAccessory['products'] = [];
     if (productAccessoriesList.length) {
       let productLists = await this.productRepo.find({
@@ -120,6 +131,10 @@ export class PromotionAccessoryService {
       { accessory_id },
       updatePromoAccessoryData,
     );
+
+    if (data.display_at) {
+      data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
+    }
 
     if (data.product_ids && data.product_ids.length) {
       await this.productPromoAccessoryRepo.delete({ accessory_id });
