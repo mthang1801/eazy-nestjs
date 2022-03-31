@@ -920,15 +920,16 @@ export class ProductService {
     let result = { ...currentProduct };
 
     // Kiểm tra tính sku đã tồn tại hay chưa
-    if (data.product_code) {
-      const product = await this.productRepo.findOne({
-        product_code: data.product_code,
-        product_id: Not(Equal(result.product_id)),
-      });
-      if (product) {
-        throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
-      }
-    }
+    // if (data.product_code) {
+    //   const product = await this.productRepo.findOne({
+    //     product_code: data.product_code,
+    //     product_id: Not(Equal(result.product_id)),
+    //   });
+    //   console.log(product);
+    //   if (product) {
+    //     throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
+    //   }
+    // }
 
     // Kiểm tra slug đã tồn tại hay chưa
     if (data.slug) {
@@ -1389,6 +1390,7 @@ export class ProductService {
     if (!isConverted) {
       convertedData = itgConvertProductsFromAppcore(data);
     }
+    delete convertedData['product_appcore_id'];
 
     const product = await this.productRepo.findOne({
       select: '*',
@@ -1402,6 +1404,17 @@ export class ProductService {
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    if (convertedData.combo_items && convertedData.combo_items.length) {
+      for (let comboItem of convertedData.combo_items) {
+        if (comboItem['product_combo_id'] != product['product_appcore_id']) {
+          throw new HttpException(
+            `Sản phẩm combo không đúng ${comboItem['product_combo_id']}, ${product['product_appcore_id']}`,
+            400,
+          );
+        }
+      }
     }
 
     let result = { ...product };
@@ -1563,6 +1576,7 @@ export class ProductService {
 
     if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Delete old group
+
       const oldGroup = await this.productVariationGroupRepo.findOne({
         product_root_id: result.product_id,
       });
@@ -1602,7 +1616,7 @@ export class ProductService {
         if (!productComboItem) {
           const productComboItemData = {
             ...new ProductsEntity(),
-            ...productItem,
+            ...this.productRepo.setData(productItem),
             product_type: 3,
           };
 
@@ -1612,10 +1626,47 @@ export class ProductService {
 
           const productComboItemDesc = {
             ...new ProductDescriptionsEntity(),
-            product: `${result.product ?? ''} combo ${i}`,
+            product: `${result.product ? result.product : ''} combo ${i + 1}`,
             product_id: productComboItem.product_id,
           };
-          await this.productDescriptionsRepo.create(productComboItemDesc);
+
+          // description
+          const productComboItemDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescriptionsRepo.setData(productItem),
+            product_core_name: productItem.product || '',
+            product_id: productComboItem.product_id,
+          };
+          await this.productDescriptionsRepo.createSync(
+            productComboItemDescData,
+          );
+
+          // price
+          const productComboItemPriceData = {
+            ...new ProductPricesEntity(),
+            ...this.productPriceRepo.setData(productItem),
+            product_id: productComboItem.product_id,
+          };
+          await this.productPriceRepo.createSync(productComboItemPriceData);
+
+          // sales
+          const productComboSaleItemData = {
+            ...new ProductSalesEntity(),
+            ...this.productSaleRepo.setData(productItem),
+            product_id: productComboItem.product_id,
+          };
+          await this.productSaleRepo.createSync(productComboSaleItemData);
+
+          // category
+          const productCategoryItemData = {
+            ...new ProductsCategoriesEntity(),
+            ...this.productCategoryRepo.setData(productItem),
+            category_id: productItem['category_id']
+              ? productItem['category_id']
+              : 0,
+            product_id: productComboItem.product_id,
+          };
+          await this.productCategoryRepo.createSync(productCategoryItemData);
         }
 
         const newGroupProductItem =
