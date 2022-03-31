@@ -29,7 +29,10 @@ import { CreateStoreDto } from '../dto/stores/create-store.dto';
 import { LocatorService } from './locator.service';
 import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 import * as moment from 'moment';
-import { MoreThan } from '../../database/find-options/operators';
+import {
+  MoreThan,
+  MoreThanOrEqual,
+} from '../../database/find-options/operators';
 @Injectable()
 export class StoreService {
   constructor(
@@ -69,7 +72,7 @@ export class StoreService {
 
     if (product_count) {
       filterConditions[`${Table.STORE_LOCATIONS}.product_count`] =
-        MoreThan(product_count);
+        MoreThanOrEqual(product_count);
     }
 
     const storesList = await this.storeLocationRepo.find({
