@@ -38,6 +38,12 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Đồng bộ sản phẩm nhóm thành công.');
   }
 
+  @Get('/search')
+  async searchList(@Query() params, @Res() res: Response): Promise<IResponse> {
+    const result = await this.service.searchList(params);
+    return this.responseSuccess(res, result);
+  }
+
   /**
    * Get products list
    * params includes page, limit, features are fields in database

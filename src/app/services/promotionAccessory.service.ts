@@ -77,22 +77,22 @@ export class PromotionAccessoryService {
 
     const productAccessoriesList = await this.productPromoAccessoryRepo.find({
       select: 'product_id',
-      where: { accessory_id: promoAccessory['accessory_id'] },
+      where: { accessory_id },
     });
-
+    console.log(productAccessoriesList);
     promoAccessory['products'] = [];
-
-    let productLists = await this.productRepo.find({
-      select: '*',
-      join: { [JoinTable.leftJoin]: productJoiner },
-      where: {
-        [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
-          ({ product_id }) => product_id,
-        ),
-      },
-    });
-
-    promoAccessory['products'] = productLists;
+    if (productAccessoriesList.length) {
+      let productLists = await this.productRepo.find({
+        select: '*',
+        join: { [JoinTable.leftJoin]: productJoiner },
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
+            ({ product_id }) => product_id,
+          ),
+        },
+      });
+      promoAccessory['products'] = productLists;
+    }
 
     return promoAccessory;
   }
@@ -116,8 +116,8 @@ export class PromotionAccessoryService {
       updatePromoAccessoryData,
     );
 
-    await this.productPromoAccessoryRepo.delete({ accessory_id });
     if (data.product_ids && data.product_ids.length) {
+      await this.productPromoAccessoryRepo.delete({ accessory_id });
       for (let productId of data.product_ids) {
         const newProductPromotionAccessoryData = {
           ...new ProductPromotionAccessoryEntity(),
@@ -154,9 +154,10 @@ export class PromotionAccessoryService {
 
     for (let accessoryItem of accessoriesList) {
       const productsCount = await this.productPromoAccessoryRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id)) as total `,
-        where: { accessory_id: accessoryItem.accessoryId },
+        select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id) as total `,
+        where: { accessory_id: accessoryItem.accessory_id },
       });
+      console.log(productsCount);
       accessoryItem['productAmount'] = productsCount[0].total;
     }
     return {

@@ -13,11 +13,36 @@ const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
   if (fieldsSearch.length && !Object.entries(filterConditions).length) {
     return fieldsSearch.map((searchItem) => ({ ...searchItem }));
   }
+  let result = [];
 
-  return fieldsSearch.map((searchItem) => ({
-    ...filterConditions,
-    ...searchItem,
-  }));
+  for (let [key, val] of Object.entries(filterConditions)) {
+    if (typeof val === 'object' && Array.isArray(val)) {
+      for (let childVal of val) {
+        result = [
+          ...result,
+          ...fieldsSearch.map((searchItem) => ({
+            ...searchItem,
+            [key]: childVal,
+          })),
+        ];
+      }
+      continue;
+    }
+
+    result = [
+      ...result,
+      ...fieldsSearch.map((searchItem) => ({
+        ...searchItem,
+        [key]: val,
+      })),
+    ];
+  }
+
+  return result;
+  // return fieldsSearch.map((searchItem) => ({
+  //   ...filterConditions,
+  //   ...searchItem,
+  // }));
 };
 
 export const productsFamilyFilterConditioner = (product) =>

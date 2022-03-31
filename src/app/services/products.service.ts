@@ -2018,14 +2018,18 @@ export class ProductService {
                   }
                 }
 
+                // Lấy phụ kiện KM, đi kèm
+                if (productInfoDetail['promotion_accessory_id']) {
+                  productInfoDetail['accessory_products'] =
+                    await this.getPromotionAccessoriesByProductId(
+                      productInfoDetail['promotion_accessory_id'],
+                    );
+                }
+
                 // Lấy các kho hàng hiện tại
-                const productsStores = await this.getProductsStores(
+                productInfoDetail['inventories'] = await this.getProductsStores(
                   productInfoDetail.product_id,
                 );
-
-                productInfoDetail['inventories'] = productsStores.length
-                  ? productsStores
-                  : null;
 
                 product['children_products'] = product['children_products']
                   ? [...product['children_products'], productInfoDetail]
@@ -2085,8 +2089,12 @@ export class ProductService {
       }
 
       // get promotion accessories
-      // product['accessory_products'] =
-      //   await this.getPromotionAccessoriesByProductId(product.product_id);
+      if (product['promotion_accessory_id']) {
+        product['accessory_products'] =
+          await this.getPromotionAccessoriesByProductId(
+            product['promotion_accessory_id'],
+          );
+      }
 
       //determine type of product
       product['productType'] = this.determineProductType(product);
@@ -2331,15 +2339,24 @@ export class ProductService {
   }
 
   async searchList(params) {
-    let { page, limit, q } = params;
+    let { page, limit, category_ids, q } = params;
 
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
+    let filterConditions = {};
+    if (category_ids) {
+      filterConditions = {
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: category_ids
+          ?.split(',')
+          ?.map((categoryId) => categoryId),
+      };
+    }
+
     const productLists = await this.productRepo.find({
       select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug`,
       join: productSearchJoiner,
-      where: productSearch(q),
+      where: productSearch(q, filterConditions),
       skip,
       limit,
     });
@@ -2659,17 +2676,22 @@ export class ProductService {
           );
 
           // Get children and accessory products
-          productInfo['accessory_products'] =
-            await this.getPromotionAccessoriesByProductId(
-              productInfo.product_id,
-            );
+          if (productInfo['promotion_accessory_id']) {
+            productInfo['accessory_products'] =
+              await this.getPromotionAccessoriesByProductId(
+                productInfo['promotion_accessory_id'],
+              );
+          }
         }
       }
 
       // Get Promotion accessory
-      product['accessory_products'] =
-        await this.getPromotionAccessoriesByProductId(product.product_id);
-
+      if (product['promotion_accessory_id']) {
+        product['accessory_products'] =
+          await this.getPromotionAccessoriesByProductId(
+            product['promotion_accessory_id'],
+          );
+      }
       // Find relevant products
       if (group.index_id) {
         let relevantGroups = await this.productVariationGroupRepo.find({
@@ -2821,16 +2843,23 @@ export class ProductService {
     }
   }
 
-  async getPromotionAccessoriesByProductId(product_id: number) {
-    const accessoriesProducts = await this.productPromoAccessoryRepo.find({
+  async getPromotionAccessoriesByProductId(accessory_id: number) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    if (!promoAccessory) {
+      return [];
+    }
+    console.log(accessory_id);
+    const productsPromoAccessory = await this.productPromoAccessoryRepo.find({
       select: '*',
       join: productPromotionAccessoriesJoiner,
       where: {
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`]: product_id,
+        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
       },
     });
 
-    return accessoriesProducts;
+    return productsPromoAccessory;
   }
 
   async importProducts() {
