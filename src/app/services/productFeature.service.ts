@@ -28,7 +28,7 @@ import {
   convertToMySQLDateTime,
   removeVietnameseTones,
 } from 'src/utils/helper';
-import { convertToSlug } from '../../utils/helper';
+import { convertToSlug, hasWhiteSpace } from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   productFeatureSearchFilter,
@@ -238,12 +238,20 @@ export class ProductFeatureService {
   }
 
   async itgCreate(productFeature: SyncProductFeatureDto) {
+    console.log('itg Create');
+    if (hasWhiteSpace(productFeature.feature_code)) {
+      throw new HttpException('feature_code không thể có khoảng trắng', 400);
+    }
+
     const checkProductFeature = await this.productFeaturesRepo.findOne({
       feature_code: productFeature.feature_code,
     });
 
     if (checkProductFeature) {
-      return this.itgUpdate(checkProductFeature.feature_id, productFeature);
+      return this.itgUpdate(
+        checkProductFeature['feature_code'],
+        productFeature,
+      );
     }
 
     const productFeatureData = {
@@ -294,11 +302,12 @@ export class ProductFeatureService {
   }
 
   async itgUpdate(feature_code, data) {
+    console.log('itg Update');
     const checkProductFeature = await this.productFeaturesRepo.findOne({
       feature_code,
     });
     if (!checkProductFeature) {
-      await this.itgCreate(data);
+      await this.itgCreate({ feature_code, ...data });
     }
 
     delete data['feature_code'];
@@ -345,7 +354,7 @@ export class ProductFeatureService {
             where: {
               [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]:
                 featureVariant['variant_code'],
-              [`${Table.PRODUCT_FEATURES}.feature_id`]:
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
                 checkProductFeature.feature_id,
             },
           },

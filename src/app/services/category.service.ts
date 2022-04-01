@@ -69,7 +69,7 @@ export class CategoryService {
     private catalogCategoryDescRepo: CatalogCategoryDescriptionRepository<CatalogCategoryDescriptionEntity>,
   ) {}
 
-  async create(data: CreateCategoryV2Dto): Promise<any> {
+  async create(data: CreateCategoryDto): Promise<any> {
     const checkSlugExist = await this.categoryRepository.findOne({
       slug: convertToSlug(data.slug),
     });
