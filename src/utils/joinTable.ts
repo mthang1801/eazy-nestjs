@@ -190,7 +190,7 @@ export const productJoiner = (params = {}) => {
   // return isLeftJoin
   //   ? { [JoinTable.leftJoin]: result }
   //   : { [JoinTable.rightJoin]: result };
-  return { [JoinTable.leftJoin]: result };
+  return { [JoinTable.innerJoin]: result };
 };
 
 export const productStickersJoiner = {

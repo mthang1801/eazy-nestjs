@@ -645,13 +645,14 @@ export class ProductService {
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
       });
-
+      console.log(productImage);
       if (productImage) {
         const image = await this.imageRepo.findOne({
           image_id: productImage.image_id,
         });
         productItem['image'] = image;
       }
+      console.log(productItem);
     }
 
     return {
