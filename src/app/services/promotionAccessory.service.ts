@@ -107,6 +107,7 @@ export class PromotionAccessoryService {
           ),
         },
       });
+
       promoAccessory['products'] = productLists;
     }
 
