@@ -87,6 +87,7 @@ export function formatDate(date) {
 export const convertToSlug = (text) =>
   text
     .toLowerCase()
+    .trim()
     .replace(/[^\w ]+/g, '')
     .replace(/ +/g, '-');
 
@@ -150,6 +151,26 @@ export const preprocessAddTextDataToMysql = (data: any) => {
       .replace(new RegExp(apostrophe, 'g'), replaceApostrophe);
   }
   return data;
+};
+
+export const formatTypeValueToInSertSQL = (key, value) => {
+  if (
+    (typeof value === 'string' && value.trim() === '') ||
+    typeof value == 'undefined'
+  )
+    return `${key} = ''`;
+  if (value === null) return `${key} = null`;
+
+  if (+value === 0)
+    return `${key} = '${typeof value === 'string' ? +value.trim() : +value}'`;
+  console.log(key, value, !isNaN(1 * +value));
+  if (!isNaN(1 * +value)) {
+    if (value[0] == 0) {
+      return `${key} = '${value}'`;
+    }
+    return `${key} = ${value}`;
+  }
+  return `${key} = '${value}'`;
 };
 
 export const processGetTextDataFromMysql = (data) => {

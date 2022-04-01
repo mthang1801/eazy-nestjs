@@ -40,13 +40,13 @@ export function Equal(value): {
   return { operator: '=', value };
 }
 
-export function Between<T>(
-  value1: T,
-  value2: T,
+export function Between(
+  value1,
+  value2,
 ): {
   operator: string;
-  value1: T;
-  value2: T;
+  value1;
+  value2;
 } {
   return { operator: 'BETWEEN', value1, value2 };
 }

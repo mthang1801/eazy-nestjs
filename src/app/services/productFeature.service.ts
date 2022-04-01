@@ -238,6 +238,14 @@ export class ProductFeatureService {
   }
 
   async createSync(productFeature: SyncProductFeatureDto) {
+    const checkProductFeature = await this.productFeaturesRepo.findOne({
+      feature_code: productFeature.feature_code,
+    });
+
+    if (checkProductFeature) {
+      return this.itgUpdate(checkProductFeature.feature_id, productFeature);
+    }
+
     const productFeatureData = {
       ...new ProductFeatureEntity(),
       ...this.productFeaturesRepo.setData(productFeature),
@@ -281,6 +289,101 @@ export class ProductFeatureService {
           ...productFeatureVariantDescData,
           variant_id: newVariant.variant_id,
         });
+      }
+    }
+  }
+
+  async itgUpdate(feature_id, data) {
+    const checkProductFeature = await this.productFeaturesRepo.findOne({
+      feature_id,
+    });
+    if (!checkProductFeature) {
+      await this.createSync(data);
+    }
+
+    const productFeatureData = {
+      ...this.productFeaturesRepo.setData(data),
+      updated_at: convertToMySQLDateTime(),
+    };
+    await this.productFeaturesRepo.update({ feature_id }, productFeatureData);
+
+    const productFeatureDesc = await this.productFeatureDescriptionRepo.findOne(
+      { feature_id },
+    );
+    if (productFeatureDesc) {
+      const updateProductFeatureData =
+        this.productFeatureDescriptionRepo.setData(data);
+      if (Object.entries(updateProductFeatureData).length) {
+        await this.productFeatureDescriptionRepo.update(
+          { feature_id },
+          updateProductFeatureData,
+        );
+      }
+    } else {
+      const newProductFeatureData = {
+        ...new ProductFeatureDescriptionEntity(),
+        ...this.productFeatureDescriptionRepo.setData(data),
+        feature_id,
+      };
+      await this.productFeatureDescriptionRepo.createSync(
+        newProductFeatureData,
+      );
+    }
+
+    if (data['feature_values'] && data['feature_values'].length) {
+      for (let featureVariant of data['feature_values']) {
+        let checkFeatureVariant = await this.productFeatureVariantsRepo.findOne(
+          { variant_code: featureVariant['variant_code'], feature_id },
+        );
+
+        if (checkFeatureVariant) {
+          const productFeatureVariantData =
+            this.productFeatureVariantsRepo.setData(featureVariant);
+          if (Object.entries(productFeatureVariantData).length) {
+            const udpateVariant = await this.productFeatureVariantsRepo.update(
+              { variant_id: checkFeatureVariant['variant_id'] },
+              {
+                ...productFeatureVariantData,
+                feature_id: feature_id,
+              },
+            );
+          }
+
+          const productFeatureVariantDescData = {
+            ...this.productFeatureVariantDescriptionRepo.setData(
+              featureVariant,
+            ),
+            variant_id: checkFeatureVariant['variant_id'],
+          };
+
+          if (Object.entries(productFeatureVariantDescData).length) {
+            await this.productFeatureVariantDescriptionRepo.update(
+              { variant_id: checkFeatureVariant['variant_id'] },
+              productFeatureVariantDescData,
+            );
+          }
+        } else {
+          const productFeatureVariantData = {
+            ...new ProductFeatureVariantEntity(),
+            ...this.productFeatureVariantsRepo.setData(featureVariant),
+          };
+          const newVariant = await this.productFeatureVariantsRepo.create({
+            ...productFeatureVariantData,
+            feature_id: feature_id,
+          });
+
+          const productFeatureVariantDescData = {
+            ...new ProductFeatureVariantDescriptionEntity(),
+            ...this.productFeatureVariantDescriptionRepo.setData(
+              featureVariant,
+            ),
+            variant_id: newVariant.variant_id,
+          };
+
+          await this.productFeatureVariantDescriptionRepo.createSync(
+            productFeatureVariantDescData,
+          );
+        }
       }
     }
   }

@@ -77,7 +77,12 @@ import {
   ImageType,
 } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
-import { Equal, IsNull, LessThan } from '../../database/find-options/operators';
+import {
+  Equal,
+  IsNull,
+  LessThan,
+  MoreThanOrEqual,
+} from '../../database/find-options/operators';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import {
   convertToSlug,
@@ -143,6 +148,10 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import {
+  LessThanOrEqual,
+  Between,
+} from '../../database/find-options/operators';
 import {
   sqlReportTotalProductAmountFromStores,
   sqlReportTotalProductsInCategories,
@@ -476,17 +485,17 @@ export class ProductService {
       page,
       limit,
       search,
-      status,
-      category_id,
-      product_status,
-      product_type,
-      productType,
+      status, // Trạng thái hiển thị
+      category_id, //  Danh mục SP
+      product_status, // Tình trạng SP Demo, mới
+      product_type, // Loai SP
+      productType, //SP cha con, doc lap, combo
       status_type, // Trạng thái SP Like, Demo
       catalog_category_id, // danh mục ngành hàng
       type, // Loại hàng cty, xách tay
       promotion_accessory_id, // Tên bộ phụ kiện đi kèm
-      created_at, // Ngày tạo
-      updated_at, //Ngày cập nhật
+      created_at_start, // Ngày tạo
+      created_at_end,
       sticker_id,
       store_location_id, // kho
     } = params;
@@ -550,13 +559,14 @@ export class ProductService {
     }
 
     // Ngay tạo
-    if (created_at) {
-      filterCondition[`${Table.PRODUCTS}.created_at`] = Like(created_at);
-    }
 
-    // Ngày cập nhật
-    if (updated_at) {
-      filterCondition[`${Table.PRODUCTS}.updated_at`] = Like(updated_at);
+    if (created_at_start) {
+      filterCondition[`${Table.PRODUCTS}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    }
+    if (created_at_end) {
+      filterCondition[`${Table.PRODUCTS}.created_at`] =
+        LessThanOrEqual(created_at_end);
     }
 
     // Theo sticker
@@ -3035,5 +3045,20 @@ export class ProductService {
       const total = await response[0][0].total;
       await this.categoryRepo.update({ category_id }, { product_count: total });
     }
+  }
+
+  async testSql() {
+    const newGroup1 = await this.productGroupIndexRepo.create({
+      group_ids: null,
+      type: 1,
+    });
+    const newGroup2 = await this.productGroupIndexRepo.create({
+      group_ids: null,
+      type: 1,
+    });
+    await this.productGroupIndexRepo.update(
+      { index_id: newGroup1.index_id },
+      { group_ids: '0112379128', type: 3 },
+    );
   }
 }
