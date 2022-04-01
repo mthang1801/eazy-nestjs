@@ -1443,11 +1443,7 @@ export class ProductService {
     const product = await this.productRepo.findOne({
       select: '*',
       join: productJoiner(),
-      where: [
-        { product_code: identifier },
-        { product_id: identifier },
-        { product_appcore_id: identifier },
-      ],
+      where: [{ product_appcore_id: identifier }],
     });
 
     if (!product) {
