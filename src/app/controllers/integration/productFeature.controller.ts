@@ -24,7 +24,7 @@ export class ProductFeatureController extends BaseController {
   }
   @Post()
   async create(@Body() data, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.createSync(data);
+    const result = await this.service.itgCreate(data);
     return this.responseSuccess(res, result, 'Thành công');
   }
 
@@ -43,13 +43,13 @@ export class ProductFeatureController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(':id')
+  @Put(':feature_code')
   async update(
-    @Param('id') id: number,
+    @Param('feature_code') feature_code: number,
     @Body() data: UpdateProductFeatureDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const { result, message } = await this.service.update(id, data);
-    return this.responseSuccess(res, result, message);
+    await this.service.itgUpdate(feature_code, data);
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 }

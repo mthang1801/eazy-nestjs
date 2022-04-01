@@ -7,6 +7,7 @@ export class CategoryEntity {
   id_path: string = '';
   level: number = 0;
   company_id: number = 0;
+  is_show_homepage: string = 'N';
   usergroup_ids: string = '';
   status: string = 'A';
   product_count: number = 0;

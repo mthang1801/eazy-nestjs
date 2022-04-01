@@ -9,4 +9,5 @@ export class CategoryDescriptionEntity {
   age_warning_message: string = '';
   redirect_url: string = '';
   meta_image: string = '';
+  url: string = '';
 }

@@ -99,4 +99,11 @@ export class CreateCategoryDto {
 
   @IsOptional()
   redirect_url: string = '';
+
+  @IsOptional()
+  @IsIn(['Y', 'N'])
+  is_show_homepage: string = 'N';
+
+  @IsOptional()
+  url: string = '';
 }

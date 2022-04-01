@@ -112,7 +112,7 @@ export class ProductFeatureService {
         const newFeatureVariantDescription: ProductFeatureVariantDescriptionEntity =
           await this.productFeatureVariantDescriptionRepo.create({
             ...featureVariantDescription,
-            variant_id: newFeatureVariant.variant_id,
+            variant_id: newFeatureVariant['variant_id'],
           });
 
         feature_variants.push({
@@ -237,7 +237,7 @@ export class ProductFeatureService {
     return productFeatures;
   }
 
-  async createSync(productFeature: SyncProductFeatureDto) {
+  async itgCreate(productFeature: SyncProductFeatureDto) {
     const checkProductFeature = await this.productFeaturesRepo.findOne({
       feature_code: productFeature.feature_code,
     });
@@ -293,29 +293,35 @@ export class ProductFeatureService {
     }
   }
 
-  async itgUpdate(feature_id, data) {
+  async itgUpdate(feature_code, data) {
     const checkProductFeature = await this.productFeaturesRepo.findOne({
-      feature_id,
+      feature_code,
     });
     if (!checkProductFeature) {
-      await this.createSync(data);
+      await this.itgCreate(data);
     }
+
+    delete data['feature_code'];
+    console.log(data);
 
     const productFeatureData = {
       ...this.productFeaturesRepo.setData(data),
       updated_at: convertToMySQLDateTime(),
     };
-    await this.productFeaturesRepo.update({ feature_id }, productFeatureData);
+    await this.productFeaturesRepo.update(
+      { feature_id: checkProductFeature.feature_id },
+      productFeatureData,
+    );
 
     const productFeatureDesc = await this.productFeatureDescriptionRepo.findOne(
-      { feature_id },
+      { feature_id: checkProductFeature.feature_id },
     );
     if (productFeatureDesc) {
       const updateProductFeatureData =
         this.productFeatureDescriptionRepo.setData(data);
       if (Object.entries(updateProductFeatureData).length) {
         await this.productFeatureDescriptionRepo.update(
-          { feature_id },
+          { feature_id: checkProductFeature.feature_id },
           updateProductFeatureData,
         );
       }
@@ -323,7 +329,7 @@ export class ProductFeatureService {
       const newProductFeatureData = {
         ...new ProductFeatureDescriptionEntity(),
         ...this.productFeatureDescriptionRepo.setData(data),
-        feature_id,
+        feature_id: checkProductFeature.feature_id,
       };
       await this.productFeatureDescriptionRepo.createSync(
         newProductFeatureData,
@@ -333,7 +339,16 @@ export class ProductFeatureService {
     if (data['feature_values'] && data['feature_values'].length) {
       for (let featureVariant of data['feature_values']) {
         let checkFeatureVariant = await this.productFeatureVariantsRepo.findOne(
-          { variant_code: featureVariant['variant_code'], feature_id },
+          {
+            select: '*',
+            join: productFeatureVariantJoiner,
+            where: {
+              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]:
+                featureVariant['variant_code'],
+              [`${Table.PRODUCT_FEATURES}.feature_id`]:
+                checkProductFeature.feature_id,
+            },
+          },
         );
 
         if (checkFeatureVariant) {
@@ -344,7 +359,7 @@ export class ProductFeatureService {
               { variant_id: checkFeatureVariant['variant_id'] },
               {
                 ...productFeatureVariantData,
-                feature_id: feature_id,
+                feature_id: checkProductFeature.feature_id,
               },
             );
           }
@@ -369,7 +384,7 @@ export class ProductFeatureService {
           };
           const newVariant = await this.productFeatureVariantsRepo.create({
             ...productFeatureVariantData,
-            feature_id: feature_id,
+            feature_id: checkProductFeature.feature_id,
           });
 
           const productFeatureVariantDescData = {
@@ -670,7 +685,7 @@ export class ProductFeatureService {
   async callSync() {
     await this.clearAll();
     for (let dataItem of productFeaturesData) {
-      await this.createSync(dataItem);
+      await this.itgCreate(dataItem);
     }
   }
 

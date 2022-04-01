@@ -1,4 +1,4 @@
-import { IsOptional, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsNotEmpty, IsIn } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -93,4 +93,11 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   redirect_url: string;
+
+  @IsOptional()
+  @IsIn(['Y', 'N'])
+  is_show_homepage: string;
+
+  @IsOptional()
+  url: string = '';
 }
