@@ -34,15 +34,15 @@ export class StickerService {
   }
 
   async getList(params) {
-    let { page, limit, search, created_at, status } = params;
+    let { page, limit, search, created_at, sticker_status } = params;
 
     let filterConditions = {};
     if (created_at) {
       filterConditions[`${Table.STICKER}.created_at`] =
         moment(created_at).format('YYYY-MM-DD');
     }
-    if (status) {
-      filterConditions[`${Table.STICKER}.status`] = status;
+    if (sticker_status) {
+      filterConditions[`${Table.STICKER}.sticker_status`] = sticker_status;
     }
 
     let stickersList = await this.stickerRepo.find({

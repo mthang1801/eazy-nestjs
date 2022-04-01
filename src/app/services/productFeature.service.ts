@@ -150,7 +150,6 @@ export class ProductFeatureService {
       join: productFeatureJoiner,
       orderBy: [
         { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
-        { field: `${Table.PRODUCT_FEATURES}.created_at`, sortBy: SortBy.DESC },
       ],
       where: productFeatureSearchFilter(search, filterCondition),
       skip,
@@ -692,10 +691,10 @@ export class ProductFeatureService {
   }
 
   async callSync() {
-    await this.clearAll();
-    for (let dataItem of productFeaturesData) {
-      await this.itgCreate(dataItem);
-    }
+    // await this.clearAll();
+    // for (let dataItem of productFeaturesData) {
+    //   await this.itgCreate(dataItem);
+    // }
   }
 
   async getSync() {
