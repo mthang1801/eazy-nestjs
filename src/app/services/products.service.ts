@@ -488,12 +488,14 @@ export class ProductService {
       created_at, // Ngày tạo
       updated_at, //Ngày cập nhật
       sticker_id,
+      store_location_id, // kho
     } = params;
     page = +page || 1;
-    limit = +limit || 20;
+    limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
+    let filterJoiner = {};
     //  Filter trạng thái hiển thị
     if (status) {
       filterCondition[`${Table.PRODUCTS}.status`] = status;
@@ -560,6 +562,15 @@ export class ProductService {
     // Theo sticker
     if (sticker_id) {
       filterCondition[`${Table.PRODUCT_STICKER}.sticker_id`] = sticker_id;
+      filterJoiner['sticker_id'] = 1;
+    }
+
+    //Theo kho
+    if (store_location_id) {
+      filterCondition[`${Table.PRODUCT_STORES}.store_location_id`] =
+        store_location_id;
+
+      filterJoiner['store_location_id'] = 1;
     }
 
     let categoriesList = [];
@@ -573,13 +584,8 @@ export class ProductService {
 
     const productLists = await this.productRepo.find({
       select: getProductsListSelector,
-      join: {
-        [JoinTable.leftJoin]: sticker_id ? productStickerJoiner : productJoiner,
-      },
-      orderBy: [
-        { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
-        { field: `${Table.PRODUCTS}.created_at`, sortBy: SortBy.DESC },
-      ],
+      join: productJoiner(filterJoiner),
+      orderBy: [{ field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC }],
       where: categoriesList.length
         ? productsListCategorySearchFilter(
             categoriesList,
@@ -593,9 +599,8 @@ export class ProductService {
 
     let count = await this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: {
-        [JoinTable.leftJoin]: sticker_id ? productStickerJoiner : productJoiner,
-      },
+      join: productJoiner(filterJoiner),
+
       where: categoriesList.length
         ? productsListCategorySearchFilter(
             categoriesList,
@@ -624,12 +629,15 @@ export class ProductService {
         productItem['productType'] = 4; // SP độc lập
       }
 
+      console.log(productItem);
+
       productItem['image'] = null;
 
       const productImage = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
       });
+      console.log(productImage);
 
       if (productImage) {
         const image = await this.imageRepo.findOne({
@@ -1426,7 +1434,7 @@ export class ProductService {
     console.log('Update Product Itg');
     const product = await this.productRepo.findOne({
       select: '*',
-      join: productJoiner,
+      join: productJoiner(),
       where: [
         { product_code: identifier },
         { product_id: identifier },

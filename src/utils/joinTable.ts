@@ -149,23 +149,48 @@ export const productByCategoryJoiner = {
   },
 };
 
-export const productJoiner = {
-  [Table.PRODUCT_DESCRIPTION]: {
-    fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-    rootJoin: `${Table.PRODUCTS}.product_id`,
-  },
-  [Table.PRODUCT_PRICES]: {
-    fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
-    rootJoin: `${Table.PRODUCTS}.product_id`,
-  },
-  [Table.PRODUCTS_CATEGORIES]: {
-    fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-    rootJoin: `${Table.PRODUCTS}.product_id`,
-  },
-  [Table.CATEGORIES]: {
-    fieldJoin: `${Table.CATEGORIES}.category_id`,
-    rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-  },
+export const productJoiner = (params = {}) => {
+  let isLeftJoin = true;
+  let result = {
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  };
+
+  if (params['sticker_id']) {
+    isLeftJoin = false;
+    result[Table.PRODUCT_STICKER] = {
+      fieldJoin: `${Table.PRODUCT_STICKER}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    };
+  }
+
+  if (params['store_location_id']) {
+    isLeftJoin = false;
+    result[Table.PRODUCT_STORES] = {
+      fieldJoin: `${Table.PRODUCT_STORES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    };
+  }
+
+  // console.log(result);
+  // return isLeftJoin
+  //   ? { [JoinTable.leftJoin]: result }
+  //   : { [JoinTable.rightJoin]: result };
+  return { [JoinTable.leftJoin]: result };
 };
 
 export const productStickersJoiner = {
@@ -447,14 +472,14 @@ export const storesLocationJoiner = {
   },
 };
 
-export const productStickerJoiner = {
-  [JoinTable.innerJoin]: {
+export const productStickerJoiner = (store_location_id) => ({
+  [JoinTable.leftJoin]: {
     [Table.STICKER]: {
       fieldJoin: `${Table.STICKER}.sticker_id`,
       rootJoin: `${Table.PRODUCT_STICKER}.sticker_id`,
     },
   },
-};
+});
 
 export const storeLocationJoiner = {
   [JoinTable.innerJoin]: {

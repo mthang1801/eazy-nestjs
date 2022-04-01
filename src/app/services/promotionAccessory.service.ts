@@ -100,7 +100,7 @@ export class PromotionAccessoryService {
     if (productAccessoriesList.length) {
       let productLists = await this.productRepo.find({
         select: '*',
-        join: { [JoinTable.leftJoin]: productJoiner },
+        join: productJoiner(),
         where: {
           [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
             ({ product_id }) => product_id,

@@ -203,7 +203,7 @@ export class OrdersService {
     for (let orderItem of data.order_items) {
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: { [JoinTable.leftJoin]: productJoiner },
+        join: productJoiner(),
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
@@ -242,7 +242,7 @@ export class OrdersService {
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: { [JoinTable.leftJoin]: productJoiner },
+        join: productJoiner(),
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
       });
 
