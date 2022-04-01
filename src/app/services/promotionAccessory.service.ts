@@ -4,7 +4,7 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
 import { CreatePromotionAccessoryDto } from '../dto/promotionAccessories/create-promotionAccessory.dto';
-import { productJoiner } from 'src/utils/joinTable';
+import { productLeftJoiner } from 'src/utils/joinTable';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdatePromotionAccessoryDto } from '../dto/promotionAccessories/update-promotionAccessory.dto';
 import { convertToMySQLDateTime } from '../../utils/helper';
@@ -100,7 +100,7 @@ export class PromotionAccessoryService {
     if (productAccessoriesList.length) {
       let productLists = await this.productRepo.find({
         select: '*',
-        join: productJoiner(),
+        join: productLeftJoiner,
         where: {
           [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
             ({ product_id }) => product_id,

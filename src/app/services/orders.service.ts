@@ -32,7 +32,7 @@ import { StatusType, CommonStatus } from '../../database/enums/status.enum';
 import {
   orderDetailsJoiner,
   orderJoiner,
-  productJoiner,
+  productLeftJoiner,
   statusJoiner,
 } from '../../utils/joinTable';
 import {
@@ -203,7 +203,7 @@ export class OrdersService {
     for (let orderItem of data.order_items) {
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: productJoiner(),
+        join: productLeftJoiner,
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
@@ -242,7 +242,7 @@ export class OrdersService {
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: productJoiner(),
+        join: productLeftJoiner,
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
       });
 

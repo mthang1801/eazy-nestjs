@@ -52,6 +52,7 @@ import {
   productByCategoryJoiner,
   productPromotionAccessoriesJoiner,
   productStickerJoiner,
+  productLeftJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -1442,8 +1443,8 @@ export class ProductService {
     console.log('Update Product Itg');
     const product = await this.productRepo.findOne({
       select: '*',
-      join: productJoiner(),
-      where: [{ product_appcore_id: identifier }],
+      join: productLeftJoiner,
+      where: { product_appcore_id: identifier },
     });
 
     if (!product) {
