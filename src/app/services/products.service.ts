@@ -104,6 +104,7 @@ import { DeleteProductImageDto } from '../dto/product/delete-productImage.dto';
 
 import {
   categorySelector,
+  getProductByIdentifierSelector,
   getProductsListSelector,
   productFeatureValuesSelector,
 } from 'src/utils/tableSelector';
@@ -407,12 +408,7 @@ export class ProductService {
     // get Product item
 
     let product = await this.productRepo.findOne({
-      select: [
-        '*',
-        `${Table.PRODUCT_DESCRIPTION}.*`,
-        `${Table.PRODUCTS}.status`,
-        `${Table.PRODUCTS}.parent_product_id`,
-      ],
+      select: getProductByIdentifierSelector,
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -430,13 +426,7 @@ export class ProductService {
 
   async getBySlug(slug: string): Promise<any> {
     let product = await this.productRepo.findOne({
-      select: [
-        '*',
-        `${Table.PRODUCT_DESCRIPTION}.*`,
-        `${Table.PRODUCTS}.status`,
-        `${Table.PRODUCTS}.slug as slug`,
-        `${Table.CATEGORIES}.slug as categorySlug`,
-      ],
+      select: getProductByIdentifierSelector,
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
@@ -1005,6 +995,9 @@ export class ProductService {
       ...data,
       updated_at: convertToMySQLDateTime(),
     });
+
+    console.log(productData);
+
     if (Object.entries(productData).length) {
       const updatedProduct = await this.productRepo.update(
         { product_id: result.product_id },
