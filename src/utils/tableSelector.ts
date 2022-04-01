@@ -31,4 +31,5 @@ export const getProductByIdentifierSelector = [
   `${Table.PRODUCT_DESCRIPTION}.meta_image as productMetaImage`,
   `${Table.PRODUCT_DESCRIPTION}.meta_description as productMetaDescription`,
   `${Table.PRODUCT_DESCRIPTION}.page_title as productPageTitle`,
+  `${Table.PRODUCTS}.redirect_url as productRedirectUrl`,
 ];
