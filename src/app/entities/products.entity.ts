@@ -51,7 +51,6 @@ export class ProductsEntity {
   facebook_obj_type: string = '';
   buy_now_url: string = '';
   appcore_combo_setting_id: string = '';
-  url_media: string = '';
   type: string = '1';
   open_new_tab: string = 'N';
   color: string = '';

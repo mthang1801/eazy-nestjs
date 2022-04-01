@@ -1,5 +1,6 @@
 export class ProductDescriptionsEntity {
   product_description_id: number = 0;
+  url_media: string = '';
   product_id: string = '0';
   lang_code: string = '';
   product: string = '';
