@@ -639,15 +639,12 @@ export class ProductService {
         productItem['productType'] = 4; // SP độc lập
       }
 
-      console.log(productItem);
-
       productItem['image'] = null;
 
       const productImage = await this.imageLinkRepo.findOne({
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
       });
-      console.log(productImage);
 
       if (productImage) {
         const image = await this.imageRepo.findOne({

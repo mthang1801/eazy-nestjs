@@ -106,17 +106,12 @@ export class StickerService {
   }
 
   async getProductSticker(product_id) {
-    const product = await this.productRepo.findOne({ product_id });
-    if (!product) {
-      throw new HttpException('Không tìm thấy sp', 404);
-    }
-    return this.productStickerRepo.find({
+    const productStickers = await this.productStickerRepo.find({
       select: '*',
       join: productStickerJoiner,
-      where: {
-        [`${Table.PRODUCT_STICKER}.product_id`]: product_id,
-        [`${Table.STICKER}.sticker_status`]: 'A',
-      },
+      where: { [`${Table.PRODUCT_STICKER}.product_id`]: product_id },
     });
+
+    return productStickers;
   }
 }

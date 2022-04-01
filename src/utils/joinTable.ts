@@ -472,14 +472,14 @@ export const storesLocationJoiner = {
   },
 };
 
-export const productStickerJoiner = (store_location_id) => ({
-  [JoinTable.leftJoin]: {
+export const productStickerJoiner = {
+  [JoinTable.innerJoin]: {
     [Table.STICKER]: {
       fieldJoin: `${Table.STICKER}.sticker_id`,
       rootJoin: `${Table.PRODUCT_STICKER}.sticker_id`,
     },
   },
-});
+};
 
 export const storeLocationJoiner = {
   [JoinTable.innerJoin]: {
