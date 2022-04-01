@@ -106,4 +106,10 @@ export class CreateCategoryDto {
 
   @IsOptional()
   url: string = '';
+
+  @IsOptional()
+  meta_image: string = '';
+
+  @IsOptional()
+  icon: string = '';
 }
