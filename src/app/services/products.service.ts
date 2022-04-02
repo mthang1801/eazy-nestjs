@@ -616,14 +616,14 @@ export class ProductService {
     // determine product type and  get Image
     for (let productItem of productLists) {
       if (
-        (productItem.parent_product_appcore_id == null ||
-          !productItem['parent_product_id']) &&
+        (productItem['parent_product_appcore_id'] == null ||
+          !productItem['parent_product_appcore_id']) &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 1; //Sản phẩm cha
       } else if (
-        (productItem.parent_product_appcore_id > 0 ||
-          productItem.parent_product_appcore_id != null) &&
+        (productItem['parent_product_appcore_id'] > 0 ||
+          productItem['parent_product_appcore_id'] != null) &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 2; // Sản phẩm con
