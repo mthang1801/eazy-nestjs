@@ -834,7 +834,7 @@ export class ProductService {
           }
         : { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId };
 
-    let productsList = await this.productRepo.find({
+    let productsList = await this.productCategoryRepo.find({
       select: '*',
       join: productByCategoryIdJoiner,
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
@@ -842,7 +842,7 @@ export class ProductService {
       limit,
     });
 
-    let count = await this.productRepo.find({
+    let count = await this.productCategoryRepo.find({
       select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
       join: productByCategoryIdJoiner,
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
