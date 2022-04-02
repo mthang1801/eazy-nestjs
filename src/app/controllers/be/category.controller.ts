@@ -24,6 +24,7 @@ import { ProductService } from 'src/app/services/products.service';
 import { CreateCategoryV2Dto } from 'src/app/dto/category/create-category.v2.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
+import { UpdateProductsInCategory } from 'src/app/dto/product/update-productInCategory';
 
 /**
  * Controller for Category
@@ -206,5 +207,15 @@ export class CategoryController extends BaseController {
       params,
     );
     return this.responseSuccess(res, result);
+  }
+
+  @Put(':id/products')
+  async updateProductIntoCategory(
+    @Param('id') categoryId: number,
+    @Body() data: UpdateProductsInCategory,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.productService.updateProductIntoCategory(categoryId, data);
+    return this.responseSuccess(res, null, 'Thành công');
   }
 }

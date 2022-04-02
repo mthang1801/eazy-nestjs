@@ -53,6 +53,7 @@ import {
   productPromotionAccessoriesJoiner,
   productStickerJoiner,
   productLeftJoiner,
+  categoryJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -96,7 +97,10 @@ import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.e
 
 import * as fs from 'fs';
 import * as fsExtra from 'fs-extra';
-import { productsListsSearchFilter } from '../../utils/tableConditioner';
+import {
+  productsListsSearchFilter,
+  getProductsListByCategoryIdSearchFilter,
+} from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import { data } from '../../database/constant/category';
@@ -151,6 +155,7 @@ import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity'
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
 import { productCategoryJoiner } from '../../utils/joinTable';
+import { UpdateProductsInCategory } from '../dto/product/update-productInCategory';
 import {
   LessThanOrEqual,
   Between,
@@ -204,7 +209,10 @@ export class ProductService {
     // Lấy danh sách các sản phẩm cha (bao gồm SP cấu hình, ngoài trự sản phẩm service product_code =4)
     let parentProductsList = await this.productRepo.find({
       select: ['*'],
-      where: { [`${Table.PRODUCTS}.parent_product_id`]: 0 },
+      where: [
+        { [`${Table.PRODUCTS}.parent_product_appcore_id`]: 0 },
+        { [`${Table.PRODUCTS}.parent_product_appcore_id`]: IsNull() },
+      ],
     });
 
     parentProductsList = parentProductsList.filter(
@@ -808,25 +816,43 @@ export class ProductService {
     categoryId: number,
     params: any,
   ): Promise<any> {
-    // Kiểm tra sự tồn tại của category
-    const category = await this.categoryRepo.findOne({
-      select: categorySelector,
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORIES}.category_id`,
-            rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-          },
-        },
-      },
-      where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
+    let { page, limit, find_reverse, search } = params;
+
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+
+    let filterCondition =
+      find_reverse == 'true'
+        ? {
+            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: Not(
+              Equal(categoryId),
+            ),
+          }
+        : { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId };
+
+    let productsList = await this.productRepo.find({
+      select: '*',
+      join: productLeftJoiner,
+      where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
+      skip,
+      limit,
     });
 
-    if (!category) {
-      throw new HttpException('Không tìm thấy danh mục sản phẩm.', 404);
-    }
+    let count = await this.productRepo.find({
+      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      join: productLeftJoiner,
+      where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
+    });
 
-    return this.getProductListByCategory(category, params);
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      products: productsList,
+    };
   }
 
   async getProductsListByCategorySlug(slug: string, params) {
@@ -880,7 +906,6 @@ export class ProductService {
         [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
           (categoryId) => categoryId,
         ),
-        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       },
       skip,
       limit,
@@ -912,7 +937,6 @@ export class ProductService {
         [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
           (categoryId) => categoryId,
         ),
-        [`${Table.PRODUCTS}.parent_product_id`]: 0,
       },
     });
 
@@ -926,6 +950,34 @@ export class ProductService {
       childrenCategories: categoriesListByLevel,
       products: productsList,
     };
+  }
+
+  async updateProductIntoCategory(
+    categoryId: number,
+    data: UpdateProductsInCategory,
+  ) {
+    let category = await this.categoryRepo.findOne({ category_id: categoryId });
+    if (!category) {
+      throw new HttpException(`Không tìm thấy danh mục`, 404);
+    }
+    if (data.deleted_products && data.deleted_products.length) {
+      for (let productId of data.deleted_products) {
+        await this.productCategoryRepo.delete({
+          product_id: productId,
+          category_id: categoryId,
+        });
+      }
+    }
+
+    if (data.inserted_products && data.inserted_products.length) {
+      for (let productId of data.inserted_products) {
+        await this.productCategoryRepo.createSync({
+          product_id: productId,
+          category_id: categoryId,
+          category_appcore_id: category['category_appcore_id'],
+        });
+      }
+    }
   }
 
   async update(identifier: string | number, data: UpdateProductDto) {

@@ -347,6 +347,15 @@ export const userSystemStoreJoiner = {
   },
 };
 
+export const categoryJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CATEGORY_DESCRIPTIONS]: {
+      fieldJoin: 'category_id',
+      rootJoin: 'category_id',
+    },
+  },
+};
+
 export const statusJoiner = {
   [Table.STATUS_DESCRIPTION]: {
     fieldJoin: `${Table.STATUS_DESCRIPTION}.status_id`,
@@ -449,15 +458,6 @@ export const cartJoiner = {
     [Table.CATEGORIES]: {
       fieldJoin: `${Table.CATEGORIES}.category_id`,
       rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-    },
-  },
-};
-
-export const categoryJoiner = {
-  [JoinTable.innerJoin]: {
-    [Table.CATEGORY_DESCRIPTIONS]: {
-      fieldJoin: 'category_id',
-      rootJoin: 'category_id',
     },
   },
 };
