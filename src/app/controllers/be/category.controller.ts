@@ -39,6 +39,12 @@ export class CategoryController extends BaseController {
     super();
   }
 
+  @Get('/fill-idpath')
+  async fillIdPath(@Res() res) {
+    await this.service.fillCategoriesIdPath();
+    return this.responseSuccess(res, null, 'Hoan tat.');
+  }
+
   /**
    * Create new record in ddv_categories table
    * @param categoryDto

@@ -99,5 +99,11 @@ export class UpdateCategoryDto {
   is_show_homepage: string;
 
   @IsOptional()
-  url: string = '';
+  url: string;
+
+  @IsOptional()
+  meta_image: string;
+
+  @IsOptional()
+  icon: string;
 }

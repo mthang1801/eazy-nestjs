@@ -55,6 +55,7 @@ import { UPLOAD_IMAGE_API } from '../../database/constant/api.appcore';
 import * as fsExtra from 'fs-extra';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
+import { sortBy } from 'lodash';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -975,6 +976,38 @@ export class CategoryService {
           );
         }
       }
+    }
+  }
+
+  async fillCategoriesIdPath() {
+    let categories = await this.categoryRepository.find({
+      select: 'category_id, parent_id, level',
+      orderBy: [{ field: `${Table.CATEGORIES}.level`, sortBy: SortBy.ASC }],
+    });
+    for (let categoryItem of categories) {
+      let idPath = [categoryItem.category_id];
+      let currentCategory = { ...categoryItem };
+      for (
+        let currentLevel = categoryItem.level;
+        currentLevel > 0;
+        currentLevel--
+      ) {
+        if (currentCategory.parent_id > 0) {
+          let parentCategory = await this.categoryRepository.findOne({
+            select: 'category_id, parent_id, level',
+            where: { category_id: currentCategory.parent_id },
+          });
+          if (parentCategory) {
+            idPath.unshift(parentCategory.category_id);
+            currentCategory = { ...parentCategory };
+          }
+        }
+      }
+
+      await this.categoryRepository.update(
+        { category_id: categoryItem.category_id },
+        { id_path: idPath.join('/') },
+      );
     }
   }
 }
