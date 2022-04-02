@@ -23,7 +23,7 @@ export class PromotionAccessoryService {
     private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
-  async create(data: CreatePromotionAccessoryDto) {
+  async create(data: CreatePromotionAccessoryDto, user) {
     const promotionAccessory = await this.promoAccessoryRepo.findOne({
       accessory_code: data.accessory_code,
     });
@@ -53,21 +53,23 @@ export class PromotionAccessoryService {
     const newPromotionAccessoryData = {
       ...new PromotionAccessoryEntity(),
       ...this.promoAccessoryRepo.setData(data),
+      created_by: user.user_id,
+      updated_by: user.user_id,
     };
-    console.log(newPromotionAccessoryData);
+
     const newPromotionAccessory = await this.promoAccessoryRepo.create(
       newPromotionAccessoryData,
     );
-
-    console.log(newPromotionAccessory);
 
     for (let productId of data.product_ids) {
       const newProductPromotionAccessoryData = {
         ...new ProductPromotionAccessoryEntity(),
         accessory_id: newPromotionAccessory.accessory_id,
         product_id: productId,
+        created_by: user.user_id,
+        updated_by: user.user_id,
       };
-      console.log(newProductPromotionAccessoryData);
+
       await this.productPromoAccessoryRepo.createSync(
         newProductPromotionAccessoryData,
       );
@@ -114,7 +116,7 @@ export class PromotionAccessoryService {
     return promoAccessory;
   }
 
-  async update(accessory_id: number, data: UpdatePromotionAccessoryDto) {
+  async update(accessory_id: number, data: UpdatePromotionAccessoryDto, user) {
     const promoAccessory = await this.promoAccessoryRepo.findById(accessory_id);
     if (!promoAccessory) {
       throw new HttpException(
@@ -126,6 +128,7 @@ export class PromotionAccessoryService {
     const updatePromoAccessoryData = {
       ...this.promoAccessoryRepo.setData(data),
       updated_at: convertToMySQLDateTime(),
+      updated_by: user.user_id,
     };
 
     await this.promoAccessoryRepo.update(
@@ -144,6 +147,8 @@ export class PromotionAccessoryService {
           ...new ProductPromotionAccessoryEntity(),
           accessory_id: accessory_id,
           product_id: productId,
+          created_by: user.user_id,
+          updated_by: user.user_id,
         };
         await this.productPromoAccessoryRepo.createSync(
           newProductPromotionAccessoryData,

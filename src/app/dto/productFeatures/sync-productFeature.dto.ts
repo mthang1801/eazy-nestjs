@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsNotEmpty, ValidateNested } from 'class-validator';
+import { IsOptional, IsNotEmpty, ValidateNested, IsIn } from 'class-validator';
 
 export class SyncProductFeatureDto {
   @IsNotEmpty()
@@ -7,6 +7,9 @@ export class SyncProductFeatureDto {
 
   @IsNotEmpty()
   feature_code: string = '';
+
+  @IsOptional()
+  status: string = 'A';
 
   @IsNotEmpty()
   @ValidateNested()
@@ -20,4 +23,7 @@ class FeatureValueDto {
 
   @IsNotEmpty()
   variant_code: string;
+
+  @IsOptional()
+  status: string = 'A';
 }

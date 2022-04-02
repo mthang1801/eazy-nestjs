@@ -16,6 +16,7 @@ import { IResponse } from '../../interfaces/response.interface';
 import { ProductFeatureService } from 'src/app/services/productFeature.service';
 import { UpdateProductFeatureDto } from 'src/app/dto/productFeatures/update-productFeatures.dto';
 import { SyncProductFeatureDto } from '../../dto/productFeatures/sync-productFeature.dto';
+import { UpdateProductFeatureAppcoreDto } from 'src/app/dto/productFeatures/update-productFeature.appcore.dto';
 
 @Controller('/itg/v1/product-features')
 export class ProductFeatureController extends BaseController {
@@ -46,7 +47,7 @@ export class ProductFeatureController extends BaseController {
   @Put(':feature_code')
   async update(
     @Param('feature_code') feature_code: number,
-    @Body() data: UpdateProductFeatureDto,
+    @Body() data: UpdateProductFeatureAppcoreDto,
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.service.itgUpdate(feature_code, data);

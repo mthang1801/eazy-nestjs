@@ -7,6 +7,8 @@ import {
   Res,
   Put,
   Query,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { Response } from 'express';
@@ -14,17 +16,20 @@ import { IResponse } from 'src/app/interfaces/response.interface';
 import { PromotionAccessoryService } from '../../services/promotionAccessory.service';
 import { CreatePromotionAccessoryDto } from '../../dto/promotionAccessories/create-promotionAccessory.dto';
 import { UpdatePromotionAccessoryDto } from '../../dto/promotionAccessories/update-promotionAccessory.dto';
+import { AuthGuard } from '../../../middlewares/be.auth';
 @Controller('be/v1/promotion-accessories')
 export class PromotionAccessoriesController extends BaseController {
   constructor(private service: PromotionAccessoryService) {
     super();
   }
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() data: CreatePromotionAccessoryDto,
+    @Req() req,
   ): Promise<IResponse> {
-    await this.service.create(data);
+    await this.service.create(data, req.user);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
@@ -44,12 +49,14 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Put(':accessory_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('accessory_id') accessory_id: number,
     @Body() data: UpdatePromotionAccessoryDto,
+    @Req() req,
   ): Promise<IResponse> {
-    const result = await this.service.update(accessory_id, data);
+    const result = await this.service.update(accessory_id, data, req.user);
     return this.responseSuccess(res, result);
   }
 

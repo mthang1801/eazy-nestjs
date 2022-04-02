@@ -36,6 +36,7 @@ import {
 } from 'src/utils/tableConditioner';
 import { DatabaseService } from 'src/database/database.service';
 import { Equal, Not } from '../../database/find-options/operators';
+import { UpdateProductFeatureAppcoreDto } from '../dto/productFeatures/update-productFeature.appcore.dto';
 
 import {
   covertProductFeaturesFromMagento,
@@ -246,6 +247,10 @@ export class ProductFeatureService {
       feature_code: productFeature.feature_code,
     });
 
+    if ([0, 1].includes(+productFeature.status)) {
+      productFeature.status = +productFeature.status == 0 ? 'A' : 'D';
+    }
+
     if (checkProductFeature) {
       return this.itgUpdate(
         checkProductFeature['feature_code'],
@@ -278,6 +283,10 @@ export class ProductFeatureService {
 
     if (productFeature?.feature_values?.length) {
       for (let featureVariant of productFeature.feature_values) {
+        if ([0, 1].includes(+featureVariant.status)) {
+          featureVariant.status = +featureVariant.status == 0 ? 'A' : 'D';
+        }
+
         const productFeatureVariantData = {
           ...new ProductFeatureVariantEntity(),
           ...this.productFeatureVariantsRepo.setData(featureVariant),
@@ -300,7 +309,7 @@ export class ProductFeatureService {
     }
   }
 
-  async itgUpdate(feature_code, data) {
+  async itgUpdate(feature_code, data: UpdateProductFeatureAppcoreDto) {
     console.log('itg Update');
     const checkProductFeature = await this.productFeaturesRepo.findOne({
       feature_code,
@@ -309,12 +318,15 @@ export class ProductFeatureService {
       await this.itgCreate({ feature_code, ...data });
     }
 
-    delete data['feature_code'];
+    if ([0, 1].includes(+data.status)) {
+      data.status = +data.status == 0 ? 'A' : 'D';
+    }
 
     const productFeatureData = {
       ...this.productFeaturesRepo.setData(data),
       updated_at: convertToMySQLDateTime(),
     };
+
     await this.productFeaturesRepo.update(
       { feature_id: checkProductFeature.feature_id },
       productFeatureData,
@@ -357,6 +369,10 @@ export class ProductFeatureService {
             },
           },
         );
+
+        if ([0, 1].includes(+featureVariant.status)) {
+          featureVariant.status = +featureVariant.status == 0 ? 'A' : 'D';
+        }
 
         if (checkFeatureVariant) {
           const productFeatureVariantData =
