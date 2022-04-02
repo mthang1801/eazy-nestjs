@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import {
   ArrayNotEmpty,
   IsDateString,
@@ -16,6 +18,11 @@ export class CreatePromotionAccessoryDto {
   product_ids: number[];
 
   @IsOptional()
+  @ValidateNested()
+  @Type(() => AccessoryProducts)
+  products: AccessoryProducts[];
+
+  @IsOptional()
   accessory_type: number = 1;
 
   @IsOptional()
@@ -24,4 +31,21 @@ export class CreatePromotionAccessoryDto {
   @IsOptional()
   @IsDateString()
   display_at: string;
+}
+
+class AccessoryProducts {
+  @IsNotEmpty()
+  product_id: number;
+
+  @IsOptional()
+  collect_price: number = 0;
+
+  @IsOptional()
+  promotion_price: number = 0;
+
+  @IsOptional()
+  sale_price_from: number = 0;
+
+  @IsOptional()
+  sale_price_to: number = 0;
 }

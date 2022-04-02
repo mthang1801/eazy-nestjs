@@ -8,6 +8,7 @@ export class ProductPromotionAccessoryEntity {
   promotion_price: number = 0;
   sale_price_from: number = 0;
   sale_price_to: number = 0;
+  collect_price: number = 0;
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
   created_by: number = 0;
