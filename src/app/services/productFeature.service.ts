@@ -310,7 +310,6 @@ export class ProductFeatureService {
     }
 
     delete data['feature_code'];
-    console.log(data);
 
     const productFeatureData = {
       ...this.productFeaturesRepo.setData(data),
@@ -697,7 +696,7 @@ export class ProductFeatureService {
     // }
   }
 
-  async getSync() {
+  async syncImports() {
     await this.clearAll();
     const featuresValues = await this.magentoDatabaseService.executeMagentoPool(
       sqlGetFeatureValues,
@@ -705,7 +704,7 @@ export class ProductFeatureService {
     if (featuresValues[0].length) {
       for (let featureValue of featuresValues[0]) {
         const convertedData = covertProductFeaturesFromMagento(featureValue);
-        console.log(convertedData);
+
         const productFeatureData = {
           ...new ProductFeatureEntity(),
           ...this.productFeaturesRepo.setData(convertedData),

@@ -161,14 +161,13 @@ export const formatTypeValueToInSertSQL = (key, value) => {
     return `${key} = ''`;
   if (value === null) return `${key} = null`;
 
-  if (+value === 0)
-    return `${key} = '${typeof value === 'string' ? +value.trim() : +value}'`;
-  console.log(key, value, !isNaN(1 * +value));
+  if (+value === 0) return `${key} = 0`;
+
   if (!isNaN(1 * +value)) {
     if (value[0] == 0) {
       return `${key} = '${value}'`;
     }
-    return `${key} = ${value}`;
+    // return `${key} = ${value}`;
   }
   return `${key} = '${value}'`;
 };

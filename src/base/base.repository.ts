@@ -78,8 +78,6 @@ export class BaseRepositorty<T> {
       }
     }
 
-    console.log(fmtParams);
-
     let sql = `INSERT INTO ${this.table} SET ? `;
 
     await this.databaseService.executeQueryWritePool(sql, fmtParams);

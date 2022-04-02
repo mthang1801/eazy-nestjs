@@ -1188,16 +1188,20 @@ export class ProductService {
 
   async itgCreate(data): Promise<any> {
     console.log('Create Product Itg');
-
+    console.log(data);
     const convertedData = itgConvertProductsFromAppcore(data);
-
+    console.log(convertedData);
     if (convertedData['product_appcore_id']) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData['product_appcore_id'],
       });
 
       if (product) {
-        return this.itgUpdate(product['product_id'], convertedData, true);
+        return this.itgUpdate(
+          convertedData['product_appcore_id'],
+          convertedData,
+          true,
+        );
       }
     }
 
@@ -1324,6 +1328,7 @@ export class ProductService {
         let productComboItem = await this.productRepo.findOne({
           product_appcore_id: productItem.product_appcore_id,
         });
+
         if (!productComboItem) {
           const productComboItemData = {
             ...new ProductsEntity(),
@@ -1371,6 +1376,13 @@ export class ProductService {
             product_id: productComboItem.product_id,
           };
           await this.productCategoryRepo.createSync(productCategoryItemData);
+        } else {
+          const updatedProductData = this.productRepo.setData(productItem);
+
+          await this.productRepo.update(
+            { product_appcore_id: productItem.product_appcore_id },
+            updatedProductData,
+          );
         }
 
         const newGroupProductItem =
@@ -1383,8 +1395,6 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
-
-    await this.requestIntegrateParentProduct();
   }
 
   async callSync(): Promise<void> {
@@ -1657,6 +1667,7 @@ export class ProductService {
         let productComboItem = await this.productRepo.findOne({
           product_appcore_id: productItem.product_appcore_id,
         });
+
         if (!productComboItem) {
           const productComboItemData = {
             ...new ProductsEntity(),
@@ -1711,6 +1722,13 @@ export class ProductService {
             product_id: productComboItem.product_id,
           };
           await this.productCategoryRepo.createSync(productCategoryItemData);
+        } else {
+          const updatedProductData = this.productRepo.setData(productItem);
+
+          await this.productRepo.update(
+            { product_appcore_id: productItem.product_appcore_id },
+            updatedProductData,
+          );
         }
 
         const newGroupProductItem =
@@ -2958,36 +2976,58 @@ export class ProductService {
   }
 
   async importProducts() {
-    // this.clearAll();
-    // const totalProducts = 17643;
-    // const limit = 30;
-    // let currentPage = 50;
-    // let destPage = currentPage + 40;
-    // let headers = {
-    //   Authorization:
-    //     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
-    // };
-    // for (let page = currentPage; page <= destPage; page++) {
-    //   const res = await axios({
-    //     url: GET_PRODUCTS_APPCORE_LIST(page, limit),
-    //     headers,
-    //   });
-    //   let listAppcoreProducts = res.data.data.list_product;
-    //   if (listAppcoreProducts && listAppcoreProducts.length) {
-    //     for (let productAppcoreItem of listAppcoreProducts) {
-    //       let res = await axios({
-    //         url: GET_PRODUCT_APPCORE_DETAIL(productAppcoreItem.id),
-    //         headers,
-    //       });
-    //       let listAppcoreProductDetail = res.data.data;
-    //       let cmsProductDetail = convertProductDataFromAppcore(
-    //         listAppcoreProductDetail,
-    //       );
-    //       await this.itgCreate(cmsProductDetail);
-    //     }
-    //   }
-    // }
-    // this.syncProductsIntoGroup();
+    this.clearAll();
+    const totalProducts = 17643;
+    const limit = 30;
+    let currentPage = 30;
+    let destPage = Math.ceil(totalProducts / limit - currentPage);
+
+    let headers = {
+      Authorization:
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
+    };
+
+    try {
+      // let res = await axios({
+      //   url: GET_PRODUCT_APPCORE_DETAIL(50000378),
+      //   headers,
+      // });
+      // let listAppcoreProductDetail = res.data.data;
+      // let cmsProductDetail = convertProductDataFromAppcore(
+      //   listAppcoreProductDetail,
+      // );
+      // await this.itgCreate(cmsProductDetail);
+      for (let page = currentPage; page <= destPage; page++) {
+        const res = await axios({
+          url: GET_PRODUCTS_APPCORE_LIST(page, limit),
+          headers,
+        });
+
+        if (!res?.data?.data?.list_product) {
+          continue;
+        }
+
+        let listAppcoreProducts = res.data.data.list_product;
+        if (listAppcoreProducts && listAppcoreProducts.length) {
+          for (let productAppcoreItem of listAppcoreProducts) {
+            let res = await axios({
+              url: GET_PRODUCT_APPCORE_DETAIL(productAppcoreItem.id),
+              headers,
+            });
+            let listAppcoreProductDetail = res.data.data;
+
+            let cmsProductDetail = convertProductDataFromAppcore(
+              listAppcoreProductDetail,
+            );
+
+            await this.itgCreate(cmsProductDetail);
+          }
+        }
+      }
+      this.syncProductsIntoGroup();
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async reportCountTotalFromStores() {

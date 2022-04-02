@@ -41,6 +41,7 @@ import { CartModule } from './cart.module';
 import { StickerModule } from './sticker.module';
 import * as path from 'path';
 import { PromotionAccessoryModule } from './promotionAccessory.module';
+import { IndexModule } from './index.modules';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -84,6 +85,7 @@ import { PromotionAccessoryModule } from './promotionAccessory.module';
     CartModule,
     StickerModule,
     PromotionAccessoryModule,
+    IndexModule,
   ],
   providers: [
     {

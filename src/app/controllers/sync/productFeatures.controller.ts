@@ -9,8 +9,8 @@ export class ProductFeatureSyncController extends BaseController {
     super();
   }
   @Get()
-  async get(@Res() res: Response): Promise<IResponse> {
-    await this.service.getSync();
+  async import(@Res() res: Response): Promise<IResponse> {
+    await this.service.syncImports();
     return this.responseSuccess(res, null, 'Thành công');
   }
 
