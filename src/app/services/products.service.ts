@@ -1454,7 +1454,7 @@ export class ProductService {
     });
 
     if (!product) {
-      return this.itgCreate({ product_appcore_id: identifier, ...data });
+      return this.itgCreate({ product_id: identifier, ...data });
     }
 
     let convertedData = { ...data };
