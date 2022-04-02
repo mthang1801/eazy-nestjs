@@ -154,7 +154,10 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
-import { productCategoryJoiner } from '../../utils/joinTable';
+import {
+  productCategoryJoiner,
+  productByCategoryIdJoiner,
+} from '../../utils/joinTable';
 import { UpdateProductsInCategory } from '../dto/product/update-productInCategory';
 import {
   LessThanOrEqual,
@@ -833,7 +836,7 @@ export class ProductService {
 
     let productsList = await this.productRepo.find({
       select: '*',
-      join: productLeftJoiner,
+      join: productByCategoryIdJoiner,
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
       skip,
       limit,
@@ -841,7 +844,7 @@ export class ProductService {
 
     let count = await this.productRepo.find({
       select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
-      join: productLeftJoiner,
+      join: productByCategoryIdJoiner,
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
     });
 
