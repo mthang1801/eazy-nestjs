@@ -150,12 +150,14 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import { productCategoryJoiner } from '../../utils/joinTable';
 import {
   LessThanOrEqual,
   Between,
 } from '../../database/find-options/operators';
 import {
   sqlReportTotalProductAmountFromStores,
+  sqlReportTotalProductAmountInStores,
   sqlReportTotalProductsInCategories,
 } from 'src/utils/analysis/sqlProductAmount';
 
@@ -614,13 +616,14 @@ export class ProductService {
     // determine product type and  get Image
     for (let productItem of productLists) {
       if (
-        (productItem.parent_product_id == 0 ||
+        (productItem.parent_product_appcore_id == null ||
           !productItem['parent_product_id']) &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 1; //Sản phẩm cha
       } else if (
-        productItem.parent_product_id != 0 &&
+        (productItem.parent_product_appcore_id > 0 ||
+          productItem.parent_product_appcore_id != null) &&
         (productItem.product_type == 1 || productItem.product_type == 2)
       ) {
         productItem['productType'] = 2; // Sản phẩm con
@@ -1403,7 +1406,7 @@ export class ProductService {
     // for (let productItem of mockProductsData) {
     //   await this.itgCreate(productItem);
     // }
-    await this.syncProductsIntoGroup();
+    // await this.syncProductsIntoGroup();
     // await this.itgGenerateSlug();
     //=========== update ===========
     // for (let productItem of mockProductsData) {
@@ -3052,6 +3055,32 @@ export class ProductService {
     }
   }
 
+  async reportTotalProductsInStores() {
+    try {
+      const response: any = await this.databaseService.executeQueryReadPool(
+        sqlReportTotalProductAmountInStores,
+      );
+      if (!response[0]) {
+        return [];
+      }
+
+      for (let storeItem of response[0]) {
+        if (storeItem['store_location_id']) {
+          await this.storeRepo.update(
+            { store_location_id: storeItem['store_location_id'] },
+            { product_count: storeItem['total'] },
+          );
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
+    }
+  }
+
   async reportCountTotalFromCategories() {
     const categoriesList = await this.categoryRepo.find();
     for (let { category_id } of categoriesList) {
@@ -3073,6 +3102,52 @@ export class ProductService {
       const total = await response[0][0].total;
       await this.categoryRepo.update({ category_id }, { product_count: total });
     }
+  }
+
+  async getRelevantProductsByCategory(product_id) {
+    let currentProduct = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+
+    if (!currentProduct) {
+      return;
+    }
+
+    let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
+      currentProduct.price,
+    );
+
+    let categories = await this.categoryRepo.find({
+      select: '*',
+      join: productCategoryJoiner,
+      where: { [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product_id },
+    });
+
+    let otherCategories = [];
+    for (let categoryItem of categories) {
+    }
+  }
+
+  setMinMaxPriceRelevantProducts(price) {
+    let minPrice = price / 2;
+    let maxPrice = price * 2;
+
+    if (price <= 100000) {
+      minPrice = 0;
+      maxPrice = 200000;
+    } else if (500000 <= price && price <= 10000000) {
+      minPrice = price / 1.5;
+      maxPrice = price * 1.5;
+    } else if (price <= 50000000) {
+      minPrice = price / 1.3;
+      maxPrice = price * 1.3;
+    } else {
+      minPrice = price / 1.2;
+      maxPrice = price * 1.2;
+    }
+    return { minPrice, maxPrice };
   }
 
   async testSql() {

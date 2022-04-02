@@ -26,11 +26,13 @@ export class IndexService {
     // // Import Customers
     // await this.customerService.importCustomers();
     // // Import Products
-    await this.productService.importProducts();
-    await this.productService.requestIntegrateParentProduct();
+    // await this.productService.importProducts();
+    // await this.productService.requestIntegrateParentProduct();
     // // Report Product Amount In Stocks
-    await this.productService.reportCountTotalFromStores();
+    await this.productService.reportTotalProductsInStores();
+    // // Report count total amount from all stores
+    // await this.productService.reportCountTotalFromStores();
     // // Report Product In Category
-    await this.productService.reportCountTotalFromStores();
+    // await this.productService.reportCountTotalFromCategories();
   }
 }
