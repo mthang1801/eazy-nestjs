@@ -1745,7 +1745,7 @@ export class ProductService {
       }
     }
 
-    await this.requestIntegrateParentProduct();
+    // await this.requestIntegrateParentProduct();
   }
 
   async clearAll() {
