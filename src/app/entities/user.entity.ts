@@ -21,6 +21,7 @@ export class UserEntity {
   url: string = '';
   tax_exempt: string = '';
   lang_code: string = 'vi';
+  type: number = 1;
   birthday: string = convertToMySQLDateTime();
   purchase_timestamp_from: null | string;
   purchase_timestamp_to: null | string;
@@ -31,4 +32,5 @@ export class UserEntity {
   janrain_identifier: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
+  lasted_buy_at: string = '';
 }

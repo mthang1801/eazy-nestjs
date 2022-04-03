@@ -199,11 +199,21 @@ export const customersListSearchFilter = (
     arraySearch = [
       { [`${Table.USERS}.email`]: Like(search) },
       { [`${Table.USERS}.phone`]: Like(search) },
-      { [`${Table.USERS}.firstname`]: Like(firstName) },
-      { [`${Table.USERS}.lastname`]: Like(lastName) },
-      { [`${Table.USERS}.firstname`]: Like(lastName) },
-      { [`${Table.USERS}.lastname`]: Like(firstName) },
     ];
+    if (firstName) {
+      arraySearch = [
+        ...arraySearch,
+        { [`${Table.USERS}.firstname`]: Like(firstName) },
+        { [`${Table.USERS}.lastname`]: Like(firstName) },
+      ];
+    }
+    if (lastName) {
+      arraySearch = [
+        ...arraySearch,
+        { [`${Table.USERS}.lastname`]: Like(lastName) },
+        { [`${Table.USERS}.firstname`]: Like(lastName) },
+      ];
+    }
   }
 
   filterConditions = {

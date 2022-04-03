@@ -977,4 +977,11 @@ export class OrdersService {
     }
     await this.orderRepo.update({ order_code }, { status: order_status });
   }
+
+  async getHistory(order_id: number) {
+    return this.orderHistoryRepo.find({
+      select: '*',
+      where: { order_id },
+    });
+  }
 }

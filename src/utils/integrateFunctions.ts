@@ -474,6 +474,10 @@ export const importCustomersFromAppcore = (coreData) => {
     ['type', 'type'],
     ['updatedAt', 'updated_at'],
     ['ward', 'b_ward'],
+    ['totalBuyedNo', 'total_purchase'],
+    ['totalBuyedAmount', 'total_purchase_amount'],
+    ['indentifyNo', 'indentify_number'],
+    ['lastedBuyedAt', 'last_buy_at'],
   ]);
   let cmsData = {};
   for (let [core, cms] of mappingData) {

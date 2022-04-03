@@ -47,7 +47,7 @@ import {
 import { CreateCustomerAppcoreDto } from '../dto/customer/create-customerAppcore.dto';
 import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
 import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
-import { sortBy } from 'lodash';
+import { filter, sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { defaultPassword } from '../../database/constant/defaultPassword';
 import {
@@ -56,7 +56,13 @@ import {
   IMPORT_CUSTOMERS_API,
 } from 'src/database/constant/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
-import { Not, Equal, MoreThan } from '../../database/find-options/operators';
+import {
+  Not,
+  Equal,
+  MoreThan,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from '../../database/find-options/operators';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
@@ -183,27 +189,107 @@ export class CustomerService {
   }
 
   async getList(params) {
-    let { page, limit, search, ...others } = params;
+    let {
+      page,
+      limit,
+      search,
+      type,
+      gender,
+      lasted_buy_at_start,
+      lasted_buy_at_end,
+      created_at_start,
+      created_at_end,
+      total_purchase_start,
+      total_purchase_end,
+      total_purchase_amount_start,
+      total_purchase_amount_end,
+      loyalty_point_start,
+      loyalty_point_end,
+      order_by_loyalty_point,
+    } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     let filterConditions = {};
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.userRepo.tableProps.includes(key)) {
-          filterConditions[`${Table.USERS}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.userProfileRepo.tableProps.includes(key)) {
-          filterConditions[`${Table.USER_PROFILES}.${key}`] = Like(val);
-          continue;
-        }
-      }
+    let filterOrders = [
+      { field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC },
+    ];
+    // Lọc theo loại KH
+    if (type) {
+      filterConditions[`${Table.USERS}.type`] = type;
     }
 
-    const count = await this.userRepo.find({
-      select: [`COUNT(DISTINCT(${Table.USERS}.user_id)) as total`],
+    // Lọc theo giới tính
+    if (gender) {
+      filterConditions[`${Table.USERS}.gender`] = gender;
+    }
+
+    // Lọc ngày tạo
+    if (created_at_start) {
+      filterConditions[`${Table.USERS}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    }
+    if (created_at_end) {
+      filterConditions[`${Table.USERS}.created_at`] =
+        LessThanOrEqual(created_at_start);
+    }
+
+    // Lọc ngày mua lần cuối
+    if (lasted_buy_at_start) {
+      filterConditions[`${Table.USERS}.created_at`] =
+        MoreThanOrEqual(lasted_buy_at_start);
+    }
+    if (lasted_buy_at_end) {
+      filterConditions[`${Table.USERS}.created_at`] =
+        LessThanOrEqual(lasted_buy_at_end);
+    }
+    // Lọc tích luỹ
+    if (loyalty_point_start) {
+      filterConditions[`${Table.USER_LOYALTY}.loyalty_point`] =
+        MoreThanOrEqual(loyalty_point_start);
+    }
+    if (loyalty_point_end && loyalty_point_end > loyalty_point_start) {
+      filterConditions[`${Table.USER_LOYALTY}.loyalty_point`] =
+        MoreThanOrEqual(loyalty_point_end);
+    }
+
+    //Lọc số lần mua
+    if (total_purchase_start) {
+      filterConditions[`${Table.USER_DATA}.total_purchase`] =
+        MoreThanOrEqual(total_purchase_start);
+    }
+    if (total_purchase_end && total_purchase_end > total_purchase_start) {
+      filterConditions[`${Table.USER_DATA}.total_purchase`] =
+        MoreThanOrEqual(loyalty_point_end);
+    }
+
+    //Lọc tổng lượng mua
+    if (total_purchase_amount_start) {
+      filterConditions[`${Table.USER_DATA}.total_purchase_amount`] =
+        MoreThanOrEqual(total_purchase_amount_start);
+    }
+    if (
+      total_purchase_amount_end &&
+      total_purchase_amount_end > total_purchase_amount_start
+    ) {
+      filterConditions[`${Table.USER_DATA}.total_purchase_amount`] =
+        MoreThanOrEqual(total_purchase_amount_end);
+    }
+
+    if (order_by_loyalty_point) {
+      filterOrders = [
+        ...filterOrders,
+        {
+          field: `${Table.USER_PROFILES}.loyalty_point`,
+          sortBy: order_by_loyalty_point == -1 ? SortBy.DESC : SortBy.ASC,
+        },
+      ];
+    }
+
+    let count = await this.userRepo.find({
+      select: `COUNT(${Table.USERS}.user_id) as total`,
+      join: userJoiner,
       where: customersListSearchFilter(search, filterConditions),
     });
 
@@ -217,12 +303,12 @@ export class CustomerService {
     });
 
     return {
-      customers: customersList,
       paging: {
         currentPage: page,
         pageSize: limit,
         total: count.length ? count[0].total : 0,
       },
+      customers: customersList,
     };
   }
 

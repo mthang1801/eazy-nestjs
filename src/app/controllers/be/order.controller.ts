@@ -58,4 +58,13 @@ export class OrderController extends BaseController {
     const result = await this.service.getByOrderCode(order_code);
     return this.responseSuccess(res, result);
   }
+
+  @Get(':order_id/history')
+  async getHistory(
+    @Res() res: Response,
+    @Param('order_id') order_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getHistory(order_id);
+    return this.responseSuccess(res, result, 'Thành công.');
+  }
 }

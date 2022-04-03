@@ -29,7 +29,7 @@ export class IndexService {
     // await this.productService.importProducts();
     // await this.productService.requestIntegrateParentProduct();
     // // Report Product Amount In Stocks
-    await this.productService.reportTotalProductsInStores();
+    // await this.productService.reportTotalProductsInStores();
     // // Report count total amount from all stores
     // await this.productService.reportCountTotalFromStores();
     // // Report Product In Category

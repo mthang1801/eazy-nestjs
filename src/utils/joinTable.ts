@@ -338,6 +338,23 @@ export const userJoiner = {
   },
 };
 
+export const userLoyaltyJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USERS]: {
+      fieldJoin: `${Table.USERS}.user_id`,
+      rootJoin: `${Table.USER_LOYALTY}.user_id`,
+    },
+    [Table.USER_PROFILES]: {
+      fieldJoin: `${Table.USER_PROFILES}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+    [Table.USER_DATA]: {
+      fieldJoin: `${Table.USER_DATA}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+  },
+};
+
 export const userSystemStoreJoiner = {
   [JoinTable.leftJoin]: {
     [Table.USER_PROFILES]: {
