@@ -2,6 +2,7 @@ import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
 
 export class OrderHistoryEntity {
   order_id: number = 0;
+
   order_code: null | number = 0;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
@@ -12,6 +13,8 @@ export class OrderHistoryEntity {
   total: number = 0;
   subtotal: number = 0;
   discount: number = 0;
+  coupon_programing_id: number = 0;
+  coupon_code: string = '';
   discount_type: number = 1;
   subtotal_discount: number = 0;
   payment_surcharge: number = 0;

@@ -225,8 +225,6 @@ export const productJoiner = (params = {}) => {
     },
   };
 
-  console.log(247, result);
-
   return { [JoinTable.innerJoin]: result };
 };
 

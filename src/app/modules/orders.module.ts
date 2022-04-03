@@ -18,6 +18,7 @@ import { CustomerModule } from './customer.module';
 import { CartModule } from './cart.module';
 import { OrderSyncController } from '../controllers/sync/order.controller';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
+import { PromotionModule } from './promotion.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -53,6 +54,7 @@ import { OrderHistoryRepository } from '../repositories/orderHistory.repository'
     StoreModule,
     forwardRef(() => CustomerModule),
     CartModule,
+    PromotionModule,
   ],
 })
 export class OrdersModule {}

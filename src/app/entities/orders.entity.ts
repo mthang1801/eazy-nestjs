@@ -11,12 +11,12 @@ export class OrderEntity {
   store_id: number = 0;
   total: number = 0;
   subtotal: number = 0;
+  coupon_programing_id: number = 0;
   coupon_code: string = '';
   discount: number = 0;
   discount_type: number = 1;
   order_type: number = 1;
   subtotal_discount: number = 0;
-
   payment_surcharge: number = 0;
   shipping_id: string = '';
   warranty_note: string = '';

@@ -127,6 +127,9 @@ export class CreateOrderDto {
   discount: number = 0;
 
   @IsOptional()
+  coupon_programing_id: number = 0;
+
+  @IsOptional()
   coupon_code: string = '';
 
   @IsOptional()

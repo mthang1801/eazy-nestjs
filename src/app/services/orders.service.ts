@@ -80,6 +80,7 @@ import { productSearchJoiner } from '../../utils/joinTable';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 import { OrderHistoryEntity } from '../entities/orderHistory.entity';
 import { convertToMySQLDateTime } from '../../utils/helper';
+import { PromotionService } from './promotion.service';
 
 @Injectable()
 export class OrdersService {
@@ -103,6 +104,7 @@ export class OrdersService {
     private customerService: CustomerService,
     private orderHistoryRepo: OrderHistoryRepository<OrderHistoryEntity>,
     private locatorService: LocatorService,
+    private promotionService: PromotionService,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -174,16 +176,6 @@ export class OrdersService {
   }
 
   async createOrder(user, data) {
-    console.log(data);
-    // data['b_city'] = data['b_city'] || data['s_city'];
-    // data['b_ward'] = data['b_ward'] || data['s_ward'];
-    // data['b_district'] = data['b_district'] || data['s_district'];
-    // data['b_phone'] = data['b_phone'] || data['s_phone'];
-    // data['b_address'] = data['b_address'] || data['s_address'];
-    // data['b_firstname'] = data['b_firstname'] || data['s_firstname'];
-    // data['b_lastname'] = data['b_lastname'] || data['s_lastname'];
-    // data['firstname'] = data['b_firstname'] || data['s_firstname'];
-    // data['lastname'] = data['b_lastname'] || data['s_lastname'];
     data['store_id'] = data['store_id'] || 67107;
     data['utm_source'] = data['utm_source'] || 10;
 
@@ -232,6 +224,28 @@ export class OrdersService {
       orderData['discount_type'] == 1
         ? orderData['total'] - orderData['discount']
         : (orderData['total'] * (100 - orderData['discount'])) / 100;
+
+    if (data['coupon_code']) {
+      //Check coupon
+      let checkCouponData = {
+        store_id: data['store_id'],
+        coupon_code: data['coupon_code'],
+        coupon_programing_id: data['coupon_programing_id'],
+        phone: data['b_phone'] ? data['b_phone'] : data['s_phone'],
+        products: data['order_items'].map(({ product_id, amount }) => ({
+          product_id,
+          amount,
+        })),
+      };
+
+      let checkResult = await this.promotionService.checkCoupon(
+        checkCouponData,
+      );
+
+      if (checkResult['isValid']) {
+        orderData['total'] -= checkResult['discountMoney'];
+      }
+    }
 
     let result = await this.orderRepo.create(orderData);
 

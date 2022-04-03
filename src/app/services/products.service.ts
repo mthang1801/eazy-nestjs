@@ -709,8 +709,6 @@ export class ProductService {
 
     let productLists, count;
 
-    console.log(filterJoiner);
-
     if (store_location_id) {
       productLists = await this.productStoreRepo.find({
         select: getProductsListSelectorBE,

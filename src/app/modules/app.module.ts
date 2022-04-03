@@ -42,6 +42,7 @@ import { StickerModule } from './sticker.module';
 import * as path from 'path';
 import { PromotionAccessoryModule } from './promotionAccessory.module';
 import { IndexModule } from './index.modules';
+import { PromotionModule } from './promotion.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -86,6 +87,7 @@ import { IndexModule } from './index.modules';
     StickerModule,
     PromotionAccessoryModule,
     IndexModule,
+    PromotionModule,
   ],
   providers: [
     {
