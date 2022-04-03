@@ -73,7 +73,7 @@ export class ProductIntegrationController extends BaseController {
 
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getList(params);
+    const result = await this.service.getListBE(params);
     return this.responseSuccess(res, result);
   }
 

@@ -151,40 +151,81 @@ export const productByCategoryJoiner = {
 
 export const productJoiner = (params = {}) => {
   let isLeftJoin = true;
-  let result = {
+  let result = {};
+  let rootJoiner = `${Table.PRODUCTS}.product_id`;
+  console.log(params);
+  //Thứ tự Ưu tien category_id, store, sticker
+
+  if (params['store_location_id']) {
+    rootJoiner = `${Table.PRODUCT_STORES}.product_id`;
+    result[Table.PRODUCTS] = {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: rootJoiner,
+    };
+  }
+  if (params['category_id']) {
+    if (params['store_location_id']) {
+      result[Table.PRODUCTS_CATEGORIES] = {
+        fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+        rootJoin: rootJoiner,
+      };
+    } else {
+      rootJoiner = `${Table.PRODUCTS_CATEGORIES}.product_id`;
+
+      result[Table.PRODUCTS] = {
+        fieldJoin: `${Table.PRODUCTS}.product_id`,
+        rootJoin: rootJoiner,
+      };
+    }
+  }
+
+  if (params['sticker_id']) {
+    if (params['store_location_id'] || params['category_id']) {
+      result[Table.PRODUCT_STICKER] = {
+        fieldJoin: `${Table.PRODUCT_STICKER}.product_id`,
+        rootJoin: rootJoiner,
+      };
+    } else {
+      rootJoiner = `${Table.PRODUCT_STICKER}.product_id`;
+      result[Table.PRODUCTS] = {
+        fieldJoin: `${Table.PRODUCTS}.product_id`,
+        rootJoin: rootJoiner,
+      };
+    }
+  }
+
+  if (params['catalog_category_id']) {
+    if (
+      params['store_location_id'] ||
+      params['category_id'] ||
+      params['sticker_id']
+    ) {
+      result[Table.CATALOG_CATEGORIES] = {
+        fieldJoin: `${Table.CATALOG_CATEGORIES}.catalog_id`,
+        rootJoin: `${Table.PRODUCTS}.catalog_category_id`,
+      };
+    } else {
+      rootJoiner = `${Table.PRODUCTS}.catalog_id`;
+      result[Table.PRODUCTS] = {
+        fieldJoin: `${Table.PRODUCTS}.catalog_category_id`,
+        rootJoin: `${Table.CATALOG_CATEGORIES}.catalog_id`,
+      };
+    }
+  }
+
+  result = {
+    ...result,
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: rootJoiner,
     },
     [Table.PRODUCT_PRICES]: {
       fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
-    [Table.PRODUCTS_CATEGORIES]: {
-      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
-    [Table.CATEGORIES]: {
-      fieldJoin: `${Table.CATEGORIES}.category_id`,
-      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+      rootJoin: rootJoiner,
     },
   };
 
-  if (params['sticker_id']) {
-    isLeftJoin = false;
-    result[Table.PRODUCT_STICKER] = {
-      fieldJoin: `${Table.PRODUCT_STICKER}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    };
-  }
-
-  if (params['store_location_id']) {
-    isLeftJoin = false;
-    result[Table.PRODUCT_STORES] = {
-      fieldJoin: `${Table.PRODUCT_STORES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    };
-  }
+  console.log(247, result);
 
   return { [JoinTable.innerJoin]: result };
 };

@@ -121,12 +121,12 @@ export const productsListsSearchFilter = (
   filterConditions = {},
   categoriesList = [],
 ) => {
-  let arraySearch = categoriesList.length
-    ? categoriesList.map((categoryId) => ({
-        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-      }))
-    : [];
-
+  // let arraySearch = categoriesList.length
+  //   ? categoriesList.map((categoryId) => ({
+  //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+  //     }))
+  //   : [];
+  let arraySearch = [];
   if (search) {
     arraySearch = [
       ...arraySearch,

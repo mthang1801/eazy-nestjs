@@ -110,6 +110,7 @@ import {
   categorySelector,
   getProductByIdentifierSelector,
   getProductsListSelector,
+  getProductsListSelectorBE,
   productFeatureValuesSelector,
 } from 'src/utils/tableSelector';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
@@ -159,6 +160,8 @@ import {
   productByCategoryIdJoiner,
 } from '../../utils/joinTable';
 import { UpdateProductsInCategory } from '../dto/product/update-productInCategory';
+import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
+import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
 import {
   LessThanOrEqual,
   Between,
@@ -204,6 +207,7 @@ export class ProductService {
     private databaseService: DatabaseService,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
+    private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -484,7 +488,105 @@ export class ProductService {
     }
   }
 
-  async getList(params: any): Promise<any> {
+  async getListFE(params) {
+    let {
+      page,
+      limit,
+      search,
+      status, // Trạng thái hiển thị
+      category_id, //  Danh mục SP
+    } = params;
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+    let filterOrders = [
+      { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
+    ];
+
+    let categoriesList = [];
+    if (category_id) {
+      categoriesList = await this.childrenCategories(category_id);
+      categoriesList = [
+        +category_id,
+        ...categoriesList.map(({ category_id }) => category_id),
+      ];
+    }
+
+    let productLists = await this.productRepo.find({
+      select: getProductsListSelector,
+      join: productLeftJoiner,
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    let count = await this.productRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productLeftJoiner,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    // determine product type and  get Image
+    for (let productItem of productLists) {
+      if (
+        (productItem['parent_product_appcore_id'] == null ||
+          !productItem['parent_product_appcore_id']) &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productItem['productType'] = 1; //Sản phẩm cha
+      } else if (
+        (productItem['parent_product_appcore_id'] > 0 ||
+          productItem['parent_product_appcore_id'] != null) &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productItem['productType'] = 2; // Sản phẩm con
+      } else if (productItem.product_type == 3) {
+        productItem['productType'] = 3; //SP combo
+      } else {
+        productItem['productType'] = 4; // SP độc lập
+      }
+
+      productItem['image'] = null;
+
+      const productImage = await this.imageLinkRepo.findOne({
+        object_id: productItem.product_id,
+        object_type: ImageObjectType.PRODUCT,
+      });
+
+      if (productImage) {
+        const image = await this.imageRepo.findOne({
+          image_id: productImage.image_id,
+        });
+        productItem['image'] = image;
+      }
+    }
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      products: productLists,
+    };
+  }
+
+  async getListBE(params: any) {
     let {
       page,
       limit,
@@ -501,13 +603,17 @@ export class ProductService {
       created_at_start, // Ngày tạo
       created_at_end,
       sticker_id,
-      store_location_id, // kho
+      store_location_id, // kho,
+      order_amount,
     } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
+    let filterOrders = [
+      { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
+    ];
     let filterJoiner = {};
     //  Filter trạng thái hiển thị
     if (status) {
@@ -540,10 +646,11 @@ export class ProductService {
       }
     }
 
-    // Filter danh mục
+    // Filter danh mục ngành hàng
     if (catalog_category_id) {
       filterCondition[`${Table.PRODUCTS}.catalog_category_id`] =
         catalog_category_id;
+      filterJoiner['catalog_category_id'] = 1;
     }
 
     // Filter tinhf trang Demo, Like
@@ -589,6 +696,10 @@ export class ProductService {
 
     let categoriesList = [];
     if (category_id) {
+      // Theo danh mục
+      filterCondition[`${Table.PRODUCTS_CATEGORIES}.category_id`] = category_id;
+      filterJoiner['category_id'] = 1;
+
       categoriesList = await this.childrenCategories(category_id);
       categoriesList = [
         +category_id,
@@ -596,33 +707,156 @@ export class ProductService {
       ];
     }
 
-    const productLists = await this.productRepo.find({
-      select: getProductsListSelector,
-      join: productJoiner(filterJoiner),
-      orderBy: [{ field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC }],
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-      skip,
-      limit,
-    });
+    let productLists, count;
 
-    let count = await this.productRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: productJoiner(filterJoiner),
+    console.log(filterJoiner);
 
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-    });
+    if (store_location_id) {
+      productLists = await this.productStoreRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      count = await this.productStoreRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+      });
+    } else if (category_id) {
+      productLists = await this.productCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      count = await this.productCategoryRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+      });
+    } else if (sticker_id) {
+      productLists = await this.productStickerRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      count = await this.productStickerRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+      });
+    } else if (catalog_category_id) {
+      productLists = await this.catalogCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      count = await this.stickerRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+      });
+    } else {
+      productLists = await this.productRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      count = await this.productRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where:
+          categoriesList.length > 1
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterCondition,
+              )
+            : productsListsSearchFilter(search, filterCondition),
+      });
+    }
 
     // determine product type and  get Image
     for (let productItem of productLists) {
@@ -650,14 +884,13 @@ export class ProductService {
         object_id: productItem.product_id,
         object_type: ImageObjectType.PRODUCT,
       });
-      console.log(productImage);
+
       if (productImage) {
         const image = await this.imageRepo.findOne({
           image_id: productImage.image_id,
         });
         productItem['image'] = image;
       }
-      console.log(productItem);
     }
 
     return {
