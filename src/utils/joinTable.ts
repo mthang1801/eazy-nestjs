@@ -381,8 +381,8 @@ export const productGroupJoiner = {
 export const productCategoryJoiner = {
   [JoinTable.innerJoin]: {
     [Table.CATEGORIES]: {
-      fieldJoin: 'category_id',
-      rootJoin: 'category_id',
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
     },
   },
 };

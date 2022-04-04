@@ -163,6 +163,7 @@ import {
 import { UpdateProductsInCategory } from '../dto/product/update-productInCategory';
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
+import { sqlFindRelevantProductsInSameCategory } from '../../utils/sql/products.sql';
 import {
   LessThanOrEqual,
   Between,
@@ -2510,6 +2511,10 @@ export class ProductService {
       //find product Stickers
       product['stickers'] = await this.getProductStickers(product);
 
+      product['relevant_products'] = await this.getRelevantProductsByCategory(
+        product.product_id,
+      );
+
       return {
         currentCategory: showListCategories
           ? currentCategory
@@ -2520,6 +2525,61 @@ export class ProductService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async getRelevantProductsByCategory(product_id) {
+    let currentProduct = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+
+    if (!currentProduct) {
+      return;
+    }
+
+    let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
+      currentProduct.price,
+    );
+
+    console.log(34, minPrice, maxPrice);
+
+    let categories = await this.productCategoryRepo.find({
+      select: '*',
+      join: productCategoryJoiner,
+      where: { [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product_id },
+    });
+
+    let listCategoriesId = categories.map(({ category_id }) => category_id);
+    let sqlQuery = sqlFindRelevantProductsInSameCategory(
+      listCategoriesId,
+      minPrice,
+      maxPrice,
+    );
+
+    let productsList = await this.productCategoryRepo.writeExec(sqlQuery);
+
+    return productsList[0];
+  }
+
+  setMinMaxPriceRelevantProducts(price) {
+    let minPrice = price / 2;
+    let maxPrice = price * 2;
+
+    if (price <= 100000) {
+      minPrice = 0;
+      maxPrice = 200000;
+    } else if (500000 <= price && price <= 10000000) {
+      minPrice = price / 1.5;
+      maxPrice = price * 1.5;
+    } else if (price <= 50000000) {
+      minPrice = price / 1.3;
+      maxPrice = price * 1.3;
+    } else {
+      minPrice = price / 1.2;
+      maxPrice = price * 1.2;
+    }
+    return { minPrice, maxPrice };
   }
 
   async getProductStickers(product) {
@@ -3387,52 +3447,6 @@ export class ProductService {
       const total = await response[0][0].total;
       await this.categoryRepo.update({ category_id }, { product_count: total });
     }
-  }
-
-  async getRelevantProductsByCategory(product_id) {
-    let currentProduct = await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
-    });
-
-    if (!currentProduct) {
-      return;
-    }
-
-    let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
-      currentProduct.price,
-    );
-
-    let categories = await this.categoryRepo.find({
-      select: '*',
-      join: productCategoryJoiner,
-      where: { [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product_id },
-    });
-
-    let otherCategories = [];
-    for (let categoryItem of categories) {
-    }
-  }
-
-  setMinMaxPriceRelevantProducts(price) {
-    let minPrice = price / 2;
-    let maxPrice = price * 2;
-
-    if (price <= 100000) {
-      minPrice = 0;
-      maxPrice = 200000;
-    } else if (500000 <= price && price <= 10000000) {
-      minPrice = price / 1.5;
-      maxPrice = price * 1.5;
-    } else if (price <= 50000000) {
-      minPrice = price / 1.3;
-      maxPrice = price * 1.3;
-    } else {
-      minPrice = price / 1.2;
-      maxPrice = price * 1.2;
-    }
-    return { minPrice, maxPrice };
   }
 
   async testSql() {
