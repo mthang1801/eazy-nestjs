@@ -673,12 +673,15 @@ export class ProductService {
     }
 
     // Ngay tạo
-
-    if (created_at_start) {
+    if (created_at_start && created_at_end) {
+      filterCondition[`${Table.PRODUCTS}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
       filterCondition[`${Table.PRODUCTS}.created_at`] =
         MoreThanOrEqual(created_at_start);
-    }
-    if (created_at_end) {
+    } else if (created_at_end) {
       filterCondition[`${Table.PRODUCTS}.created_at`] =
         LessThanOrEqual(created_at_end);
     }
