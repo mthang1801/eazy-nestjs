@@ -60,6 +60,7 @@ export class ProductsEntity {
   catalog_category_id: number = 3;
   redirect_url: string = '';
   is_installment: string = 'N';
+  product_function: number = 0;
   created_at: string = convertToMySQLDateTime();
   display_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();

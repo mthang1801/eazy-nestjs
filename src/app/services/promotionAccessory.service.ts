@@ -122,11 +122,6 @@ export class PromotionAccessoryService {
       ).format('YYYY-MM-DD HH:mm:ss');
     }
 
-    // const productAccessoriesList = await this.productPromoAccessoryRepo.find({
-    //   select: 'product_id',
-    //   where: { accessory_id },
-    // });
-
     promoAccessory['products'] = [];
 
     let productLists = await this.productRepo.find({
@@ -220,11 +215,16 @@ export class PromotionAccessoryService {
   }
 
   async getList(params) {
-    let { page, limit, search } = params;
+    let { page, limit, search, accessory_type } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
     let filterConditions = {};
+
+    if (accessory_type) {
+      filterConditions[`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_type`] =
+        accessory_type;
+    }
     const accessoriesList = await this.promoAccessoryRepo.find({
       select: '*',
 

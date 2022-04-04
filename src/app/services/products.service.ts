@@ -54,6 +54,7 @@ import {
   productStickerJoiner,
   productLeftJoiner,
   categoryJoiner,
+  productsListByCategoryJoiner,
 } from 'src/utils/joinTable';
 import {
   productSearch,
@@ -513,6 +514,7 @@ export class ProductService {
         ...categoriesList.map(({ category_id }) => category_id),
       ];
     }
+    console.log(categoriesList);
 
     let productLists = await this.productRepo.find({
       select: getProductsListSelector,
@@ -1103,6 +1105,10 @@ export class ProductService {
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.childrenCategories(categoryId);
 
+    let filterCondition = {
+      [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
+    };
+
     categoriesListByLevel = _.orderBy(
       categoriesListByLevel,
       ['level'],
@@ -1120,18 +1126,30 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.*`,
-      join: {
-        [JoinTable.leftJoin]: productByCategoryJoiner,
-      },
-      where: {
-        [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
-          (categoryId) => categoryId,
-        ),
-      },
+    const productsList = await this.productCategoryRepo.find({
+      select: getProductsListSelectorBE,
+      join: productsListByCategoryJoiner(),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
       skip,
       limit,
+    });
+
+    const count = await this.productCategoryRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productsListByCategoryJoiner(),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
     });
 
     for (let productItem of productsList) {
@@ -1150,18 +1168,6 @@ export class ProductService {
       //find product Stickers
       productItem['stickers'] = await this.getProductStickers(productItem);
     }
-
-    const count = await this.productRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: {
-        [JoinTable.leftJoin]: productByCategoryJoiner,
-      },
-      where: {
-        [`${Table.PRODUCTS_CATEGORIES}.category_id `]: categoriesList.map(
-          (categoryId) => categoryId,
-        ),
-      },
-    });
 
     return {
       paging: {
@@ -3442,5 +3448,33 @@ export class ProductService {
       { index_id: newGroup1.index_id },
       { group_ids: '0112379128', type: 3 },
     );
+  }
+
+  async determineProductFunction() {
+    let productsList = await this.productRepo.find();
+    for (let productItem of productsList) {
+      let productFunction = 1;
+      if (
+        (productItem['parent_product_appcore_id'] == null ||
+          !productItem['parent_product_appcore_id']) &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productFunction = 1; //Sản phẩm cha
+      } else if (
+        (productItem['parent_product_appcore_id'] > 0 ||
+          productItem['parent_product_appcore_id'] != null) &&
+        (productItem.product_type == 1 || productItem.product_type == 2)
+      ) {
+        productFunction = 2; // Sản phẩm con
+      } else if (productItem.product_type == 3) {
+        productFunction = 3; //SP combo
+      } else {
+        productFunction = 4; // SP độc lập
+      }
+      await this.productRepo.update(
+        { product_id: productItem.product_id },
+        { product_function: productFunction },
+      );
+    }
   }
 }

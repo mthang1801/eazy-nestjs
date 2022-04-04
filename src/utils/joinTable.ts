@@ -227,6 +227,29 @@ export const productJoiner = (params = {}) => {
   return { [JoinTable.innerJoin]: result };
 };
 
+export const productsListByCategoryJoiner = (params = {}) => {
+  let rootJoiner = `${Table.PRODUCTS_CATEGORIES}.product_id`;
+  let result = {};
+
+  result = {
+    ...result,
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: rootJoiner,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: rootJoiner,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: rootJoiner,
+    },
+  };
+
+  return { [JoinTable.innerJoin]: result };
+};
+
 export const productLeftJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {

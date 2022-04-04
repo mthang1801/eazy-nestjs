@@ -39,6 +39,7 @@ export const getProductAccessorySelector = [
   `DISTINCT(${Table.PRODUCTS}.product_id)`,
   `${Table.PRODUCT_DESCRIPTION}.*`,
   `${Table.PRODUCTS}.product_code`,
-  `${Table.PRODUCT_PROMOTION_ACCESSORY}.*`,
   `${Table.PRODUCT_PRICES}.*`,
+  `${Table.PRODUCT_PROMOTION_ACCESSORY}.*`,
+  `${Table.PRODUCTS}.amount`,
 ];

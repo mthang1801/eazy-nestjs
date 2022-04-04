@@ -34,5 +34,7 @@ export class IndexService {
     // await this.productService.reportCountTotalFromStores();
     // // Report Product In Category
     // await this.productService.reportCountTotalFromCategories();
+    // Determin product functions
+    await this.productService.determineProductFunction();
   }
 }
