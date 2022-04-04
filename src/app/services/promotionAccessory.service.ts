@@ -34,24 +34,12 @@ export class PromotionAccessoryService {
       );
     }
 
-    for (let productId of data.product_ids) {
-      const product = await this.productRepo.findOne({
-        product_id: productId,
-      });
-      if (!product) {
-        throw new HttpException(
-          `Sản phẩm có id ${productId} không tồn tại`,
-          404,
-        );
-      }
-    }
-
     if (data.products) {
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
-          where: { product_id: productItem.product_id },
+          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
         if (!product) {
           throw new HttpException(
@@ -64,7 +52,7 @@ export class PromotionAccessoryService {
           productItem.promotion_price > product['price']
         ) {
           throw new HttpException(
-            `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp `,
+            `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp, không được lớn hơn giá gốc `,
             400,
           );
         }
@@ -92,32 +80,18 @@ export class PromotionAccessoryService {
       newPromotionAccessoryData,
     );
 
-    for (let productId of data.product_ids) {
-      const newProductPromotionAccessoryData = {
-        ...new ProductPromotionAccessoryEntity(),
-        accessory_id: newPromotionAccessory.accessory_id,
-        product_id: productId,
-        created_by: user.user_id,
-        updated_by: user.user_id,
-      };
-
-      await this.productPromoAccessoryRepo.createSync(
-        newProductPromotionAccessoryData,
-      );
-    }
-
     if (data.products) {
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
-          where: { product_id: productItem.product_id },
+          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
 
         const newProductData = {
           ...new ProductPromotionAccessoryEntity(),
           ...this.productPromoAccessoryRepo.setData(productItem),
-          price: product['price'],
+          sale_price: product['price'],
           created_by: user.user_id,
           updated_by: user.user_id,
           accessory_id: newPromotionAccessory.accessory_id,
@@ -176,26 +150,12 @@ export class PromotionAccessoryService {
       );
     }
 
-    if (data.product_ids && data.product_ids.length) {
-      for (let productId of data.product_ids) {
-        const product = await this.productRepo.findOne({
-          product_id: productId,
-        });
-        if (!product) {
-          throw new HttpException(
-            `Sản phẩm có id ${productId} không tồn tại`,
-            404,
-          );
-        }
-      }
-    }
-
     if (data.products) {
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
-          where: { product_id: productItem.product_id },
+          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
         if (!product) {
           throw new HttpException(
@@ -208,7 +168,7 @@ export class PromotionAccessoryService {
           productItem.promotion_price > product['price']
         ) {
           throw new HttpException(
-            `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp `,
+            `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp, không được lớn hơn giá gốc `,
             400,
           );
         }
@@ -236,35 +196,19 @@ export class PromotionAccessoryService {
       data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
     }
 
-    if (data.product_ids && data.product_ids.length) {
-      await this.productPromoAccessoryRepo.delete({ accessory_id });
-      for (let productId of data.product_ids) {
-        const newProductPromotionAccessoryData = {
-          ...new ProductPromotionAccessoryEntity(),
-          accessory_id: accessory_id,
-          product_id: productId,
-          created_by: user.user_id,
-          updated_by: user.user_id,
-        };
-        await this.productPromoAccessoryRepo.createSync(
-          newProductPromotionAccessoryData,
-        );
-      }
-    }
-
     if (data.products && data.products.length) {
       await this.productPromoAccessoryRepo.delete({ accessory_id });
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
-          where: { product_id: productItem.product_id },
+          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
 
         const newProductData = {
           ...new ProductPromotionAccessoryEntity(),
           ...this.productPromoAccessoryRepo.setData(productItem),
-          price: product['price'],
+          sale_price: product['price'],
           created_by: user.user_id,
           updated_by: user.user_id,
           accessory_id: accessory_id,

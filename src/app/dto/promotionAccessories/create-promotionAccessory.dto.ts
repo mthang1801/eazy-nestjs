@@ -14,9 +14,6 @@ export class CreatePromotionAccessoryDto {
   @IsNotEmpty()
   accessory_name: string;
 
-  @ArrayNotEmpty()
-  product_ids: number[];
-
   @IsOptional()
   @ValidateNested()
   @Type(() => AccessoryProducts)

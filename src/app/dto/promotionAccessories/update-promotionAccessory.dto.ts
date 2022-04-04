@@ -23,9 +23,6 @@ export class UpdatePromotionAccessoryDto {
   products: AccessoryProducts[];
 
   @IsOptional()
-  product_ids: number[];
-
-  @IsOptional()
   accessory_status: string = 'A';
 
   @IsOptional()

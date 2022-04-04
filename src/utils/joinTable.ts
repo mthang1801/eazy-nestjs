@@ -153,7 +153,7 @@ export const productJoiner = (params = {}) => {
   let isLeftJoin = true;
   let result = {};
   let rootJoiner = `${Table.PRODUCTS}.product_id`;
-  console.log(params);
+  console.log(156, params);
   //Thứ tự Ưu tien category_id, store, sticker
 
   if (params['store_location_id']) {

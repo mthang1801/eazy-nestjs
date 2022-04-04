@@ -5,6 +5,7 @@ import { Equal, Like, Not } from 'src/database/find-options/operators';
 import { convertToSlug, removeVietnameseTones } from './helper';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
+  console.log(8, filterConditions);
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
     return filterConditions;
   if (!fieldsSearch.length && Object.entries(filterConditions).length) {
@@ -119,14 +120,9 @@ export const userGroupSearchByNameCode = (
 export const productsListsSearchFilter = (
   search = '',
   filterConditions = {},
-  categoriesList = [],
 ) => {
-  // let arraySearch = categoriesList.length
-  //   ? categoriesList.map((categoryId) => ({
-  //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-  //     }))
-  //   : [];
   let arraySearch = [];
+
   if (search) {
     arraySearch = [
       ...arraySearch,
@@ -147,13 +143,7 @@ export const productsListCategorySearchFilter = (
   if (search) {
     arraySearch = [
       { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-      { [`${Table.PRODUCTS}.barcode`]: Like(search) },
       { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-      {
-        [`${Table.PRODUCTS}.slug`]: Like(
-          convertToSlug(removeVietnameseTones(search)),
-        ),
-      },
     ];
   }
   let searchList = [];

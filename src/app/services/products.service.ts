@@ -697,7 +697,6 @@ export class ProductService {
     let categoriesList = [];
     if (category_id) {
       // Theo danh mục
-      filterCondition[`${Table.PRODUCTS_CATEGORIES}.category_id`] = category_id;
       filterJoiner['category_id'] = 1;
 
       categoriesList = await this.childrenCategories(category_id);
@@ -714,14 +713,13 @@ export class ProductService {
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
       });
@@ -729,29 +727,26 @@ export class ProductService {
       count = await this.productStoreRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
       });
     } else if (category_id) {
-      console.log(categoriesList);
       productLists = await this.productCategoryRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
       });
@@ -759,14 +754,13 @@ export class ProductService {
       count = await this.productCategoryRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
       });
     } else if (sticker_id) {
       productLists = await this.productStickerRepo.find({
