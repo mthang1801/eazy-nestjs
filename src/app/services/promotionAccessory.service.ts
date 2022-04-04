@@ -17,6 +17,7 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import * as moment from 'moment';
+import { getProductAccessorySelector } from 'src/utils/tableSelector';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -121,25 +122,22 @@ export class PromotionAccessoryService {
       ).format('YYYY-MM-DD HH:mm:ss');
     }
 
-    const productAccessoriesList = await this.productPromoAccessoryRepo.find({
-      select: 'product_id',
-      where: { accessory_id },
-    });
+    // const productAccessoriesList = await this.productPromoAccessoryRepo.find({
+    //   select: 'product_id',
+    //   where: { accessory_id },
+    // });
 
     promoAccessory['products'] = [];
-    if (productAccessoriesList.length) {
-      let productLists = await this.productRepo.find({
-        select: '*',
-        join: productPromotionAccessoryJoiner,
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: productAccessoriesList.map(
-            ({ product_id }) => product_id,
-          ),
-        },
-      });
 
-      promoAccessory['products'] = productLists;
-    }
+    let productLists = await this.productRepo.find({
+      select: getProductAccessorySelector,
+      join: productPromotionAccessoryJoiner,
+      where: {
+        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+      },
+    });
+
+    promoAccessory['products'] = productLists;
 
     return promoAccessory;
   }

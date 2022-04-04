@@ -205,7 +205,6 @@ export const productJoiner = (params = {}) => {
         rootJoin: `${Table.PRODUCTS}.catalog_category_id`,
       };
     } else {
-      rootJoiner = `${Table.PRODUCTS}.catalog_id`;
       result[Table.PRODUCTS] = {
         fieldJoin: `${Table.PRODUCTS}.catalog_category_id`,
         rootJoin: `${Table.CATALOG_CATEGORIES}.catalog_id`,

@@ -767,14 +767,13 @@ export class ProductService {
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
       });
@@ -782,57 +781,53 @@ export class ProductService {
       count = await this.productStickerRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
       });
     } else if (catalog_category_id) {
       productLists = await this.catalogCategoryRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
       });
 
-      count = await this.stickerRepo.find({
+      count = await this.catalogCategoryRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
       });
     } else {
       productLists = await this.productRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
       });
@@ -840,14 +835,13 @@ export class ProductService {
       count = await this.productRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
-        where:
-          categoriesList.length > 1
-            ? productsListCategorySearchFilter(
-                categoriesList,
-                search,
-                filterCondition,
-              )
-            : productsListsSearchFilter(search, filterCondition),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
       });
     }
 
