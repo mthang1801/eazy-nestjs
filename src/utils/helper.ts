@@ -171,6 +171,24 @@ export const formatTypeValueToInSertSQL = (key, value) => {
   }
   return `${key} = '${value}'`;
 };
+export const formatTypeValueConditionSQL = (value) => {
+  if (
+    (typeof value === 'string' && value.trim() === '') ||
+    typeof value == 'undefined'
+  )
+    return `''`;
+  if (value === null) return `null`;
+
+  if (+value === 0) return `0`;
+
+  if (!isNaN(1 * +value)) {
+    if (value[0] == 0) {
+      return `'${value}'`;
+    }
+    // return `${key} = ${value}`;
+  }
+  return `'${value}'`;
+};
 
 export const processGetTextDataFromMysql = (data) => {
   if (data && typeof data == 'string') {

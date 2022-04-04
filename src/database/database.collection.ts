@@ -1,5 +1,10 @@
 import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
 import {
+  formatTypeValueConditionSQL,
+  formatTypeValueToInSertSQL,
+  preprocessAddTextDataToMysql,
+} from 'src/utils/helper';
+import {
   CustomRepositoryCannotInheritRepositoryError,
   UsingJoinColumnIsNotAllowedError,
 } from 'typeorm';
@@ -173,8 +178,8 @@ export class DatabaseCollection {
       let condition = {
         connect: 'AND',
         field: field,
-        operation: `BETWEEN ${value1} AND `,
-        value: value2,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
+        value: formatTypeValueConditionSQL(value2),
       };
 
       this.arrayCondition.push(condition);
@@ -250,23 +255,23 @@ export class DatabaseCollection {
   andOrWhereBetween(field, value1, value2, pos_cond): void {
     if (field != '') {
       let condition: any = {
-        operation: `BETWEEN ${value1} AND `,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
       };
       switch (pos_cond) {
         case 'first':
           condition.connect = 'AND';
           condition.field = '(' + field;
-          condition.value = value2;
+          condition.value = formatTypeValueConditionSQL(value2);
           break;
         case 'middle':
           condition.connect = 'OR';
           condition.field = field;
-          condition.value = value2;
+          condition.value = formatTypeValueConditionSQL(value2);
           break;
         case 'last':
           condition.connect = 'OR';
           condition.field = field;
-          condition.value = value2 + ')';
+          condition.value = formatTypeValueConditionSQL(value2) + ')';
           break;
         default:
       }
@@ -312,23 +317,23 @@ export class DatabaseCollection {
   orAndWhereBetween(field, value1, value2, pos_cond): void {
     if (field != '') {
       let condition: any = {
-        operation: `BETWEEN ${value1} AND `,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
       };
       switch (pos_cond) {
         case 'first':
           condition.connect = 'OR';
           condition.field = '(' + field;
-          condition.value = value2;
+          condition.value = formatTypeValueConditionSQL(value2);
           break;
         case 'middle':
           condition.connect = 'AND';
           condition.field = field;
-          condition.value = value2;
+          condition.value = formatTypeValueConditionSQL(value2);
           break;
         case 'last':
           condition.connect = 'AND';
           condition.field = field;
-          condition.value = value2 + ')';
+          condition.value = formatTypeValueConditionSQL(value2) + ')';
           break;
         default:
       }

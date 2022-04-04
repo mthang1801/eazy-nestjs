@@ -700,8 +700,7 @@ export const itgConvertProductsFromAppcore = (data) => {
 
   const mappingComboData = new Map([
     ['product_id', 'product_appcore_id'],
-    // ['product_combo_id', 'parent_product_appcore_id'],
-    // ['appcore_combo_setting_id', 'appcore_combo_setting_id'],
+
     ['quantity', 'amount'],
   ]);
 
@@ -722,5 +721,13 @@ export const itgConvertProductsFromAppcore = (data) => {
 
   delete convertedData['product_id'];
   delete convertedData['parent_product_id'];
+
+  convertedData['product_function'] =
+    convertedData['product_type'] < 3
+      ? !convertedData['parent_product_appcore_id']
+        ? 1
+        : 2
+      : convertedData['product_type'];
+
   return convertedData;
 };

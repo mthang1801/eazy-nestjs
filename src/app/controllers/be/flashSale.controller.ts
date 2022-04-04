@@ -40,7 +40,7 @@ export class FlashSalesController extends BaseController {
     @Res() res: Response,
     @Param('flash_sale_id') flash_sale_id: number,
   ): Promise<IResponse> {
-    const result = await this.service.get(flash_sale_id);
+    const result = await this.service.CMSget(flash_sale_id);
     return this.responseSuccess(res, result, 'Thành công.');
   }
 

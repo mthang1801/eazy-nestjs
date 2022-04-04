@@ -1480,9 +1480,9 @@ export class ProductService {
 
   async itgCreate(data): Promise<any> {
     console.log('Create Product Itg');
-    console.log(data);
+
     const convertedData = itgConvertProductsFromAppcore(data);
-    console.log(convertedData);
+
     if (convertedData['product_appcore_id']) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData['product_appcore_id'],

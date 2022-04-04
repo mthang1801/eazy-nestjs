@@ -59,7 +59,7 @@ export class FlashSalesService {
     }
   }
 
-  async get(flash_sale_id) {
+  async FEget(flash_sale_id) {
     let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
 
     if (!flashSale) {
@@ -84,6 +84,47 @@ export class FlashSalesService {
         if (flashSaleDetailItem.detail_status == 'D') {
           continue;
         }
+        let flashSaleProducts = await this.flashSaleProductRepo.find({
+          select: '*',
+          join: flashSaleProductJoiner,
+          where: { detail_id: flashSaleDetailItem['detail_id'] },
+        });
+
+        if (flashSaleProducts.length) {
+          for (let flashSaleProductItem of flashSaleProducts) {
+            const flashSaleProductStickers = await this.productStickerRepo.find(
+              {
+                select: '*',
+                join: productStickerJoiner,
+                where: { product_id: flashSaleProductItem['product_id'] },
+              },
+            );
+            flashSaleProductItem['stickers'] = flashSaleProductStickers;
+          }
+        }
+        flashSaleDetailItem['products'] = flashSaleProducts;
+        flashSale['details'] = flashSale['details']
+          ? [...flashSale['details'], flashSaleDetailItem]
+          : [flashSaleDetailItem];
+      }
+    }
+
+    return flashSale;
+  }
+  async CMSget(flash_sale_id) {
+    let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
+
+    if (!flashSale) {
+      throw new HttpException('Không tìm thấy FlashSale', 404);
+    }
+
+    let flashSaleDetails = await this.flashSaleDetailRepo.find({
+      select: '*',
+      where: { flash_sale_id },
+    });
+
+    if (flashSaleDetails.length) {
+      for (let flashSaleDetailItem of flashSaleDetails) {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
           select: '*',
           join: flashSaleProductJoiner,
