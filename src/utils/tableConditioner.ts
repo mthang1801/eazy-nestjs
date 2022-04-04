@@ -24,13 +24,8 @@ const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
       },
     ];
   }
-  console.log(41, result);
 
   return result;
-  // return fieldsSearch.map((searchItem) => ({
-  //   ...filterConditions,
-  //   ...searchItem,
-  // }));
 };
 
 export const productsFamilyFilterConditioner = (product) =>
