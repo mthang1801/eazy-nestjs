@@ -1687,6 +1687,7 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
+    await this.requestIntegrateParentProduct();
   }
 
   async callSync(): Promise<void> {
