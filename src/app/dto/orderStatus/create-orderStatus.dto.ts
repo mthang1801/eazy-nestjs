@@ -69,4 +69,7 @@ export class orderStatusUpdateDTO {
 
   @IsOptional()
   value: number;
+
+  @IsOptional()
+  color_value: string;
 }

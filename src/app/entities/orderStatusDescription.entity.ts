@@ -4,4 +4,5 @@ export class OrderStatusDescriptionEntity {
   email_subj: string = '';
   email_header: string = '';
   lang_code: string = '';
+  color_value: string = '';
 }

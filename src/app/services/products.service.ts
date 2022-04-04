@@ -739,6 +739,7 @@ export class ProductService {
             : productsListsSearchFilter(search, filterCondition),
       });
     } else if (category_id) {
+      console.log(categoriesList);
       productLists = await this.productCategoryRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
@@ -1194,8 +1195,8 @@ export class ProductService {
     if (!category) {
       throw new HttpException(`Không tìm thấy danh mục`, 404);
     }
-    if (data.deleted_products && data.deleted_products.length) {
-      for (let productId of data.deleted_products) {
+    if (data.removed_products && data.removed_products.length) {
+      for (let productId of data.removed_products) {
         await this.productCategoryRepo.delete({
           product_id: productId,
           category_id: categoryId,
@@ -1205,6 +1206,10 @@ export class ProductService {
 
     if (data.inserted_products && data.inserted_products.length) {
       for (let productId of data.inserted_products) {
+        await this.productCategoryRepo.delete({
+          product_id: productId,
+          category_id: categoryId,
+        });
         await this.productCategoryRepo.createSync({
           product_id: productId,
           category_id: categoryId,

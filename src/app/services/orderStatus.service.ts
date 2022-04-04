@@ -14,6 +14,7 @@ import { OrderStatusDescriptionEntity } from '../entities/orderStatusDescription
 import { OrderStatusDataEntity } from '../entities/orderStatusData.entity';
 import { Like } from 'typeorm';
 import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto';
+import { convertToMySQLDateTime } from '../../utils/helper';
 
 @Injectable()
 export class OrderStatusService {
@@ -138,7 +139,7 @@ export class OrderStatusService {
   }
   async update(id, data) {
     //=== check if data changes ?====
-    const changed = await this.repository.findOne({ where: { status_id: id } });
+    const changed = await this.repository.findOne({ status_id: id });
     if (!(changed.status === data.status && changed.type === data.type)) {
       //====Check if exist
       const check = await this.repository.findOne({
@@ -158,30 +159,20 @@ export class OrderStatusService {
     const orderStatusData = {
       ...this.repository.setData(data),
     };
-    let _orderStatus = await this.repository.update(id, orderStatusData);
 
-    ///==========================|Add to ddv_status_data table|==============
-
-    const orderStatusDataData = {
-      status_id: id,
-      ...this.orderStatusDataRepo.setData(data),
-    };
-
-    let _orderStatusData = await this.orderStatusDataRepo.update(
-      id,
-      orderStatusDataData,
-    );
-    ///==========================|Add to ddv_status_data table|==============
+    if (Object.entries(orderStatusData).length) {
+      await this.repository.update(id, orderStatusData);
+    }
 
     const orderStatusDataDes = {
       status_id: id,
       ...this.orderStatusDescriptionRepo.setData(data),
     };
-
-    let _orderStatusDes = await this.orderStatusDescriptionRepo.update(
-      id,
-      orderStatusDataDes,
-    );
-    return orderStatusData;
+    if (Object.entries(orderStatusDataDes).length) {
+      await this.orderStatusDescriptionRepo.update(
+        { status_id: id },
+        orderStatusDataDes,
+      );
+    }
   }
 }

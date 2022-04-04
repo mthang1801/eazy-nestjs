@@ -53,9 +53,8 @@ export class OrderStatusController extends BaseController {
     @Body() body: OrderStatusUpdateDTO,
     @Param('id') id,
   ): Promise<IResponse> {
-    const order = await this.service.update(id, body);
-    if (order === '422')
-      return this.optionalResponse(res, 422, 'Status and Type duplicated');
-    return this.responseSuccess(res, order);
+    await this.service.update(id, body);
+
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 }
