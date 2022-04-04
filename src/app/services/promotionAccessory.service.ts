@@ -222,7 +222,7 @@ export class PromotionAccessoryService {
     let filterConditions = {};
 
     if (accessory_type) {
-      filterConditions[`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_type`] =
+      filterConditions[`${Table.PROMOTION_ACCESSORY}.accessory_type`] =
         accessory_type;
     }
     const accessoriesList = await this.promoAccessoryRepo.find({
