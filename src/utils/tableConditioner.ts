@@ -5,7 +5,6 @@ import { Equal, Like, Not } from 'src/database/find-options/operators';
 import { convertToSlug, removeVietnameseTones } from './helper';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
-  console.log(8, filterConditions);
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
     return filterConditions;
   if (!fieldsSearch.length && Object.entries(filterConditions).length) {
@@ -16,28 +15,16 @@ const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
   }
   let result = [];
 
-  for (let [key, val] of Object.entries(filterConditions)) {
-    if (typeof val === 'object' && Array.isArray(val)) {
-      for (let childVal of val) {
-        result = [
-          ...result,
-          ...fieldsSearch.map((searchItem) => ({
-            ...searchItem,
-            [key]: childVal,
-          })),
-        ];
-      }
-      continue;
-    }
-
+  for (let fieldSearchItem of fieldsSearch) {
     result = [
       ...result,
-      ...fieldsSearch.map((searchItem) => ({
-        ...searchItem,
-        [key]: val,
-      })),
+      {
+        ...filterConditions,
+        ...fieldSearchItem,
+      },
     ];
   }
+  console.log(41, result);
 
   return result;
   // return fieldsSearch.map((searchItem) => ({

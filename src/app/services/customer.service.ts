@@ -67,6 +67,7 @@ import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
 import moment from 'moment';
+import { Between } from '../../database/find-options/operators';
 
 @Injectable()
 export class CustomerService {
@@ -226,32 +227,44 @@ export class CustomerService {
     }
 
     // Lọc ngày tạo
-    if (created_at_start) {
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.USERS}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
       filterConditions[`${Table.USERS}.created_at`] =
         MoreThanOrEqual(created_at_start);
-    }
-    if (created_at_end) {
+    } else if (created_at_end) {
       filterConditions[`${Table.USERS}.created_at`] =
         LessThanOrEqual(created_at_start);
     }
 
     // Lọc ngày mua lần cuối
-    if (lasted_buy_at_start) {
+    if (lasted_buy_at_end && lasted_buy_at_start) {
+      filterConditions[`${Table.USERS}.created_at`] = Between(
+        lasted_buy_at_start,
+        lasted_buy_at_end,
+      );
+    } else if (lasted_buy_at_start) {
       filterConditions[`${Table.USERS}.created_at`] =
         MoreThanOrEqual(lasted_buy_at_start);
-    }
-    if (lasted_buy_at_end) {
+    } else if (lasted_buy_at_end) {
       filterConditions[`${Table.USERS}.created_at`] =
         LessThanOrEqual(lasted_buy_at_end);
     }
     // Lọc tích luỹ
-    if (loyalty_point_start) {
+    if (loyalty_point_start && loyalty_point_end) {
+      filterConditions[`${Table.USER_LOYALTY}.loyalty_point`] = Between(
+        loyalty_point_start,
+        loyalty_point_end,
+      );
+    } else if (loyalty_point_start) {
       filterConditions[`${Table.USER_LOYALTY}.loyalty_point`] =
         MoreThanOrEqual(loyalty_point_start);
-    }
-    if (loyalty_point_end && loyalty_point_end > loyalty_point_start) {
+    } else if (loyalty_point_end) {
       filterConditions[`${Table.USER_LOYALTY}.loyalty_point`] =
-        MoreThanOrEqual(loyalty_point_end);
+        LessThanOrEqual(loyalty_point_start);
     }
 
     //Lọc số lần mua
@@ -265,11 +278,15 @@ export class CustomerService {
     }
 
     //Lọc tổng lượng mua
-    if (total_purchase_amount_start) {
+    if (total_purchase_amount_start && total_purchase_amount_end) {
+      filterConditions[`${Table.USER_DATA}.total_purchase_amount`] = Between(
+        total_purchase_amount_start,
+        total_purchase_amount_end,
+      );
+    } else if (total_purchase_amount_start) {
       filterConditions[`${Table.USER_DATA}.total_purchase_amount`] =
         MoreThanOrEqual(total_purchase_amount_start);
-    }
-    if (
+    } else if (
       total_purchase_amount_end &&
       total_purchase_amount_end > total_purchase_amount_start
     ) {

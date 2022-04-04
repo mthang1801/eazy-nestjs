@@ -168,6 +168,19 @@ export class DatabaseCollection {
     }
   }
 
+  andWhereBetween(field, value1, value2): void {
+    if (field != '') {
+      let condition = {
+        connect: 'AND',
+        field: field,
+        operation: `BETWEEN ${value1} AND `,
+        value: value2,
+      };
+
+      this.arrayCondition.push(condition);
+    }
+  }
+
   orWhere(field, operation, value): void {
     if (field != '') {
       if (operation == 'LIKE') {
@@ -181,6 +194,19 @@ export class DatabaseCollection {
         field: field,
         operation: operation != '' ? operation : '=',
         value: value,
+      };
+
+      this.arrayCondition.push(condition);
+    }
+  }
+
+  orWhereBetween(field, value1, value2): void {
+    if (field != '') {
+      let condition = {
+        connect: 'OR',
+        field: field,
+        operation: `BETWEEN ${value1} AND `,
+        value: value2,
       };
 
       this.arrayCondition.push(condition);
@@ -213,6 +239,34 @@ export class DatabaseCollection {
           condition.connect = 'OR';
           condition.field = field;
           condition.value = value + ')';
+          break;
+        default:
+      }
+
+      this.arrayCondition.push(condition);
+    }
+  }
+
+  andOrWhereBetween(field, value1, value2, pos_cond): void {
+    if (field != '') {
+      let condition: any = {
+        operation: `BETWEEN ${value1} AND `,
+      };
+      switch (pos_cond) {
+        case 'first':
+          condition.connect = 'AND';
+          condition.field = '(' + field;
+          condition.value = value2;
+          break;
+        case 'middle':
+          condition.connect = 'OR';
+          condition.field = field;
+          condition.value = value2;
+          break;
+        case 'last':
+          condition.connect = 'OR';
+          condition.field = field;
+          condition.value = value2 + ')';
           break;
         default:
       }
@@ -254,6 +308,35 @@ export class DatabaseCollection {
       this.arrayCondition.push(condition);
     }
   }
+
+  orAndWhereBetween(field, value1, value2, pos_cond): void {
+    if (field != '') {
+      let condition: any = {
+        operation: `BETWEEN ${value1} AND `,
+      };
+      switch (pos_cond) {
+        case 'first':
+          condition.connect = 'OR';
+          condition.field = '(' + field;
+          condition.value = value2;
+          break;
+        case 'middle':
+          condition.connect = 'AND';
+          condition.field = field;
+          condition.value = value2;
+          break;
+        case 'last':
+          condition.connect = 'AND';
+          condition.field = field;
+          condition.value = value2 + ')';
+          break;
+        default:
+      }
+
+      this.arrayCondition.push(condition);
+    }
+  }
+
   orderBy(sortArray: { field: string; sortBy: SortBy }[]): void {
     if (sortArray.length) {
       let sortString = '';
@@ -273,6 +356,7 @@ export class DatabaseCollection {
     if (typeof objFields !== 'object') {
       throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
     }
+
     // Array is considered as OR operator, so we will connect with orAndWhere each other
     if (Array.isArray(objFields)) {
       this.orCondition(objFields);
@@ -323,9 +407,16 @@ export class DatabaseCollection {
             }
           }
         } else {
-          value = val['value'];
-          operator = val['operator'];
-          this.andWhere(field, operator, value);
+          if (val['operator'] == 'BETWEEN') {
+            let valueMin = val['value1'];
+            let valueMax = val['value2'];
+
+            this.andWhereBetween(field, valueMin, valueMax);
+          } else {
+            value = val['value'];
+            operator = val['operator'];
+            this.andWhere(field, operator, value);
+          }
         }
       }
     });
@@ -334,43 +425,26 @@ export class DatabaseCollection {
   orCondition(arrayFields: any): void {
     for (let i = 0; i < arrayFields.length; i++) {
       Object.entries(arrayFields[i]).forEach(([field, val], j) => {
-        let value = val['value'] || val;
-        let operator = val['operator'] || '=';
+        if (val['operator'] == 'BETWEEN') {
+          let valueMin = val['value1'];
+          let valueMax = val['value2'];
 
-        if (typeof val !== 'object') {
           if (Object.entries(arrayFields[i]).length > 1) {
             if (j === 0) {
-              this.orAndWhere(field, operator, value, 'first');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'first');
             } else if (j === Object.entries(arrayFields[i]).length - 1) {
-              this.orAndWhere(field, operator, value, 'last');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'last');
             } else {
-              this.orAndWhere(field, operator, value, 'middle');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'middle');
             }
           } else {
-            this.orWhere(field, operator, value);
+            this.orWhereBetween(field, valueMin, valueMax);
           }
-        } else if (typeof val === 'object') {
-          if (Array.isArray(val)) {
-            for (let k = 0; k < value.length; k++) {
-              let subValue = val[j]['value'] || val[j];
-              let subOperator = val[j]['operator'] || '=';
+        } else {
+          let value = val['value'] || val;
+          let operator = val['operator'] || '=';
 
-              if (Object.entries(arrayFields[i]).length > 1) {
-                if (j === 0 && k === 0) {
-                  this.orAndWhere(field, subOperator, subValue, 'first');
-                } else if (
-                  j === Object.entries(arrayFields[i]).length - 1 &&
-                  k === value.length - 1
-                ) {
-                  this.orAndWhere(field, subOperator, subValue, 'last');
-                } else {
-                  this.orAndWhere(field, subOperator, subValue, 'middle');
-                }
-              } else {
-                this.orWhere(field, subOperator, subValue);
-              }
-            }
-          } else {
+          if (typeof val !== 'object') {
             if (Object.entries(arrayFields[i]).length > 1) {
               if (j === 0) {
                 this.orAndWhere(field, operator, value, 'first');
@@ -381,6 +455,40 @@ export class DatabaseCollection {
               }
             } else {
               this.orWhere(field, operator, value);
+            }
+          } else if (typeof val === 'object') {
+            if (Array.isArray(val)) {
+              for (let k = 0; k < value.length; k++) {
+                let subValue = val[j]['value'] || val[j];
+                let subOperator = val[j]['operator'] || '=';
+
+                if (Object.entries(arrayFields[i]).length > 1) {
+                  if (j === 0 && k === 0) {
+                    this.orAndWhere(field, subOperator, subValue, 'first');
+                  } else if (
+                    j === Object.entries(arrayFields[i]).length - 1 &&
+                    k === value.length - 1
+                  ) {
+                    this.orAndWhere(field, subOperator, subValue, 'last');
+                  } else {
+                    this.orAndWhere(field, subOperator, subValue, 'middle');
+                  }
+                } else {
+                  this.orWhere(field, subOperator, subValue);
+                }
+              }
+            } else {
+              if (Object.entries(arrayFields[i]).length > 1) {
+                if (j === 0) {
+                  this.orAndWhere(field, operator, value, 'first');
+                } else if (j === Object.entries(arrayFields[i]).length - 1) {
+                  this.orAndWhere(field, operator, value, 'last');
+                } else {
+                  this.orAndWhere(field, operator, value, 'middle');
+                }
+              } else {
+                this.orWhere(field, operator, value);
+              }
             }
           }
         }
@@ -453,31 +561,6 @@ export class DatabaseCollection {
         : `SELECT count(Distinct ${col}) AS total FROM ${this.table} ${this.alias} ${this.stringJoin} ${condition}`;
     return sql;
   }
-
-  // This is old version, may be deprecated in the future
-  // genCondition(): string {
-  //   let stringCondition = '';
-  //   if (this.arrayCondition.length > 0) {
-  //
-  //     let arrayCheckExist = [];
-  //     for (let i = 0; i < this.arrayCondition.length; i++) {
-  //       arrayCheckExist[
-  //         this.arrayCondition[i].field + '_' + this.arrayCondition[i].value
-  //       ] = this.arrayCondition[i];
-  //     }
-
-  //     let i = 0;
-  //     for (let data in arrayCheckExist) {
-  //       if (i == 0) {
-  //         stringCondition += `WHERE ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
-  //       } else {
-  //         stringCondition += ` ${arrayCheckExist[data].connect} ${arrayCheckExist[data].field} ${arrayCheckExist[data].operation} ${arrayCheckExist[data].value} `;
-  //       }
-  //       i++;
-  //     }
-  //   }
-  //   return stringCondition;
-  // }
 
   genCondition(): string {
     let stringCondition = '';
