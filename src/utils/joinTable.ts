@@ -248,6 +248,22 @@ export const productLeftJoiner = {
     },
   },
 };
+export const productPromotionAccessoryJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_PROMOTION_ACCESSORY]: {
+      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+  },
+};
 export const productByCategoryIdJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {
