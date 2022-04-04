@@ -34,6 +34,11 @@ export enum Table {
   PROMOTION_ACCESSORY = 'ddv_promotion_accessories',
   PRODUCT_PROMOTION_ACCESSORY = 'ddv_product_promotion_accessories',
 
+  //============== Flash sale =============
+  FLASH_SALES = 'ddv_flash_sales',
+  FLASH_SALE_DETAILS = 'ddv_flash_sale_details',
+  FLASH_SALE_PRODUCTS = 'ddv_flash_sale_products',
+
   //============== Image ==============
   IMAGE = 'ddv_images',
   IMAGE_LINK = 'ddv_images_links',

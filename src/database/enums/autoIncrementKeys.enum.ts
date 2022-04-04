@@ -27,6 +27,11 @@ export enum PrimaryKeys {
   ddv_banner_target_descriptions = 'target_id',
   ddv_banner_items = 'banner_item_id',
 
+  //============== Flash sale ==============
+  ddv_flash_sales = 'flash_sale_id',
+  ddv_flash_sale_details = 'detail_id',
+  ddv_flash_sale_products = 'flash_sale_product_id',
+
   //============== Image ==============
   ddv_images = 'image_id',
   ddv_images_links = 'pair_id',

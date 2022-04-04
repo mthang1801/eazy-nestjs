@@ -395,3 +395,15 @@ export const getProductsListByCategoryIdSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const flashSaleSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.FLASH_SALES}.name`]: Like(search) },
+      { [`${Table.FLASH_SALES}.code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
