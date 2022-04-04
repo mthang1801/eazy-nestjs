@@ -286,4 +286,6 @@ export class PromotionAccessoryService {
 
     return accessoriesProducts;
   }
+
+  async itgCreate(data) {}
 }

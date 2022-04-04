@@ -9,16 +9,11 @@ export class PromotionService {
   constructor(private productRepo: ProductsRepository<ProductsEntity>) {}
 
   async checkCoupon(data: CheckCouponDto) {
-    let coreData = {
-      couponCode: data.coupon_code,
-    };
+    let coreData = {};
 
-    if (data.store_id) {
-      coreData['storeId'] = data.store_id;
-    }
-    if (data.coupon_programing_id) {
-      coreData['couponeProgramId'] = data.coupon_programing_id;
-    }
+    coreData['couponCode'] = data.coupon_code;
+    coreData['storeId'] = data.store_id || 67107;
+    coreData['couponeProgramId'] = data.coupon_programing_id || '123';
     if (data.phone) {
       // Chưa thực thi
     }

@@ -178,7 +178,7 @@ export class DatabaseCollection {
       let condition = {
         connect: 'AND',
         field: field,
-        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND`,
         value: formatTypeValueConditionSQL(value2),
       };
 
@@ -210,7 +210,7 @@ export class DatabaseCollection {
       let condition = {
         connect: 'OR',
         field: field,
-        operation: `BETWEEN ${value1} AND `,
+        operation: `BETWEEN ${value1} AND`,
         value: value2,
       };
 
@@ -255,7 +255,7 @@ export class DatabaseCollection {
   andOrWhereBetween(field, value1, value2, pos_cond): void {
     if (field != '') {
       let condition: any = {
-        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND`,
       };
       switch (pos_cond) {
         case 'first':
@@ -317,7 +317,7 @@ export class DatabaseCollection {
   orAndWhereBetween(field, value1, value2, pos_cond): void {
     if (field != '') {
       let condition: any = {
-        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND `,
+        operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND`,
       };
       switch (pos_cond) {
         case 'first':
