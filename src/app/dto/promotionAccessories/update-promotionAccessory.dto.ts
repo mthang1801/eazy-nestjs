@@ -15,7 +15,7 @@ export class UpdatePromotionAccessoryDto {
   accessory_name: string;
 
   @IsOptional()
-  accessory_type: number = 1;
+  accessory_type: number;
 
   @IsOptional()
   @ValidateNested()
