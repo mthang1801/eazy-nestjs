@@ -39,7 +39,7 @@ export class PromotionAccessoryItgController extends BaseController {
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
-  @Post('/warranty-packages')
+  @Post('warranty-packages')
   async createWarranty(@Res() res: Response, @Body() data) {
     await this.service.itgCreate(data, 3);
     return this.responseSuccess(res, null, 'Thành công.');
