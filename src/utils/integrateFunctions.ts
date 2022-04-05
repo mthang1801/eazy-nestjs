@@ -740,14 +740,14 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
     ['name', 'accessory_name'],
     ['code', 'accessory_code'],
     ['description', 'description'],
-    ['status', 'accessory_status'],
+    ['is_active', 'accessory_status'],
     ['start_date', 'display_at'],
     ['end_date', 'end_at'],
   ]);
 
   let cmsData = {};
   for (let [core, cms] of mappdingData) {
-    if (core == 'status') {
+    if (core == 'is_active') {
       cmsData[cms] = coreData[core] == 1 ? 'A' : 'D';
       continue;
     }
@@ -770,14 +770,14 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
     let mappingAccessoryItems = new Map([
       ['product_id', 'product_appcore_id'],
       ['repurchase_price', 'collect_price'],
-      ['status', 'status'],
+      ['is_active', 'status'],
       ['app_core_id', 'app_core_id'],
     ]);
     let cmsAccessoryItems = [];
     for (let accessoryItem of coreData['accessory_items']) {
       let cmsAccessoryItem = {};
       for (let [core, cms] of mappingAccessoryItems) {
-        if (core == 'status') {
+        if (core == 'is_active') {
           cmsAccessoryItem[cms] = accessoryItem[core] == 1 ? 'A' : 'D';
           continue;
         }
