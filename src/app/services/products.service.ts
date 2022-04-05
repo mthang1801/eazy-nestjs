@@ -174,6 +174,7 @@ import {
   sqlReportTotalProductAmountInStores,
   sqlReportTotalProductsInCategories,
 } from 'src/utils/analysis/sqlProductAmount';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 
 @Injectable()
 export class ProductService {
@@ -211,6 +212,7 @@ export class ProductService {
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
+    private accessoryService: PromotionAccessoryService,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -3149,64 +3151,25 @@ export class ProductService {
       result['prodyctTypeName'] = 'Sản phẩm combo';
     }
 
-    if (product.product_type == 1 || product.product_type == 2) {
-      if (product.parent_product_id > 0) {
-        let parentProduct = await this.productRepo.findOne({
-          product_id: product.parent_product_id,
-        });
-        if (parentProduct) {
-          product = parentProduct;
-        }
-      }
-
+    if (product['product_function'] == 1) {
       product['stores'] = await this.getProductsStores(product.product_id);
 
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: product.product_id,
       });
+
       if (!group) {
         throw new HttpException('Không tìm thấy SP', 404);
       }
 
-      let productsInGroup = await this.productVariationGroupProductsRepo.find({
-        where: { group_id: group.group_id },
-      });
-      if (productsInGroup.length) {
-        for (let productItem of productsInGroup) {
-          let productInfo = await this.productRepo.findOne({
-            select: `*,${Table.PRODUCTS}.*,  ${Table.CATEGORIES}.slug as categorySlug`,
-            join: { [JoinTable.leftJoin]: productFullJoiner },
-            where: {
-              [`${Table.PRODUCTS}.product_id`]: productItem.product_id,
-            },
-          });
-
-          // Get Image
-          productInfo['image'] = await this.getProductImage(
-            productInfo.product_id,
-          );
-          // Get Features
-          productInfo['productFeatures'] = await this.getProductFeatures(
-            productInfo.product_id,
-          );
-
-          productInfo['stores'] = await this.getProductsStores(
-            productInfo.product_id,
-          );
-
-          // Get children and accessory products
-          if (productInfo['promotion_accessory_id']) {
-            productInfo['accessory_products'] =
-              await this.getPromotionAccessoriesByProductId(
-                productInfo['promotion_accessory_id'],
-              );
-          }
-        }
-      }
+      let childrenProducts = await this.getChildrenProducts(
+        product['product_id'],
+      );
+      product['children_products'] = childrenProducts;
 
       // Get Promotion accessory
       if (product['promotion_accessory_id']) {
-        product['accessory_products'] =
+        product['promotion_accessory_products'] =
           await this.getPromotionAccessoriesByProductId(
             product['promotion_accessory_id'],
           );
@@ -3254,6 +3217,42 @@ export class ProductService {
     }
 
     return result;
+  }
+
+  async getChildrenProducts(product_id) {
+    const childrenProducts = await this.productRepo.find({
+      select: productDetailSelector,
+      join: { [JoinTable.leftJoin]: productFullJoiner },
+      where: {
+        [`${Table.PRODUCTS}.parent_product_id`]: product_id,
+      },
+    });
+
+    if (childrenProducts.length) {
+      for (let childProduct of childrenProducts) {
+        // Get Image
+        childProduct['image'] = await this.getProductImage(
+          childProduct.product_id,
+        );
+        // Get Features
+        childProduct['productFeatures'] = await this.getProductFeatures(
+          childProduct.product_id,
+        );
+        // Get stores
+        childProduct['stores'] = await this.getProductsStores(
+          childProduct.product_id,
+        );
+        // Get accessory
+        if (childProduct['promotion_accessory_id']) {
+          childProduct['promotion_accessory_products'] =
+            await this.getPromotionAccessoriesByProductId(
+              childProduct['promotion_accessory_id'],
+            );
+        }
+      }
+    }
+
+    return childrenProducts;
   }
 
   async getProductImage(product_id) {
@@ -3363,22 +3362,13 @@ export class ProductService {
   }
 
   async getPromotionAccessoriesByProductId(accessory_id: number) {
-    const promoAccessory = await this.promoAccessoryRepo.findOne({
-      accessory_id,
-    });
-    if (!promoAccessory) {
-      return [];
-    }
-    console.log(accessory_id);
-    const productsPromoAccessory = await this.productPromoAccessoryRepo.find({
+    return this.productPromoAccessoryRepo.find({
       select: '*',
       join: productPromotionAccessoriesJoiner,
       where: {
         [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
       },
     });
-
-    return productsPromoAccessory;
   }
 
   async importProducts() {

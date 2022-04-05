@@ -10,7 +10,10 @@ import {
 } from 'src/utils/joinTable';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdatePromotionAccessoryDto } from '../dto/promotionAccessories/update-promotionAccessory.dto';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import {
+  convertToMySQLDateTime,
+  formatStandardTimeStamp,
+} from '../../utils/helper';
 import { promotionAccessoriesSearchFilter } from 'src/utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { ProductsRepository } from '../repositories/products.repository';
@@ -117,11 +120,18 @@ export class PromotionAccessoryService {
       );
     }
 
-    if (promoAccessory['display_at']) {
-      promoAccessory['display_at'] = moment(
-        promoAccessory['display_at'],
-      ).format('YYYY-MM-DD HH:mm:ss');
-    }
+    promoAccessory['display_at'] = formatStandardTimeStamp(
+      promoAccessory['display_at'],
+    );
+    promoAccessory['end_at'] = formatStandardTimeStamp(
+      promoAccessory['end_at'],
+    );
+    promoAccessory['created_at'] = formatStandardTimeStamp(
+      promoAccessory['created_at'],
+    );
+    promoAccessory['updated_at'] = formatStandardTimeStamp(
+      promoAccessory['updated_at'],
+    );
 
     promoAccessory['products'] = [];
 
@@ -341,9 +351,26 @@ export class PromotionAccessoryService {
           },
         });
         if (product) {
+          let updatedData = {};
+          switch (type) {
+            case 1:
+              updatedData = { free_accessory_id: newAccessory['accessory_id'] };
+              break;
+            case 2:
+              updatedData = {
+                promotion_accessory_id: newAccessory['accessory_id'],
+              };
+              break;
+            case 3:
+              updatedData = {
+                warranty_package_id: newAccessory['accessory_id'],
+              };
+              break;
+          }
+
           await this.productRepo.update(
             { product_id: product['product_id'] },
-            { promotion_accessory_id: newAccessory['accessory_id'] },
+            updatedData,
           );
         }
       }
@@ -413,9 +440,26 @@ export class PromotionAccessoryService {
           },
         });
         if (product) {
+          let updatedData = {};
+          switch (type) {
+            case 1:
+              updatedData = { free_accessory_id: accessory['accessory_id'] };
+              break;
+            case 2:
+              updatedData = {
+                promotion_accessory_id: accessory['accessory_id'],
+              };
+              break;
+            case 3:
+              updatedData = {
+                warranty_package_id: accessory['accessory_id'],
+              };
+              break;
+          }
+
           await this.productRepo.update(
             { product_id: product['product_id'] },
-            { promotion_accessory_id: accessory['accessory_id'] },
+            updatedData,
           );
         }
       }
