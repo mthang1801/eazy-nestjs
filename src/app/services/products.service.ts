@@ -1487,6 +1487,13 @@ export class ProductService {
       }
     }
 
+    if (data.joined_products && data.joined_products.length) {
+      await this.joinParentProducts([
+        currentProduct['product_id'],
+        ...data.joined_products,
+      ]);
+    }
+
     return result;
   }
 
