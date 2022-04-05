@@ -176,6 +176,7 @@ import {
   sqlReportTotalProductsInCategories,
 } from 'src/utils/analysis/sqlProductAmount';
 import { PromotionAccessoryService } from './promotionAccessory.service';
+import { productPriceJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -2561,10 +2562,6 @@ export class ProductService {
       //find product Stickers
       product['stickers'] = await this.getProductStickers(product);
 
-      product['relevant_products'] = await this.getRelevantProductsByCategory(
-        product.product_id,
-      );
-
       return {
         currentCategory: showListCategories
           ? currentCategory
@@ -2577,39 +2574,31 @@ export class ProductService {
     }
   }
 
-  async getRelevantProductsByCategory(product_id) {
-    let currentProduct = await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
-    });
-
-    if (!currentProduct) {
-      return;
-    }
-
+  async getRelativeProductsByCategory(product) {
     let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
-      currentProduct.price,
+      product.price,
     );
-
-    console.log(34, minPrice, maxPrice);
 
     let categories = await this.productCategoryRepo.find({
       select: '*',
       join: productCategoryJoiner,
-      where: { [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product_id },
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product['product_id'],
+      },
     });
 
     let listCategoriesId = categories.map(({ category_id }) => category_id);
-    let sqlQuery = sqlFindRelevantProductsInSameCategory(
-      listCategoriesId,
-      minPrice,
-      maxPrice,
-    );
+    let productsList = await this.productCategoryRepo.find({
+      select: '*',
+      join: productByCategoryIdJoiner,
+      where: listCategoriesId.map((categoryId) => ({
+        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+        [`${Table.PRODUCT_PRICES}.price`]: Between(minPrice, maxPrice),
+        [`${Table.PRODUCTS}.product_function`]: product['product_function'],
+      })),
+    });
 
-    let productsList = await this.productCategoryRepo.writeExec(sqlQuery);
-
-    return productsList[0];
+    return productsList;
   }
 
   setMinMaxPriceRelevantProducts(price) {
@@ -3219,12 +3208,14 @@ export class ProductService {
         await this.getAccessoriesByProductId(result['warranty_package_id']);
     }
 
+    // Get Current category info
     result['currentCategory'] = await this.categoryRepo.findOne({
       select: '*',
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.category_id`]: result['category_id'] },
     });
 
+    // Get parent categories info
     result['parentCategories'] = await this.parentCategories(
       result['currentCategory'],
     );
@@ -3233,6 +3224,10 @@ export class ProductService {
       (o) => o.level,
     ]);
 
+    // Get relative products
+    result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+      result,
+    );
     return result;
   }
 
@@ -3405,6 +3400,14 @@ export class ProductService {
     });
   }
 
+  async getFirstChildProduct(product_id) {
+    return this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { parent_product_id: product_id },
+    });
+  }
+
   async importProducts() {
     this.clearAll();
     const totalProducts = 17643;
@@ -3544,6 +3547,28 @@ export class ProductService {
       { index_id: newGroup1.index_id },
       { group_ids: '0112379128', type: 3 },
     );
+  }
+
+  async autoFillPriceIntoConfigurableProducts() {
+    const configurableProductsList = await this.productRepo.find({
+      select: '*',
+      join: productPriceJoiner,
+      where: { [`${Table.PRODUCTS}.product_function`]: 1 },
+    });
+    if (configurableProductsList.length) {
+      for (let configProductItem of configurableProductsList) {
+        if (configProductItem['price'] == 0 || !configProductItem['price']) {
+          let childProduct = await this.getFirstChildProduct(
+            configProductItem['product_id'],
+          );
+          let childProductPrice = this.productPriceRepo.setData(childProduct);
+          await this.productPriceRepo.update(
+            { product_id: configProductItem['product_id'] },
+            childProductPrice,
+          );
+        }
+      }
+    }
   }
 
   async determineProductFunction() {

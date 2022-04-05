@@ -1,5 +1,6 @@
 export const sqlFindRelevantProductsInSameCategory = (
   categories,
+  productFunction,
   minPrice,
   maxPrice,
 ) => {
