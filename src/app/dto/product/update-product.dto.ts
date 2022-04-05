@@ -136,6 +136,9 @@ export class UpdateProductDto {
 
   @IsOptional()
   promotion_accessory_id: string;
+
+  @IsOptional()
+  joined_products: number[];
 }
 
 class ProductFeatureDto {

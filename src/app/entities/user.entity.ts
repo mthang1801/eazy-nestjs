@@ -32,5 +32,5 @@ export class UserEntity {
   janrain_identifier: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
-  lasted_buy_at: string = '';
+  lasted_buy_at: string = convertToMySQLDateTime();
 }

@@ -1036,7 +1036,13 @@ export class ProductService {
     const groupIndex = await this.productGroupIndexRepo.create(groupIndexData);
 
     for (let group of groupsList) {
-      // const newVariationGroup = await this.productVariationGroupRepo.setData();
+      await this.productVariationGroupRepo.update(
+        { group_id: group['group_id'] },
+        {
+          index_id: groupIndex.index_id,
+          product_root_id: group['group_id'],
+        },
+      );
     }
   }
 
