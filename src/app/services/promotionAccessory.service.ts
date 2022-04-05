@@ -307,7 +307,7 @@ export class PromotionAccessoryService {
       return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
 
-    await this.itgCheckConstraint(convertedData);
+    // await this.itgCheckConstraint(convertedData);
 
     const accessoryData = {
       ...new PromotionAccessoryEntity(),
@@ -326,14 +326,17 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { product_appcore_id: accessoryItem['product_appcore_id'] },
         });
-        let newAccessoryItemData = {
-          ...new ProductPromotionAccessoryEntity(),
-          ...this.productPromoAccessoryRepo.setData(accessoryItem),
-          accessory_id: newAccessory['accessory_id'],
-          product_id: product['product_id'] || 0,
-          sale_price: product['price'] || 0,
-        };
-        await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+        // Tạm thời ignore SP chưa tồn tại
+        if (product) {
+          let newAccessoryItemData = {
+            ...new ProductPromotionAccessoryEntity(),
+            ...this.productPromoAccessoryRepo.setData(accessoryItem),
+            accessory_id: newAccessory['accessory_id'],
+            product_id: product['product_id'] || 0,
+            sale_price: product['price'] || 0,
+          };
+          await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+        }
       }
     }
 
@@ -387,7 +390,7 @@ export class PromotionAccessoryService {
       return this.itgCreate(data, type);
     }
 
-    await this.itgCheckConstraint(convertedData);
+    // await this.itgCheckConstraint(convertedData);
 
     const accessoryData = {
       ...this.promoAccessoryRepo.setData(convertedData),
@@ -413,16 +416,18 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { product_appcore_id: accessoryItem['product_appcore_id'] },
         });
+        // Tạm thời ignore SP chưa tồn tại
+        if (product) {
+          let newAccessoryItemData = {
+            ...new ProductPromotionAccessoryEntity(),
+            ...this.productPromoAccessoryRepo.setData(accessoryItem),
+            accessory_id: accessory['accessory_id'],
+            product_id: product['product_id'] || 0,
+            sale_price: product['price'] || 0,
+          };
 
-        let newAccessoryItemData = {
-          ...new ProductPromotionAccessoryEntity(),
-          ...this.productPromoAccessoryRepo.setData(accessoryItem),
-          accessory_id: accessory['accessory_id'],
-          product_id: product['product_id'] || 0,
-          sale_price: product['price'] || 0,
-        };
-
-        await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+          await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+        }
       }
     }
 
