@@ -1010,6 +1010,36 @@ export class ProductService {
     }
   }
 
+  async joinParentProducts(product_ids: number[]) {
+    if (product_ids.length < 2) {
+      throw new HttpException('Số lượng sản phẩm cần join quá ít', 400);
+    }
+    let groupsList = [];
+    for (let productId of product_ids) {
+      let group = await this.productRepo.findOne({
+        product_root_id: productId,
+        group_type: 1,
+      });
+      if (!group) {
+        throw new HttpException(
+          `Sản phẩm có id ${productId} không là SP cha`,
+          400,
+        );
+      }
+      groupsList = [...groupsList, group];
+    }
+
+    let groupIndexData = {
+      ...new ProductVariationGroupIndexEntity(),
+      group_ids: groupsList.join(','),
+    };
+    const groupIndex = await this.productGroupIndexRepo.create(groupIndexData);
+
+    for (let group of groupsList) {
+      // const newVariationGroup = await this.productVariationGroupRepo.setData();
+    }
+  }
+
   async childrenCategories(categoryId, categoriesList = []) {
     let categories = await this.categoryRepo.find({
       select: categorySelector,

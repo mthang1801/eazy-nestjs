@@ -10,7 +10,6 @@ export class PromotionService {
 
   async checkCoupon(data: CheckCouponDto) {
     let coreData = {};
-
     coreData['couponCode'] = data.coupon_code;
     coreData['storeId'] = data.store_id || 67107;
     coreData['couponeProgramId'] = data.coupon_programing_id || '123';

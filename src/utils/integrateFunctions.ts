@@ -11,6 +11,7 @@ import {
 import { UserRepository } from '../app/repositories/user.repository';
 import { saltHashPassword } from './cipherHelper';
 import { defaultPassword } from '../database/constant/defaultPassword';
+import * as moment from 'moment';
 
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
@@ -322,7 +323,7 @@ export const itgCustomerToAppcore = (data) => {
     }
     if (app === 'birthday') {
       if (checkValidTimestamp(data[app])) {
-        cData[core] = formatStandardTimeStamp(data[app]);
+        cData[core] = moment(data[app]).format('YYYY-MM-DD');
       }
       continue;
     }

@@ -22,6 +22,7 @@ import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import {
   convertNullDatetimeData,
+  formatStandardTimeStamp,
   generateRandomPassword,
   preprocessUserResult,
 } from 'src/utils/helper';
@@ -66,7 +67,7 @@ import {
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
-import moment from 'moment';
+import * as moment from 'moment';
 import { Between } from '../../database/find-options/operators';
 
 @Injectable()
@@ -374,7 +375,7 @@ export class CustomerService {
 
     let result = { ...user };
     if (data['birthday']) {
-      data['birthday'] = convertNullDatetimeData(data['birthday']);
+      data['birthday'] = formatStandardTimeStamp(data['birthday']);
     }
 
     if (data['firstname']) {
