@@ -60,3 +60,9 @@ export const getProductAccessorySelector = [
   `${Table.PRODUCTS}.amount`,
   `${Table.PRODUCTS}.thumbnail`,
 ];
+
+export const productDetailSelector = [
+  `*`,
+  `${Table.PRODUCTS}.*`,
+  `${Table.CATEGORIES}.slug as categorySlug`,
+];

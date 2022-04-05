@@ -28,6 +28,10 @@ export class UpdatePromotionAccessoryDto {
   @IsOptional()
   @IsDateString()
   display_at: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_at: string;
 }
 
 class AccessoryProducts {

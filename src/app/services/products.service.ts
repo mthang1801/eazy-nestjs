@@ -164,6 +164,7 @@ import { UpdateProductsInCategory } from '../dto/product/update-productInCategor
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
 import { sqlFindRelevantProductsInSameCategory } from '../../utils/sql/products.sql';
+import { productDetailSelector } from '../../utils/tableSelector';
 import {
   LessThanOrEqual,
   Between,
@@ -3071,9 +3072,19 @@ export class ProductService {
 
     let result: any = {};
 
+    if (product['product_function'] == 2) {
+      product = await this.productRepo.findOne({
+        product_id: product['parent_product_id'],
+      });
+    }
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
     if (product.product_type >= 4) {
       result = await this.productRepo.findOne({
-        select: `*,${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as categorySlug`,
+        select: productDetailSelector,
         join: { [JoinTable.leftJoin]: productFullJoiner },
         where: { [`${Table.PRODUCTS}.product_id`]: product.product_id },
       });
@@ -3112,7 +3123,7 @@ export class ProductService {
       if (productsComboList.length) {
         for (let productComboItem of productsComboList) {
           let productCombo = await this.productRepo.findOne({
-            select: `*,${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as categorySlug`,
+            select: productDetailSelector,
             join: { [JoinTable.leftJoin]: productFullJoiner },
             where: {
               [`${Table.PRODUCTS}.product_id`]: productComboItem.product_id,

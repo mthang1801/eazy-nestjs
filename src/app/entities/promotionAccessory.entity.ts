@@ -8,7 +8,7 @@ export class PromotionAccessoryEntity {
   description: string = '';
   accessory_status: string = 'A';
   display_at: string = convertToMySQLDateTime();
-  end_at: string = '';
+  end_at: string = convertToMySQLDateTime();
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
   created_by: number = 0;
