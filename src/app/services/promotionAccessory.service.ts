@@ -289,12 +289,12 @@ export class PromotionAccessoryService {
   }
 
   async itgCreate(data, type) {
-    const convertedData = itgConvertGiftAccessoriesFromAppcore(data, 2);
+    const convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
     const accessory = await this.promoAccessoryRepo.findOne({
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      return;
+      return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
 
     const accessoryData = {
@@ -344,6 +344,77 @@ export class PromotionAccessoryService {
           await this.productRepo.update(
             { product_id: product['product_id'] },
             { promotion_accessory_id: newAccessory['accessory_id'] },
+          );
+        }
+      }
+    }
+  }
+
+  async itgUpdate(app_core_id: string, data, type: number) {
+    let convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
+    let accessory = await this.promoAccessoryRepo.findOne({ app_core_id });
+    if (!accessory) {
+      return this.itgCreate({ app_core_id, ...data }, type);
+    }
+
+    const accessoryData = {
+      ...this.promoAccessoryRepo.setData(convertedData),
+      updated_at: convertToMySQLDateTime(),
+    };
+
+    await this.promoAccessoryRepo.update(
+      { accessory_id: accessory['accessory_id'] },
+      accessoryData,
+    );
+
+    if (
+      convertedData['accessory_items'] &&
+      Array.isArray(convertedData['accessory_items']) &&
+      convertedData['accessory_items'].length
+    ) {
+      await this.productPromoAccessoryRepo.delete({
+        accessory_id: accessory['accessory_id'],
+      });
+      for (let accessoryItem of convertedData['accessory_items']) {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: { product_appcore_id: accessoryItem['product_appcore_id'] },
+        });
+        let newAccessoryItemData = {
+          ...new ProductPromotionAccessoryEntity(),
+          ...this.productPromoAccessoryRepo.setData(accessoryItem),
+          accessory_id: accessory['accessory_id'],
+          product_id: product['product_id'] || 0,
+          sale_price: product['price'] || 0,
+        };
+        await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+      }
+    }
+
+    if (
+      convertedData['accessory_applied_products'] &&
+      Array.isArray(convertedData['accessory_applied_products']) &&
+      convertedData['accessory_applied_products'].length
+    ) {
+      await this.productRepo.update(
+        { promotion_accessory_id: accessory['accessory_id'] },
+        { promotion_accessory_id: 0 },
+      );
+      for (let appliedProductItem of convertedData[
+        'accessory_applied_products'
+      ]) {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: {
+            product_appcore_id: appliedProductItem['product_appcore_id'],
+          },
+        });
+        if (product) {
+          await this.productRepo.update(
+            { product_id: product['product_id'] },
+            { promotion_accessory_id: accessory['accessory_id'] },
           );
         }
       }
