@@ -733,7 +733,7 @@ export const itgConvertProductsFromAppcore = (data) => {
   return convertedData;
 };
 
-export const itgConvertGiftAccessoriesFromAppcore = (coreData) => {
+export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
   let mappdingData = new Map([
     ['app_core_id', 'app_core_id'],
     ['name', 'accessory_name'],
@@ -759,7 +759,8 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData) => {
     cmsData[cms] = coreData[core];
   }
 
-  cmsData['accessory_type'] = 2;
+  cmsData['accessory_type'] = type;
+
   if (
     coreData['accessory_items'] &&
     Array.isArray(coreData['accessory_items']) &&

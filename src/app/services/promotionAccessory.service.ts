@@ -288,8 +288,8 @@ export class PromotionAccessoryService {
     return accessoriesProducts;
   }
 
-  async itgCreate(data) {
-    const convertedData = itgConvertGiftAccessoriesFromAppcore(data);
+  async itgCreate(data, type) {
+    const convertedData = itgConvertGiftAccessoriesFromAppcore(data, 2);
     const accessory = await this.promoAccessoryRepo.findOne({
       app_core_id: convertedData['app_core_id'],
     });

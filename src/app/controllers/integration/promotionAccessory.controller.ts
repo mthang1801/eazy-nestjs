@@ -9,7 +9,7 @@ export class PromotionAccessoryItgController extends BaseController {
   }
   @Post('/gift')
   async create(@Res() res: Response, @Body() data) {
-    await this.service.itgCreate(data);
+    await this.service.itgCreate(data, 2);
     return this.responseSuccess(res, null, 'Thành công.');
   }
 }
