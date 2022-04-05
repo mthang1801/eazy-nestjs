@@ -552,9 +552,9 @@ export class OrdersService {
 
   async itgCreate(data: CreateOrderAppcoreDto) {
     console.log('create');
-    console.log(data);
+
     const convertedData = convertOrderDataFromAppcore(data);
-    console.log(convertedData);
+
     const order = await this.orderRepo.findOne({
       order_code: convertedData.order_code,
     });

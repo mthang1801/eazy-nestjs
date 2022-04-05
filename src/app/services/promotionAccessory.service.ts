@@ -18,6 +18,7 @@ import { ProductsEntity } from '../entities/products.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import * as moment from 'moment';
 import { getProductAccessorySelector } from 'src/utils/tableSelector';
+import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunctions';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -287,5 +288,65 @@ export class PromotionAccessoryService {
     return accessoriesProducts;
   }
 
-  async itgCreate(data) {}
+  async itgCreate(data) {
+    const convertedData = itgConvertGiftAccessoriesFromAppcore(data);
+    const accessory = await this.promoAccessoryRepo.findOne({
+      app_core_id: convertedData['app_core_id'],
+    });
+    if (accessory) {
+      return;
+    }
+
+    const accessoryData = {
+      ...new PromotionAccessoryEntity(),
+      ...this.promoAccessoryRepo.setData(convertedData),
+    };
+    const newAccessory = await this.promoAccessoryRepo.create(accessoryData);
+
+    if (
+      convertedData['accessory_items'] &&
+      Array.isArray(convertedData['accessory_items']) &&
+      convertedData['accessory_items'].length
+    ) {
+      for (let accessoryItem of convertedData['accessory_items']) {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: { product_appcore_id: accessoryItem['product_appcore_id'] },
+        });
+        let newAccessoryItemData = {
+          ...new ProductPromotionAccessoryEntity(),
+          ...this.productPromoAccessoryRepo.setData(accessoryItem),
+          accessory_id: newAccessory['accessory_id'],
+          product_id: product['product_id'] || 0,
+          sale_price: product['price'] || 0,
+        };
+        await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+      }
+    }
+
+    if (
+      convertedData['accessory_applied_products'] &&
+      Array.isArray(convertedData['accessory_applied_products']) &&
+      convertedData['accessory_applied_products'].length
+    ) {
+      for (let appliedProductItem of convertedData[
+        'accessory_applied_products'
+      ]) {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: {
+            product_appcore_id: appliedProductItem['product_appcore_id'],
+          },
+        });
+        if (product) {
+          await this.productRepo.update(
+            { product_id: product['product_id'] },
+            { promotion_accessory_id: newAccessory['accessory_id'] },
+          );
+        }
+      }
+    }
+  }
 }

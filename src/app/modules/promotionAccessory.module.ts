@@ -4,6 +4,7 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { PromotionAccessoriesController } from '../controllers/be/promotionAccessory.controller';
 import { ProductsRepository } from '../repositories/products.repository';
+import { PromotionAccessoryItgController } from '../controllers/integration/promotionAccessory.controller';
 @Global()
 @Module({
   providers: [
@@ -17,6 +18,9 @@ import { ProductsRepository } from '../repositories/products.repository';
     PromotionAccessoryRepository,
     ProductPromotionAccessoryRepository,
   ],
-  controllers: [PromotionAccessoriesController],
+  controllers: [
+    PromotionAccessoriesController,
+    PromotionAccessoryItgController,
+  ],
 })
 export class PromotionAccessoryModule {}

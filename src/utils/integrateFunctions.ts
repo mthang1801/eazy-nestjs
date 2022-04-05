@@ -1,15 +1,16 @@
 import {
+  checkValidTimestamp,
   convertNullDatetimeData,
   convertToMySQLDateTime,
   convertToSlug,
+  formatStandardTimeStamp,
   removeVietnameseTones,
+  validateEmail,
 } from './helper';
 
-import * as moment from 'moment';
 import { UserRepository } from '../app/repositories/user.repository';
 import { saltHashPassword } from './cipherHelper';
 import { defaultPassword } from '../database/constant/defaultPassword';
-import { validateEmail } from './helper';
 
 export const itgOrderFromAppcore = (cData) => {
   const dataMapping = new Map([
@@ -320,8 +321,8 @@ export const itgCustomerToAppcore = (data) => {
       continue;
     }
     if (app === 'birthday') {
-      if (moment(data[app]).isValid()) {
-        cData[core] = moment(data[app]).format('YYYY-MM-DD');
+      if (checkValidTimestamp(data[app])) {
+        cData[core] = formatStandardTimeStamp(data[app]);
       }
       continue;
     }
@@ -513,8 +514,8 @@ export const importCustomersFromAppcore = (coreData) => {
     }
 
     if (['createdAt', 'updatedAt', 'dateOfBirth'].includes(core)) {
-      if (moment(coreData[core]).isValid()) {
-        cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
+      if (checkValidTimestamp(coreData[core])) {
+        cmsData[cms] = formatStandardTimeStamp(coreData[core]);
       }
 
       continue;
@@ -543,8 +544,8 @@ export const convertCategoryFromAppcore = (coreData) => {
       cmsData['category_appcore'] = coreData[core];
     }
     if (core === 'display_at' && coreData[core]) {
-      if (moment(coreData[core]).isValid()) {
-        cmsData[cms] = moment(coreData[core]).format('YYYY-MM-DD HH:mm:ss');
+      if (checkValidTimestamp(coreData[core])) {
+        cmsData[cms] = formatStandardTimeStamp(coreData[core]);
       }
       continue;
     }
@@ -730,4 +731,78 @@ export const itgConvertProductsFromAppcore = (data) => {
       : convertedData['product_type'];
 
   return convertedData;
+};
+
+export const itgConvertGiftAccessoriesFromAppcore = (coreData) => {
+  let mappdingData = new Map([
+    ['app_core_id', 'app_core_id'],
+    ['name', 'accessory_name'],
+    ['code', 'accessory_code'],
+    ['description', 'description'],
+    ['status', 'accessory_status'],
+    ['start_date', 'display_at'],
+    ['end_date', 'end_at'],
+  ]);
+
+  let cmsData = {};
+  for (let [core, cms] of mappdingData) {
+    if (core == 'status') {
+      cmsData[cms] = coreData[core] == 1 ? 'A' : 'D';
+      continue;
+    }
+    if (['start_date', 'end_date'].includes(core)) {
+      if (checkValidTimestamp(coreData[core])) {
+        cmsData[cms] = formatStandardTimeStamp(coreData[core]);
+      }
+      continue;
+    }
+    cmsData[cms] = coreData[core];
+  }
+
+  cmsData['accessory_type'] = 2;
+  if (
+    coreData['accessory_items'] &&
+    Array.isArray(coreData['accessory_items']) &&
+    coreData['accessory_items'].length
+  ) {
+    let mappingAccessoryItems = new Map([
+      ['product_id', 'product_appcore_id'],
+      ['repurchase_price', 'collect_price'],
+      ['status', 'status'],
+      ['app_core_id', 'app_core_id'],
+    ]);
+    let cmsAccessoryItems = [];
+    for (let accessoryItem of coreData['accessory_items']) {
+      let cmsAccessoryItem = {};
+      for (let [core, cms] of mappingAccessoryItems) {
+        if (core == 'status') {
+          cmsAccessoryItem[cms] = accessoryItem[core] == 1 ? 'A' : 'D';
+          continue;
+        }
+        cmsAccessoryItem[cms] = accessoryItem[core];
+      }
+      cmsAccessoryItems = [...cmsAccessoryItems, cmsAccessoryItem];
+    }
+    cmsData['accessory_items'] = cmsAccessoryItems;
+  }
+
+  if (
+    coreData['accessory_applied_products'] &&
+    Array.isArray(coreData['accessory_applied_products']) &&
+    coreData['accessory_applied_products'].length
+  ) {
+    let cmsAccessoryAppliedItems = [];
+    for (let productItem of coreData['accessory_applied_products']) {
+      let cmsAccessoryAppliedItem = {
+        product_appcore_id: productItem['product_id'],
+      };
+      cmsAccessoryAppliedItems = [
+        ...cmsAccessoryAppliedItems,
+        cmsAccessoryAppliedItem,
+      ];
+    }
+
+    cmsData['accessory_applied_products'] = cmsAccessoryAppliedItems;
+  }
+  return cmsData;
 };

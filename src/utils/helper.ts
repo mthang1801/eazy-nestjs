@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import * as moment from 'moment';
 
 export const convertToMySQLDateTime = (DateTime = new Date()) =>
   new Date(new Date(DateTime).getTime() + 7 * 3600 * 1000)
@@ -208,3 +209,8 @@ export const validateEmail = (email) => {
 };
 
 export const hasWhiteSpace = (s) => s.indexOf(' ') >= 0;
+
+export const formatStandardTimeStamp = (timestamp) =>
+  moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+
+export const checkValidTimestamp = (timestamp) => moment(timestamp).isValid();

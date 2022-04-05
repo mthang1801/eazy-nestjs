@@ -70,7 +70,10 @@ export class FlashSalesService {
       throw new HttpException('Flash sale đã bị ẩn.', 400);
     }
 
-    if (flashSale.status == 'E') {
+    if (
+      flashSale.status == 'E' ||
+      (flashSale.end_at && new Date(flashSale.end_at).getTime() < Date.now())
+    ) {
       throw new HttpException('Flash Sale đã hết hiệu lực', 400);
     }
 

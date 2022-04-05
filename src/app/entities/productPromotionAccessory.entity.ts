@@ -2,6 +2,8 @@ import { convertToMySQLDateTime } from 'src/utils/helper';
 
 export class ProductPromotionAccessoryEntity {
   product_id: number = 0;
+  product_appcore_id: string = '';
+  app_core_id: string = '';
   accessory_id: number = 0;
   status: string = 'A';
   sale_price: number = 0;
