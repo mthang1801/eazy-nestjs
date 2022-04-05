@@ -307,6 +307,8 @@ export class PromotionAccessoryService {
       return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
 
+    await this.itgCheckConstraint(convertedData);
+
     const accessoryData = {
       ...new PromotionAccessoryEntity(),
       ...this.promoAccessoryRepo.setData(convertedData),
@@ -385,6 +387,8 @@ export class PromotionAccessoryService {
       return this.itgCreate(data, type);
     }
 
+    await this.itgCheckConstraint(convertedData);
+
     const accessoryData = {
       ...this.promoAccessoryRepo.setData(convertedData),
       updated_at: convertToMySQLDateTime(),
@@ -409,6 +413,7 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { product_appcore_id: accessoryItem['product_appcore_id'] },
         });
+
         let newAccessoryItemData = {
           ...new ProductPromotionAccessoryEntity(),
           ...this.productPromoAccessoryRepo.setData(accessoryItem),
@@ -416,6 +421,7 @@ export class PromotionAccessoryService {
           product_id: product['product_id'] || 0,
           sale_price: product['price'] || 0,
         };
+
         await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
       }
     }
@@ -460,6 +466,29 @@ export class PromotionAccessoryService {
           await this.productRepo.update(
             { product_id: product['product_id'] },
             updatedData,
+          );
+        }
+      }
+    }
+  }
+
+  async itgCheckConstraint(convertedData) {
+    if (
+      convertedData['accessory_items'] &&
+      Array.isArray(convertedData['accessory_items']) &&
+      convertedData['accessory_items'].length
+    ) {
+      for (let accessoryItem of convertedData['accessory_items']) {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: { product_appcore_id: accessoryItem['product_appcore_id'] },
+        });
+
+        if (!product) {
+          throw new HttpException(
+            `Không tìm thấy sp trong items có id ${accessoryItem['product_appcore_id']}`,
+            404,
           );
         }
       }
