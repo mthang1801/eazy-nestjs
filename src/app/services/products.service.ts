@@ -1555,6 +1555,15 @@ export class ProductService {
       }
     }
 
+    if (convertedData['parent_product_appcore_id']) {
+      let parentProduct = await this.productRepo.findOne({
+        product_appcore_id: convertedData['parent_product_appcore_id'],
+      });
+      if (parentProduct) {
+        convertedData['parent_product_id'] = parentProduct['product_id'];
+      }
+    }
+
     // set product
     const productData = {
       ...new ProductsEntity(),
@@ -1745,7 +1754,7 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
-    await this.requestIntegrateParentProduct();
+    // await this.requestIntegrateParentProduct();
   }
 
   async callSync(): Promise<void> {
@@ -1823,6 +1832,15 @@ export class ProductService {
     }
 
     let result = { ...product };
+
+    if (convertedData['parent_product_appcore_id']) {
+      let parentProduct = await this.productRepo.findOne({
+        product_appcore_id: convertedData['parent_product_appcore_id'],
+      });
+      if (parentProduct) {
+        convertedData['parent_product_id'] = parentProduct['product_id'];
+      }
+    }
 
     const productData = this.productRepo.setData(convertedData);
 
@@ -2093,7 +2111,7 @@ export class ProductService {
       }
     }
 
-    await this.requestIntegrateParentProduct();
+    // await this.requestIntegrateParentProduct();
   }
 
   async clearAll() {
