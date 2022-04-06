@@ -735,6 +735,16 @@ export class ProductService {
         limit,
       });
 
+      productLists = await this.productStoreRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productLists.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+
       count = await this.productStoreRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
@@ -760,6 +770,16 @@ export class ProductService {
           : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
+      });
+
+      productLists = await this.productCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productLists.map(({ product_id }) => product_id),
+          ),
+        },
       });
 
       count = await this.productCategoryRepo.find({
@@ -789,6 +809,16 @@ export class ProductService {
         limit,
       });
 
+      productLists = await this.productStickerRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productLists.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+
       count = await this.productStickerRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
@@ -814,6 +844,16 @@ export class ProductService {
           : productsListsSearchFilter(search, filterCondition),
         skip,
         limit,
+      });
+
+      productLists = await this.catalogCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productLists.map(({ product_id }) => product_id),
+          ),
+        },
       });
 
       count = await this.catalogCategoryRepo.find({
@@ -843,6 +883,16 @@ export class ProductService {
         limit,
       });
 
+      productLists = await this.productRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productLists.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+
       count = await this.productRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
@@ -855,16 +905,6 @@ export class ProductService {
           : productsListsSearchFilter(search, filterCondition),
       });
     }
-
-    productLists = await this.productRepo.find({
-      select: getProductsListSelectorBE,
-      join: productJoiner(filterJoiner),
-      where: {
-        [`${Table.PRODUCTS}.product_id`]: In(
-          productLists.map(({ product_id }) => product_id),
-        ),
-      },
-    });
 
     // determine product type and  get Image
     for (let productItem of productLists) {
@@ -884,20 +924,6 @@ export class ProductService {
         productItem['productType'] = 3; //SP combo
       } else {
         productItem['productType'] = 4; // SP độc lập
-      }
-
-      productItem['image'] = null;
-
-      const productImage = await this.imageLinkRepo.findOne({
-        object_id: productItem.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      });
-
-      if (productImage) {
-        const image = await this.imageRepo.findOne({
-          image_id: productImage.image_id,
-        });
-        productItem['image'] = image;
       }
     }
 
