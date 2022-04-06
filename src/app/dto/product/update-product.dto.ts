@@ -135,7 +135,13 @@ export class UpdateProductDto {
   is_installment: string;
 
   @IsOptional()
-  promotion_accessory_id: string;
+  promotion_accessory_id: number;
+
+  @IsOptional()
+  warranty_package_id: number;
+
+  @IsOptional()
+  free_accessory_id: number;
 
   @IsOptional()
   joined_products: number[];
