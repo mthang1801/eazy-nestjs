@@ -526,10 +526,7 @@ export class CategoryService {
       const categories = await this.categoryRepository.find({
         select: '*',
         join: categoryJoiner,
-        orderBy: [
-          { field: 'updated_at', sortBy: SortBy.DESC },
-          { field: 'created_at', sortBy: SortBy.DESC },
-        ],
+        orderBy: [{ field: 'updated_at', sortBy: SortBy.DESC }],
         where: categoriesSearchFilter(search, filterCondition),
         skip,
         limit,
@@ -1009,5 +1006,11 @@ export class CategoryService {
         { id_path: idPath.join('/') },
       );
     }
+  }
+
+  async syncAllCatagory() {
+    await this.syncImportCatalogs();
+    await this.syncImports();
+    await this.fillCategoriesIdPath();
   }
 }
