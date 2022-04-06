@@ -356,6 +356,18 @@ export class CustomerService {
       const avatar = await this.imageRepo.findById(userImage.image_id);
       user['avatar'] = avatar;
     }
+
+    user['creator'] = null;
+    if (user['created_by']) {
+      const creator = await this.userRepo.findOne({
+        select: '*',
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: user['created_by'] },
+      });
+
+      user['creator'] = creator;
+    }
+
     return preprocessUserResult(user);
   }
 
