@@ -18,6 +18,7 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     const authoriazationToken = req.headers?.authorization;
+
     if (!authoriazationToken) {
       throw new HttpException(
         'Yêu cầu truy cập bị từ chối.',

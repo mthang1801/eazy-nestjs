@@ -24,8 +24,8 @@ export class FlashSalesController extends BaseController {
     super();
   }
 
-  @Post()
   @UseGuards(AuthGuard)
+  @Post()
   async create(
     @Res() res: Response,
     @Body() data: CreateFlashSaleDto,

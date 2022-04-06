@@ -43,6 +43,7 @@ import * as path from 'path';
 import { PromotionAccessoryModule } from './promotionAccessory.module';
 import { IndexModule } from './index.modules';
 import { PromotionModule } from './promotion.module';
+import { FlashSaleModule } from './flashSale.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -88,6 +89,7 @@ import { PromotionModule } from './promotion.module';
     PromotionAccessoryModule,
     IndexModule,
     PromotionModule,
+    FlashSaleModule,
   ],
   providers: [
     {

@@ -34,6 +34,9 @@ export class CreateOrderDto {
   b_phone: string;
 
   @IsOptional()
+  type: string;
+
+  @IsOptional()
   notes: string; //Ghi chú khách hàng
 
   @IsOptional()
