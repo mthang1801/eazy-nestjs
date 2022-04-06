@@ -721,7 +721,7 @@ export class ProductService {
 
     if (store_location_id) {
       productLists = await this.productStoreRepo.find({
-        select: getProductsListSelectorBE,
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
         where: categoriesList.length
@@ -748,7 +748,7 @@ export class ProductService {
       });
     } else if (category_id) {
       productLists = await this.productCategoryRepo.find({
-        select: getProductsListSelectorBE,
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
         where: categoriesList.length
@@ -775,7 +775,7 @@ export class ProductService {
       });
     } else if (sticker_id) {
       productLists = await this.productStickerRepo.find({
-        select: getProductsListSelectorBE,
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
         where: categoriesList.length
@@ -802,7 +802,7 @@ export class ProductService {
       });
     } else if (catalog_category_id) {
       productLists = await this.catalogCategoryRepo.find({
-        select: getProductsListSelectorBE,
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
         where: categoriesList.length
@@ -829,7 +829,7 @@ export class ProductService {
       });
     } else {
       productLists = await this.productRepo.find({
-        select: getProductsListSelectorBE,
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
         join: productJoiner(filterJoiner),
         orderBy: filterOrders,
         where: categoriesList.length
@@ -855,6 +855,16 @@ export class ProductService {
           : productsListsSearchFilter(search, filterCondition),
       });
     }
+
+    productLists = await this.productRepo.find({
+      select: getProductsListSelectorBE,
+      join: productJoiner(filterJoiner),
+      where: {
+        [`${Table.PRODUCTS}.product_id`]: In(
+          productLists.map(({ product_id }) => product_id),
+        ),
+      },
+    });
 
     // determine product type and  get Image
     for (let productItem of productLists) {
@@ -1560,7 +1570,7 @@ export class ProductService {
       product_id: result['product_id'],
     };
 
-    await this.productDescriptionsRepo.createSync(productDescData);
+    await this.productDescriptionsRepo.create(productDescData);
 
     //price
     const productPriceData = {
@@ -1569,7 +1579,7 @@ export class ProductService {
       product_id: result.product_id,
     };
 
-    await this.productPriceRepo.createSync(productPriceData);
+    await this.productPriceRepo.create(productPriceData);
 
     //sale
     const productSaleData = {
@@ -1578,7 +1588,7 @@ export class ProductService {
       product_id: result.product_id,
     };
 
-    await this.productSaleRepo.createSync(productSaleData);
+    await this.productSaleRepo.create(productSaleData);
 
     // category
 
@@ -1596,7 +1606,7 @@ export class ProductService {
       product_id: result.product_id,
     };
 
-    await this.productCategoryRepo.createSync(productCategoryData);
+    await this.productCategoryRepo.create(productCategoryData);
 
     if (
       convertedData['product_features'] &&
@@ -1642,7 +1652,7 @@ export class ProductService {
             : 0,
         };
 
-        await this.productFeatureValueRepo.createSync(productFeatureValueData);
+        await this.productFeatureValueRepo.create(productFeatureValueData);
       }
     }
 
@@ -2083,7 +2093,7 @@ export class ProductService {
       }
     }
 
-    // await this.requestIntegrateParentProduct();
+    await this.requestIntegrateParentProduct();
   }
 
   async clearAll() {

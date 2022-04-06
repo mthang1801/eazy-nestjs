@@ -159,7 +159,6 @@ export const productByCategoryJoiner = {
 };
 
 export const productJoiner = (params = {}) => {
-  let isLeftJoin = true;
   let result = {};
   let rootJoiner = `${Table.PRODUCTS}.product_id`;
   //Thứ tự Ưu tien category_id, store, sticker
@@ -232,7 +231,7 @@ export const productJoiner = (params = {}) => {
     },
   };
 
-  return { [JoinTable.innerJoin]: result };
+  return { [JoinTable.join]: result };
 };
 
 export const productsListByCategoryJoiner = (params = {}) => {

@@ -79,9 +79,7 @@ export class PaymentService {
   async payooPayment(data) {
     let requestData = `{\"OrderNo\":\"273ASOA3621897\",\"ShopID\":\"590\",\"FromShipDate\":\"14/08/2017\",\"ShipNumDay\":\"1\",\"Description\":\"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..... Sốtiền thanh toán: 50000\",\"CyberCash\":\"50000\",\"PaymentExpireDate\":\"20220814201400\",\"NotifyUrl\":\"http://localhost:5000\",\"InfoEx\":\"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e\"}`;
     let signNature = '9ea7434ff04572a64c61cd602f6de2e3';
-    let response = await axios({
-      url: '',
-    });
+    let response = await axios({});
   }
 
   async getById(id): Promise<IPayment[]> {

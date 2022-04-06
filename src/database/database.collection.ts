@@ -1,5 +1,6 @@
 import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
 import {
+  formatStringCondition,
   formatTypeValueConditionSQL,
   formatTypeValueToInSertSQL,
   preprocessAddTextDataToMysql,
@@ -576,11 +577,7 @@ export class DatabaseCollection {
       }
 
       for (let [i, checkExistItem] of arrayCheckExist.entries()) {
-        if (i == 0) {
-          stringCondition += `WHERE ${checkExistItem.field} ${checkExistItem.operation} ${checkExistItem.value} `;
-        } else {
-          stringCondition += ` ${checkExistItem.connect} ${checkExistItem.field} ${checkExistItem.operation} ${checkExistItem.value} `;
-        }
+        stringCondition += formatStringCondition(i, checkExistItem);
       }
     }
     return stringCondition;

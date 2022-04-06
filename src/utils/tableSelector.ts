@@ -20,14 +20,14 @@ export const getUserSystemByIdSelector = `*, ${Table.USERS}.*`;
 
 export const getProductsListSelector = `DISTINCT(${Table.PRODUCTS}.product_id), ${Table.PRODUCT_PRICES}.price, ${Table.PRODUCTS}.product_type,${Table.PRODUCTS}.barcode, ${Table.PRODUCTS}.amount, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.PRODUCTS}.product_code,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.status, ${Table.PRODUCTS}.parent_product_id,  ${Table.PRODUCTS}.parent_product_appcore_id, ${Table.PRODUCTS}.product_appcore_id, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.product_status `;
 export const getProductsListSelectorBE = [
-  `DISTINCT(${Table.PRODUCTS}.product_id)`,
-  `${Table.PRODUCT_PRICES}.*`,
+  `${Table.PRODUCTS}.product_id`,
+  `${Table.PRODUCT_PRICES}.price`,
   `${Table.PRODUCTS}.product_type`,
   `${Table.PRODUCTS}.barcode`,
   `${Table.PRODUCTS}.amount`,
   `${Table.PRODUCTS}.thumbnail`,
   `${Table.PRODUCTS}.product_function`,
-  `${Table.PRODUCT_DESCRIPTION}.*`,
+  `${Table.PRODUCT_DESCRIPTION}.product`,
   `${Table.PRODUCTS}.product_code`,
   `${Table.PRODUCTS}.slug as productSlug`,
   `${Table.PRODUCTS}.status`,
