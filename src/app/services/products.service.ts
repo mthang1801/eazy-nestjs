@@ -735,15 +735,17 @@ export class ProductService {
         limit,
       });
 
-      productLists = await this.productStoreRepo.find({
-        select: getProductsListSelectorBE,
-        join: productJoiner(filterJoiner),
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: In(
-            productLists.map(({ product_id }) => product_id),
-          ),
-        },
-      });
+      if (productLists.length) {
+        productLists = await this.productStoreRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
 
       count = await this.productStoreRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
@@ -772,15 +774,17 @@ export class ProductService {
         limit,
       });
 
-      productLists = await this.productCategoryRepo.find({
-        select: getProductsListSelectorBE,
-        join: productJoiner(filterJoiner),
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: In(
-            productLists.map(({ product_id }) => product_id),
-          ),
-        },
-      });
+      if (productLists.length) {
+        productLists = await this.productCategoryRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
 
       count = await this.productCategoryRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
@@ -809,15 +813,17 @@ export class ProductService {
         limit,
       });
 
-      productLists = await this.productStickerRepo.find({
-        select: getProductsListSelectorBE,
-        join: productJoiner(filterJoiner),
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: In(
-            productLists.map(({ product_id }) => product_id),
-          ),
-        },
-      });
+      if (productLists.length) {
+        productLists = await this.productStickerRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
 
       count = await this.productStickerRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
@@ -845,16 +851,17 @@ export class ProductService {
         skip,
         limit,
       });
-
-      productLists = await this.catalogCategoryRepo.find({
-        select: getProductsListSelectorBE,
-        join: productJoiner(filterJoiner),
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: In(
-            productLists.map(({ product_id }) => product_id),
-          ),
-        },
-      });
+      if (productLists.length) {
+        productLists = await this.catalogCategoryRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
 
       count = await this.catalogCategoryRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
@@ -883,16 +890,17 @@ export class ProductService {
         limit,
       });
 
-      productLists = await this.productRepo.find({
-        select: getProductsListSelectorBE,
-        join: productJoiner(filterJoiner),
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: In(
-            productLists.map(({ product_id }) => product_id),
-          ),
-        },
-      });
-
+      if (productLists.length) {
+        productLists = await this.productRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
       count = await this.productRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
