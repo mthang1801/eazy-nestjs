@@ -7,7 +7,7 @@ export class FlashSaleEntity {
   description: string = '';
   flash_type: number = 0;
   start_at: string = convertToMySQLDateTime();
-  end_at: string = '';
+  end_at: null | string;
   logo_img: string = '';
   background_img: string = '';
   show_countdown: string = 'N';
