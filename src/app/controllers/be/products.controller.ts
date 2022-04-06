@@ -68,8 +68,11 @@ export class ProductsController extends BaseController {
   }
 
   @Get('/parents')
-  async getParentsList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getParentsList();
+  async getParentsList(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getParentsList(params);
     return this.responseSuccess(res, result);
   }
 

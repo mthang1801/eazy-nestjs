@@ -408,6 +408,14 @@ export const productInfoJoiner = {
     rootJoin: `${Table.PRODUCTS}.product_id`,
   },
 };
+export const productDescriptionJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+  },
+};
 
 export const userJoiner = {
   [JoinTable.leftJoin]: {

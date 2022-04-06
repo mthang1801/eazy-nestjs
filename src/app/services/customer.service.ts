@@ -88,7 +88,7 @@ export class CustomerService {
       throw new HttpException('Tên khách hàng không được để trống', 422);
     }
 
-    const { passwordHash, salt } = saltHashPassword(defaultPassword);
+    const { passwordHash, salt } = saltHashPassword(data.password);
 
     const user = await this.userRepo.findOne({ phone: data.phone });
 
@@ -97,7 +97,9 @@ export class CustomerService {
     }
 
     if (data.email) {
-      const userEmail = await this.userRepo.findOne({ email: data.email });
+      const userEmail = await this.userRepo.findOne({
+        email: data.email.trim().toLowerCase(),
+      });
       if (userEmail) {
         throw new HttpException('Email đã tồn tại', 409);
       }
@@ -108,7 +110,7 @@ export class CustomerService {
       ...this.userRepo.setData(data),
       password: passwordHash,
       salt: salt,
-      status: UserStatusEnum.Deactive,
+      status: UserStatusEnum.Active,
     };
 
     const newUser = await this.userRepo.create(userData);
@@ -116,19 +118,19 @@ export class CustomerService {
     let result = { ...newUser };
 
     data['b_phone'] = data['phone'];
-    data['s_phone'] = data['phone'];
+    data['s_phone'] = data['s_phone'] || data['phone'];
     data['b_firstname'] = data['firstname'];
     data['b_lastname'] = data['lastname'];
     data['b_district'] = data['b_district'];
     data['b_city'] = data['b_city'];
     data['b_ward'] = data['b_ward'];
     data['b_address'] = data['b_address'];
-    data['s_firstname'] = data['firstname'];
-    data['s_lastname'] = data['lastname'];
-    data['s_district'] = data['b_district'];
-    data['s_city'] = data['b_city'];
-    data['s_ward'] = data['b_ward'];
-    data['s_address'] = data['b_address'];
+    data['s_firstname'] = data['s_firstname'] || data['firstname'];
+    data['s_lastname'] = data['s_lastname'] || data['lastname'];
+    data['s_district'] = data['s_lastname'] || data['b_district'];
+    data['s_city'] = data['s_city'] || data['b_city'];
+    data['s_ward'] = data['s_ward'] || data['b_ward'];
+    data['s_address'] = data['s_address'] || data['b_address'];
 
     const userProfileData = {
       ...new UserProfileEntity(),
@@ -163,7 +165,7 @@ export class CustomerService {
     return this.createCustomerToAppcore(result);
   }
 
-  async createCustomerToAppcore(user, deleteWhenFalse = true): Promise<void> {
+  async createCustomerToAppcore(user): Promise<void> {
     try {
       const customerAppcoreData = itgCustomerToAppcore(user);
 

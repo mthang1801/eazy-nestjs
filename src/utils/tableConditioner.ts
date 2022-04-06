@@ -422,3 +422,18 @@ export const getProductsListByAccessoryIdSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const getParentProductsSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

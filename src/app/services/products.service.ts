@@ -176,7 +176,11 @@ import {
   sqlReportTotalProductsInCategories,
 } from 'src/utils/analysis/sqlProductAmount';
 import { PromotionAccessoryService } from './promotionAccessory.service';
-import { productPriceJoiner } from '../../utils/joinTable';
+import { getParentProductsSearchFilter } from '../../utils/tableConditioner';
+import {
+  productPriceJoiner,
+  productDescriptionJoiner,
+} from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -371,24 +375,35 @@ export class ProductService {
     }
   }
 
-  async getParentsList() {
-    const products = await this.productRepo.find({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.PRODUCT_DESCRIPTION]: {
-            fieldJoin: 'product_id',
-            rootJoin: 'product_id',
-          },
-        },
-      },
-      where: {
-        parent_product_id: 0,
-        product_type: [1, 2],
-      },
+  async getParentsList(params) {
+    let { page, limit, search } = params;
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+
+    let filterConditions = { [`${Table.PRODUCTS}.product_function`]: 1 };
+    let productsList = await this.productRepo.find({
+      select: '*',
+      join: productDescriptionJoiner,
+      where: getParentProductsSearchFilter(search, filterConditions),
+      skip,
+      limit,
     });
 
-    return products;
+    let count = await this.productRepo.find({
+      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      join: productDescriptionJoiner,
+      where: getParentProductsSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      products: productsList,
+    };
   }
 
   async searchOnOrder(params) {
@@ -612,6 +627,8 @@ export class ProductService {
       created_at_end,
       sticker_id,
       store_location_id, // kho,
+      amount_start, // Tồn kho
+      amount_end,
       order_amount,
     } = params;
     page = +page || 1;
@@ -703,6 +720,19 @@ export class ProductService {
         store_location_id;
 
       filterJoiner['store_location_id'] = 1;
+    }
+
+    //Tồn kho
+    if (amount_start && amount_end) {
+      filterCondition[`${Table.PRODUCTS}.amount`] = Between(
+        amount_start,
+        amount_end,
+      );
+    } else if (amount_start) {
+      filterCondition[`${Table.PRODUCTS}.amount`] =
+        MoreThanOrEqual(amount_start);
+    } else if (amount_end) {
+      filterCondition[`${Table.PRODUCTS}.amount`] = LessThanOrEqual(amount_end);
     }
 
     let categoriesList = [];
@@ -851,6 +881,7 @@ export class ProductService {
         skip,
         limit,
       });
+
       if (productLists.length) {
         productLists = await this.catalogCategoryRepo.find({
           select: getProductsListSelectorBE,
