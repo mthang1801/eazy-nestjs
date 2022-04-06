@@ -967,6 +967,16 @@ export class ProductService {
       } else {
         productItem['productType'] = 4; // SP độc lập
       }
+
+      let currentCategory = await this.productCategoryRepo.findOne({
+        select: '*',
+        join: productCategoryJoiner,
+        where: {
+          [`${Table.PRODUCTS_CATEGORIES}.product_id`]:
+            productItem['product_id'],
+        },
+      });
+      productItem['currentCategory'] = currentCategory;
     }
 
     return {
@@ -3341,6 +3351,7 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
+    console.log(product);
   }
 
   async getChildrenProducts(product_id) {

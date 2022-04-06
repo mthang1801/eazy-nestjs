@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsIn, Matches } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsOptional()
@@ -11,6 +11,10 @@ export class CreateCustomerDto {
   email: string;
 
   @IsNotEmpty()
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/, {
+    message:
+      'Mật khẩu cần ít nhất 8 ký tự bao gồm ký tự đặc biệt, chứ thường, chữ in hoa và số.',
+  })
   password: string;
 
   @IsNotEmpty()
