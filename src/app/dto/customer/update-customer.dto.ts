@@ -13,6 +13,9 @@ export class UpdateCustomerDTO {
   email: string;
 
   @IsOptional()
+  password: string;
+
+  @IsOptional()
   firstname: string;
 
   @IsOptional()

@@ -5,6 +5,7 @@ export class ProductVariationGroupsEntity {
   product_root_id: number = 0;
   status: string = 'A';
   group_type: number = 1; //1 : Nhóm SP thường, IMEI. 2: Nhóm SP combo
+  group_name: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
 }

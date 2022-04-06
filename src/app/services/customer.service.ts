@@ -380,26 +380,6 @@ export class CustomerService {
       data['birthday'] = formatStandardTimeStamp(data['birthday']);
     }
 
-    if (data['firstname']) {
-      data['b_firstname'] = data['b_firstname'] || data['firstname'];
-      data['s_firstname'] = data['s_firstname'] || data['firstname'];
-    }
-
-    if (data['lastname']) {
-      data['b_lastname'] = data['b_lastname'] || data['lastname'];
-      data['s_lastname'] = data['s_lastname'] || data['lastname'];
-    }
-
-    if (data['b_city']) {
-      data['s_city'] = data['s_city'] || data['b_city'];
-    }
-    if (data['b_district']) {
-      data['s_district'] = data['s_district'] || data['b_district'];
-    }
-    if (data['b_ward']) {
-      data['s_ward'] = data['s_ward'] || data['b_ward'];
-    }
-
     const userData = {
       ...this.userRepo.setData(data),
       updated_at: convertToMySQLDateTime(),

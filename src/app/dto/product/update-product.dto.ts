@@ -1,4 +1,5 @@
-import { IsIn, IsOptional, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsIn, IsOptional, IsNotEmpty, ValidateNested } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -144,7 +145,9 @@ export class UpdateProductDto {
   free_accessory_id: number;
 
   @IsOptional()
-  joined_products: number[];
+  @ValidateNested()
+  @Type(() => JoinedProduct)
+  joined_products: JoinedProduct[];
 }
 
 class ProductFeatureDto {
@@ -153,4 +156,12 @@ class ProductFeatureDto {
 
   @IsNotEmpty()
   variant_id: number;
+}
+
+export class JoinedProduct {
+  @IsNotEmpty()
+  product_id: number;
+
+  @IsOptional()
+  name: string;
 }

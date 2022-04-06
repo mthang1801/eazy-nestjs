@@ -47,11 +47,14 @@ export class CreateFlashSaleDto {
 }
 
 class FlashSaleDetails {
-  @IsNotEmpty()
+  @IsOptional()
   tab_name: string;
 
   @IsOptional()
   detail_url: string;
+
+  @IsOptional()
+  detail_status: string = 'A';
 
   @ValidateNested()
   @ArrayNotEmpty()
@@ -66,6 +69,6 @@ class FlashSaleProducts {
   @IsOptional()
   flash_sale_product_status: string = 'A';
 
-  @IsNotEmpty()
+  @IsOptional()
   position: number;
 }

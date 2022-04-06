@@ -80,7 +80,10 @@ import {
   ImageObjectType,
   ImageType,
 } from 'src/database/enums/tableFieldEnum/imageTypes.enum';
-import { UpdateProductDto } from '../dto/product/update-product.dto';
+import {
+  UpdateProductDto,
+  JoinedProduct,
+} from '../dto/product/update-product.dto';
 import {
   Equal,
   IsNull,
@@ -1090,22 +1093,23 @@ export class ProductService {
     }
   }
 
-  async joinParentProducts(product_ids: number[]) {
-    if (product_ids.length < 2) {
+  async joinParentProducts(joined_products: JoinedProduct[]) {
+    if (joined_products.length < 2) {
       throw new HttpException('Số lượng sản phẩm cần join quá ít', 400);
     }
     let groupsList = [];
-    for (let productId of product_ids) {
+    for (let { product_id, name } of joined_products) {
       let group = await this.productRepo.findOne({
-        product_root_id: productId,
+        product_root_id: product_id,
         group_type: 1,
       });
       if (!group) {
         throw new HttpException(
-          `Sản phẩm có id ${productId} không là SP cha`,
+          `Sản phẩm có id ${product_id} không là SP cha`,
           400,
         );
       }
+      group['group_name'] = name;
       groupsList = [...groupsList, group];
     }
 
@@ -1120,7 +1124,7 @@ export class ProductService {
         { group_id: group['group_id'] },
         {
           index_id: groupIndex.index_id,
-          product_root_id: group['group_id'],
+          group_name: group['group_name'],
         },
       );
     }
@@ -1347,6 +1351,12 @@ export class ProductService {
       );
     }
 
+    if (data.joined_products && data.joined_products.length) {
+      if (!data.joined_products.some(({ product_id }) => product_id)) {
+        throw new HttpException('Tạo nhóm SP không thành công', 400);
+      }
+    }
+
     // //Kiểm tra product features hợp lệ
     // if (data?.product_features?.length) {
     //   for (let productFeature of data.product_features) {
@@ -1568,10 +1578,7 @@ export class ProductService {
     }
 
     if (data.joined_products && data.joined_products.length) {
-      await this.joinParentProducts([
-        currentProduct['product_id'],
-        ...data.joined_products,
-      ]);
+      await this.joinParentProducts(data.joined_products);
     }
 
     return result;
