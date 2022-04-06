@@ -3331,6 +3331,18 @@ export class ProductService {
     return result;
   }
 
+  async testGetById(product_id) {
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+  }
+
   async getChildrenProducts(product_id) {
     const childrenProducts = await this.productRepo.find({
       select: productDetailSelector,

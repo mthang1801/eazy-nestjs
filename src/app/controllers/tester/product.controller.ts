@@ -53,6 +53,15 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('product_id')
+  async getById(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.testGetById(product_id);
+    return this.responseSuccess(res, result, 'Thành công.');
+  }
+
   @Post('test')
   async test() {
     await this.service.testSql();

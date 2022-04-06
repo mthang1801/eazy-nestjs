@@ -64,13 +64,26 @@ export const userSystemSearchFilter = (search = '', filterConditions = {}) => {
   let firstName = splitSearchArr.slice(0, -1).join(' ').trim();
   let lastName = splitSearchArr.slice(-1)[0].trim();
   let arraySearch = [];
+
   if (search) {
     arraySearch = [
-      { [`${Table.USERS}.lastname`]: Like(firstName) },
-      { [`${Table.USERS}.firstname`]: Like(lastName) },
       { [`${Table.USERS}.email`]: Like(search) },
       { [`${Table.USERS}.phone`]: Like(search) },
     ];
+    if (firstName) {
+      arraySearch = [
+        ...arraySearch,
+        { [`${Table.USERS}.firstname`]: Like(firstName) },
+        { [`${Table.USERS}.lastname`]: Like(firstName) },
+      ];
+    }
+    if (lastName) {
+      arraySearch = [
+        ...arraySearch,
+        { [`${Table.USERS}.lastname`]: Like(lastName) },
+        { [`${Table.USERS}.firstname`]: Like(lastName) },
+      ];
+    }
   }
   filterConditions = {
     ...filterConditions,
