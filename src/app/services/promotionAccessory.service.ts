@@ -22,6 +22,7 @@ import { SortBy } from '../../database/enums/sortBy.enum';
 import * as moment from 'moment';
 import { getProductAccessorySelector } from 'src/utils/tableSelector';
 import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunctions';
+import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -380,6 +381,60 @@ export class PromotionAccessoryService {
         }
       }
     }
+  }
+
+  async getProductsListByAccessoryId(accessory_id: number, params) {
+    let accessory = await this.promoAccessoryRepo.findOne({ accessory_id });
+    if (!accessory) {
+      throw new HttpException('Không tìm thấy.', 404);
+    }
+    let { page, limit, search } = params;
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+
+    let filterCondition = {};
+
+    switch (+accessory.accessory_type) {
+      case 1:
+        filterCondition = {
+          [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
+        };
+        break;
+      case 2:
+        filterCondition = {
+          [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
+        };
+        break;
+      case 3:
+        filterCondition = {
+          [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
+        };
+        break;
+    }
+
+    const productsList = await this.productRepo.find({
+      select: '*',
+      join: productLeftJoiner,
+      where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    let count = await this.productRepo.find({
+      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      join: productLeftJoiner,
+      where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      products: productsList,
+    };
   }
 
   async itgUpdate(app_core_id: string, data, type: number) {

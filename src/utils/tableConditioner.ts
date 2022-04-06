@@ -407,3 +407,18 @@ export const flashSaleSearchFilter = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const getProductsListByAccessoryIdSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

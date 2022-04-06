@@ -68,4 +68,17 @@ export class PromotionAccessoriesController extends BaseController {
     const result = await this.service.getByProductId(product_id);
     return this.responseSuccess(res, result);
   }
+
+  @Get(':accessory_id/products')
+  async getProductsListByAccessoryId(
+    @Res() res: Response,
+    @Param('accessory_id') accessory_id: number,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductsListByAccessoryId(
+      accessory_id,
+      params,
+    );
+    return this.responseSuccess(res, result);
+  }
 }
