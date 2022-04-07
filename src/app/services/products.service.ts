@@ -634,6 +634,7 @@ export class ProductService {
       store_location_id, // kho,
       amount_start, // Tồn kho
       amount_end,
+      product_function,
       order_amount,
     } = params;
     page = +page || 1;
@@ -659,21 +660,8 @@ export class ProductService {
     }
 
     // Filter Sản phẩm thuộc về Sp cha hay SP con, combo hay độc lập
-    if (productType) {
-      if (productType == 1) {
-        filterCondition[`${Table.PRODUCTS}.product_type`] = LessThan(3);
-        filterCondition[`${Table.PRODUCTS}.parent_product_id`] = 0;
-      }
-      if (productType == 2) {
-        filterCondition[`${Table.PRODUCTS}.product_type`] = LessThan(3);
-        filterCondition[`${Table.PRODUCTS}.parent_product_id`] = MoreThan(0);
-      }
-      if (productType == 3) {
-        filterCondition[`${Table.PRODUCTS}.product_type`] = 3;
-      }
-      if (productType == 4) {
-        filterCondition[`${Table.PRODUCTS}.product_type`] = MoreThan(3);
-      }
+    if (product_function) {
+      filterCondition[`${Table.PRODUCTS}.product_function`] = product_function;
     }
 
     // Filter danh mục ngành hàng
@@ -3333,7 +3321,7 @@ export class ProductService {
             for (let relevantGroupItem of relevantGroups) {
               if (relevantGroupItem.product_root_id) {
                 let productRoot = await this.productRepo.findOne({
-                  select: '*',
+                  select: getDetailProductsListSelectorFE,
                   join: { [JoinTable.innerJoin]: productFullJoiner },
                   where: {
                     [`${Table.PRODUCTS}.product_id`]:
