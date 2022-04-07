@@ -81,6 +81,7 @@ import { OrderHistoryRepository } from '../repositories/orderHistory.repository'
 import { OrderHistoryEntity } from '../entities/orderHistory.entity';
 import { convertToMySQLDateTime } from '../../utils/helper';
 import { PromotionService } from './promotion.service';
+import { formatOrderTimestamp } from 'src/utils/services/order.helper';
 
 @Injectable()
 export class OrdersService {
@@ -978,7 +979,8 @@ export class OrdersService {
     }
 
     order['order_items'] = orderDetails;
-    return order;
+
+    return formatOrderTimestamp(order);
   }
 
   async updateOrderStatus(order_code, order_status) {

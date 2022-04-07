@@ -224,16 +224,3 @@ export const formatStringCondition = (position, existsItem) => {
   formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
   return formatStringCond;
 };
-
-export const formatCustomerDatetime = (customer) => {
-  customer['created_at'] = customer['created_at']
-    ? formatStandardTimeStamp(customer['created_at'])
-    : customer['created_at'];
-  customer['updated_at'] = customer['updated_at']
-    ? formatStandardTimeStamp(customer['updated_at'])
-    : customer['updated_at'];
-  customer['birthday'] = customer['birthday']
-    ? formatStandardTimeStamp(customer['birthday'])
-    : customer['birthday'];
-  return customer;
-};

@@ -22,7 +22,6 @@ import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import {
   convertNullDatetimeData,
-  formatCustomerDatetime,
   formatStandardTimeStamp,
   generateRandomPassword,
   preprocessUserResult,
@@ -71,6 +70,7 @@ import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoy
 import * as moment from 'moment';
 import { Between } from '../../database/find-options/operators';
 import { creatorJoiner } from '../../utils/joinTable';
+import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
 
 @Injectable()
 export class CustomerService {
@@ -370,7 +370,7 @@ export class CustomerService {
       user['creator'] = preprocessUserResult(creator);
     }
 
-    return formatCustomerDatetime(user);
+    return formatCustomerTimestamp(user);
   }
 
   async update(user_id: string, data: UpdateCustomerDTO) {
