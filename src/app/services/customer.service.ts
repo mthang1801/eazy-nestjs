@@ -915,7 +915,7 @@ export class CustomerService {
         }
       }
       console.log(916, total);
-      await this.userLoyalHistory.update(
+      await this.userLoyalRepo.update(
         { user_id: user.user_id },
         { point: total },
       );
