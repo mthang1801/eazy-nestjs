@@ -738,15 +738,19 @@ export class ProductService {
     }
 
     let categoriesList = [];
+    filterJoiner['category_id'] = 1;
     if (category_id) {
+      let arrCategories = category_id.split(',');
       // Theo danh mục
-      filterJoiner['category_id'] = 1;
-
-      categoriesList = await this.childrenCategories(category_id);
-      categoriesList = [
-        +category_id,
-        ...categoriesList.map(({ category_id }) => category_id),
-      ];
+      if (arrCategories.length < 2) {
+        categoriesList = await this.childrenCategories(category_id);
+        categoriesList = [
+          +category_id,
+          ...categoriesList.map(({ category_id }) => category_id),
+        ];
+      } else {
+        categoriesList = arrCategories;
+      }
     }
 
     let productLists, count;
@@ -2744,9 +2748,20 @@ export class ProductService {
       }
 
       // get promotion accessories
+
       if (product['promotion_accessory_id']) {
         product['accessory_products'] = await this.getAccessoriesByProductId(
           product['promotion_accessory_id'],
+        );
+      }
+      if (product['free_accessory_id']) {
+        product['free_products'] = await this.getAccessoriesByProductId(
+          product['free_accessory_id'],
+        );
+      }
+      if (product['warranty_package_id']) {
+        product['warranty_products'] = await this.getAccessoriesByProductId(
+          product['warranty_package_id'],
         );
       }
 
@@ -3342,6 +3357,7 @@ export class ProductService {
       if (group) {
         let childrenProducts = await this.getChildrenProducts(
           result['product_id'],
+          1,
         );
         result['children_products'] = childrenProducts;
 
@@ -3401,16 +3417,20 @@ export class ProductService {
     // Get accessory
     if (result['promotion_accessory_id']) {
       result['promotion_accessory_products'] =
-        await this.getAccessoriesByProductId(result['promotion_accessory_id']);
+        await this.getAccessoriesByProductId(
+          result['promotion_accessory_id'],
+          1,
+        );
     }
     if (result['free_accessory_id']) {
       result['free_accessory_products'] = await this.getAccessoriesByProductId(
         result['free_accessory_id'],
+        1,
       );
     }
     if (result['warranty_package_id']) {
       result['warranty_package_products'] =
-        await this.getAccessoriesByProductId(result['warranty_package_id']);
+        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
     }
 
     // Get Current category info
@@ -3449,7 +3469,7 @@ export class ProductService {
     console.log(product);
   }
 
-  async getChildrenProducts(product_id) {
+  async getChildrenProducts(product_id, role = 0) {
     const childrenProducts = await this.productRepo.find({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
@@ -3473,18 +3493,21 @@ export class ProductService {
           childProduct['promotion_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['promotion_accessory_id'],
+              role,
             );
         }
         if (childProduct['free_accessory_id']) {
           childProduct['free_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['free_accessory_id'],
+              role,
             );
         }
         if (childProduct['warranty_package_id']) {
           childProduct['warranty_package_products'] =
             await this.getAccessoriesByProductId(
               childProduct['warranty_package_id'],
+              role,
             );
         }
       }
@@ -3600,12 +3623,14 @@ export class ProductService {
     }
   }
 
-  async getAccessoriesByProductId(accessory_id: number) {
-    return this.productPromoAccessoryRepo.find({
-      select: '*',
-      join: productPromotionAccessoriesJoiner,
-      where: {
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+  async getAccessoriesByProductId(accessory_id: number, role = 0) {
+    // role = 0 : CMS, 1 : FE
+    let condition: any = {
+      [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+    };
+    if (role === 1) {
+      condition = {
+        ...condition,
         [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
           formatStandardTimeStamp(new Date()),
         ),
@@ -3614,7 +3639,12 @@ export class ProductService {
         ),
         [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
         [`${Table.PRODUCT_PROMOTION_ACCESSORY}.status`]: 'A',
-      },
+      };
+    }
+    return this.productPromoAccessoryRepo.find({
+      select: '*',
+      join: productPromotionAccessoriesJoiner,
+      where: condition,
     });
   }
 

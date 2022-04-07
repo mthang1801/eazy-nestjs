@@ -186,18 +186,22 @@ export class FlashSalesService {
         filterConditions[`${Table.FLASH_SALES}.start_at`] = LessThan(
           formatStandardTimeStamp(new Date()),
         );
-        break;
-      case 2:
-        filterConditions[`${Table.FLASH_SALES}.start_at`] = MoreThanOrEqual(
-          formatStandardTimeStamp(new Date()),
-        );
         filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
         break;
       case 3:
         filterConditions[`${Table.FLASH_SALES}.end_at`] = MoreThanOrEqual(
           formatStandardTimeStamp(new Date()),
         );
+        filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
         break;
+      case 4:
+        filterConditions[`${Table.FLASH_SALES}.status`] = 'D';
+        break;
+      default:
+        filterConditions[`${Table.FLASH_SALES}.start_at`] = MoreThanOrEqual(
+          formatStandardTimeStamp(new Date()),
+        );
+        filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
     }
 
     if (flash_type) {
