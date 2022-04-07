@@ -32,6 +32,6 @@ export class UserEntity {
   janrain_identifier: string = '';
   created_at: string = convertToMySQLDateTime();
   updated_at: string = convertToMySQLDateTime();
-  lasted_buy_at: null | string;
+  lasted_buy_at: null | string = null;
   created_by: number = 0;
 }

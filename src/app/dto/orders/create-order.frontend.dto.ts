@@ -42,4 +42,7 @@ export class CreateOrderFEDto {
 
   @IsNotEmpty()
   s_address: string;
+
+  @IsOptional()
+  coupon_code: string;
 }

@@ -18,6 +18,8 @@ import { Table } from 'src/database/enums';
 import { MoreThanOrEqual } from 'src/database/find-options/operators';
 import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
 import { LessThan } from '../../database/find-options/operators';
+import { sortBy } from 'lodash';
+import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   convertToMySQLDateTime,
   formatStandardTimeStamp,
@@ -109,9 +111,9 @@ export class FlashSalesService {
             flashSaleProductItem['stickers'] = flashSaleProductStickers;
           }
         }
-        flashSaleDetailItem['products'] = flashSaleProducts;
-        flashSale['details'] = flashSale['details']
-          ? [...flashSale['details'], flashSaleDetailItem]
+        flashSaleDetailItem['flash_sale_products'] = flashSaleProducts;
+        flashSale['flash_sale_details'] = flashSale['flash_sale_details']
+          ? [...flashSale['flash_sale_details'], flashSaleDetailItem]
           : [flashSaleDetailItem];
       }
     }
@@ -206,6 +208,9 @@ export class FlashSalesService {
 
     const flashSalesList = await this.flashSaleRepo.find({
       select: '*',
+      orderBy: [
+        { field: `${Table.FLASH_SALES}.updated_at`, sortBy: SortBy.DESC },
+      ],
       where: flashSaleSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -237,6 +242,8 @@ export class FlashSalesService {
       updated_at: convertToMySQLDateTime(),
       updated_by: user.user_id,
     };
+
+    console.log(flashSaleData);
     await this.flashSaleRepo.update({ flash_sale_id }, flashSaleData);
     //Only update status will return immediately
     if (Object.entries(data).length == 1 && data.status) {

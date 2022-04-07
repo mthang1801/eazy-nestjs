@@ -373,6 +373,53 @@ export class CustomerService {
     return formatCustomerTimestamp(user);
   }
 
+  async getCustomerLoyaltyHistory(id, params) {
+    const user = await this.userRepo.findOne({ user_id: id });
+    if (!user) {
+      throw new HttpException('Không tìm thấy khách hàng.', 404);
+    }
+
+    let { page, limit, search } = params;
+    page = +page || 1;
+    limit = +limit || 10;
+    let skip = (page - 1) * limit;
+
+    const userLoyaltyHistory = await this.userLoyalHistory.find({
+      select: '*',
+      orderBy: [
+        {
+          field: `${Table.USER_LOYALTY_HISTORY}.created_at`,
+          sortBy: SortBy.DESC,
+        },
+      ],
+      where: { [`${Table.USER_LOYALTY_HISTORY}.user_id`]: id },
+      skip,
+      limit,
+    });
+
+    const count = await this.userLoyalHistory.find({
+      select: '*',
+      orderBy: [
+        {
+          field: `${Table.USER_LOYALTY_HISTORY}.created_at`,
+          sortBy: SortBy.DESC,
+        },
+      ],
+      where: { [`${Table.USER_LOYALTY_HISTORY}.user_id`]: id },
+      skip,
+      limit,
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      loyaltyHistories: userLoyaltyHistory,
+    };
+  }
+
   async update(user_id: string, data: UpdateCustomerDTO) {
     const user = await this.userRepo.findOne({ user_id });
 

@@ -53,6 +53,16 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, result, `action return all customer`);
   }
 
+  @Get('/:id/loyalty-histories')
+  async getCustomerLoyaltyHistory(
+    @Param('id') id: number,
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getCustomerLoyaltyHistory(id, params);
+    return this.responseSuccess(res, result);
+  }
+
   @Put('/:user_id')
   async update(
     @Res() res,

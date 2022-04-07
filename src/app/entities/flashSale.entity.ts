@@ -6,8 +6,8 @@ export class FlashSaleEntity {
   url: string = '';
   description: string = '';
   flash_type: number = 0;
-  start_at: null | string;
-  end_at: null | string;
+  start_at: null | string = null;
+  end_at: null | string = null;
   logo_img: string = '';
   background_img: string = '';
   show_countdown: string = 'N';

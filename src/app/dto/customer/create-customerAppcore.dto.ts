@@ -20,7 +20,7 @@ export class CreateCustomerAppcoreDto {
   email: string;
 
   @IsOptional()
-  birthday: null | string;
+  birthday: null | string = null;
 
   @IsOptional()
   b_phone: string;
