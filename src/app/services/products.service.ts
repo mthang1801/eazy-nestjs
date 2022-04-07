@@ -2684,7 +2684,7 @@ export class ProductService {
     }
   }
 
-  async getRelativeProductsByCategory(product) {
+  async getRelativeProductsByCategory(product, exclusive_lists = []) {
     let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
       product.price,
     );
@@ -3175,6 +3175,8 @@ export class ProductService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
+    let exclusivesProductsInCategory = [];
+
     if (product['product_function'] == 2) {
       product = await this.productRepo.findOne({
         select: productDetailSelector,
@@ -3304,6 +3306,7 @@ export class ProductService {
     );
 
     // Get accessory
+
     if (result['promotion_accessory_id']) {
       result['promotion_accessory_products'] =
         await this.getAccessoriesByProductId(result['promotion_accessory_id']);

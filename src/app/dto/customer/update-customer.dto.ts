@@ -126,4 +126,7 @@ export class UpdateCustomerDTO {
 
   @IsOptional()
   type: string;
+
+  @IsOptional()
+  created_by: number;
 }
