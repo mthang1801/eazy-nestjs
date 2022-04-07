@@ -902,6 +902,8 @@ export class CustomerService {
       user_id: user.user_id,
     });
 
+    console.log(loyaltyHistoriesList);
+
     if (loyaltyHistoriesList.length) {
       let total = 0;
       for (let loyaltyHistory of loyaltyHistoriesList) {
@@ -911,6 +913,7 @@ export class CustomerService {
           total -= loyaltyHistory['point'];
         }
       }
+      console.log(916, total);
       await this.userLoyalHistory.update(
         { user_id: user.user_id },
         { point: total },
