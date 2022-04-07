@@ -1843,10 +1843,11 @@ export class ProductService {
   }
 
   async checkProductGroup(currentProduct, data) {
+    console.log(currentProduct, data);
     if ([1, 2].includes(+data['product_type'])) {
       if (!data['parent_product_appcore_id']) {
         const group = await this.productVariationGroupRepo.findOne({
-          product_root_id: currentProduct,
+          product_root_id: currentProduct.product_id,
         });
         if (!group) {
           const newGroupData = {
