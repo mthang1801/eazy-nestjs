@@ -856,7 +856,7 @@ export class CustomerService {
     if (userLoyalty) {
       await this.userLoyalRepo.update(
         { user_id: user.user_id },
-        { loyalty_point: point, updated_at: convertToMySQLDateTime() },
+        { loyalty_point: point },
       );
     } else {
       const newUserLoyalty = {

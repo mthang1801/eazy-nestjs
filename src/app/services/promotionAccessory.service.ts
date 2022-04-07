@@ -23,6 +23,7 @@ import * as moment from 'moment';
 import { getProductAccessorySelector } from 'src/utils/tableSelector';
 import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunctions';
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
+import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -509,13 +510,14 @@ export class PromotionAccessoryService {
           let updatedData = {};
           switch (type) {
             case 1:
-              updatedData = { free_accessory_id: accessory['accessory_id'] };
-              break;
-            case 2:
               updatedData = {
                 promotion_accessory_id: accessory['accessory_id'],
               };
               break;
+            case 2:
+              updatedData = { free_accessory_id: accessory['accessory_id'] };
+              break;
+
             case 3:
               updatedData = {
                 warranty_package_id: accessory['accessory_id'],
@@ -551,6 +553,40 @@ export class PromotionAccessoryService {
             404,
           );
         }
+      }
+    }
+  }
+
+  async updateProductAccessory(
+    accessory_id: number,
+    data: UpdateProductPromotionAccessoryDto,
+  ) {
+    let typeNameOfAccessory;
+    switch (+data.type) {
+      case 1:
+        typeNameOfAccessory = 'promotion_accessory_id';
+        break;
+      case 2:
+        typeNameOfAccessory = 'free_accessory_id';
+        break;
+      case 3:
+        typeNameOfAccessory = 'warranty_package_id';
+        break;
+    }
+    if (data.removed_products && data.removed_products.length) {
+      for (let productId of data.removed_products) {
+        await this.productRepo.update(
+          { product_id: productId },
+          { [typeNameOfAccessory]: 0 },
+        );
+      }
+    }
+    if (data.inserted_products && data.inserted_products.length) {
+      for (let productId of data.inserted_products) {
+        await this.productRepo.update(
+          { product_id: productId },
+          { [typeNameOfAccessory]: accessory_id },
+        );
       }
     }
   }

@@ -17,6 +17,7 @@ import { PromotionAccessoryService } from '../../services/promotionAccessory.ser
 import { CreatePromotionAccessoryDto } from '../../dto/promotionAccessories/create-promotionAccessory.dto';
 import { UpdatePromotionAccessoryDto } from '../../dto/promotionAccessories/update-promotionAccessory.dto';
 import { AuthGuard } from '../../../middlewares/be.auth';
+import { UpdateProductPromotionAccessoryDto } from '../../dto/promotionAccessories/update-productPromotionAccessory.dto';
 @Controller('be/v1/promotion-accessories')
 export class PromotionAccessoriesController extends BaseController {
   constructor(private service: PromotionAccessoryService) {
@@ -80,5 +81,15 @@ export class PromotionAccessoriesController extends BaseController {
       params,
     );
     return this.responseSuccess(res, result);
+  }
+
+  @Put(':accessory_id/update-products')
+  async updateAccessoryProducts(
+    @Res() res: Response,
+    @Body() data: UpdateProductPromotionAccessoryDto,
+    @Param('accessory_id') accessory_id: number,
+  ): Promise<IResponse> {
+    await this.service.updateProductAccessory(accessory_id, data);
+    return this.responseSuccess(res, null, 'Thành công');
   }
 }
