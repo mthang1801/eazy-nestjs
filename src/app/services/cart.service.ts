@@ -69,8 +69,7 @@ export class CartService {
     result['totalAmount'] = totalAmount;
 
     const totalPrice = cartItems.reduce(
-      (acc, ele) =>
-        acc + (ele.amount * ele.price * (100 - ele.percentage_discount)) / 100,
+      (acc, ele) => acc + ele.amount * ele.price,
       0,
     );
     result['totalPrice'] = totalPrice;
