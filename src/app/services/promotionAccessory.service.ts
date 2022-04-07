@@ -561,8 +561,12 @@ export class PromotionAccessoryService {
     accessory_id: number,
     data: UpdateProductPromotionAccessoryDto,
   ) {
+    let accessory = await this.promoAccessoryRepo.findOne({ accessory_id });
+    if (!accessory) {
+      throw new HttpException('Không tìm thấy bộ Phụ kiện', 404);
+    }
     let typeNameOfAccessory;
-    switch (+data.type) {
+    switch (+accessory.accessory_type) {
       case 1:
         typeNameOfAccessory = 'promotion_accessory_id';
         break;
