@@ -897,6 +897,25 @@ export class CustomerService {
       user_id: user.user_id,
     };
     await this.userLoyalHistory.create(userLoyalHist);
+
+    const loyaltyHistoriesList = await this.userLoyalHistory.find({
+      user_id: user.user_id,
+    });
+
+    if (loyaltyHistoriesList.length) {
+      let total = 0;
+      for (let loyaltyHistory of loyaltyHistoriesList) {
+        if (loyaltyHistory['by_type'] == 'A') {
+          total += loyaltyHistory['point'];
+        } else {
+          total -= loyaltyHistory['point'];
+        }
+      }
+      await this.userLoyalHistory.update(
+        { user_id: user.user_id },
+        { point: total },
+      );
+    }
   }
 
   async importCustomers() {
