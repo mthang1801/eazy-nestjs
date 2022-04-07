@@ -22,6 +22,7 @@ import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import {
   convertNullDatetimeData,
+  formatCustomerDatetime,
   formatStandardTimeStamp,
   generateRandomPassword,
   preprocessUserResult,
@@ -127,7 +128,7 @@ export class CustomerService {
     data['b_address'] = data['b_address'];
     data['s_firstname'] = data['s_firstname'] || data['firstname'];
     data['s_lastname'] = data['s_lastname'] || data['lastname'];
-    data['s_district'] = data['s_lastname'] || data['b_district'];
+    data['s_district'] = data['s_district'] || data['b_district'];
     data['s_city'] = data['s_city'] || data['b_city'];
     data['s_ward'] = data['s_ward'] || data['b_ward'];
     data['s_address'] = data['s_address'] || data['b_address'];
@@ -333,7 +334,7 @@ export class CustomerService {
   }
 
   async getById(id) {
-    const user = await this.userRepo.findOne({
+    let user = await this.userRepo.findOne({
       select: ['*'],
       join: userJoiner,
       where: {
@@ -368,7 +369,7 @@ export class CustomerService {
       user['creator'] = creator;
     }
 
-    return preprocessUserResult(user);
+    return formatCustomerDatetime(user);
   }
 
   async update(user_id: string, data: UpdateCustomerDTO) {
@@ -426,7 +427,6 @@ export class CustomerService {
           },
           {
             loyalty_point: data.loyalty_point,
-            updated_at: convertToMySQLDateTime(),
           },
         );
         result['loyalty'] = updatedUserLoyal;

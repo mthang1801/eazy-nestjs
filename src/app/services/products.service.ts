@@ -3721,4 +3721,23 @@ export class ProductService {
       );
     }
   }
+
+  async updateProductPrices() {
+    let productsPrice = await this.productPriceRepo.find();
+    for (let productItem of productsPrice) {
+      if (
+        +productItem.price > 0 &&
+        +productItem.list_price > 0 &&
+        +productItem.list_price > +productItem.price
+      ) {
+        await this.productPriceRepo.update(
+          { product_id: productItem['product_id'] },
+          {
+            percentage_discount:
+              (1 - +productItem.price / +productItem.list_price) * 100,
+          },
+        );
+      }
+    }
+  }
 }

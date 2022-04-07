@@ -28,6 +28,7 @@ export const getProductsListSelectorBE = [
   `${Table.PRODUCTS}.thumbnail`,
   `${Table.PRODUCTS}.product_function`,
   `${Table.PRODUCT_DESCRIPTION}.product`,
+  `${Table.PRODUCT_PRICES}.*`,
   `${Table.PRODUCTS}.product_code`,
   `${Table.PRODUCTS}.slug as productSlug`,
   `${Table.PRODUCTS}.status`,
