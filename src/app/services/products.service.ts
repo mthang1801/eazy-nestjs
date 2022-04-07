@@ -634,6 +634,7 @@ export class ProductService {
       store_location_id, // kho,
       amount_start, // Tồn kho
       amount_end,
+      variant_ids,
       product_function,
       order_amount,
     } = params;
@@ -699,6 +700,14 @@ export class ProductService {
     } else if (created_at_end) {
       filterCondition[`${Table.PRODUCTS}.created_at`] =
         LessThanOrEqual(created_at_end);
+    }
+
+    // Variant_id
+    if (variant_ids) {
+      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
+        variant_ids.split(','),
+      );
+      filterJoiner['variant_id'] = 1;
     }
 
     // Theo sticker
@@ -888,6 +897,45 @@ export class ProductService {
       }
 
       count = await this.catalogCategoryRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productJoiner(filterJoiner),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
+      });
+    } else if (variant_ids) {
+      productLists = await this.productFeatureValueRepo.find({
+        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+        join: productJoiner(filterJoiner),
+        orderBy: filterOrders,
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
+        skip,
+        limit,
+      });
+
+      if (productLists.length) {
+        productLists = await this.productFeatureValueRepo.find({
+          select: getProductsListSelectorBE,
+          join: productJoiner(filterJoiner),
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: In(
+              productLists.map(({ product_id }) => product_id),
+            ),
+          },
+        });
+      }
+
+      count = await this.productFeatureValueRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
         join: productJoiner(filterJoiner),
         where: categoriesList.length
@@ -1094,31 +1142,27 @@ export class ProductService {
   }
 
   async joinParentProducts(joined_products: JoinedProduct[]) {
-    if (joined_products.length < 2) {
-      throw new HttpException('Số lượng sản phẩm cần join quá ít', 400);
-    }
+    if (joined_products.length < 2) return;
+
     let groupsList = [];
+
     for (let { product_id, name } of joined_products) {
-      let group = await this.productRepo.findOne({
+      let group = await this.productVariationGroupRepo.findOne({
         product_root_id: product_id,
-        group_type: 1,
       });
-      if (!group) {
-        throw new HttpException(
-          `Sản phẩm có id ${product_id} không là SP cha`,
-          400,
-        );
+      if (group) {
+        group['group_name'] = name;
+        groupsList = [...groupsList, group];
       }
-      group['group_name'] = name;
-      groupsList = [...groupsList, group];
     }
+
+    if (groupsList.length != joined_products.length) return;
 
     let groupIndexData = {
       ...new ProductVariationGroupIndexEntity(),
-      group_ids: groupsList.join(','),
+      group_ids: groupsList.map(({ group_id }) => group_id).join(','),
     };
     const groupIndex = await this.productGroupIndexRepo.create(groupIndexData);
-
     for (let group of groupsList) {
       await this.productVariationGroupRepo.update(
         { group_id: group['group_id'] },

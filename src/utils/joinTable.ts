@@ -162,7 +162,6 @@ export const productJoiner = (params = {}) => {
   let result = {};
   let rootJoiner = `${Table.PRODUCTS}.product_id`;
   //Thứ tự Ưu tien category_id, store, sticker
-
   if (params['store_location_id']) {
     rootJoiner = `${Table.PRODUCT_STORES}.product_id`;
     result[Table.PRODUCTS] = {
@@ -170,6 +169,7 @@ export const productJoiner = (params = {}) => {
       rootJoin: rootJoiner,
     };
   }
+
   if (params['category_id']) {
     if (params['store_location_id']) {
       result[Table.PRODUCTS_CATEGORIES] = {
@@ -215,6 +215,26 @@ export const productJoiner = (params = {}) => {
       result[Table.PRODUCTS] = {
         fieldJoin: `${Table.PRODUCTS}.catalog_category_id`,
         rootJoin: `${Table.CATALOG_CATEGORIES}.catalog_id`,
+      };
+    }
+  }
+
+  if (params['variant_id']) {
+    if (
+      params['store_location_id'] ||
+      params['category_id'] ||
+      params['sticker_id'] ||
+      params['catalog_category_id']
+    ) {
+      result[Table.PRODUCT_FEATURE_VALUES] = {
+        fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+        rootJoin: `${Table.PRODUCTS}.product_id`,
+      };
+    } else {
+      rootJoiner = `${Table.PRODUCT_FEATURE_VALUES}.product_id`;
+      result[Table.PRODUCTS] = {
+        fieldJoin: `${Table.PRODUCTS}.product_id`,
+        rootJoin: rootJoiner,
       };
     }
   }

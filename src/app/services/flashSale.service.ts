@@ -97,6 +97,12 @@ export class FlashSalesService {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
           select: getDetailProductsListSelectorFE,
           join: flashSaleProductJoiner,
+          orderBy: [
+            {
+              field: `${Table.FLASH_SALE_PRODUCTS}.position`,
+              sortBy: SortBy.ASC,
+            },
+          ],
           where: { detail_id: flashSaleDetailItem['detail_id'] },
         });
 
@@ -164,16 +170,7 @@ export class FlashSalesService {
   }
 
   async getList(params) {
-    let {
-      page,
-      limit,
-      search,
-      status,
-      activity_status,
-      flash_type,
-      start_at,
-      end_at,
-    } = params;
+    let { page, limit, search, status, activity_status, flash_type } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;

@@ -36,7 +36,6 @@ export class IndexService {
     // await this.productService.reportCountTotalFromCategories();
     // Determin product functions
     // await this.productService.determineProductFunction();
-
-    await this.productService.updateProductPrices();
+    // await this.productService.syncProductsIntoGroup();
   }
 }
