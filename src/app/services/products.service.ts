@@ -3321,7 +3321,10 @@ export class ProductService {
             for (let relevantGroupItem of relevantGroups) {
               if (relevantGroupItem.product_root_id) {
                 let productRoot = await this.productRepo.findOne({
-                  select: getDetailProductsListSelectorFE,
+                  select: [
+                    ...getDetailProductsListSelectorFE,
+                    `${Table.PRODUCT_VARIATION_GROUPS}.*`,
+                  ],
                   join: { [JoinTable.innerJoin]: productFullJoiner },
                   where: {
                     [`${Table.PRODUCTS}.product_id`]:
