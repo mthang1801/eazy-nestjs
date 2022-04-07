@@ -436,6 +436,15 @@ export const userJoiner = {
   },
 };
 
+export const creatorJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.USER_PROFILES]: {
+      fieldJoin: `${Table.USER_PROFILES}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+  },
+};
+
 export const userLoyaltyJoiner = {
   [JoinTable.leftJoin]: {
     [Table.USERS]: {

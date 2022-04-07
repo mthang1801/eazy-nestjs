@@ -70,6 +70,7 @@ import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity'
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
 import * as moment from 'moment';
 import { Between } from '../../database/find-options/operators';
+import { creatorJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class CustomerService {
@@ -362,11 +363,11 @@ export class CustomerService {
     if (user['created_by']) {
       const creator = await this.userRepo.findOne({
         select: '*',
-        join: userJoiner,
+        join: creatorJoiner,
         where: { [`${Table.USERS}.user_id`]: user['created_by'] },
       });
 
-      user['creator'] = creator;
+      user['creator'] = preprocessUserResult(creator);
     }
 
     return formatCustomerDatetime(user);
