@@ -394,6 +394,7 @@ export const convertGetProductsFromAppcore = (appCoreData) => {
 };
 
 export const mappingStatusOrder = (coreStatus) => {
+  console.log('mapping status', coreStatus);
   let result;
   switch (+coreStatus) {
     case 2:

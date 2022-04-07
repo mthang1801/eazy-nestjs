@@ -859,6 +859,7 @@ export class CustomerService {
         updated_at: convertToMySQLDateTime(),
       },
     );
+    console.log('Loyalty point', customer_appcore_id, point);
     const userLoyalty = await this.userLoyalRepo.findOne({
       user_id: user.user_id,
     });
