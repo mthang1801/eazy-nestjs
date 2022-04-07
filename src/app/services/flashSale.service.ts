@@ -146,9 +146,9 @@ export class FlashSalesService {
             flashSaleProductItem['stickers'] = flashSaleProductStickers;
           }
         }
-        flashSaleDetailItem['products'] = flashSaleProducts;
-        flashSale['details'] = flashSale['details']
-          ? [...flashSale['details'], flashSaleDetailItem]
+        flashSaleDetailItem['flash_sale_products'] = flashSaleProducts;
+        flashSale['flash_sale_details'] = flashSale['flash_sale_details']
+          ? [...flashSale['flash_sale_details'], flashSaleDetailItem]
           : [flashSaleDetailItem];
       }
     }
@@ -157,7 +157,16 @@ export class FlashSalesService {
   }
 
   async getList(params) {
-    let { page, limit, search, status } = params;
+    let {
+      page,
+      limit,
+      search,
+      status,
+      activity_status,
+      flash_type,
+      start_at,
+      end_at,
+    } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
@@ -168,12 +177,30 @@ export class FlashSalesService {
       filterConditions[`${Table.FLASH_SALES}.status`] = status;
     }
 
+    switch (+activity_status) {
+      case 1:
+        break;
+    }
+
     const flashSalesList = await this.flashSaleRepo.find({
       select: '*',
       where: flashSaleSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+    const count = await this.flashSaleRepo.find({
+      select: `COUNT(${Table.FLASH_SALES}.flash_sale_id) as total`,
+      where: flashSaleSearchFilter(search, filterConditions),
     });
 
-    return flashSalesList;
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      flashSalesList,
+    };
   }
 
   async update(flash_sale_id: number, data: UpdateFlashSaleDto, user) {
@@ -181,12 +208,17 @@ export class FlashSalesService {
     if (!flashSale) {
       throw new HttpException('Không tìm thấy flash sale', 404);
     }
+
     const flashSaleData = {
       ...this.flashSaleRepo.setData(data),
       updated_at: convertToMySQLDateTime(),
       updated_by: user.user_id,
     };
     await this.flashSaleRepo.update({ flash_sale_id }, flashSaleData);
+    //Only update status will return immediately
+    if (Object.entries(data).length == 1 && data.status) {
+      return;
+    }
 
     const oldFlashSalesDetails = await this.flashSaleDetailRepo.find({
       select: '*',
@@ -202,24 +234,25 @@ export class FlashSalesService {
         });
       }
     }
-
-    for (let flashSaleDetailItem of data.flash_sale_details) {
-      const newFlashSaleDetailItem = {
-        ...new FlashSaleDetailEntity(),
-        ...this.flashSaleDetailRepo.setData(flashSaleDetailItem),
-        flash_sale_id,
-      };
-      const newFlashSaleDetail = await this.flashSaleDetailRepo.create(
-        newFlashSaleDetailItem,
-      );
-
-      for (let flashSaleProductItem of flashSaleDetailItem.flash_sale_products) {
-        const newFlashSaleProductData = {
-          ...new FlashSaleProductEntity(),
-          ...this.flashSaleProductRepo.setData(flashSaleProductItem),
-          detail_id: newFlashSaleDetail.detail_id,
+    if (data.flash_sale_details && data.flash_sale_details.length) {
+      for (let flashSaleDetailItem of data.flash_sale_details) {
+        const newFlashSaleDetailItem = {
+          ...new FlashSaleDetailEntity(),
+          ...this.flashSaleDetailRepo.setData(flashSaleDetailItem),
+          flash_sale_id,
         };
-        await this.flashSaleProductRepo.createSync(newFlashSaleProductData);
+        const newFlashSaleDetail = await this.flashSaleDetailRepo.create(
+          newFlashSaleDetailItem,
+        );
+
+        for (let flashSaleProductItem of flashSaleDetailItem.flash_sale_products) {
+          const newFlashSaleProductData = {
+            ...new FlashSaleProductEntity(),
+            ...this.flashSaleProductRepo.setData(flashSaleProductItem),
+            detail_id: newFlashSaleDetail.detail_id,
+          };
+          await this.flashSaleProductRepo.createSync(newFlashSaleProductData);
+        }
       }
     }
   }

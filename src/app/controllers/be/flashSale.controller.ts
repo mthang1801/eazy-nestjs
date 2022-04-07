@@ -51,6 +51,7 @@ export class FlashSalesController extends BaseController {
   }
 
   @Put(':flash_sale_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('flash_sale_id') flash_sale_id: number,

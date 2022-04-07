@@ -7,20 +7,20 @@ import {
 } from 'class-validator';
 import { convertToMySQLDateTime } from '../../../utils/helper';
 export class UpdateFlashSaleDto {
-  @IsNotEmpty()
-  name: string = '';
+  @IsOptional()
+  name: string;
 
   @IsOptional()
-  url: string = '';
+  url: string;
 
   @IsOptional()
-  description: string = '';
+  description: string;
 
   @IsOptional()
   flash_type: number;
 
   @IsOptional()
-  status: string = 'A';
+  status: string;
 
   @IsOptional()
   start_at: string;
@@ -29,7 +29,7 @@ export class UpdateFlashSaleDto {
   end_at: string;
 
   @IsOptional()
-  show_countdown: string = 'N';
+  show_countdown: string;
 
   @IsOptional()
   logo_img: string;
@@ -37,7 +37,7 @@ export class UpdateFlashSaleDto {
   @IsOptional()
   background_img: string;
 
-  @ArrayNotEmpty()
+  @IsOptional()
   @ValidateNested()
   @Type(() => FlashSaleDetails)
   flash_sale_details: FlashSaleDetails[];
@@ -50,6 +50,9 @@ class FlashSaleDetails {
   @IsOptional()
   detail_url: string;
 
+  @IsOptional()
+  detail_status: string;
+
   @ValidateNested()
   @ArrayNotEmpty()
   @Type(() => FlashSaleProducts)
@@ -61,7 +64,7 @@ class FlashSaleProducts {
   product_id: number;
 
   @IsOptional()
-  flash_sale_product_status: string = 'A';
+  flash_sale_product_status: string;
 
   @IsNotEmpty()
   position: number;
