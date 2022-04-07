@@ -44,7 +44,7 @@ export class UpdateFlashSaleDto {
 }
 
 class FlashSaleDetails {
-  @IsNotEmpty()
+  @IsOptional()
   tab_name: string;
 
   @IsOptional()
