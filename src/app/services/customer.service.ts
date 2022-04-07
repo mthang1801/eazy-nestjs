@@ -846,9 +846,19 @@ export class CustomerService {
     const user = await this.userRepo.findOne({
       user_appcore_id: customer_appcore_id,
     });
+
     if (!user) {
       return;
     }
+
+    await this.userRepo.update(
+      {
+        user_id: user['user_id'],
+      },
+      {
+        updated_at: convertToMySQLDateTime(),
+      },
+    );
     const userLoyalty = await this.userLoyalRepo.findOne({
       user_id: user.user_id,
     });
