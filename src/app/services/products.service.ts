@@ -168,7 +168,10 @@ import { UpdateProductsInCategory } from '../dto/product/update-productInCategor
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
 import { sqlFindRelevantProductsInSameCategory } from '../../utils/sql/products.sql';
-import { productDetailSelector } from '../../utils/tableSelector';
+import {
+  productDetailSelector,
+  getDetailProductsListSelectorFE,
+} from '../../utils/tableSelector';
 import {
   LessThanOrEqual,
   Between,
@@ -1260,7 +1263,7 @@ export class ProductService {
     let skip = (page - 1) * limit;
 
     const productsList = await this.productCategoryRepo.find({
-      select: getProductsListSelectorBE,
+      select: getDetailProductsListSelectorFE,
       join: productsListByCategoryJoiner(),
       where: categoriesList.length
         ? productsListCategorySearchFilter(

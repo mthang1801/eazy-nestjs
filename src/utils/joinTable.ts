@@ -252,6 +252,10 @@ export const productsListByCategoryJoiner = (params = {}) => {
       fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
       rootJoin: rootJoiner,
     },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+      rootJoin: `${Table.CATEGORIES}.category_id`,
+    },
   };
 
   return { [JoinTable.innerJoin]: result };
@@ -678,6 +682,31 @@ export const productPromotionAccessoriesJoiner = {
 };
 
 export const flashSaleProductJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.FLASH_SALE_PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  },
+};
+
+export const flashSaleProductJoinerFE = {
   [JoinTable.innerJoin]: {
     [Table.PRODUCTS]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,

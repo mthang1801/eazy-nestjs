@@ -20,6 +20,7 @@ import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
 import { LessThan } from '../../database/find-options/operators';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
 import {
   convertToMySQLDateTime,
   formatStandardTimeStamp,
@@ -94,7 +95,7 @@ export class FlashSalesService {
           continue;
         }
         let flashSaleProducts = await this.flashSaleProductRepo.find({
-          select: '*',
+          select: getDetailProductsListSelectorFE,
           join: flashSaleProductJoiner,
           where: { detail_id: flashSaleDetailItem['detail_id'] },
         });
