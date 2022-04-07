@@ -1838,7 +1838,62 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
+    await this.checkProductGroup(result, convertedData);
     // await this.requestIntegrateParentProduct();
+  }
+
+  async checkProductGroup(currentProduct, data) {
+    if ([1, 2].includes(+data['product_type'])) {
+      if (!data['parent_product_appcore_id']) {
+        const group = await this.productVariationGroupRepo.findOne({
+          product_root_id: currentProduct,
+        });
+        if (!group) {
+          const newGroupData = {
+            ...new ProductVariationGroupsEntity(),
+            product_root_id: currentProduct.product_root_id,
+          };
+          const newGroup = await this.productVariationGroupRepo.create(
+            newGroupData,
+          );
+          let childrenProducts = await this.productRepo.find({
+            select: '*',
+            where: { parent_product_appcore_id: currentProduct.product_id },
+          });
+          if (childrenProducts.length) {
+            for (let childProduct of childrenProducts) {
+              await this.productVariationGroupProductsRepo.createSync({
+                product_id: childProduct['product_id'],
+                parent_product_id: currentProduct.product_id,
+                group_id: newGroup['group_id'],
+              });
+            }
+          }
+        }
+      } else {
+        let parentProduct = await this.productRepo.findOne({
+          parent_product_appcore_id: currentProduct.parent_product_appcore_id,
+        });
+        if (parentProduct) {
+          let group = await this.productVariationGroupRepo.findOne({
+            product_root_id: parentProduct.product_id,
+          });
+          if (group) {
+            const checkProductInGroup =
+              await this.productVariationGroupProductsRepo.findOne({
+                product_id: currentProduct.product_id,
+              });
+            if (!checkProductInGroup) {
+              await this.productVariationGroupProductsRepo.createSync({
+                product_id: currentProduct['product_id'],
+                parent_product_id: parentProduct.product_id,
+                group_id: group['group_id'],
+              });
+            }
+          }
+        }
+      }
+    }
   }
 
   async callSync(): Promise<void> {
@@ -2195,6 +2250,7 @@ export class ProductService {
       }
     }
 
+    await this.checkProductGroup(result, convertedData);
     // await this.requestIntegrateParentProduct();
   }
 
