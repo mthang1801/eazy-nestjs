@@ -6,7 +6,7 @@ export class FlashSaleEntity {
   url: string = '';
   description: string = '';
   flash_type: number = 0;
-  start_at: string = convertToMySQLDateTime();
+  start_at: null | string;
   end_at: null | string;
   logo_img: string = '';
   background_img: string = '';
