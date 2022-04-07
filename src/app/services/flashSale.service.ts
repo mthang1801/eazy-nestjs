@@ -189,13 +189,14 @@ export class FlashSalesService {
         filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
         break;
       case 2:
-        filterConditions[`${Table.FLASH_SALES}.start_at`] = MoreThan(
+        filterConditions[`${Table.FLASH_SALES}.start_at`] = LessThan(
           formatStandardTimeStamp(new Date()),
         );
-        filterConditions[`${Table.FLASH_SALES}.end_at`] = LessThan(
+        filterConditions[`${Table.FLASH_SALES}.end_at`] = MoreThan(
           formatStandardTimeStamp(new Date()),
         );
         filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
+        break;
       case 3:
         filterConditions[`${Table.FLASH_SALES}.end_at`] = LessThan(
           formatStandardTimeStamp(new Date()),
