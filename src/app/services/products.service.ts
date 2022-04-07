@@ -738,9 +738,10 @@ export class ProductService {
     }
 
     let categoriesList = [];
-    filterJoiner['category_id'] = 1;
+
     if (category_id) {
       let arrCategories = category_id.split(',');
+      filterJoiner['category_id'] = 1;
       // Theo danh mục
       if (arrCategories.length < 2) {
         categoriesList = await this.childrenCategories(category_id);
@@ -748,8 +749,6 @@ export class ProductService {
           +category_id,
           ...categoriesList.map(({ category_id }) => category_id),
         ];
-      } else {
-        categoriesList = arrCategories;
       }
     }
 

@@ -17,7 +17,7 @@ import { flashSaleSearchFilter } from '../../utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { MoreThanOrEqual } from 'src/database/find-options/operators';
 import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
-import { LessThan } from '../../database/find-options/operators';
+import { LessThan, MoreThan } from '../../database/find-options/operators';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
@@ -183,13 +183,13 @@ export class FlashSalesService {
 
     switch (+activity_status) {
       case 1:
-        filterConditions[`${Table.FLASH_SALES}.start_at`] = LessThan(
+        filterConditions[`${Table.FLASH_SALES}.start_at`] = MoreThan(
           formatStandardTimeStamp(new Date()),
         );
         filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
         break;
       case 3:
-        filterConditions[`${Table.FLASH_SALES}.end_at`] = MoreThanOrEqual(
+        filterConditions[`${Table.FLASH_SALES}.end_at`] = LessThan(
           formatStandardTimeStamp(new Date()),
         );
         filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
