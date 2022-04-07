@@ -17,7 +17,11 @@ import { flashSaleSearchFilter } from '../../utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { MoreThanOrEqual } from 'src/database/find-options/operators';
 import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { LessThan } from '../../database/find-options/operators';
+import {
+  convertToMySQLDateTime,
+  formatStandardTimeStamp,
+} from '../../utils/helper';
 
 @Injectable()
 export class FlashSalesService {
@@ -179,7 +183,25 @@ export class FlashSalesService {
 
     switch (+activity_status) {
       case 1:
+        filterConditions[`${Table.FLASH_SALES}.start_at`] = LessThan(
+          formatStandardTimeStamp(new Date()),
+        );
         break;
+      case 2:
+        filterConditions[`${Table.FLASH_SALES}.start_at`] = MoreThanOrEqual(
+          formatStandardTimeStamp(new Date()),
+        );
+        filterConditions[`${Table.FLASH_SALES}.status`] = 'A';
+        break;
+      case 3:
+        filterConditions[`${Table.FLASH_SALES}.end_at`] = MoreThanOrEqual(
+          formatStandardTimeStamp(new Date()),
+        );
+        break;
+    }
+
+    if (flash_type) {
+      filterConditions[`${Table.FLASH_SALES}.flash_type`] = flash_type;
     }
 
     const flashSalesList = await this.flashSaleRepo.find({
@@ -188,6 +210,7 @@ export class FlashSalesService {
       skip,
       limit,
     });
+
     const count = await this.flashSaleRepo.find({
       select: `COUNT(${Table.FLASH_SALES}.flash_sale_id) as total`,
       where: flashSaleSearchFilter(search, filterConditions),

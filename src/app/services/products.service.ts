@@ -538,7 +538,6 @@ export class ProductService {
         ...categoriesList.map(({ category_id }) => category_id),
       ];
     }
-    console.log(categoriesList);
 
     let productLists = await this.productRepo.find({
       select: getProductsListSelector,
@@ -3248,46 +3247,44 @@ export class ProductService {
         product_root_id: result.product_id,
       });
 
-      if (!group) {
-        throw new HttpException('Không tìm thấy SP', 404);
-      }
+      if (group) {
+        let childrenProducts = await this.getChildrenProducts(
+          result['product_id'],
+        );
+        result['children_products'] = childrenProducts;
 
-      let childrenProducts = await this.getChildrenProducts(
-        result['product_id'],
-      );
-      result['children_products'] = childrenProducts;
+        // Find relevant products
+        if (group.index_id) {
+          let relevantGroups = await this.productVariationGroupRepo.find({
+            select: '*',
+            where: {
+              index_id: group.index_id,
+            },
+          });
 
-      // Find relevant products
-      if (group.index_id) {
-        let relevantGroups = await this.productVariationGroupRepo.find({
-          select: '*',
-          where: {
-            index_id: group.index_id,
-          },
-        });
+          relevantGroups = [
+            group,
+            ...relevantGroups.filter(
+              ({ group_id }) => group_id !== group.group_id,
+            ),
+          ];
 
-        relevantGroups = [
-          group,
-          ...relevantGroups.filter(
-            ({ group_id }) => group_id !== group.group_id,
-          ),
-        ];
+          if (relevantGroups.length) {
+            for (let relevantGroupItem of relevantGroups) {
+              if (relevantGroupItem.product_root_id) {
+                let productRoot = await this.productRepo.findOne({
+                  select: '*',
+                  join: { [JoinTable.innerJoin]: productFullJoiner },
+                  where: {
+                    [`${Table.PRODUCTS}.product_id`]:
+                      relevantGroupItem.product_root_id,
+                  },
+                });
 
-        if (relevantGroups.length) {
-          for (let relevantGroupItem of relevantGroups) {
-            if (relevantGroupItem.product_root_id) {
-              let productRoot = await this.productRepo.findOne({
-                select: '*',
-                join: { [JoinTable.innerJoin]: productFullJoiner },
-                where: {
-                  [`${Table.PRODUCTS}.product_id`]:
-                    relevantGroupItem.product_root_id,
-                },
-              });
-
-              result['relevantProducts'] = result['relevantProducts']
-                ? [...result['relevantProducts'], productRoot]
-                : [productRoot];
+                result['relevantProducts'] = result['relevantProducts']
+                  ? [...result['relevantProducts'], productRoot]
+                  : [productRoot];
+              }
             }
           }
         }
