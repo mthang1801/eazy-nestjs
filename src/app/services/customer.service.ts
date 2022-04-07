@@ -899,7 +899,8 @@ export class CustomerService {
     await this.userLoyalHistory.create(userLoyalHist);
 
     const loyaltyHistoriesList = await this.userLoyalHistory.find({
-      user_id: user.user_id,
+      select: '*',
+      where: { user_id: user.user_id },
     });
 
     console.log(loyaltyHistoriesList);
