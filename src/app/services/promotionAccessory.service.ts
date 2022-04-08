@@ -399,37 +399,35 @@ export class PromotionAccessoryService {
       [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
     };
 
-    // switch (+accessory.accessory_type) {
-    //   case 1:
-    //     filterCondition = {
-    //       [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
-    //     };
-    //     break;
-    //   case 2:
-    //     filterCondition = {
-    //       [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
-    //     };
-    //     break;
-    //   case 3:
-    //     filterCondition = {
-    //       [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
-    //     };
-    //     break;
-    // }
+    switch (+accessory.accessory_type) {
+      case 1:
+        filterCondition = {
+          [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
+        };
+        break;
+      case 2:
+        filterCondition = {
+          [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
+        };
+        break;
+      case 3:
+        filterCondition = {
+          [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
+        };
+        break;
+    }
 
-    const productsList = await this.productPromoAccessoryRepo.find({
+    const productsList = await this.productRepo.find({
       select: '*',
-      join: productPromotionAccessorytLeftJoiner,
+      join: productLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
       skip,
       limit,
     });
 
-    console.log(productsList);
-
-    let count = await this.productPromoAccessoryRepo.find({
-      select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id) as total`,
-      join: productPromotionAccessorytLeftJoiner,
+    let count = await this.productRepo.find({
+      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      join: productLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
     });
 

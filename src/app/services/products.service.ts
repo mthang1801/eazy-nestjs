@@ -3395,6 +3395,14 @@ export class ProductService {
                   ? [...result['relevantProducts'], productRoot]
                   : [productRoot];
               }
+              result['relevantProducts'] = [
+                result['relevantProducts'].find(
+                  (product) => product['product_id'] === result['product_id'],
+                ),
+                ...result['relevantProducts'].filter(
+                  (product) => product['product_id'] !== result['product_id'],
+                ),
+              ];
             }
           }
         }
@@ -3405,7 +3413,6 @@ export class ProductService {
     result['stores'] = await this.getProductsStores(result.product_id);
 
     // get Image
-
     result['images'] = await this.getProductImages(result.product_id);
 
     //Get Features
