@@ -25,6 +25,10 @@ import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunct
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
 import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
+import {
+  getProductsListSelectorBE,
+  getDetailProductsListSelectorFE,
+} from '../../utils/tableSelector';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -418,7 +422,7 @@ export class PromotionAccessoryService {
     }
 
     const productsList = await this.productRepo.find({
-      select: '*',
+      select: getProductAccessorySelector,
       join: productLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
       skip,
@@ -426,7 +430,7 @@ export class PromotionAccessoryService {
     });
 
     let count = await this.productRepo.find({
-      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
     });

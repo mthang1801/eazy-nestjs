@@ -63,7 +63,6 @@ export const getProductAccessorySelector = [
   `${Table.PRODUCT_DESCRIPTION}.*`,
   `${Table.PRODUCTS}.product_code`,
   `${Table.PRODUCT_PRICES}.*`,
-  `${Table.PRODUCT_PROMOTION_ACCESSORY}.*`,
   `${Table.PRODUCTS}.amount`,
   `${Table.PRODUCTS}.thumbnail`,
 ];
