@@ -3,10 +3,8 @@ import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
-import {
-  formatStandardTimeStamp,
-  preprocessDatabaseBeforeResponse,
-} from '../utils/helper';
+
+import { preprocessDatabaseBeforeResponse } from '../utils/helper';
 import {
   preprocessAddTextDataToMysql,
   formatTypeValueToInSertSQL,
@@ -183,13 +181,15 @@ export class BaseRepositorty<T> {
     this.logger.log('=============== FIND ================');
     const optionKeys = Object.keys(options);
     const collection = new DatabaseCollection(this.table);
-    // if (optionKeys.length === 0) {
-    //   collection['select']('*');
-    // } else if (
-    //   !optionKeys.some((key: any) => orderCmds.some(key.toLowerCase()))
-    // ) {
-    //   collection['where'](options);
-    // } else {
+
+    if (
+      !Object.keys(options).some(
+        (val) =>
+          val.toLowerCase() === 'where' || /(select|from|join)/gi.test(val),
+      )
+    ) {
+      collection['where'](options);
+    }
 
     for (let cmd of orderCmds) {
       if (optionKeys.includes(cmd)) {
