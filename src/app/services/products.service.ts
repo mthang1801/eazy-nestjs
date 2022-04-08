@@ -2749,19 +2749,19 @@ export class ProductService {
       // get promotion accessories
 
       if (product['promotion_accessory_id']) {
-        product['accessory_products'] = await this.getAccessoriesByProductId(
-          product['promotion_accessory_id'],
-        );
+        product['promotion_accessory_name'] =
+          await this.promoAccessoryRepo.findOne(
+            product['promotion_accessory_id'],
+          );
       }
       if (product['free_accessory_id']) {
-        product['free_products'] = await this.getAccessoriesByProductId(
+        product['free_accessory_name'] = await this.promoAccessoryRepo.findOne(
           product['free_accessory_id'],
         );
       }
       if (product['warranty_package_id']) {
-        product['warranty_products'] = await this.getAccessoriesByProductId(
-          product['warranty_package_id'],
-        );
+        product['warranty_package_name'] =
+          await this.promoAccessoryRepo.findOne(product['warranty_package_id']);
       }
 
       //determine type of product
