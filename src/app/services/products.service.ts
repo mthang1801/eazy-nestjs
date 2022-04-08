@@ -2749,21 +2749,25 @@ export class ProductService {
       // get promotion accessories
 
       if (product['promotion_accessory_id']) {
-        product['promotion_accessory_name'] =
-          await this.promoAccessoryRepo.findOne({
-            accessory_id: product['promotion_accessory_id'],
-          });
+        let promotionRes = await this.promoAccessoryRepo.findOne({
+          select: '*',
+          where: { accessory_id: product['promotion_accessory_id'] },
+        });
+        product['promotion_accessory_name'] = promotionRes['accessory_name'];
       }
       if (product['free_accessory_id']) {
-        product['free_accessory_name'] = await this.promoAccessoryRepo.findOne({
-          accessory_id: product['free_accessory_id'],
+        let promotionRes = await this.promoAccessoryRepo.findOne({
+          select: '*',
+          where: { accessory_id: product['free_accessory_id'] },
         });
+        product['free_accessory_name'] = promotionRes['accessory_name'];
       }
       if (product['warranty_package_id']) {
-        product['warranty_package_name'] =
-          await this.promoAccessoryRepo.findOne({
-            accessory_id: product['warranty_package_id'],
-          });
+        let promotionRes = await this.promoAccessoryRepo.findOne({
+          select: '*',
+          where: { accessory_id: product['warranty_package_id'] },
+        });
+        product['warranty_package_name'] = promotionRes['accessory_name'];
       }
 
       //determine type of product
