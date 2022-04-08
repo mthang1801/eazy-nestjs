@@ -308,7 +308,7 @@ export class PromotionAccessoryService {
     if (accessory) {
       return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
-
+    console.log(convertedData);
     // await this.itgCheckConstraint(convertedData);
 
     const accessoryData = {
