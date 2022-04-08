@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 export class UserLoyaltyHistoryEntity {
   user_id: number = 0;
   point: number = 0;

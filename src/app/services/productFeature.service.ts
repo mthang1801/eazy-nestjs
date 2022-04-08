@@ -25,7 +25,7 @@ import {
 } from '../../database/constant/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 import {
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   removeVietnameseTones,
 } from 'src/utils/helper';
 import { convertToSlug, hasWhiteSpace } from '../../utils/helper';
@@ -74,8 +74,8 @@ export class ProductFeatureService {
 
     const newFeature = await this.productFeaturesRepo.create({
       ...productFeatureData,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
+      created_at: formatStandardTimeStamp(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     let result = { ...newFeature };
@@ -324,7 +324,7 @@ export class ProductFeatureService {
 
     const productFeatureData = {
       ...this.productFeaturesRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
 
     await this.productFeaturesRepo.update(
@@ -486,7 +486,7 @@ export class ProductFeatureService {
 
     const productFeatureData = {
       ...this.productFeaturesRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
     let updatedFeature = {};
     if (Object.entries(productFeatureData).length) {

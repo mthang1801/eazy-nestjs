@@ -17,7 +17,7 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { UpdateShippingDto } from '../dto/shipping/update-shipping.dto';
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { shippingJoiner, shippingServiceJoiner } from '../../utils/joinTable';
 @Injectable()
 export class ShippingService {
@@ -35,7 +35,7 @@ export class ShippingService {
     const shippingData = {
       ...new ShippingsEntity(),
       ...this.shippingRepo.setData(data),
-      created_at: convertToMySQLDateTime(new Date(data.created_at)),
+      created_at: formatStandardTimeStamp(new Date(data.created_at)),
     };
     const newShipping = await this.shippingRepo.create(shippingData);
     let result = { ...newShipping };
@@ -92,7 +92,9 @@ export class ShippingService {
     }
 
     if (data.created_at) {
-      data['created_at'] = convertToMySQLDateTime(new Date(data['created_at']));
+      data['created_at'] = formatStandardTimeStamp(
+        new Date(data['created_at']),
+      );
     }
     const shippingData = this.shippingRepo.setData(data);
 

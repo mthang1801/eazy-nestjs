@@ -1,7 +1,6 @@
 import {
   checkValidTimestamp,
   convertNullDatetimeData,
-  convertToMySQLDateTime,
   convertToSlug,
   formatStandardTimeStamp,
   removeVietnameseTones,
@@ -73,7 +72,7 @@ export const itgOrderFromAppcore = (cData) => {
     }
     if (core === 'created_at' || core === 'updated_at') {
       if (cData[core]) {
-        data[app] = convertToMySQLDateTime(new Date(cData[core]));
+        data[app] = formatStandardTimeStamp(new Date(cData[core]));
         continue;
       }
     }
@@ -133,7 +132,7 @@ export const itgCustomerFromAppcore = (cData) => {
       core === 'updatedAt' ||
       core === 'dateOfBirth'
     ) {
-      data[app] = convertToMySQLDateTime(new Date(cData[core]));
+      data[app] = formatStandardTimeStamp(new Date(cData[core]));
       continue;
     }
     if (app === 'data') {
@@ -345,7 +344,7 @@ export const itgCreateCategoryFromAppcore = (coreData) => {
 
   for (let [core, cms] of mappingData) {
     if (core === 'display_at') {
-      cmsData[cms] = convertToMySQLDateTime(coreData[core]);
+      cmsData[cms] = formatStandardTimeStamp(coreData[core]);
       continue;
     }
     cmsData[cms] = coreData[core];

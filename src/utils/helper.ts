@@ -1,11 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import * as moment from 'moment';
-
-export const convertToMySQLDateTime = (DateTime = new Date()) =>
-  new Date(new Date(DateTime).getTime() + 7 * 3600 * 1000)
-    .toISOString()
-    .slice(0, 19)
-    .replace('T', ' ');
+import { processGetTextDataFromMysql } from '../base/base.helper';
 
 export const preprocessUserResult = (user) => {
   if (!user) return null;
@@ -56,11 +51,11 @@ export const preprocessDatabaseBeforeResponse = (data) => {
 
   for (let [key, val] of iterate_object(dataObject)) {
     if (key === 'created_at') {
-      dataObject[key] = convertToMySQLDateTime(new Date(dataObject[key]));
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
       continue;
     }
     if (key === 'updated_at') {
-      dataObject[key] = convertToMySQLDateTime(new Date(dataObject[key]));
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
       continue;
     }
 
@@ -72,18 +67,6 @@ export const preprocessDatabaseBeforeResponse = (data) => {
 
   return dataObject;
 };
-
-export function formatDate(date) {
-  var d = new Date(date),
-    month = '' + (d.getMonth() + 1),
-    day = '' + d.getDate(),
-    year = d.getFullYear();
-
-  if (month.length < 2) month = '0' + month;
-  if (day.length < 2) day = '0' + day;
-
-  return [year, month, day].join('-');
-}
 
 export const convertToSlug = (text) =>
   text
@@ -133,72 +116,10 @@ export const formatQueryString = (queryString: string) => {
   return result;
 };
 
-export const MaxLimit = 9999999999999;
-
 export const convertNullData = (data) => (data ? data : null);
 
 export const convertNullDatetimeData = (data) =>
-  data ? convertToMySQLDateTime(new Date(data)) : null;
-
-const quotation = `"`;
-const replaceQuotation = '_quot';
-const apostrophe = `'`;
-const replaceApostrophe = '_apos';
-
-export const preprocessAddTextDataToMysql = (data: any) => {
-  if (data && typeof data == 'string') {
-    return data
-      .replace(new RegExp(quotation, 'g'), replaceQuotation)
-      .replace(new RegExp(apostrophe, 'g'), replaceApostrophe);
-  }
-  return data;
-};
-
-export const formatTypeValueToInSertSQL = (key, value) => {
-  if (
-    (typeof value === 'string' && value.trim() === '') ||
-    typeof value == 'undefined'
-  )
-    return `${key} = ''`;
-  if (value === null) return `${key} = null`;
-
-  if (+value === 0) return `${key} = 0`;
-
-  if (!isNaN(1 * +value)) {
-    if (value[0] == 0) {
-      return `${key} = '${value}'`;
-    }
-    // return `${key} = ${value}`;
-  }
-  return `${key} = '${value}'`;
-};
-export const formatTypeValueConditionSQL = (value) => {
-  if (
-    (typeof value === 'string' && value.trim() === '') ||
-    typeof value == 'undefined'
-  )
-    return `''`;
-  if (value === null) return `null`;
-
-  if (+value === 0) return `0`;
-
-  if (!isNaN(1 * +value)) {
-    if (value[0] == 0) {
-      return `'${value}'`;
-    }
-    // return `${key} = ${value}`;
-  }
-  return `'${value}'`;
-};
-
-export const processGetTextDataFromMysql = (data) => {
-  if (data && typeof data == 'string') {
-    return data
-      .replace(new RegExp(replaceQuotation, 'g'), quotation)
-      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe);
-  }
-  return data;
-};
+  data ? formatStandardTimeStamp(new Date(data)) : null;
 
 export const validateEmail = (email) => {
   return String(email)
@@ -210,8 +131,15 @@ export const validateEmail = (email) => {
 
 export const hasWhiteSpace = (s) => s.indexOf(' ') >= 0;
 
-export const formatStandardTimeStamp = (timestamp) =>
-  moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+export const formatStandardTimeStamp = (
+  timestamp: string | Date = new Date(),
+) => moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
+
+export const formatDateTime = (timestamp: string | Date = new Date()) =>
+  moment(timestamp).format('YYYY-MM-DD');
+
+export const formatTime = (timestamp: string | Date = new Date()) =>
+  moment(timestamp).format('HH:mm:ss');
 
 export const checkValidTimestamp = (timestamp) => moment(timestamp).isValid();
 
@@ -223,4 +151,17 @@ export const formatStringCondition = (position, existsItem) => {
 
   formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
   return formatStringCond;
+};
+
+export const formatCustomerDatetime = (customer) => {
+  customer['created_at'] = customer['created_at']
+    ? formatStandardTimeStamp(customer['created_at'])
+    : customer['created_at'];
+  customer['updated_at'] = customer['updated_at']
+    ? formatStandardTimeStamp(customer['updated_at'])
+    : customer['updated_at'];
+  customer['birthday'] = customer['birthday']
+    ? formatStandardTimeStamp(customer['birthday'])
+    : customer['birthday'];
+  return customer;
 };

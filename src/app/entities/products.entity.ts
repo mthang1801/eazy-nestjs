@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class ProductsEntity {
   product_appcore_id: string = '';
@@ -63,7 +63,7 @@ export class ProductsEntity {
   redirect_url: string = '';
   is_installment: string = 'N';
   product_function: number = 0;
-  created_at: string = convertToMySQLDateTime();
-  display_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  display_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
 }

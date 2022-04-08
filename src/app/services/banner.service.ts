@@ -8,7 +8,7 @@ import { BannerRepository } from '../repositories/banner.repository';
 
 import { ImagesService } from './image.service';
 import { Table, JoinTable, SortBy } from '../../database/enums/index';
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';
 import { BannerDescriptionsEntity } from '../entities/bannerDescriptions.entity';
 import { IBannerResult } from '../interfaces/bannerResult.interface';
@@ -184,7 +184,7 @@ export class bannerService {
     }
     const bannerData = this.bannerRepo.setData({
       ...data,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
     if (Object.entries(bannerData).length) {
       await this.bannerRepo.update({ banner_id: id }, bannerData);

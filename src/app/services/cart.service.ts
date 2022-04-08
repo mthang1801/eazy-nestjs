@@ -4,7 +4,7 @@ import { CartEntity } from '../entities/cart.entity';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { CartRepository } from '../repositories/cart.repository';
 import { CartItemRepository } from '../repositories/cartItem.repository';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 import { words } from 'lodash';
 import { cartJoiner } from 'src/utils/joinTable';
 import { Table } from 'src/database/enums';

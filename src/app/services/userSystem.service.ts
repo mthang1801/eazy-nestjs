@@ -37,7 +37,7 @@ import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { CustomerService } from './customer.service';
 import {
   convertNullDatetimeData,
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
 } from 'src/utils/helper';
 import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
 
@@ -149,7 +149,7 @@ export class UserSystemService {
     if (Object.entries(userUpdateData).length) {
       const updatedUser = await this.userRepository.update(
         { user_id: result.user_id },
-        { ...userUpdateData, updated_at: convertToMySQLDateTime() },
+        { ...userUpdateData, updated_at: formatStandardTimeStamp() },
       );
 
       result = { ...result, ...updatedUser };
@@ -212,7 +212,7 @@ export class UserSystemService {
           user_type: UserTypeEnum.Employee,
           store_id: data.store_id,
           status: data.status,
-          updated_at: convertToMySQLDateTime(),
+          updated_at: formatStandardTimeStamp(),
         },
       );
 

@@ -1,16 +1,13 @@
 import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
-import {
-  formatStringCondition,
-  formatTypeValueConditionSQL,
-  formatTypeValueToInSertSQL,
-  preprocessAddTextDataToMysql,
-} from 'src/utils/helper';
+import { formatTypeValueConditionSQL } from 'src/base/base.helper';
+
 import {
   CustomRepositoryCannotInheritRepositoryError,
   UsingJoinColumnIsNotAllowedError,
 } from 'typeorm';
 import { Condition } from '../base/interfaces/collection.interfaces';
 import { SortBy } from './enums/index';
+import { formatStringCondition } from '../utils/helper';
 export class DatabaseCollection {
   private table: string;
 

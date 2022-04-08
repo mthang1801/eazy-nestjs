@@ -4,13 +4,13 @@ import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
 import {
-  formatTypeValueToInSertSQL,
-  preprocessAddTextDataToMysql,
-} from '../utils/helper';
-import {
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   preprocessDatabaseBeforeResponse,
 } from '../utils/helper';
+import {
+  preprocessAddTextDataToMysql,
+  formatTypeValueToInSertSQL,
+} from './base.helper';
 const orderCmds = [
   'select',
   'from',

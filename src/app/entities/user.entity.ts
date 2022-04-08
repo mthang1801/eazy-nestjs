@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { UserMenuEntity } from './userMenu.entity';
 export class UserEntity {
   status: string = 'A';
@@ -22,7 +22,7 @@ export class UserEntity {
   tax_exempt: string = '';
   lang_code: string = 'vi';
   type: number = 1;
-  birthday: string = convertToMySQLDateTime();
+  birthday: string = formatStandardTimeStamp();
   purchase_timestamp_from: null | string;
   purchase_timestamp_to: null | string;
   responsible_email: string = '';
@@ -30,8 +30,8 @@ export class UserEntity {
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
   lasted_buy_at: null | string = null;
   created_by: number = 0;
 }

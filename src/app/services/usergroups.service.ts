@@ -30,7 +30,7 @@ import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity'
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { PrivilegeRepository } from '../repositories/privilege.repository';
 import { PrivilegeEntity } from '../entities/privilege.entity';
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { userGroupJoiner } from 'src/utils/joinTable';
 
 @Injectable()
@@ -254,7 +254,7 @@ export class UserGroupsService {
 
     const userGroupData = this.userGroupRepo.setData({
       ...data,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     if (Object.entries(userGroupData).length) {

@@ -3,7 +3,7 @@ import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
 import {
   convertNullDatetimeData,
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   convertToSlug,
   removeVietnameseTones,
 } from '../../utils/helper';
@@ -164,7 +164,7 @@ export class CategoryService {
     let updatedCategoryData = {};
     updatedCategoryData = {
       ...this.categoryRepository.setData(convertedData),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
 
     await this.categoryRepository.update(

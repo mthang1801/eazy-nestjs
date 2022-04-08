@@ -17,13 +17,7 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantsEntity } from '../entities/productOptionVariants.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
-import { parse, stringify, toJSON, fromJSON } from 'flatted';
-import {
-  convertToMySQLDateTime,
-  formatStandardTimeStamp,
-  generateRandomString,
-  preprocessAddTextDataToMysql,
-} from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
@@ -91,11 +85,7 @@ import {
   MoreThanOrEqual,
 } from '../../database/find-options/operators';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
-import {
-  convertToSlug,
-  MaxLimit,
-  removeVietnameseTones,
-} from '../../utils/helper';
+import { convertToSlug, removeVietnameseTones } from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
@@ -149,7 +139,6 @@ import {
 import { DatabaseService } from '../../database/database.service';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductVariationGroupIndexEntity } from '../entities/productVariationGroupIndex.entity';
-import { processGetTextDataFromMysql } from '../../utils/helper';
 import { join } from 'path';
 import { ProductStickerRepository } from '../repositories/productSticker.repository';
 import { ProductStickerEntity } from '../entities/productSticker.entity';
@@ -251,8 +240,8 @@ export class ProductService {
       if (!productGroup) {
         const newProductGroup = await this.productVariationGroupRepo.create({
           product_root_id: parentProductItem.product_id,
-          created_at: convertToMySQLDateTime(),
-          updated_at: convertToMySQLDateTime(),
+          created_at: formatStandardTimeStamp(),
+          updated_at: formatStandardTimeStamp(),
         });
         await this.productVariationGroupProductsRepo.createSync({
           product_id: parentProductItem.product_id,
@@ -1458,7 +1447,7 @@ export class ProductService {
     // Update product
     const productData = this.productRepo.setData({
       ...data,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     console.log(productData);
@@ -1789,8 +1778,8 @@ export class ProductService {
       let productGroup = await this.productVariationGroupRepo.create({
         product_root_id: result.product_id,
         group_type: 2,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
+        updated_at: formatStandardTimeStamp(),
       });
 
       await this.productVariationGroupProductsRepo.create({
@@ -2194,8 +2183,8 @@ export class ProductService {
       let productGroup = await this.productVariationGroupRepo.create({
         product_root_id: result['product_id'],
         group_type: 2,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
+        updated_at: formatStandardTimeStamp(),
       });
 
       await this.productVariationGroupProductsRepo.create({
@@ -2987,15 +2976,15 @@ export class ProductService {
                 store_location_id: dataItem['storeId'],
                 product_id: product.product_id,
                 amount: dataItem['inStockQuantity'],
-                created_at: convertToMySQLDateTime(),
-                updated_at: convertToMySQLDateTime(),
+                created_at: formatStandardTimeStamp(),
+                updated_at: formatStandardTimeStamp(),
               });
               await this.productStoreHistoryRepo.create({
                 store_location_id: dataItem['storeId'],
                 product_id: product.product_id,
                 amount: dataItem['inStockQuantity'],
-                created_at: convertToMySQLDateTime(),
-                updated_at: convertToMySQLDateTime(),
+                created_at: formatStandardTimeStamp(),
+                updated_at: formatStandardTimeStamp(),
               });
             }
           }
@@ -3030,7 +3019,7 @@ export class ProductService {
         { product_id, store_location_id },
         {
           amount,
-          updated_at: convertToMySQLDateTime(),
+          updated_at: formatStandardTimeStamp(),
         },
       );
     } else {
@@ -3039,8 +3028,8 @@ export class ProductService {
         product_id,
         store_location_id,
         amount,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
+        updated_at: formatStandardTimeStamp(),
       });
     }
     // Create new product store history
@@ -3048,8 +3037,8 @@ export class ProductService {
       product_id,
       store_location_id,
       amount,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
+      created_at: formatStandardTimeStamp(),
+      updated_at: formatStandardTimeStamp(),
     });
   }
 
@@ -3179,8 +3168,8 @@ export class ProductService {
     }
     const newGroupIndex = await this.productGroupIndexRepo.create({
       group_ids: groups,
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
+      created_at: formatStandardTimeStamp(),
+      updated_at: formatStandardTimeStamp(),
     });
     for (let groupId of group_ids) {
       await this.productVariationGroupRepo.update(
@@ -3206,7 +3195,7 @@ export class ProductService {
       },
       {
         group_ids: group_ids.join(','),
-        updated_at: convertToMySQLDateTime(),
+        updated_at: formatStandardTimeStamp(),
       },
     );
 

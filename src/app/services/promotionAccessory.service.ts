@@ -10,10 +10,7 @@ import {
 } from 'src/utils/joinTable';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdatePromotionAccessoryDto } from '../dto/promotionAccessories/update-promotionAccessory.dto';
-import {
-  convertToMySQLDateTime,
-  formatStandardTimeStamp,
-} from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 import { promotionAccessoriesSearchFilter } from 'src/utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { ProductsRepository } from '../repositories/products.repository';
@@ -197,7 +194,7 @@ export class PromotionAccessoryService {
 
     const updatePromoAccessoryData = {
       ...this.promoAccessoryRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
       updated_by: user.user_id,
     };
 
@@ -457,7 +454,7 @@ export class PromotionAccessoryService {
 
     const accessoryData = {
       ...this.promoAccessoryRepo.setData(convertedData),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
 
     await this.promoAccessoryRepo.update(

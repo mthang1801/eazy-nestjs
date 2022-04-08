@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 export class StickerEntity {
   sticker_id: number = 0;
   sticker_code: string = '';
@@ -6,8 +6,8 @@ export class StickerEntity {
   description: string = '';
   sticker_status: string = 'A';
   url_image: string = '';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
   created_by: number = 0;
   updated_by: number = 0;
 }

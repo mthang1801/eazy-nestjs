@@ -1,4 +1,7 @@
-import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
+import {
+  formatStandardTimeStamp,
+  generateRandomString,
+} from 'src/utils/helper';
 
 export class OrderEntity {
   order_id: number = 0;
@@ -96,6 +99,6 @@ export class OrderEntity {
   installment_interest_rate_code: string = '';
   installment_tenor_code: string = '';
   ref_order_id: string = generateRandomString();
-  created_date: string = convertToMySQLDateTime();
-  updated_date: string = convertToMySQLDateTime();
+  created_date: string = formatStandardTimeStamp();
+  updated_date: string = formatStandardTimeStamp();
 }

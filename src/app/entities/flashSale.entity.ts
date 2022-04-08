@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 export class FlashSaleEntity {
   code: string = '';
   name: string = '';
@@ -11,8 +11,8 @@ export class FlashSaleEntity {
   logo_img: string = '';
   background_img: string = '';
   show_countdown: string = 'N';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
   created_by: number = 0;
   updated_by: number = 0;
 }

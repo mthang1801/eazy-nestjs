@@ -7,7 +7,7 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 export class CreateShippingDto {
   @IsNotEmpty()
   @IsString()
@@ -25,7 +25,7 @@ export class CreateShippingDto {
   services: ShippingService[];
 
   @IsOptional()
-  created_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
 
   @IsNotEmpty()
   image_path: string;

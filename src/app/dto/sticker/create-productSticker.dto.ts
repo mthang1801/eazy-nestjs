@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { convertToMySQLDateTime } from '../../../utils/helper';
+import { formatStandardTimeStamp } from '../../../utils/helper';
 import {
   IsIn,
   IsNotEmpty,
@@ -30,8 +30,8 @@ export class ProductStickerItem {
   position_id: number; //1: TOP_LEFT, 2: TOP_RIGHT, 3: BOTTOM_LEFT, 4: BOTTOM_RIGHT
 
   @IsOptional()
-  start_at: string = convertToMySQLDateTime();
+  start_at: string = formatStandardTimeStamp();
 
   @IsOptional()
-  end_at: string = convertToMySQLDateTime();
+  end_at: string = formatStandardTimeStamp();
 }

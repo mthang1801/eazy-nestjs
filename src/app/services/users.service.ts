@@ -12,7 +12,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { Table } from '../../database/enums/index';
 import {
   convertNullDatetimeData,
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   preprocessUserResult,
 } from '../../utils/helper';
 import { ObjectLiteral } from '../../common/ObjectLiteral';
@@ -131,7 +131,7 @@ export class UsersService {
 
     const userData = {
       ...this.userRepository.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
     await this.userRepository.update({ user_id }, userData);
 
@@ -172,7 +172,7 @@ export class UsersService {
   async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {
     const updatedUser = await this.userRepository.update(user_id, {
       ...dataObj,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
     updatedUser['image'] = await this.getUserImage(updatedUser['user_id']);
     return preprocessUserResult(updatedUser);
@@ -293,10 +293,10 @@ export class UsersService {
 
     const updatedUser = await this.userRepository.update(user.user_id, {
       verify_token: verifyToken,
-      verify_token_exp: convertToMySQLDateTime(
+      verify_token_exp: formatStandardTimeStamp(
         new Date(Date.now() + 2 * 3600 * 1000),
       ),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     await this.mailService.sendUserConfirmation(
@@ -374,7 +374,7 @@ export class UsersService {
       password: passwordHash,
       salt,
       verify_token: '',
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
     return true;
   }
@@ -390,7 +390,7 @@ export class UsersService {
   async updateProfilebyAdmin(id, data) {
     let userData = {
       ...this.userRepository.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
     let _user = await this.userRepository.update(id, userData);
     let result = { ..._user };

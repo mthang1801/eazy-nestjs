@@ -79,7 +79,7 @@ import { CartItemEntity } from '../entities/cartItem.entity';
 import { productSearchJoiner } from '../../utils/joinTable';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 import { OrderHistoryEntity } from '../entities/orderHistory.entity';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 import { PromotionService } from './promotion.service';
 import { formatOrderTimestamp } from 'src/utils/services/order.helper';
 
@@ -312,7 +312,7 @@ export class OrdersService {
         {
           order_code: orderAppcoreResponse.orderId,
           is_sync: 0,
-          updated_date: convertToMySQLDateTime(),
+          updated_date: formatStandardTimeStamp(),
         },
       );
       for (let orderItem of orderAppcoreResponse['orderItemIds']) {

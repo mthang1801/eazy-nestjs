@@ -11,7 +11,7 @@ import { Table } from '../../database/enums/tables.enum';
 import { IResponseUserToken } from '../interfaces/response.interface';
 import { AuthProviderEnum } from '../../database/enums/tableFieldEnum/authProvider.enum';
 import {
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   preprocessUserResult,
 } from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-loginProvider.dto';
@@ -108,7 +108,7 @@ export class AuthService {
       phone,
       salt,
       status: UserStatusEnum.Deactive,
-      created_at: convertToMySQLDateTime(),
+      created_at: formatStandardTimeStamp(),
     });
 
     let result = { ...user };
@@ -138,8 +138,8 @@ export class AuthService {
     //create a new record at ddv_user_loyalty
     const newUserLoyalty = await this.userLoyaltyRepo.create({
       user_id: result['user_id'],
-      created_at: convertToMySQLDateTime(),
-      updated_at: convertToMySQLDateTime(),
+      created_at: formatStandardTimeStamp(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     result = { ...result, ...newUserLoyalty };
@@ -230,7 +230,7 @@ export class AuthService {
         firstname: providerData.givenName,
         lastname: providerData.familyName,
         email: providerData.email,
-        created_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
       });
 
       // Create a new record at ddv_user_profiles
@@ -253,8 +253,8 @@ export class AuthService {
       //create a new record at ddv_user_loyalty
       const newUserLoyalty = await this.userLoyaltyRepo.create({
         user_id: userExists.user_id,
-        created_at: convertToMySQLDateTime(),
-        updated_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
+        updated_at: formatStandardTimeStamp(),
       });
 
       await this.customerService.createCustomerToAppcore(userExists);
@@ -407,7 +407,7 @@ export class AuthService {
     // Update user
     await this.userRepository.update(user_id, {
       status: UserStatusEnum.Active,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     // Update email
@@ -473,7 +473,7 @@ export class AuthService {
     const updatedUser = await this.userRepository.update(user_id, {
       password: passwordHash,
       salt,
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     });
 
     const userLogin = { email: updatedUser.email, password };
@@ -491,10 +491,10 @@ export class AuthService {
         activation_key: uuid().replace(/-/g, ''),
         confirmed: 0,
         type,
-        expired_at: convertToMySQLDateTime(
+        expired_at: formatStandardTimeStamp(
           new Date(Date.now() + 24 * 3600 * 1000),
         ),
-        created_at: convertToMySQLDateTime(),
+        created_at: formatStandardTimeStamp(),
       });
 
     switch (type) {

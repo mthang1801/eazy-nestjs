@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 export const sqlSyncGetCategoryFromMagento =
   'SELECT * FROM  `ddv_catalog_category_entity` cce  JOIN `ddv_catalog_category_entity_varchar` ccev ON cce.entity_id = ccev.entity_id;';
 
@@ -19,7 +19,7 @@ export const convertCategoryFromMagentoToCMS = (magentoData) => {
   let cmsData = {};
   for (let [magento, cms] of mappingData) {
     if (magento === 'created_at' || magento === 'updated_at') {
-      cmsData[cms] = convertToMySQLDateTime(new Date(magentoData[magento]));
+      cmsData[cms] = formatStandardTimeStamp(new Date(magentoData[magento]));
       continue;
     }
     if (magento === 'value' && magentoData[magento] == null) {

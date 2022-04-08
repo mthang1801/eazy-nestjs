@@ -28,7 +28,6 @@ import {
 } from 'src/utils/helper';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
-import { convertToMySQLDateTime } from '../../utils/helper';
 import { saltHashPassword } from 'src/utils/cipherHelper';
 import { MailService } from './mail.service';
 import axios from 'axios';
@@ -182,7 +181,7 @@ export class CustomerService {
       const user_appcore_id = data.data;
       await this.userRepo.update(
         { user_id: user.user_id },
-        { user_appcore_id, updated_at: convertToMySQLDateTime() },
+        { user_appcore_id, updated_at: formatStandardTimeStamp() },
       );
     } catch (error) {
       console.log('create customer', error);
@@ -443,7 +442,7 @@ export class CustomerService {
 
     const userData = {
       ...this.userRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
 
     const updatedUser = await this.userRepo.update({ user_id }, userData);
@@ -464,8 +463,8 @@ export class CustomerService {
         const newUserLoyal = await this.userLoyalRepo.create({
           user_id: user.user_id,
           loyalty_point: data.loyalty_point,
-          created_at: convertToMySQLDateTime(),
-          updated_at: convertToMySQLDateTime(),
+          created_at: formatStandardTimeStamp(),
+          updated_at: formatStandardTimeStamp(),
         });
         result['loyalty'] = newUserLoyal;
       } else {
@@ -727,7 +726,7 @@ export class CustomerService {
     if (Object.entries(userData).length) {
       const updatedUser = await this.userRepo.update(
         { user_id: result.user_id },
-        { ...userData, updated_at: convertToMySQLDateTime() },
+        { ...userData, updated_at: formatStandardTimeStamp() },
       );
       result = { ...updatedUser };
     }
@@ -822,7 +821,7 @@ export class CustomerService {
       { user_id: customer.user_id },
       {
         loyalty_point: data.loyalty_point,
-        updated_at: convertToMySQLDateTime(),
+        updated_at: formatStandardTimeStamp(),
       },
     );
   }
@@ -856,7 +855,7 @@ export class CustomerService {
         user_id: user['user_id'],
       },
       {
-        updated_at: convertToMySQLDateTime(),
+        updated_at: formatStandardTimeStamp(),
       },
     );
     console.log('Loyalty point', customer_appcore_id, point);

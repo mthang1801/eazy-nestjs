@@ -5,7 +5,7 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator';
-import { convertToMySQLDateTime } from '../../../utils/helper';
+import { formatStandardTimeStamp } from '../../../utils/helper';
 export class UpdateFlashSaleDto {
   @IsOptional()
   name: string;

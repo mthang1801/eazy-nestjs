@@ -1,4 +1,7 @@
-import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
+import {
+  formatStandardTimeStamp,
+  generateRandomString,
+} from 'src/utils/helper';
 
 export class OrderHistoryEntity {
   order_id: number = 0;
@@ -91,6 +94,6 @@ export class OrderHistoryEntity {
   user_appcore_id: number = 0;
   is_sync: number = 1;
   ref_order_id: string = generateRandomString();
-  created_date: string = convertToMySQLDateTime();
-  updated_date: string = convertToMySQLDateTime();
+  created_date: string = formatStandardTimeStamp();
+  updated_date: string = formatStandardTimeStamp();
 }

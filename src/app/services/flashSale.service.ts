@@ -21,10 +21,7 @@ import { LessThan, MoreThan } from '../../database/find-options/operators';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
-import {
-  convertToMySQLDateTime,
-  formatStandardTimeStamp,
-} from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 
 @Injectable()
 export class FlashSalesService {
@@ -230,7 +227,7 @@ export class FlashSalesService {
 
     const flashSaleData = {
       ...this.flashSaleRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
       updated_by: user.user_id,
     };
 

@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 export class StoreLocationEntity {
   store_location_id: number = 0;
   company_id: number = 0;
@@ -22,6 +22,6 @@ export class StoreLocationEntity {
   area_name: string = '';
   open_at: string = '';
   close_at: string = '';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
 }

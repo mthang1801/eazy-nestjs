@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class ProductFeatureEntity {
   feature_id: number = 0;
@@ -17,6 +17,6 @@ export class ProductFeatureEntity {
   status: string = 'A';
   position: number = 0;
   comparison: string = 'N';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
 }

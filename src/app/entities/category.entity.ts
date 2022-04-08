@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class CategoryEntity {
   category_appcore_id: number = 0;
@@ -21,7 +21,7 @@ export class CategoryEntity {
   parent_magento_id: number = 0;
   feature_id: number = 0;
   icon: string = '';
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
-  display_at: string = convertToMySQLDateTime();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
+  display_at: string = formatStandardTimeStamp();
 }

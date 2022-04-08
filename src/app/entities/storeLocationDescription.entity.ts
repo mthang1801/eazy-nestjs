@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class StoreLocationDescriptionEntity {
   lang_code: string = 'vi';
@@ -7,5 +7,5 @@ export class StoreLocationDescriptionEntity {
   type_name: string = '';
   pickup_address: string = '';
   pickup_phone: string = '';
-  pickup_time: string = convertToMySQLDateTime();
+  pickup_time: string = formatStandardTimeStamp();
 }

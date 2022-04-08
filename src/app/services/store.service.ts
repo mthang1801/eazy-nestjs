@@ -22,7 +22,7 @@ import { ProductStoreRepository } from '../repositories/productStore.repository'
 import { ProductStoreEntity } from '../entities/productStore.entity';
 // import * as storesData from 'src/database/constant/stores.json';
 import {
-  convertToMySQLDateTime,
+  formatStandardTimeStamp,
   convertNullDatetimeData,
 } from '../../utils/helper';
 import { CreateStoreDto } from '../dto/stores/create-store.dto';

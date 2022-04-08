@@ -3,7 +3,7 @@ import { Table } from 'src/database/enums';
 import { CreateStickerDto } from '../dto/sticker/create-sticker.dto';
 import { StickerEntity } from '../entities/sticker.entity';
 import { StickerRepository } from '../repositories/sticker.repository';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 import * as moment from 'moment';
 import { stickerFilterSearch } from 'src/utils/tableConditioner';
 import { UpdateStickerDto } from '../dto/sticker/update-sticker.dto';
@@ -77,7 +77,7 @@ export class StickerService {
 
     const stickerUpdated = {
       ...this.stickerRepo.setData(data),
-      updated_at: convertToMySQLDateTime(),
+      updated_at: formatStandardTimeStamp(),
     };
     await this.stickerRepo.update({ sticker_id }, stickerUpdated);
   }

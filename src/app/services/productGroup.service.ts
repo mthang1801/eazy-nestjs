@@ -12,7 +12,10 @@ import { Table } from '../../database/enums/tables.enum';
 import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
 import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.entity';
 import { IsNull, Not } from 'src/database/find-options/operators';
-import { convertToMySQLDateTime, generateRandomString } from 'src/utils/helper';
+import {
+  formatStandardTimeStamp,
+  generateRandomString,
+} from 'src/utils/helper';
 @Injectable()
 export class ProductGroupService {
   constructor(
@@ -56,8 +59,8 @@ export class ProductGroupService {
           code: generateRandomString(),
           product_root_id: parentProductItem.product_id,
           group_type: parentProductItem.product_type === 3 ? 2 : 1,
-          created_at: convertToMySQLDateTime(),
-          updated_at: convertToMySQLDateTime(),
+          created_at: formatStandardTimeStamp(),
+          updated_at: formatStandardTimeStamp(),
         });
         await this.groupProductRepo.createSync({
           product_id: parentProductItem.product_id,

@@ -1,4 +1,4 @@
-import { convertToMySQLDateTime } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class PromotionAccessoryEntity {
   app_core_id: string = '';
@@ -7,10 +7,10 @@ export class PromotionAccessoryEntity {
   accessory_type: number = 1;
   description: string = '';
   accessory_status: string = 'A';
-  display_at: string = convertToMySQLDateTime();
-  end_at: string = convertToMySQLDateTime();
-  created_at: string = convertToMySQLDateTime();
-  updated_at: string = convertToMySQLDateTime();
+  display_at: string = formatStandardTimeStamp();
+  end_at: string = formatStandardTimeStamp();
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
   created_by: number = 0;
   updated_by: number = 0;
 }

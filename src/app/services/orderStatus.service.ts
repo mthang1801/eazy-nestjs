@@ -14,7 +14,7 @@ import { OrderStatusDescriptionEntity } from '../entities/orderStatusDescription
 import { OrderStatusDataEntity } from '../entities/orderStatusData.entity';
 import { Like } from 'typeorm';
 import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto';
-import { convertToMySQLDateTime } from '../../utils/helper';
+import { formatStandardTimeStamp } from '../../utils/helper';
 
 @Injectable()
 export class OrderStatusService {
