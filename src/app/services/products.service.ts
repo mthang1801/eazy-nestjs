@@ -2804,7 +2804,7 @@ export class ProductService {
 
     let listCategoriesId = categories.map(({ category_id }) => category_id);
     let productsList = await this.productCategoryRepo.find({
-      select: '*',
+      select: `*, ${Table.PRODUCTS}.slug as productSlug`,
       join: productByCategoryIdJoiner,
       where: listCategoriesId.map((categoryId) => ({
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
