@@ -499,37 +499,37 @@ export class PromotionAccessoryService {
       for (let appliedProductItem of convertedData[
         'accessory_applied_products'
       ]) {
-        let product = await this.productRepo.findOne({
-          select: '*',
-          join: productLeftJoiner,
-          where: {
-            product_appcore_id: appliedProductItem['product_appcore_id'],
-          },
-        });
-        if (product) {
-          let updatedData = {};
-          switch (type) {
-            case 1:
-              updatedData = {
-                promotion_accessory_id: accessory['accessory_id'],
-              };
-              break;
-            case 2:
-              updatedData = { free_accessory_id: accessory['accessory_id'] };
-              break;
+        // let product = await this.productRepo.findOne({
+        //   select: '*',
+        //   join: productLeftJoiner,
+        //   where: {
+        //     product_appcore_id: appliedProductItem['product_appcore_id'],
+        //   },
+        // });
+        // if (product) {
+        let updatedData = {};
+        switch (type) {
+          case 1:
+            updatedData = {
+              promotion_accessory_id: accessory['accessory_id'],
+            };
+            break;
+          case 2:
+            updatedData = { free_accessory_id: accessory['accessory_id'] };
+            break;
 
-            case 3:
-              updatedData = {
-                warranty_package_id: accessory['accessory_id'],
-              };
-              break;
-          }
-
-          await this.productRepo.update(
-            { product_id: product['product_id'] },
-            updatedData,
-          );
+          case 3:
+            updatedData = {
+              warranty_package_id: accessory['accessory_id'],
+            };
+            break;
         }
+
+        await this.productRepo.update(
+          { product_appcore_id: appliedProductItem['product_appcore_id'] },
+          updatedData,
+        );
+        // }
       }
     }
   }
