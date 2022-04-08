@@ -24,6 +24,7 @@ import { getProductAccessorySelector } from 'src/utils/tableSelector';
 import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunctions';
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
+import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -394,37 +395,41 @@ export class PromotionAccessoryService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    let filterCondition = {};
+    let filterCondition = {
+      [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+    };
 
-    switch (+accessory.accessory_type) {
-      case 1:
-        filterCondition = {
-          [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
-        };
-        break;
-      case 2:
-        filterCondition = {
-          [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
-        };
-        break;
-      case 3:
-        filterCondition = {
-          [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
-        };
-        break;
-    }
+    // switch (+accessory.accessory_type) {
+    //   case 1:
+    //     filterCondition = {
+    //       [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
+    //     };
+    //     break;
+    //   case 2:
+    //     filterCondition = {
+    //       [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
+    //     };
+    //     break;
+    //   case 3:
+    //     filterCondition = {
+    //       [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
+    //     };
+    //     break;
+    // }
 
-    const productsList = await this.productRepo.find({
+    const productsList = await this.productPromoAccessoryRepo.find({
       select: '*',
-      join: productLeftJoiner,
+      join: productPromotionAccessorytLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
       skip,
       limit,
     });
 
-    let count = await this.productRepo.find({
-      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
-      join: productLeftJoiner,
+    console.log(productsList);
+
+    let count = await this.productPromoAccessoryRepo.find({
+      select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id) as total`,
+      join: productPromotionAccessorytLeftJoiner,
       where: getProductsListByAccessoryIdSearchFilter(search, filterCondition),
     });
 
@@ -499,37 +504,37 @@ export class PromotionAccessoryService {
       for (let appliedProductItem of convertedData[
         'accessory_applied_products'
       ]) {
-        // let product = await this.productRepo.findOne({
-        //   select: '*',
-        //   join: productLeftJoiner,
-        //   where: {
-        //     product_appcore_id: appliedProductItem['product_appcore_id'],
-        //   },
-        // });
-        // if (product) {
-        let updatedData = {};
-        switch (type) {
-          case 1:
-            updatedData = {
-              promotion_accessory_id: accessory['accessory_id'],
-            };
-            break;
-          case 2:
-            updatedData = { free_accessory_id: accessory['accessory_id'] };
-            break;
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: {
+            product_appcore_id: appliedProductItem['product_appcore_id'],
+          },
+        });
+        if (product) {
+          let updatedData = {};
+          switch (type) {
+            case 1:
+              updatedData = {
+                promotion_accessory_id: accessory['accessory_id'],
+              };
+              break;
+            case 2:
+              updatedData = { free_accessory_id: accessory['accessory_id'] };
+              break;
 
-          case 3:
-            updatedData = {
-              warranty_package_id: accessory['accessory_id'],
-            };
-            break;
+            case 3:
+              updatedData = {
+                warranty_package_id: accessory['accessory_id'],
+              };
+              break;
+          }
+
+          await this.productRepo.update(
+            { product_appcore_id: appliedProductItem['product_appcore_id'] },
+            updatedData,
+          );
         }
-
-        await this.productRepo.update(
-          { product_appcore_id: appliedProductItem['product_appcore_id'] },
-          updatedData,
-        );
-        // }
       }
     }
   }

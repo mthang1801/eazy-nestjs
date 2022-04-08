@@ -29,6 +29,7 @@ import { CreateStoreDto } from '../dto/stores/create-store.dto';
 import { LocatorService } from './locator.service';
 import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 import * as moment from 'moment';
+import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   MoreThan,
   MoreThanOrEqual,
@@ -78,6 +79,9 @@ export class StoreService {
     const storesList = await this.storeLocationRepo.find({
       select: '*',
       join: storesLocationJoiner,
+      orderBy: [
+        { field: `${Table.STORE_LOCATIONS}.updated_at`, sortBy: SortBy.DESC },
+      ],
       where: storeLocationSearchFilter(search, filterConditions),
       skip,
       limit,
