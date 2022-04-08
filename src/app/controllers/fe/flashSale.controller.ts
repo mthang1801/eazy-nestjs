@@ -8,12 +8,9 @@ export class FlashSalesController extends BaseController {
   constructor(private service: FlashSalesService) {
     super();
   }
-  @Get(':flash_sale_id')
-  async get(
-    @Res() res: Response,
-    @Param('flash_sale_id') flash_sale_id: number,
-  ): Promise<IResponse> {
-    const result = await this.service.FEget(flash_sale_id);
+  @Get()
+  async get(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.FEget();
     return this.responseSuccess(res, result, 'Thành công.');
   }
 }

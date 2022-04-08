@@ -66,27 +66,12 @@ export class FlashSalesService {
     }
   }
 
-  async FEget(flash_sale_id) {
-    let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
-
-    if (!flashSale) {
-      throw new HttpException('Không tìm thấy FlashSale', 404);
-    }
-
-    if (flashSale.status == 'D') {
-      throw new HttpException('Flash sale đã bị ẩn.', 400);
-    }
-
-    if (
-      flashSale.status == 'E' ||
-      (flashSale.end_at && new Date(flashSale.end_at).getTime() < Date.now())
-    ) {
-      throw new HttpException('Flash Sale đã hết hiệu lực', 400);
-    }
+  async FEget() {
+    let flashSale = await this.flashSaleRepo.findOne({ status: 'A' });
 
     let flashSaleDetails = await this.flashSaleDetailRepo.find({
       select: '*',
-      where: { flash_sale_id },
+      where: { flash_sale_id: flashSale.flash_sale_id },
     });
 
     if (flashSaleDetails.length) {
