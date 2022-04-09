@@ -3,7 +3,7 @@ import { Module, forwardRef } from '@nestjs/common';
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserRepository } from '../repositories/user.repository';
-import { UserGroupPrivilegeController } from '../controllers/be/usergroupPrivilege.controller';
+import { UserGroupPrivilegeController } from '../controllers/be/v1/usergroupPrivilege.controller';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupsPrivilegeService } from '../services/usergroupPrivilege.service';
 import { PrivilegeRepository } from '../repositories/privilege.repository';

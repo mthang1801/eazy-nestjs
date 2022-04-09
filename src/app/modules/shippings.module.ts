@@ -3,7 +3,7 @@ import { ShippingDescriptionRepository } from '../repositories/shippingDescripti
 import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingServiceDescriptionRepository } from '../repositories/shippingServiceDescription.repository';
 import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
-import { ShippingController } from '../controllers/be/shippings.controller';
+import { ShippingController } from '../controllers/be/v1/shippings.controller';
 
 import { ShippingService } from '../services/shippings.service';
 

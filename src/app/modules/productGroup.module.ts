@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ProductGroupController } from '../controllers/be/productGroup.controller';
+import { ProductGroupController } from '../controllers/be/v1/productGroup.controller';
 import { ProductGroupService } from '../services/productGroup.service';
 import { ProductsModule } from './products.module';
 

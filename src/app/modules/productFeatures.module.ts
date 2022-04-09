@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ProductFeatureController } from '../controllers/be/productFeature.controller';
+import { ProductFeatureController } from '../controllers/be/v1/productFeature.controller';
 import { ProductFeaturesRepository } from '../repositories/productFeature.repository';
 import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
 import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
@@ -9,7 +9,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureService } from '../services/productFeature.service';
 import { ProductsModule } from './products.module';
 import { ProductFeatureController as ProductFeatureIntegrationController } from '../controllers/integration/productFeature.controller';
-import { ProductFeatureSyncController } from '../controllers/sync/productFeatures.controller';
+import { ProductFeatureSyncController } from '../controllers/sync/v1/productFeatures.controller';
 
 @Module({
   imports: [forwardRef(() => ProductsModule)],

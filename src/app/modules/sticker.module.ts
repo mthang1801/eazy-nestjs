@@ -1,5 +1,5 @@
 import { forwardRef, Module, Global } from '@nestjs/common';
-import { StickerController } from '../controllers/be/sticker.controller';
+import { StickerController } from '../controllers/be/v1/sticker.controller';
 import { ProductStickerRepository } from '../repositories/productSticker.repository';
 
 import { StickerRepository } from '../repositories/sticker.repository';

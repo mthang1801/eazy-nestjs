@@ -1,6 +1,6 @@
 import { Module, Global } from '@nestjs/common';
-import { StoreController } from '../controllers/be/store.controller';
-import { StoreSyncController } from '../controllers/sync/store.controller';
+import { StoreController } from '../controllers/be/v1/store.controller';
+import { StoreSyncController } from '../controllers/sync/v1/store.controller';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationDescriptionsRepository } from '../repositories/storeLocationDescriptions.repository';

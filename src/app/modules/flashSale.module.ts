@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { FlashSalesController as FlashSalesControllerBE } from '../controllers/be/flashSale.controller';
-import { FlashSalesController as FlashSalesControllerFE } from '../controllers/fe/flashSale.controller';
+import { FlashSalesController as FlashSalesControllerBE } from '../controllers/be/v1/flashSale.controller';
+import { FlashSalesController as FlashSalesControllerFE } from '../controllers/fe/v1/flashSale.controller';
 import { FlashSaleRepository } from '../repositories/flashSale.repository';
 import { FlashSaleDetailRepository } from '../repositories/flashSaleDetail.repository';
 import { FlashSaleProductRepository } from '../repositories/flashSaleProduct.repository';

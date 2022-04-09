@@ -877,7 +877,9 @@ export class OrdersService {
 
   async getByOrderCode(order_code: number) {
     const order = await this.orderRepo.findOne({ order_code });
-
+    if (!order) {
+      throw new HttpException('Đơn hàng không tồn tại', 404);
+    }
     return this.getOrderDetails(order);
   }
 

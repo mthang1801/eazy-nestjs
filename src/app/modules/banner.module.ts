@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { bannerController as bannerControllerBE } from '../controllers/be/banner.controller';
-import { bannerController as bannerControllerFE } from '../controllers/fe/banner.controller';
+import { bannerController as bannerControllerBE } from '../controllers/be/v1/banner.controller';
+import { bannerController as bannerControllerFE } from '../controllers/fe/v1/banner.controller';
 import { bannerService } from '../services/banner.service';
 import { BannerRepository } from '../repositories/banner.repository';
 import { BannerDescriptionsRepository } from '../repositories/bannerDescription.respository';

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { IndexController } from '../controllers/sync/index.controller';
+import { IndexController } from '../controllers/sync/v1/index.controller';
 import { IndexService } from '../services/index.service';
 import { CategoryModule } from './category.module';
 import { CustomerModule } from './customer.module';
