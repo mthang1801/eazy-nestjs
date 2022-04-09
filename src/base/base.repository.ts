@@ -13,6 +13,8 @@ const orderCmds = [
   'select',
   'from',
   'join',
+  'groupBy',
+  'having',
   'where',
   'skip',
   'limit',
@@ -234,14 +236,20 @@ export class BaseRepositorty<T> {
     }
 
     const collection = new DatabaseCollection(this.table);
+    let distinctParam: any = null;
     Object.entries(params).forEach(([key, val]) => {
       if (['join', 'where'].includes(key)) {
         collection[key](val);
       }
+      if (key.toLowerCase() == 'distinct') {
+        distinctParam = { [key]: val };
+      }
     });
 
     const result = await this.databaseService.executeQueryReadPool(
-      collection.sqlCount(),
+      distinctParam
+        ? collection.sqlCount(distinctParam)
+        : collection.sqlCount(),
     );
 
     return result[0][0]['total'] || 0;

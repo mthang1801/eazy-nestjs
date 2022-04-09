@@ -3784,18 +3784,17 @@ export class ProductService {
   }
 
   async testSql() {
-    const newGroup1 = await this.productGroupIndexRepo.create({
-      group_ids: null,
-      type: 1,
+    let res = await this.productCategoryRepo.find({
+      select: `${Table.PRODUCTS_CATEGORIES}.category_id, ${Table.PRODUCTS_CATEGORIES}.link_type, COUNT(${Table.PRODUCTS_CATEGORIES}.product_id) as count`,
+      // groupBy: [
+      //   `${Table.PRODUCTS_CATEGORIES}.link_type`,
+      //   `${Table.PRODUCTS_CATEGORIES}.category_id`,
+      // ],
+      // having: { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: 139 },
+      join: productCategoryJoiner,
+      where: { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: 139 },
     });
-    const newGroup2 = await this.productGroupIndexRepo.create({
-      group_ids: null,
-      type: 1,
-    });
-    await this.productGroupIndexRepo.update(
-      { index_id: newGroup1.index_id },
-      { group_ids: '0112379128', type: 3 },
-    );
+    console.log(res);
   }
 
   async autoFillPriceIntoConfigurableProducts() {

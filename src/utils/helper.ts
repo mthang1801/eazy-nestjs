@@ -143,16 +143,6 @@ export const formatTime = (timestamp: string | Date = new Date()) =>
 
 export const checkValidTimestamp = (timestamp) => moment(timestamp).isValid();
 
-export const formatStringCondition = (position, existsItem) => {
-  let formatStringCond =
-    position == 0
-      ? `WHERE ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `
-      : ` ${existsItem['connect']} ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `;
-
-  formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
-  return formatStringCond;
-};
-
 export const formatCustomerDatetime = (customer) => {
   customer['created_at'] = customer['created_at']
     ? formatStandardTimeStamp(customer['created_at'])

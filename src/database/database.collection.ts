@@ -7,7 +7,10 @@ import {
 } from 'typeorm';
 import { Condition } from '../base/interfaces/collection.interfaces';
 import { SortBy } from './enums/index';
-import { formatStringCondition } from '../utils/helper';
+import {
+  formatStringCondition,
+  formatHavingCondition,
+} from './database.helper';
 export class DatabaseCollection {
   private table: string;
 
@@ -20,6 +23,9 @@ export class DatabaseCollection {
   private sortString: string;
   private limit: number;
   private offset: number;
+  private stringGroupBy: string | number | string[] | number[];
+  private stringHaving: string;
+  private arrayHaving: any[];
 
   constructor(table) {
     this.table = table;
@@ -30,6 +36,9 @@ export class DatabaseCollection {
     this.arrayCondition = [];
     this.stringCondition = ' ';
     this.sortString = '';
+    this.stringGroupBy = '';
+    this.stringHaving = '';
+    this.arrayHaving = [];
     this.limit = 99999999999;
     this.offset = 0;
   }
@@ -42,6 +51,9 @@ export class DatabaseCollection {
     this.arrayCondition = [];
     this.stringCondition = ' ';
     this.sortString = ' ';
+    this.stringGroupBy = '';
+    this.stringHaving = '';
+    this.arrayHaving = [];
     this.limit = 20;
     this.offset = 0;
   }
@@ -152,7 +164,7 @@ export class DatabaseCollection {
     }
   }
 
-  andWhere(field, operation, value): void {
+  andWhere(field, operation, value, type): void {
     if (field != '') {
       if (operation == 'LIKE') {
         value = `'%${value}%'`;
@@ -167,11 +179,13 @@ export class DatabaseCollection {
         value: value,
       };
 
-      this.arrayCondition.push(condition);
+      type === 'having'
+        ? this.arrayHaving.push(condition)
+        : this.arrayCondition.push(condition);
     }
   }
 
-  andWhereBetween(field, value1, value2): void {
+  andWhereBetween(field, value1, value2, type): void {
     if (field != '') {
       let condition = {
         connect: 'AND',
@@ -184,7 +198,7 @@ export class DatabaseCollection {
     }
   }
 
-  orWhere(field, operation, value): void {
+  orWhere(field, operation, value, type): void {
     if (field != '') {
       if (operation == 'LIKE') {
         value = `'%${value}%'`;
@@ -199,11 +213,13 @@ export class DatabaseCollection {
         value: value,
       };
 
-      this.arrayCondition.push(condition);
+      type === 'having'
+        ? this.arrayHaving.push(condition)
+        : this.arrayCondition.push(condition);
     }
   }
 
-  orWhereBetween(field, value1, value2): void {
+  orWhereBetween(field, value1, value2, type): void {
     if (field != '') {
       let condition = {
         connect: 'OR',
@@ -216,7 +232,7 @@ export class DatabaseCollection {
     }
   }
 
-  andOrWhere(field, operation, value, pos_cond): void {
+  andOrWhere(field, operation, value, pos_cond, type): void {
     if (field != '') {
       if (operation == 'LIKE') {
         value = `'%${value}%'`;
@@ -246,7 +262,9 @@ export class DatabaseCollection {
         default:
       }
 
-      this.arrayCondition.push(condition);
+      type === 'having'
+        ? this.arrayHaving.push(condition)
+        : this.arrayCondition.push(condition);
     }
   }
 
@@ -278,7 +296,7 @@ export class DatabaseCollection {
     }
   }
 
-  orAndWhere(field, operation, value, pos_cond): void {
+  orAndWhere(field, operation, value, pos_cond, type): void {
     if (field != '') {
       if (operation.toUpperCase() == 'LIKE') {
         value = `'%${value}%'`;
@@ -308,11 +326,13 @@ export class DatabaseCollection {
         default:
       }
 
-      this.arrayCondition.push(condition);
+      type === 'having'
+        ? this.arrayHaving.push(condition)
+        : this.arrayCondition.push(condition);
     }
   }
 
-  orAndWhereBetween(field, value1, value2, pos_cond): void {
+  orAndWhereBetween(field, value1, value2, pos_cond, type): void {
     if (field != '') {
       let condition: any = {
         operation: `BETWEEN ${formatTypeValueConditionSQL(value1)} AND`,
@@ -336,7 +356,9 @@ export class DatabaseCollection {
         default:
       }
 
-      this.arrayCondition.push(condition);
+      type === 'having'
+        ? this.arrayHaving.push(condition)
+        : this.arrayCondition.push(condition);
     }
   }
 
@@ -370,28 +392,43 @@ export class DatabaseCollection {
     this.andCondition(objFields);
   }
 
-  andCondition(objFields: any): void {
+  having(objFields: any): void {
+    if (typeof objFields !== 'object') {
+      throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
+    }
+
+    // Array is considered as OR operator, so we will connect with orAndWhere each other
+    if (Array.isArray(objFields)) {
+      this.orCondition(objFields, 'having');
+      return;
+    }
+
+    // Object us considered as AND operator, so we will connect with andOrWhere each other
+    this.andCondition(objFields, 'having');
+  }
+
+  andCondition(objFields: any, type = 'where'): void {
     Object.entries(objFields).forEach(([field, val], i) => {
       let value = val;
       let operator = '=';
 
       if (typeof val !== 'object') {
-        this.andWhere(field, operator, val);
+        this.andWhere(field, operator, val, type);
       } else if (typeof val === 'object') {
         if (Array.isArray(val)) {
           if (val.length === 1) {
-            this.andWhere(field, operator, val[0]);
+            this.andWhere(field, operator, val[0], type);
           } else {
             for (let j = 0; j < val.length; j++) {
               let subValue = val[j];
               let subOperator = '=';
               if (typeof subValue !== 'object') {
                 if (j === 0) {
-                  this.andOrWhere(field, subOperator, subValue, 'first');
+                  this.andOrWhere(field, subOperator, subValue, 'first', type);
                 } else if (j === val.length - 1) {
-                  this.andOrWhere(field, subOperator, subValue, 'last');
+                  this.andOrWhere(field, subOperator, subValue, 'last', type);
                 } else {
-                  this.andOrWhere(field, subOperator, subValue, 'middle');
+                  this.andOrWhere(field, subOperator, subValue, 'middle', type);
                 }
               } else if (
                 typeof subValue === 'object' &&
@@ -400,11 +437,11 @@ export class DatabaseCollection {
                 subValue = val[j]['value'];
                 subOperator = val[j]['operator'];
                 if (j === 0) {
-                  this.andOrWhere(field, subOperator, subValue, 'first');
+                  this.andOrWhere(field, subOperator, subValue, 'first', type);
                 } else if (j === val.length - 1) {
-                  this.andOrWhere(field, subOperator, subValue, 'last');
+                  this.andOrWhere(field, subOperator, subValue, 'last', type);
                 } else {
-                  this.andOrWhere(field, subOperator, subValue, 'middle');
+                  this.andOrWhere(field, subOperator, subValue, 'middle', type);
                 }
               }
             }
@@ -414,18 +451,18 @@ export class DatabaseCollection {
             let valueMin = val['value1'];
             let valueMax = val['value2'];
 
-            this.andWhereBetween(field, valueMin, valueMax);
+            this.andWhereBetween(field, valueMin, valueMax, type);
           } else {
             value = val['value'];
             operator = val['operator'];
-            this.andWhere(field, operator, value);
+            this.andWhere(field, operator, value, type);
           }
         }
       }
     });
   }
 
-  orCondition(arrayFields: any): void {
+  orCondition(arrayFields: any, type = 'where'): void {
     for (let i = 0; i < arrayFields.length; i++) {
       Object.entries(arrayFields[i]).forEach(([field, val], j) => {
         if (val['operator'] == 'BETWEEN') {
@@ -434,14 +471,14 @@ export class DatabaseCollection {
 
           if (Object.entries(arrayFields[i]).length > 1) {
             if (j === 0) {
-              this.orAndWhereBetween(field, valueMin, valueMax, 'first');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'first', type);
             } else if (j === Object.entries(arrayFields[i]).length - 1) {
-              this.orAndWhereBetween(field, valueMin, valueMax, 'last');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'last', type);
             } else {
-              this.orAndWhereBetween(field, valueMin, valueMax, 'middle');
+              this.orAndWhereBetween(field, valueMin, valueMax, 'middle', type);
             }
           } else {
-            this.orWhereBetween(field, valueMin, valueMax);
+            this.orWhereBetween(field, valueMin, valueMax, type);
           }
         } else {
           let value = val['value'] || val;
@@ -450,14 +487,14 @@ export class DatabaseCollection {
           if (typeof val !== 'object') {
             if (Object.entries(arrayFields[i]).length > 1) {
               if (j === 0) {
-                this.orAndWhere(field, operator, value, 'first');
+                this.orAndWhere(field, operator, value, 'first', type);
               } else if (j === Object.entries(arrayFields[i]).length - 1) {
-                this.orAndWhere(field, operator, value, 'last');
+                this.orAndWhere(field, operator, value, 'last', type);
               } else {
-                this.orAndWhere(field, operator, value, 'middle');
+                this.orAndWhere(field, operator, value, 'middle', type);
               }
             } else {
-              this.orWhere(field, operator, value);
+              this.orWhere(field, operator, value, type);
             }
           } else if (typeof val === 'object') {
             if (Array.isArray(val)) {
@@ -467,35 +504,63 @@ export class DatabaseCollection {
 
                 if (Object.entries(arrayFields[i]).length > 1) {
                   if (j === 0 && k === 0) {
-                    this.orAndWhere(field, subOperator, subValue, 'first');
+                    this.orAndWhere(
+                      field,
+                      subOperator,
+                      subValue,
+                      'first',
+                      type,
+                    );
                   } else if (
                     j === Object.entries(arrayFields[i]).length - 1 &&
                     k === value.length - 1
                   ) {
-                    this.orAndWhere(field, subOperator, subValue, 'last');
+                    this.orAndWhere(field, subOperator, subValue, 'last', type);
                   } else {
-                    this.orAndWhere(field, subOperator, subValue, 'middle');
+                    this.orAndWhere(
+                      field,
+                      subOperator,
+                      subValue,
+                      'middle',
+                      type,
+                    );
                   }
                 } else {
-                  this.orWhere(field, subOperator, subValue);
+                  this.orWhere(field, subOperator, subValue, type);
                 }
               }
             } else {
               if (Object.entries(arrayFields[i]).length > 1) {
                 if (j === 0) {
-                  this.orAndWhere(field, operator, value, 'first');
+                  this.orAndWhere(field, operator, value, 'first', type);
                 } else if (j === Object.entries(arrayFields[i]).length - 1) {
-                  this.orAndWhere(field, operator, value, 'last');
+                  this.orAndWhere(field, operator, value, 'last', type);
                 } else {
-                  this.orAndWhere(field, operator, value, 'middle');
+                  this.orAndWhere(field, operator, value, 'middle', type);
                 }
               } else {
-                this.orWhere(field, operator, value);
+                this.orWhere(field, operator, value, type);
               }
             }
           }
         }
       });
+    }
+  }
+
+  groupBy(groupChain): void {
+    if (groupChain) {
+      this.stringGroupBy = 'GROUP BY ';
+      if (
+        typeof groupChain === 'object' &&
+        Array.isArray(groupChain) &&
+        groupChain.length
+      ) {
+        this.stringGroupBy += groupChain.join(', ');
+      } else {
+        this.stringGroupBy += groupChain;
+      }
+      this.stringGroupBy += ' ';
     }
   }
 
@@ -507,29 +572,25 @@ export class DatabaseCollection {
     this.limit = limit;
   }
 
-  sqlCount(): string {
+  sqlCount(distinctParam: any = null): string {
     this.stringCondition = this.genCondition();
-    const sql = `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin} ${this.stringCondition}`;
-    // this.arrayCondition.length === 0
-    //   ? `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin}`
-    //   : `SELECT count(*) AS total    ${this.table} ${this.alias} ${this.stringJoin} ${this.stringCondition}`;
-    return sql;
-  }
+    const sql = distinctParam
+      ? `SELECT count(${Object.keys[distinctParam][0]}.${
+          Object.values(distinctParam)[0]
+        } }) AS total FROM ${this.table} ${this.alias} ${this.stringJoin} ${
+          this.stringCondition
+        }`
+      : `SELECT count(*) AS total FROM ${this.table} ${this.alias} ${this.stringJoin} ${this.stringCondition}`;
 
-  sqlById(id): string {
-    let sql_string = '';
-    sql_string =
-      this.stringSelect +
-      ` FROM ${this.table} ${this.alias} ` +
-      this.stringJoin +
-      ` WHERE ${this.alias}.id= ${id} LIMIT 1 `;
-    this.reset();
-    return sql_string;
+    return sql;
   }
 
   sql(is_limit = true): string {
     let sql_string = '';
+    console.log();
     this.stringCondition = this.genCondition();
+    this.stringHaving = this.genHaving();
+    console.log(this.stringHaving);
     const orderString = this.sortString
       ? 'ORDER BY ' + this.sortString
       : this.sortString;
@@ -537,6 +598,8 @@ export class DatabaseCollection {
       this.stringSelect +
       ` FROM ${this.table} ${this.alias} ` +
       this.stringJoin +
+      this.stringGroupBy +
+      this.stringHaving +
       this.stringCondition +
       orderString;
     if (is_limit == true) {
@@ -578,5 +641,20 @@ export class DatabaseCollection {
       }
     }
     return stringCondition;
+  }
+
+  genHaving(): string {
+    let stringHaving = '';
+    if (this.arrayHaving.length > 0) {
+      let arrayCheckExist = [];
+      for (let i = 0; i < this.arrayHaving.length; i++) {
+        arrayCheckExist = [...arrayCheckExist, this.arrayHaving[i]];
+      }
+
+      for (let [i, checkExistItem] of arrayCheckExist.entries()) {
+        stringHaving += formatHavingCondition(i, checkExistItem);
+      }
+    }
+    return stringHaving;
   }
 }
