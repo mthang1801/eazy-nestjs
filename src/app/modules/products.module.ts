@@ -22,7 +22,7 @@ import { ProductFeaturesRepository } from '../repositories/productFeature.reposi
 import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
-import { ProductIntegrationController } from '../controllers/integration/products.controller';
+import { ProductIntegrationController } from '../controllers/integration/v1/products.controller';
 import { StoreModule } from './store.module';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';

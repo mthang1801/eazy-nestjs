@@ -11,9 +11,9 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
-import { BaseController } from '../../../base/base.controllers';
-import { IResponse } from '../../interfaces/response.interface';
-import { AuthGuard } from '../../../middlewares/fe.auth';
+import { BaseController } from '../../../../base/base.controllers';
+import { IResponse } from '../../../interfaces/response.interface';
+import { AuthGuard } from '../../../../middlewares/fe.auth';
 import { OrdersService } from 'src/app/services/orders.service';
 import { OrderStatusService } from 'src/app/services/orderStatus.service';
 import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';

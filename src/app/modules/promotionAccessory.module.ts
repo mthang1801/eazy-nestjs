@@ -4,7 +4,7 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { PromotionAccessoriesController } from '../controllers/be/v1/promotionAccessory.controller';
 import { ProductsRepository } from '../repositories/products.repository';
-import { PromotionAccessoryItgController } from '../controllers/integration/promotionAccessory.controller';
+import { PromotionAccessoryItgController } from '../controllers/integration/v1/promotionAccessory.controller';
 @Global()
 @Module({
   providers: [

@@ -11,13 +11,13 @@ import {
   Delete,
   UsePipes,
 } from '@nestjs/common';
-import { BaseController } from '../../../base/base.controllers';
-import { CategoryService } from '../../services/category.service';
-import { AuthGuard } from '../../../middlewares/be.auth';
-import { CreateCategoryDto } from '../../dto/category/create-category.dto';
-import { IResponse } from '../../interfaces/response.interface';
+import { BaseController } from '../../../../base/base.controllers';
+import { CategoryService } from '../../../services/category.service';
+import { AuthGuard } from '../../../../middlewares/be.auth';
+import { CreateCategoryDto } from '../../../dto/category/create-category.dto';
+import { IResponse } from '../../../interfaces/response.interface';
 import { Response } from 'express';
-import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
+import { UpdateCategoryDto } from '../../../dto/category/update-category.dto';
 import { ProductService } from 'src/app/services/products.service';
 import { UpdateCategoryAppcoreDto } from 'src/app/dto/category/update-category.appcore.dto';
 

@@ -6,7 +6,7 @@ import { CategoryDescriptionRepository } from '../repositories/categoryDescripti
 import { CategoryController as CategoryControllerFE } from '../controllers/fe/v1/category.controller';
 import { ProductService } from '../services/products.service';
 import { ProductsModule } from './products.module';
-import { CategoryController as CategoryControllerIntegration } from '../controllers/integration/category.controller';
+import { CategoryController as CategoryControllerIntegration } from '../controllers/integration/v1/category.controller';
 import { CategorySyncController } from '../controllers/sync/v1/category.controller';
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';

@@ -8,7 +8,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 
 import { ProductFeatureService } from '../services/productFeature.service';
 import { ProductsModule } from './products.module';
-import { ProductFeatureController as ProductFeatureIntegrationController } from '../controllers/integration/productFeature.controller';
+import { ProductFeatureController as ProductFeatureIntegrationController } from '../controllers/integration/v1/productFeature.controller';
 import { ProductFeatureSyncController } from '../controllers/sync/v1/productFeatures.controller';
 
 @Module({

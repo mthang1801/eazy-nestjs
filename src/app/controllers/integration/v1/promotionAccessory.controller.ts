@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Res, Put, Param } from '@nestjs/common';
-import { BaseController } from '../../../base/base.controllers';
-import { PromotionAccessoryService } from '../../services/promotionAccessory.service';
+import { BaseController } from '../../../../base/base.controllers';
+import { PromotionAccessoryService } from '../../../services/promotionAccessory.service';
 import { Response } from 'express';
 @Controller('itg/v1/accessories')
 export class PromotionAccessoryItgController extends BaseController {

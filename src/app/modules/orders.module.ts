@@ -8,7 +8,7 @@ import { OrderDataRepository } from '../repositories/orderData.repository';
 import { OrderController as OrderControllerBE } from '../controllers/be/v1/order.controller';
 import { ProductsRepository } from '../repositories/products.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
-import { OrderIntegrationController } from '../controllers/integration/order.controller';
+import { OrderIntegrationController } from '../controllers/integration/v1/order.controller';
 import { OrderStatusModule } from './orderStatus.module';
 import { OrdersController as OrdersControllerFE } from '../controllers/fe/v1/order.controller';
 import { UsersModule } from './users.module';
