@@ -30,10 +30,7 @@ import { LocatorService } from './locator.service';
 import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 import * as moment from 'moment';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import {
-  MoreThan,
-  MoreThanOrEqual,
-} from '../../database/find-options/operators';
+import { MoreThan, MoreThanOrEqual } from '../../database/operators/operators';
 @Injectable()
 export class StoreService {
   constructor(

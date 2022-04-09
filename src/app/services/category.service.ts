@@ -14,7 +14,7 @@ import { CategoryDescriptionEntity } from '../entities/categoryDescription.entit
 import { CategoryEntity } from '../entities/category.entity';
 import { CategoryDescriptionRepository } from '../repositories/categoryDescriptions.repository';
 import * as _ from 'lodash';
-import { Like } from '../../database/find-options/operators';
+import { Like } from '../../database/operators/operators';
 import { ICategoryResult } from '../interfaces/categoryReult.interface';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
@@ -27,7 +27,7 @@ import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
 import { data as categoryData } from '../../database/constant/category';
-import { catalogCategoryJoiner, categoryJoiner } from 'src/utils/joinTable';
+import { catalogCategoryJoiner } from 'src/utils/joinTable';
 import { DatabaseService } from 'src/database/database.service';
 import {
   sqlSyncGetCategoryFromMagento,
@@ -56,6 +56,8 @@ import * as fsExtra from 'fs-extra';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import { sortBy } from 'lodash';
+import { categorySelector } from '../../database/sqlQuery/select/category.select';
+import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -1012,5 +1014,53 @@ export class CategoryService {
     await this.syncImportCatalogs();
     await this.syncImports();
     await this.fillCategoriesIdPath();
+  }
+
+  async parentCategories(category, categoriesList = [{ ...category }]) {
+    if (!category.parent_id) {
+      return categoriesList;
+    } else {
+      let parentCategory = await this.categoryRepository.findOne({
+        select: categorySelector,
+        join: {
+          [JoinTable.leftJoin]: {
+            [Table.CATEGORY_DESCRIPTIONS]: {
+              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+              rootJoin: `${Table.CATEGORIES}.category_id`,
+            },
+          },
+        },
+        where: {
+          [`${Table.CATEGORIES}.category_id`]: category.parent_id,
+        },
+      });
+      categoriesList = [...categoriesList, { ...parentCategory }];
+
+      return this.parentCategories(parentCategory, categoriesList);
+    }
+  }
+
+  async childrenCategories(categoryId, categoriesList = []) {
+    let categories = await this.categoryRepository.find({
+      select: categorySelector,
+      join: categoryJoiner,
+      where: { [`${Table.CATEGORIES}.parent_id`]: categoryId },
+    });
+    if (categories.length) {
+      for (let categoryItem of categories) {
+        categoriesList = [...categoriesList, categoryItem];
+      }
+    } else {
+      return categoriesList;
+    }
+
+    for (let { category_id } of categories) {
+      categoriesList = await this.childrenCategories(
+        category_id,
+        categoriesList,
+      );
+    }
+
+    return categoriesList;
   }
 }

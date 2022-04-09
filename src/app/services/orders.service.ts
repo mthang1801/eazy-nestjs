@@ -25,7 +25,7 @@ import {
   ordersByCustomerFilter,
   orderSearchFilter,
 } from 'src/utils/tableConditioner';
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { StatusRepository } from '../repositories/status.repository';
 import { StatusEntity } from '../entities/status.entity';
 import { StatusType, CommonStatus } from '../../database/enums/status.enum';

@@ -14,7 +14,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { userJoiner } from 'src/utils/joinTable';
 import { customersListSearchFilter } from 'src/utils/tableConditioner';
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
@@ -62,12 +62,12 @@ import {
   MoreThan,
   MoreThanOrEqual,
   LessThanOrEqual,
-} from '../../database/find-options/operators';
+} from '../../database/operators/operators';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
 import * as moment from 'moment';
-import { Between } from '../../database/find-options/operators';
+import { Between } from '../../database/operators/operators';
 import { creatorJoiner } from '../../utils/joinTable';
 import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
 

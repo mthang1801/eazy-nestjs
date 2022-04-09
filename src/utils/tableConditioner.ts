@@ -1,7 +1,7 @@
 import { customer_type } from 'src/database/constant/customer';
 import { Table } from 'src/database/enums';
 import { UserTypeEnum } from 'src/database/enums/tableFieldEnum/user.enum';
-import { Equal, Like, Not } from 'src/database/find-options/operators';
+import { Equal, Like, Not } from 'src/database/operators/operators';
 import { convertToSlug, removeVietnameseTones } from './helper';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
@@ -110,65 +110,6 @@ export const userGroupSearchByNameCode = (
       [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search),
     },
   ];
-};
-
-export const productsListsSearchFilter = (
-  search = '',
-  filterConditions = {},
-) => {
-  let arraySearch = [];
-
-  if (search) {
-    arraySearch = [
-      ...arraySearch,
-      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-    ];
-  }
-
-  return searchFilterTemplate(filterConditions, arraySearch);
-};
-
-export const productsListCategorySearchFilter = (
-  categoriesList,
-  search = '',
-  filterConditions = {},
-) => {
-  let arraySearch = [];
-  if (search) {
-    arraySearch = [
-      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-    ];
-  }
-  let searchList = [];
-  for (let categoryId of categoriesList) {
-    if (arraySearch.length) {
-      let categoryWithSearch = [];
-      for (let searchItem of arraySearch) {
-        categoryWithSearch = [
-          ...categoryWithSearch,
-          {
-            ...searchItem,
-            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-          },
-        ];
-      }
-
-      searchList = [...searchList, ...categoryWithSearch];
-    } else {
-      searchList = [
-        ...searchList,
-        { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId },
-      ];
-    }
-  }
-
-  if (searchList.length) {
-    arraySearch = searchList;
-  }
-
-  return searchFilterTemplate(filterConditions, arraySearch);
 };
 
 export const customersListSearchFilter = (
@@ -422,21 +363,6 @@ export const flashSaleSearchFilter = (search = '', filterConditions = {}) => {
 };
 
 export const getProductsListByAccessoryIdSearchFilter = (
-  search = '',
-  filterConditions = {},
-) => {
-  let arraySearch = [];
-  if (search) {
-    arraySearch = [
-      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-    ];
-  }
-
-  return searchFilterTemplate(filterConditions, arraySearch);
-};
-
-export const getParentProductsSearchFilter = (
   search = '',
   filterConditions = {},
 ) => {

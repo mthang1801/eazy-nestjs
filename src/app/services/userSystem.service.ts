@@ -15,7 +15,7 @@ import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileg
 import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
-import { Like, Not, Equal } from '../../database/find-options/operators';
+import { Like, Not, Equal } from '../../database/operators/operators';
 import { JoinTable } from 'src/database/enums';
 import { userSystemSearchFilter } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';

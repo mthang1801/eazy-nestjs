@@ -15,7 +15,6 @@ import {
   formatStandardTimeStamp,
   preprocessUserResult,
 } from '../../utils/helper';
-import { ObjectLiteral } from '../../common/ObjectLiteral';
 
 import { PrimaryKeys } from '../../database/enums/autoIncrementKeys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
@@ -65,7 +64,7 @@ export class UsersService {
     return user;
   }
 
-  async create(dataObj: ObjectLiteral): Promise<UserEntity> {
+  async create(dataObj: any): Promise<UserEntity> {
     let user = await this.userRepository.create(dataObj);
     return user;
   }
@@ -169,7 +168,7 @@ export class UsersService {
     });
   }
 
-  async update(user_id: number, dataObj: ObjectLiteral): Promise<UserEntity> {
+  async update(user_id: number, dataObj: any): Promise<UserEntity> {
     const updatedUser = await this.userRepository.update(user_id, {
       ...dataObj,
       updated_at: formatStandardTimeStamp(),
@@ -178,7 +177,7 @@ export class UsersService {
     return preprocessUserResult(updatedUser);
   }
 
-  async findOne(dataObj: ObjectLiteral | ObjectLiteral[]): Promise<UserEntity> {
+  async findOne(dataObj: any | any[]): Promise<UserEntity> {
     const user = await this.userRepository.findOne({ ...dataObj });
     return user;
   }

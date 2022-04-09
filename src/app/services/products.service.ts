@@ -34,31 +34,18 @@ import { CreateProductDto } from '../dto/product/create-product.dto';
 import { CategoryRepository } from '../repositories/category.repository';
 import { CategoryEntity } from '../entities/category.entity';
 import {
-  productFamilyJoiner,
-  productFeaturesByCategory,
   productFeaturesJoiner,
   productFullJoiner,
   productJoiner,
-  productGroupJoiner,
   productGroupProductsJoiner,
   productInfoJoiner,
   productSearchJoiner,
-  productsSearchOnOrderJoiner,
-  productByCategoryJoiner,
   productPromotionAccessoriesJoiner,
-  productStickerJoiner,
   productLeftJoiner,
-  categoryJoiner,
   productsListByCategoryJoiner,
 } from 'src/utils/joinTable';
-import {
-  productSearch,
-  productSearchFilterOnOrder,
-  productsFamilyFilterConditioner,
-  productsGroupFilterConditioner,
-  productsListCategorySearchFilter,
-} from 'src/utils/tableConditioner';
-import { In, Like, MoreThan, Not } from 'src/database/find-options/operators';
+import { productSearch } from 'src/utils/tableConditioner';
+import { In, Like, MoreThan, Not } from 'src/database/operators/operators';
 import { ProductFeaturesRepository } from '../repositories/productFeature.repository';
 import { ProductFeatureEntity } from '../entities/productFeature.entity';
 import { ProductFeatureDescriptionsRepository } from '../repositories/productFeatureDescription.repository';
@@ -83,19 +70,20 @@ import {
   IsNull,
   LessThan,
   MoreThanOrEqual,
-} from '../../database/find-options/operators';
+} from '../../database/operators/operators';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
-import { convertToSlug, removeVietnameseTones } from '../../utils/helper';
+import {
+  convertToSlug,
+  removeVietnameseTones,
+  getPageSkipLimit,
+} from '../../utils/helper';
 import { UpdateImageDto } from '../dto/product/update-productImage.dto';
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 
 import * as fs from 'fs';
 import * as fsExtra from 'fs-extra';
-import {
-  productsListsSearchFilter,
-  getProductsListByCategoryIdSearchFilter,
-} from '../../utils/tableConditioner';
+import { getProductsListByCategoryIdSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import { data } from '../../database/constant/category';
@@ -120,6 +108,7 @@ import { ProductStoreHistoryRepository } from '../repositories/productStoreHisto
 import { ProductStoreHistoryEntity } from '../entities/productStoreHistory.entity';
 import { CreateProductStoreDto } from '../dto/product/create-productStore.dto';
 import {
+  APPCORE_TOKEN,
   GET_PRODUCTS_APPCORE_LIST,
   GET_PRODUCTS_COMBO_STORES_API,
   GET_PRODUCTS_LIST_APPCORE_BY_PAGE_API,
@@ -161,21 +150,35 @@ import {
   productDetailSelector,
   getDetailProductsListSelectorFE,
 } from '../../utils/tableSelector';
-import {
-  LessThanOrEqual,
-  Between,
-} from '../../database/find-options/operators';
+import { LessThanOrEqual, Between } from '../../database/operators/operators';
 import {
   sqlReportTotalProductAmountFromStores,
   sqlReportTotalProductAmountInStores,
   sqlReportTotalProductsInCategories,
 } from 'src/utils/analysis/sqlProductAmount';
 import { PromotionAccessoryService } from './promotionAccessory.service';
-import { getParentProductsSearchFilter } from '../../utils/tableConditioner';
+
+import { CategoryService } from './category.service';
+import { countDistinctProduct } from '../../database/sqlQuery/select/product.select';
+import {
+  parentProductCondition,
+  countProduct,
+} from '../../database/sqlQuery/select/product.select';
 import {
   productPriceJoiner,
   productDescriptionJoiner,
 } from '../../utils/joinTable';
+import {
+  getParentProductsSearchFilter,
+  getProductBySlugCondition,
+  productsListCategorySearchFilter,
+} from 'src/database/sqlQuery/where/product.where';
+import {
+  getProductByIdentifierCondition,
+  productsListsSearchFilter,
+} from '../../database/sqlQuery/where/product.where';
+import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
+import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
 
 @Injectable()
 export class ProductService {
@@ -214,6 +217,7 @@ export class ProductService {
     private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
     private accessoryService: PromotionAccessoryService,
+    private categoryService: CategoryService,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -222,10 +226,7 @@ export class ProductService {
     // Lấy danh sách các sản phẩm cha (bao gồm SP cấu hình, ngoài trự sản phẩm service product_code =4)
     let parentProductsList = await this.productRepo.find({
       select: ['*'],
-      where: [
-        { [`${Table.PRODUCTS}.parent_product_appcore_id`]: 0 },
-        { [`${Table.PRODUCTS}.parent_product_appcore_id`]: IsNull() },
-      ],
+      where: parentProductCondition,
     });
 
     parentProductsList = parentProductsList.filter(
@@ -371,10 +372,8 @@ export class ProductService {
   }
 
   async getParentsList(params) {
-    let { page, limit, search } = params;
-    page = +page || 1;
-    limit = +limit || 10;
-    let skip = (page - 1) * limit;
+    let { search } = params;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterConditions = { [`${Table.PRODUCTS}.product_function`]: 1 };
     let productsList = await this.productRepo.find({
@@ -386,46 +385,9 @@ export class ProductService {
     });
 
     let count = await this.productRepo.find({
-      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
+      select: countProduct,
       join: productDescriptionJoiner,
       where: getParentProductsSearchFilter(search, filterConditions),
-    });
-
-    return {
-      paging: {
-        currentPage: page,
-        pageSize: limit,
-        total: count[0].total,
-      },
-      products: productsList,
-    };
-  }
-
-  async searchOnOrder(params) {
-    let { page, limit, search, category_ids } = params;
-    page = +page || 1;
-    limit = +limit || 20;
-    let skip = (page - 1) * limit;
-
-    let filterConditions = {
-      [`${Table.PRODUCTS}.amount`]: MoreThan(0),
-    };
-
-    if (category_ids) {
-      filterConditions['category_id'] = category_ids.split(',');
-    }
-
-    let productsList = await this.productRepo.find({
-      select: '*',
-      join: productsSearchOnOrderJoiner,
-      where: productSearchFilterOnOrder(search, filterConditions),
-      skip,
-      limit,
-    });
-    let count = await this.productRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: productsSearchOnOrderJoiner,
-      where: productSearchFilterOnOrder(search, filterConditions),
     });
 
     return {
@@ -446,10 +408,7 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
-      where: [
-        { [`${Table.PRODUCTS}.product_id`]: identifier },
-        { [`${Table.PRODUCTS}.product_appcore_id`]: identifier },
-      ],
+      where: getProductByIdentifierCondition(identifier),
     });
 
     if (!product) {
@@ -464,7 +423,7 @@ export class ProductService {
       join: {
         [JoinTable.leftJoin]: productFullJoiner,
       },
-      where: { [`${Table.PRODUCTS}.slug`]: slug },
+      where: getProductBySlugCondition(slug),
     });
 
     if (!product) {
@@ -475,47 +434,13 @@ export class ProductService {
     return this.getProductDetails(product);
   }
 
-  async parentCategories(category, categoriesList = [{ ...category }]) {
-    if (!category.parent_id) {
-      return categoriesList;
-    } else {
-      let parentCategory = await this.categoryRepo.findOne({
-        select: [
-          `${Table.CATEGORIES}.category_id`,
-          'level',
-          'slug',
-          'category',
-          'parent_id',
-        ],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.CATEGORY_DESCRIPTIONS]: {
-              fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-              rootJoin: `${Table.CATEGORIES}.category_id`,
-            },
-          },
-        },
-        where: {
-          [`${Table.CATEGORIES}.category_id`]: category.parent_id,
-        },
-      });
-      categoriesList = [...categoriesList, { ...parentCategory }];
-
-      return this.parentCategories(parentCategory, categoriesList);
-    }
-  }
-
   async getListFE(params) {
     let {
-      page,
-      limit,
       search,
       status, // Trạng thái hiển thị
       category_id, //  Danh mục SP
     } = params;
-    page = +page || 1;
-    limit = +limit || 10;
-    let skip = (page - 1) * limit;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
     let filterOrders = [
@@ -524,7 +449,9 @@ export class ProductService {
 
     let categoriesList = [];
     if (category_id) {
-      categoriesList = await this.childrenCategories(category_id);
+      categoriesList = await this.categoryService.childrenCategories(
+        category_id,
+      );
       categoriesList = [
         +category_id,
         ...categoriesList.map(({ category_id }) => category_id),
@@ -547,7 +474,7 @@ export class ProductService {
     });
 
     let count = await this.productRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      select: countDistinctProduct,
       join: productLeftJoiner,
       where: categoriesList.length
         ? productsListCategorySearchFilter(
@@ -557,41 +484,6 @@ export class ProductService {
           )
         : productsListsSearchFilter(search, filterCondition),
     });
-
-    // determine product type and  get Image
-    for (let productItem of productLists) {
-      if (
-        (productItem['parent_product_appcore_id'] == null ||
-          !productItem['parent_product_appcore_id']) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productItem['productType'] = 1; //Sản phẩm cha
-      } else if (
-        (productItem['parent_product_appcore_id'] > 0 ||
-          productItem['parent_product_appcore_id'] != null) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productItem['productType'] = 2; // Sản phẩm con
-      } else if (productItem.product_type == 3) {
-        productItem['productType'] = 3; //SP combo
-      } else {
-        productItem['productType'] = 4; // SP độc lập
-      }
-
-      productItem['image'] = null;
-
-      const productImage = await this.imageLinkRepo.findOne({
-        object_id: productItem.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      });
-
-      if (productImage) {
-        const image = await this.imageRepo.findOne({
-          image_id: productImage.image_id,
-        });
-        productItem['image'] = image;
-      }
-    }
 
     return {
       paging: {
@@ -605,8 +497,6 @@ export class ProductService {
 
   async getListBE(params: any) {
     let {
-      page,
-      limit,
       search,
       status, // Trạng thái hiển thị
       category_id, //  Danh mục SP
@@ -627,9 +517,7 @@ export class ProductService {
       product_function,
       order_amount,
     } = params;
-    page = +page || 1;
-    limit = +limit || 10;
-    let skip = (page - 1) * limit;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
     let filterOrders = [
@@ -733,7 +621,9 @@ export class ProductService {
       filterJoiner['category_id'] = 1;
       // Theo danh mục
       if (arrCategories.length < 2) {
-        categoriesList = await this.childrenCategories(category_id);
+        categoriesList = await this.categoryService.childrenCategories(
+          category_id,
+        );
         categoriesList = [
           +category_id,
           ...categoriesList.map(({ category_id }) => category_id),
@@ -741,245 +631,60 @@ export class ProductService {
       }
     }
 
-    let productLists, count;
+    let productsList: any[] = [];
+    let count = 0;
+    let isContinued = true;
+    let productSearchFilterParams = {
+      filterCondition,
+      filterJoiner,
+      filterOrders,
+      categoriesList,
+      search,
+      skip,
+      limit,
+    };
+    if (store_location_id && isContinued) {
+      ({ productsList, count } = await this.findProductsListAndCountFromStore(
+        productSearchFilterParams,
+      ));
 
-    if (store_location_id) {
-      productLists = await this.productStoreRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.productStoreRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-
-      count = await this.productStoreRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
-    } else if (category_id) {
-      productLists = await this.productCategoryRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.productCategoryRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-
-      count = await this.productCategoryRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
-    } else if (sticker_id) {
-      productLists = await this.productStickerRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.productStickerRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-
-      count = await this.productStickerRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
-    } else if (catalog_category_id) {
-      productLists = await this.catalogCategoryRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.catalogCategoryRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-
-      count = await this.catalogCategoryRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
-    } else if (variant_ids) {
-      productLists = await this.productFeatureValueRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.productFeatureValueRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-
-      count = await this.productFeatureValueRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
-    } else {
-      productLists = await this.productRepo.find({
-        select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
-        join: productJoiner(filterJoiner),
-        orderBy: filterOrders,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        skip,
-        limit,
-      });
-
-      if (productLists.length) {
-        productLists = await this.productRepo.find({
-          select: getProductsListSelectorBE,
-          join: productJoiner(filterJoiner),
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: In(
-              productLists.map(({ product_id }) => product_id),
-            ),
-          },
-        });
-      }
-      count = await this.productRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productJoiner(filterJoiner),
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
+      isContinued = false;
+    }
+    if (category_id && isContinued) {
+      ({ productsList, count } =
+        await this.findProductsListAndCountFromCategory(
+          productSearchFilterParams,
+        ));
+      isContinued = false;
+    }
+    if (sticker_id && isContinued) {
+      ({ productsList, count } = await this.findProductsListAndCountFromSticker(
+        productSearchFilterParams,
+      ));
+      isContinued = false;
+    }
+    if (catalog_category_id && isContinued) {
+      ({ productsList, count } = await this.findProductsListAndCountFromCatalog(
+        productSearchFilterParams,
+      ));
+      isContinued = false;
+    }
+    if (variant_ids && isContinued) {
+      ({ productsList, count } =
+        await this.findProductsListAndCountFromFeatureValue(
+          productSearchFilterParams,
+        ));
+      isContinued = false;
+    }
+    if (isContinued) {
+      ({ productsList, count } = await this.findProductsListAndCount(
+        productSearchFilterParams,
+      ));
+      isContinued = false;
     }
 
     // determine product type and  get Image
-    for (let productItem of productLists) {
+    for (let productItem of productsList) {
       if (
         (productItem['parent_product_appcore_id'] == null ||
           !productItem['parent_product_appcore_id']) &&
@@ -1013,10 +718,321 @@ export class ProductService {
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count[0].total,
+        total: count,
       },
-      products: productLists,
+      products: productsList,
     };
+  }
+
+  async findProductsListAndCountFromStore(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.productStoreRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.productStoreRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+
+    let count = await this.productStoreRepo.find({
+      select: countDistinctProduct,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
+  }
+
+  async findProductsListAndCountFromCategory(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.productCategoryRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.productCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+
+    let count = await this.productCategoryRepo.find({
+      select: countDistinctProduct,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
+  }
+
+  async findProductsListAndCountFromSticker(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.productStickerRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.productStickerRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+
+    let count = await this.productStickerRepo.find({
+      select: countDistinctProduct,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
+  }
+
+  async findProductsListAndCountFromCatalog(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.catalogCategoryRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.catalogCategoryRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+
+    let count = await this.catalogCategoryRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
+  }
+
+  async findProductsListAndCountFromFeatureValue(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.productFeatureValueRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.productFeatureValueRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+
+    let count = await this.productFeatureValueRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
+  }
+
+  async findProductsListAndCount(params) {
+    let {
+      filterOrders,
+      categoriesList,
+      search,
+      filterCondition,
+      filterJoiner,
+      skip,
+      limit,
+    } = params;
+    let productsList = await this.productRepo.find({
+      select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
+      join: productJoiner(filterJoiner),
+      orderBy: filterOrders,
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+      skip,
+      limit,
+    });
+
+    if (productsList.length) {
+      productsList = await this.productRepo.find({
+        select: getProductsListSelectorBE,
+        join: productJoiner(filterJoiner),
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
+    let count = await this.productRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productJoiner(filterJoiner),
+      where: categoriesList.length
+        ? productsListCategorySearchFilter(
+            categoriesList,
+            search,
+            filterCondition,
+          )
+        : productsListsSearchFilter(search, filterCondition),
+    });
+
+    return { productsList, count: count[0].total };
   }
 
   async groupingProducts(start_product_id: number, dest_product_id: number) {
@@ -1166,37 +1182,6 @@ export class ProductService {
     }
   }
 
-  async childrenCategories(categoryId, categoriesList = []) {
-    let categories = await this.categoryRepo.find({
-      select: categorySelector,
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORIES}.category_id`,
-            rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-          },
-        },
-      },
-      where: { [`${Table.CATEGORIES}.parent_id`]: categoryId },
-    });
-    if (categories.length) {
-      for (let categoryItem of categories) {
-        categoriesList = [...categoriesList, categoryItem];
-      }
-    } else {
-      return categoriesList;
-    }
-
-    for (let { category_id } of categories) {
-      categoriesList = await this.childrenCategories(
-        category_id,
-        categoriesList,
-      );
-    }
-
-    return categoriesList;
-  }
-
   async getProductsListByCategoryId(
     categoryId: number,
     params: any,
@@ -1263,7 +1248,9 @@ export class ProductService {
 
   async getProductListByCategory(category, params) {
     let categoryId = category.category_id;
-    let categoriesListByLevel = await this.childrenCategories(categoryId);
+    let categoriesListByLevel = await this.categoryService.childrenCategories(
+      categoryId,
+    );
 
     let filterCondition = {
       [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
@@ -1863,7 +1850,6 @@ export class ProductService {
       }
     }
     await this.checkProductGroup(result, convertedData);
-    // await this.requestIntegrateParentProduct();
   }
 
   async checkProductGroup(currentProduct, data) {
@@ -2691,46 +2677,16 @@ export class ProductService {
 
       if (showListCategories) {
         currentCategory = await this.categoryRepo.find({
-          select: [
-            `${Table.CATEGORIES}.category_id`,
-            'level',
-            'slug',
-            'category',
-            'parent_id',
-          ],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.CATEGORY_DESCRIPTIONS]: {
-                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
-              [Table.PRODUCTS_CATEGORIES]: {
-                fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
-            },
-          },
+          select: categorySelector,
+          join: categoryJoinProduct,
           where: {
             [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product.product_id,
           },
         });
       } else {
         currentCategory = await this.categoryRepo.findOne({
-          select: [
-            `${Table.CATEGORIES}.category_id`,
-            'level',
-            'slug',
-            'category',
-            'parent_id',
-          ],
-          join: {
-            [JoinTable.leftJoin]: {
-              [Table.CATEGORY_DESCRIPTIONS]: {
-                fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-                rootJoin: `${Table.CATEGORIES}.category_id`,
-              },
-            },
-          },
+          select: categorySelector,
+          join: categoryJoiner,
           where: { [`${Table.CATEGORIES}.category_id`]: product.category_id },
         });
       }
@@ -2762,7 +2718,9 @@ export class ProductService {
       //determine type of product
       product['productType'] = this.determineProductType(product);
 
-      const categoriesList = await this.parentCategories(currentCategory);
+      const categoriesList = await this.categoryService.parentCategories(
+        currentCategory,
+      );
       const parentCategories = categoriesList.slice(1);
 
       product['status'] = status;
@@ -2862,12 +2820,14 @@ export class ProductService {
 
   determineProductType(product) {
     if (
-      product.parent_product_id == 0 &&
+      (product['parent_product_appcore_id'] == null ||
+        !product['parent_product_appcore_id']) &&
       (product.product_type == 1 || product.product_type == 2)
     ) {
       return 1; //Sản phẩm cha
     } else if (
-      product.parent_product_id != 0 &&
+      (product['parent_product_appcore_id'] > 0 ||
+        product['parent_product_appcore_id'] != null) &&
       (product.product_type == 1 || product.product_type == 2)
     ) {
       return 2; // Sản phẩm con
@@ -3117,7 +3077,7 @@ export class ProductService {
           { category_id: categoryItem.category_id },
           { product_count: 0 },
         );
-        let childrensCategories = await this.childrenCategories(
+        let childrensCategories = await this.categoryService.childrenCategories(
           categoryItem.category_id,
         );
         let categoriesFamily = [
@@ -3442,7 +3402,7 @@ export class ProductService {
     });
 
     // Get parent categories info
-    result['parentCategories'] = await this.parentCategories(
+    result['parentCategories'] = await this.categoryService.parentCategories(
       result['currentCategory'],
     );
 
@@ -3455,19 +3415,6 @@ export class ProductService {
       result,
     );
     return result;
-  }
-
-  async testGetById(product_id) {
-    const product = await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
-    }
-    console.log(product);
   }
 
   async getChildrenProducts(product_id, role = 0) {
@@ -3665,20 +3612,10 @@ export class ProductService {
     let destPage = Math.ceil(totalProducts / limit - currentPage);
 
     let headers = {
-      Authorization:
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
+      Authorization: APPCORE_TOKEN,
     };
 
     try {
-      // let res = await axios({
-      //   url: GET_PRODUCT_APPCORE_DETAIL(50000378),
-      //   headers,
-      // });
-      // let listAppcoreProductDetail = res.data.data;
-      // let cmsProductDetail = convertProductDataFromAppcore(
-      //   listAppcoreProductDetail,
-      // );
-      // await this.itgCreate(cmsProductDetail);
       for (let page = currentPage; page <= destPage; page++) {
         const res = await axios({
           url: GET_PRODUCTS_APPCORE_LIST(page, limit),
@@ -3763,7 +3700,9 @@ export class ProductService {
   async reportCountTotalFromCategories() {
     const categoriesList = await this.categoryRepo.find();
     for (let { category_id } of categoriesList) {
-      let childrenCategories = await this.childrenCategories(category_id);
+      let childrenCategories = await this.categoryService.childrenCategories(
+        category_id,
+      );
 
       let categories = [
         ...new Set([
@@ -3781,6 +3720,19 @@ export class ProductService {
       const total = await response[0][0].total;
       await this.categoryRepo.update({ category_id }, { product_count: total });
     }
+  }
+
+  async testGetById(product_id) {
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+    console.log(product);
   }
 
   async testSql() {
@@ -3822,24 +3774,8 @@ export class ProductService {
   async determineProductFunction() {
     let productsList = await this.productRepo.find();
     for (let productItem of productsList) {
-      let productFunction = 1;
-      if (
-        (productItem['parent_product_appcore_id'] == null ||
-          !productItem['parent_product_appcore_id']) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productFunction = 1; //Sản phẩm cha
-      } else if (
-        (productItem['parent_product_appcore_id'] > 0 ||
-          productItem['parent_product_appcore_id'] != null) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productFunction = 2; // Sản phẩm con
-      } else if (productItem.product_type == 3) {
-        productFunction = 3; //SP combo
-      } else {
-        productFunction = 4; // SP độc lập
-      }
+      let productFunction = this.determineProductType(productItem);
+
       await this.productRepo.update(
         { product_id: productItem.product_id },
         { product_function: productFunction },

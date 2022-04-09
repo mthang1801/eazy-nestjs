@@ -7,6 +7,7 @@ export const formatStringCondition = (position, existsItem) => {
   formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
   return formatStringCond;
 };
+
 export const formatHavingCondition = (position, existsItem) => {
   let formatStringCond =
     position == 0

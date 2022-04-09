@@ -155,3 +155,11 @@ export const formatCustomerDatetime = (customer) => {
     : customer['birthday'];
   return customer;
 };
+
+export const getPageSkipLimit = (params) => {
+  let { page, limit } = params;
+  page = +page || 1;
+  limit = +limit || 10;
+  let skip = (page - 1) * limit;
+  return { page, skip, limit };
+};

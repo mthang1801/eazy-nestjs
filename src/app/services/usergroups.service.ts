@@ -10,12 +10,7 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
-import {
-  Like,
-  IsNull,
-  Not,
-  Equal,
-} from '../../database/find-options/operators';
+import { Like, IsNull, Not, Equal } from '../../database/operators/operators';
 import { CreateUserGroupsDto } from '../dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';

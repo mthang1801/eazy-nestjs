@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
 import { JoinTable, Table } from 'src/database/enums';
-import { Like } from '../../database/find-options/operators';
+import { Like } from '../../database/operators/operators';
 import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from '../dto/usergroups/update-usergroupPrivilege.dto';
 import { IUserGroupPrivilege } from '../interfaces/usergroupPrivilege.interface';

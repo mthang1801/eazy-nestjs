@@ -26,7 +26,7 @@ import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetD
 import { BannerTargetDescriptionEntity } from '../entities/bannerTargetDescription.entity';
 import { bannerSearchFilter } from '../../utils/tableConditioner';
 import { bannerItemsJoiner, bannerJoiner } from 'src/utils/joinTable';
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { BannerPageDescriptionEntity } from '../entities/bannerPageDescription.entity';
 import * as moment from 'moment';
 import { BannerItemEntity } from '../entities/bannerItem.entity';

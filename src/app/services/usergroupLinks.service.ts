@@ -17,7 +17,7 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 import { UpdateUserGroupLinkDto } from '../dto/usergroups/update-usergroupLink.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';

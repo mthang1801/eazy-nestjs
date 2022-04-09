@@ -11,7 +11,7 @@ import { JoinTable } from '../../database/enums/joinTable.enum';
 import { Table } from '../../database/enums/tables.enum';
 import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
 import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.entity';
-import { IsNull, Not } from 'src/database/find-options/operators';
+import { IsNull, Not } from 'src/database/operators/operators';
 import {
   formatStandardTimeStamp,
   generateRandomString,

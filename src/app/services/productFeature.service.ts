@@ -11,7 +11,7 @@ import { ProductFeatureVariantsRepository } from '../repositories/productFeature
 import { ProductFeatureDisplayStatus } from 'src/database/enums/tableFieldEnum/productFeature.enum';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { Table } from 'src/database/enums';
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { UpdateProductFeatureDto } from '../dto/productFeatures/update-productFeatures.dto';
 import { IProductFeaturesResponse } from '../interfaces/productFeaturesResponse.interface';
 import { ProductFeatureValueRepository } from '../repositories/productFeaturesValues.repository';
@@ -35,7 +35,7 @@ import {
   productFeatureVariantSearchFilter,
 } from 'src/utils/tableConditioner';
 import { DatabaseService } from 'src/database/database.service';
-import { Equal, Not } from '../../database/find-options/operators';
+import { Equal, Not } from '../../database/operators/operators';
 import { UpdateProductFeatureAppcoreDto } from '../dto/productFeatures/update-productFeature.appcore.dto';
 
 import {

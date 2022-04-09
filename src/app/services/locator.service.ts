@@ -7,7 +7,7 @@ import { DistrictRepository } from '../repositories/district.repository';
 import { WardRepository } from '../repositories/ward.repository';
 import { wardsData } from '../../database/constant/wards';
 
-import { Like } from '../../database/find-options/operators';
+import { Like } from '../../database/operators/operators';
 
 @Injectable()
 export class LocatorService {

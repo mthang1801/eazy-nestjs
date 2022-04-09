@@ -60,23 +60,6 @@ export const productPriceJoiner = {
   },
 };
 
-export const productsSearchOnOrderJoiner = {
-  [JoinTable.leftJoin]: {
-    [Table.PRODUCT_DESCRIPTION]: {
-      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
-    [Table.PRODUCT_PRICES]: {
-      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
-    [Table.PRODUCTS_CATEGORIES]: {
-      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
-  },
-};
-
 export const productSearchJoiner = {
   [JoinTable.innerJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {
@@ -533,15 +516,6 @@ export const userSystemStoreJoiner = {
     [Table.STORE_LOCATION_DESCRIPTIONS]: {
       fieldJoin: `${Table.STORE_LOCATION_DESCRIPTIONS}.store_location_id`,
       rootJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
-    },
-  },
-};
-
-export const categoryJoiner = {
-  [JoinTable.innerJoin]: {
-    [Table.CATEGORY_DESCRIPTIONS]: {
-      fieldJoin: 'category_id',
-      rootJoin: 'category_id',
     },
   },
 };

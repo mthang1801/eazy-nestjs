@@ -15,9 +15,9 @@ import { ProductStickerRepository } from '../repositories/productSticker.reposit
 import { productStickerJoiner } from '../../utils/joinTable';
 import { flashSaleSearchFilter } from '../../utils/tableConditioner';
 import { Table } from 'src/database/enums';
-import { MoreThanOrEqual } from 'src/database/find-options/operators';
+import { MoreThanOrEqual } from 'src/database/operators/operators';
 import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
-import { LessThan, MoreThan } from '../../database/find-options/operators';
+import { LessThan, MoreThan } from '../../database/operators/operators';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';

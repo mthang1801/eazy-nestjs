@@ -6,7 +6,7 @@ import { PaymentDescriptionsRepository } from '../repositories/paymentDescriptio
 import { PaymentDescriptionsEntity } from '../entities/paymentDescription.entity';
 
 import { IPayment } from '../interfaces/payment.interface';
-import { Like } from 'src/database/find-options/operators';
+import { Like } from 'src/database/operators/operators';
 import { paymentFilter } from 'src/utils/tableConditioner';
 import axios from 'axios';
 
