@@ -86,7 +86,7 @@ import * as fsExtra from 'fs-extra';
 import { getProductsListByCategoryIdSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
-import { data } from '../../database/constant/category';
+import { data } from '../../constants/category';
 import { DeleteProductImageDto } from '../dto/product/delete-productImage.dto';
 
 import {
@@ -115,7 +115,7 @@ import {
   GET_PRODUCTS_STORES_API,
   GET_PRODUCT_APPCORE_DETAIL,
   UPLOAD_IMAGE_API,
-} from 'src/database/constant/api.appcore';
+} from 'src/constants/api.appcore';
 import { CreateProductAppcoreDto } from '../dto/product/create-product.appcore.dto';
 import {
   convertGetProductsFromAppcore,
@@ -145,7 +145,7 @@ import {
 import { UpdateProductsInCategory } from '../dto/product/update-productInCategory';
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
-import { sqlFindRelevantProductsInSameCategory } from '../../utils/sql/products.sql';
+import { sqlFindRelevantProductsInSameCategory } from '../../database/sqlQuery/others/stringQuery/products.sql';
 import {
   productDetailSelector,
   getDetailProductsListSelectorFE,
@@ -155,7 +155,7 @@ import {
   sqlReportTotalProductAmountFromStores,
   sqlReportTotalProductAmountInStores,
   sqlReportTotalProductsInCategories,
-} from 'src/utils/analysis/sqlProductAmount';
+} from 'src/database/sqlQuery/others/reports/sqlProductAmount';
 import { PromotionAccessoryService } from './promotionAccessory.service';
 
 import { CategoryService } from './category.service';

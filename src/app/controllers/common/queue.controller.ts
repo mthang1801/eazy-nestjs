@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { citiesData } from '../../../database/constant/cities';
+import { citiesData } from '../../../constants/cities';
 
 @Controller('queue/v1')
 export class QueueController {

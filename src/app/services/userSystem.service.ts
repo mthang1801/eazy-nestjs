@@ -16,15 +16,14 @@ import { UserGroupsRepository } from '../repositories/usergroups.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
 import { Like, Not, Equal } from '../../database/operators/operators';
-import { JoinTable } from 'src/database/enums';
 import { userSystemSearchFilter } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 import { userJoiner } from 'src/utils/joinTable';
-import { customer_type } from '../../database/constant/customer';
+import { customer_type } from '../../constants/customer';
 import { userSystemStoreJoiner } from '../../utils/joinTable';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { CreateUserSystemDto } from '../dto/userSystem/create-userSystem.dto';
-import { defaultPassword } from '../../database/constant/defaultPassword';
+import { defaultPassword } from '../../constants/defaultPassword';
 import {
   UserStatusEnum,
   UserTypeEnum,

@@ -17,7 +17,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { UpdateOrderDto } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
-import { convertDataToIntegrate } from 'src/database/constant/order';
+import { convertDataToIntegrate } from 'src/constants/order';
 import axios from 'axios';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
@@ -63,9 +63,9 @@ import {
   GET_ORDERS_FROM_APPCORE_API,
   GET_ORDER_BY_ID_FROM_APPCORE_API,
   PUSH_ORDER_TO_APPCORE_API,
-} from 'src/database/constant/api.appcore';
+} from 'src/constants/api.appcore';
 import { saltHashPassword } from 'src/utils/cipherHelper';
-import { defaultPassword } from '../../database/constant/defaultPassword';
+import { defaultPassword } from '../../constants/defaultPassword';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';

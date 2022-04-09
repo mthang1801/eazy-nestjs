@@ -3,7 +3,7 @@ import { CheckCouponDto } from '../dto/promotion/checkCoupon.dto';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import axios from 'axios';
-import { CHECK_COUPON_API } from 'src/database/constant/api.appcore';
+import { CHECK_COUPON_API } from 'src/constants/api.appcore';
 @Injectable()
 export class PromotionService {
   constructor(private productRepo: ProductsRepository<ProductsEntity>) {}

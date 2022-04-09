@@ -5,7 +5,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
-import { defaultPassword } from '../../../database/constant/defaultPassword';
+import { defaultPassword } from '../../../constants/defaultPassword';
 
 export class CreateUserSystemDto {
   @IsNotEmpty()

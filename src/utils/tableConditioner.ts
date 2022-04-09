@@ -1,4 +1,4 @@
-import { customer_type } from 'src/database/constant/customer';
+import { customer_type } from 'src/constants/customer';
 import { Table } from 'src/database/enums';
 import { UserTypeEnum } from 'src/database/enums/tableFieldEnum/user.enum';
 import { Equal, Like, Not } from 'src/database/operators/operators';

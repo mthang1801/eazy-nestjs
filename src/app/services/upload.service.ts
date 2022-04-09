@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as fsExtra from 'fs-extra';
-import { UPLOAD_IMAGE_API } from 'src/database/constant/api.appcore';
+import { UPLOAD_IMAGE_API } from 'src/constants/api.appcore';
 @Injectable()
 export class UploadService {
   async upload(files) {

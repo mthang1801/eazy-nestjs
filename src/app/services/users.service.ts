@@ -34,7 +34,7 @@ import { UserProfileEntity } from '../entities/userProfile.entity';
 import { LimitOnUpdateNotSupportedError } from 'typeorm';
 import { userJoiner } from 'src/utils/joinTable';
 import { itgCustomerToAppcore } from 'src/utils/integrateFunctions';
-import { CREATE_CUSTOMER_API } from 'src/database/constant/api.appcore';
+import { CREATE_CUSTOMER_API } from 'src/constants/api.appcore';
 import axios from 'axios';
 
 @Injectable()

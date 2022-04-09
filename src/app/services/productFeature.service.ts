@@ -22,7 +22,7 @@ import * as _ from 'lodash';
 import {
   productFeatures as productFeaturesData,
   productFeatures,
-} from '../../database/constant/productFeatures';
+} from '../../constants/productFeatures';
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 import {
   formatStandardTimeStamp,
@@ -41,7 +41,7 @@ import { UpdateProductFeatureAppcoreDto } from '../dto/productFeatures/update-pr
 import {
   covertProductFeaturesFromMagento,
   sqlGetFeatureValues,
-} from 'src/utils/scriptSyncFromMagentor/productFeature.sync';
+} from 'src/database/sqlQuery/others/scriptSyncFromMagentor/productFeature.sync';
 import {
   productFeatureJoiner,
   productFeatureVariantJoiner,

@@ -49,12 +49,12 @@ import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
 import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
 import { filter, sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { defaultPassword } from '../../database/constant/defaultPassword';
+import { defaultPassword } from '../../constants/defaultPassword';
 import {
   CREATE_CUSTOMER_API,
   GET_CUSTOMERS_API,
   IMPORT_CUSTOMERS_API,
-} from 'src/database/constant/api.appcore';
+} from 'src/constants/api.appcore';
 import { UpdateCustomerLoyalty } from '../dto/customer/update-customerLoyalty.appcore.dto';
 import {
   Not,

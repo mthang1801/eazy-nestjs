@@ -5,7 +5,7 @@ import { WardEntity } from '../entities/wards.entity';
 import { CityRepository } from '../repositories/city.repository';
 import { DistrictRepository } from '../repositories/district.repository';
 import { WardRepository } from '../repositories/ward.repository';
-import { wardsData } from '../../database/constant/wards';
+import { wardsData } from '../../constants/wards';
 
 import { Like } from '../../database/operators/operators';
 

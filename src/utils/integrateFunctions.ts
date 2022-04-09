@@ -9,7 +9,7 @@ import {
 
 import { UserRepository } from '../app/repositories/user.repository';
 import { saltHashPassword } from './cipherHelper';
-import { defaultPassword } from '../database/constant/defaultPassword';
+import { defaultPassword } from '../constants/defaultPassword';
 import * as moment from 'moment';
 
 export const itgOrderFromAppcore = (cData) => {

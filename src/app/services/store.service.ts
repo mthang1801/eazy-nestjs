@@ -8,7 +8,7 @@ import { StoreLocationDescriptionEntity } from '../entities/storeLocationDescrip
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { Table } from '../../database/enums/tables.enum';
 import axios from 'axios';
-import { GET_STORES_API } from 'src/database/constant/api.appcore';
+import { GET_STORES_API } from 'src/constants/api.appcore';
 import { DistrictRepository } from '../repositories/district.repository';
 import { DistrictEntity } from '../entities/districts.entity';
 import { CityRepository } from '../repositories/city.repository';

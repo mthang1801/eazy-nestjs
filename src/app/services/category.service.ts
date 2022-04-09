@@ -26,18 +26,18 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
-import { data as categoryData } from '../../database/constant/category';
+import { data as categoryData } from '../../constants/category';
 import { catalogCategoryJoiner } from 'src/utils/joinTable';
 import { DatabaseService } from 'src/database/database.service';
 import {
   sqlSyncGetCategoryFromMagento,
   convertCategoryFromMagentoToCMS,
-} from '../../utils/scriptSyncFromMagentor/category.sync';
+} from '../../database/sqlQuery/others/scriptSyncFromMagentor/category.sync';
 import { categoriesSearchFilter } from 'src/utils/tableConditioner';
 import {
   sqlGetCatalogCategoryName,
   sqlGetCatalogCategoryUrlKey,
-} from '../../utils/scriptSyncFromMagentor/catalogCategoy';
+} from '../../database/sqlQuery/others/scriptSyncFromMagentor/catalogCategoy';
 
 import {
   convertCategoryFromAppcore,
@@ -48,10 +48,10 @@ import { CatalogCategoryEntity } from '../entities/catalogCategory.entity';
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
 import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDescription.entity';
-import { sqlGetCatalogCategoryUrlPath } from '../../utils/scriptSyncFromMagentor/catalogCategoy';
+import { sqlGetCatalogCategoryUrlPath } from '../../database/sqlQuery/others/scriptSyncFromMagentor/catalogCategoy';
 import axios from 'axios';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { UPLOAD_IMAGE_API } from '../../database/constant/api.appcore';
+import { UPLOAD_IMAGE_API } from '../../constants/api.appcore';
 import * as fsExtra from 'fs-extra';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
