@@ -375,4 +375,16 @@ export class BaseRepositorty<T> {
   async writeExec(queryString: string, params: any = null): Promise<any> {
     return this.databaseService.executeQueryWritePool(queryString, params);
   }
+
+  async startTransaction() {
+    await this.databaseService.startTransaction();
+  }
+
+  async commitTransaction() {
+    await this.databaseService.commitTransaction();
+  }
+
+  async rollbackTransaction() {
+    await this.databaseService.rollbackTransaction();
+  }
 }

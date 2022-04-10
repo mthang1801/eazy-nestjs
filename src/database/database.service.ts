@@ -57,4 +57,19 @@ export class DatabaseService {
         .catch((err) => reject(err));
     });
   }
+
+  async startTransaction(): Promise<void> {
+    let sql = 'START TRANSACTION;';
+    await this.executeQueryWritePool(sql);
+  }
+
+  async commitTransaction(): Promise<void> {
+    let sql = 'COMMIT;';
+    await this.executeQueryWritePool(sql);
+  }
+
+  async rollbackTransaction(): Promise<void> {
+    let sql = 'ROLLBACK;';
+    await this.executeQueryWritePool(sql);
+  }
 }

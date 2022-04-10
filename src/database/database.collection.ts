@@ -587,10 +587,8 @@ export class DatabaseCollection {
 
   sql(is_limit = true): string {
     let sql_string = '';
-    console.log();
     this.stringCondition = this.genCondition();
     this.stringHaving = this.genHaving();
-    console.log(this.stringHaving);
     const orderString = this.sortString
       ? 'ORDER BY ' + this.sortString
       : this.sortString;

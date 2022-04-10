@@ -1,15 +1,22 @@
-export const MaxLimit = 9999999999999;
-
 const quotation = `"`;
-const replaceQuotation = '_quot';
+const replaceQuotation = '_$quot';
 const apostrophe = `'`;
-const replaceApostrophe = '_apos';
+const replaceApostrophe = '_$apos';
 
 export const preprocessAddTextDataToMysql = (data: any) => {
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(quotation, 'g'), replaceQuotation)
       .replace(new RegExp(apostrophe, 'g'), replaceApostrophe);
+  }
+  return data;
+};
+
+export const processGetTextDataFromMysql = (data) => {
+  if (data && typeof data == 'string') {
+    return data
+      .replace(new RegExp(replaceQuotation, 'g'), quotation)
+      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe);
   }
   return data;
 };
@@ -49,13 +56,4 @@ export const formatTypeValueConditionSQL = (value) => {
     // return `${key} = ${value}`;
   }
   return `'${value}'`;
-};
-
-export const processGetTextDataFromMysql = (data) => {
-  if (data && typeof data == 'string') {
-    return data
-      .replace(new RegExp(replaceQuotation, 'g'), quotation)
-      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe);
-  }
-  return data;
 };
