@@ -156,7 +156,29 @@ export class CategoryService {
       ...this.categoryRepository.setData(convertedData),
       slug: convertToSlug(removeVietnameseTones(data['category'])),
     };
-    const newCategory = await this.categoryRepository.create(categoryData);
+
+    if (convertedData['parent_appcore_id']) {
+      let parentCategory = await this.categoryRepository.findOne({
+        category_appcore_id: convertedData['parent_appcore_id'],
+      });
+      if (parentCategory) {
+        categoryData['id_path'] = `${parentCategory['id_path']}`;
+      }
+    }
+
+    let newCategory = await this.categoryRepository.create(categoryData);
+
+    //update id_path
+    newCategory = await this.categoryRepository.update(
+      { category_id: newCategory['category_id'] },
+      {
+        id_path: categoryData['id_path']
+          ? `${categoryData['id_path']}/${newCategory['category_id']}`
+          : newCategory['category_id'],
+      },
+    );
+
+    await this.updateLevelChildrenCategories(newCategory['category_id']);
 
     const categoryDescData = {
       ...new CategoryDescriptionEntity(),
@@ -183,10 +205,24 @@ export class CategoryService {
       updated_at: formatStandardTimeStamp(),
     };
 
+    if (convertedData['parent_appcore_id']) {
+      const parentCategory = await this.catalogCategoryRepo.findOne({
+        category_appcore_id: convertedData['parent_appcore_id'],
+      });
+      if (parentCategory) {
+        updatedCategoryData[
+          'id_path'
+        ] = `${parentCategory['id_path']}/${category['category_id']}`;
+        updatedCategoryData['level'] = parentCategory['level'] + 1;
+      }
+    }
+
     await this.categoryRepository.update(
       { category_id: category['category_id'] },
       updatedCategoryData,
     );
+
+    await this.updateLevelChildrenCategories(category['category_id']);
 
     const updatedCategoryDesData = {
       ...this.categoryDescriptionRepo.setData(convertedData),
