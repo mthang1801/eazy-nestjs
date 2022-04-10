@@ -82,6 +82,11 @@ export class CategoryService {
       throw new HttpException('Đường dẫn đã tồn tại.', 409);
     }
 
+    const categoryData = {
+      ...new CategoryEntity(),
+      ...this.categoryRepository.setData(data),
+    };
+
     if (data.parent_id) {
       const parentCategory = await this.categoryRepository.findOne({
         category_id: data.parent_id,
@@ -89,14 +94,17 @@ export class CategoryService {
       if (!parentCategory) {
         throw new HttpException('Danh mục cha không tồn tại', 404);
       }
-      data['level'] = parentCategory['level'] + 1;
+      categoryData['level'] = parentCategory['level'] + 1;
+      categoryData['id_path'] = parentCategory['id_path'];
     }
 
-    const categoryData = {
-      ...new CategoryEntity(),
-      ...this.categoryRepository.setData(data),
-    };
-    const category = await this.categoryRepository.create(categoryData);
+    let category = await this.categoryRepository.create(categoryData);
+    // Update id_path
+    category = await this.categoryRepository.update(
+      { category_id: category['category_id'] },
+      { id_path: `${category['id_path']}/${category['category_id']}` },
+    );
+
     let result: any = { ...category };
 
     const categoryDescData = {
@@ -248,6 +256,8 @@ export class CategoryService {
 
       updatedCategoryData['id_path'] = `${parentCategory['id_path']}/${id}`;
       updatedCategoryData['level'] = parentCategory['level'] + 1;
+      updatedCategoryData['parent_appcore_id'] =
+        parentCategory['category_appcore_id'];
     }
 
     let result = { ...oldCategoryData };
@@ -421,6 +431,7 @@ export class CategoryService {
             {
               level: currentCategory['level'] + 1,
               id_path: `${currentCategory['id_path']}/${childCategory.category_id}`,
+              parent_appcore_id: `${currentCategory['category_appcore_id']}`,
             },
           );
           await this.updateLevelChildrenCategories(childCategory.category_id);
