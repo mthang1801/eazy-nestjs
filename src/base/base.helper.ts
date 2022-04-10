@@ -1,7 +1,7 @@
 const quotation = `"`;
-const replaceQuotation = '_$quot';
+const replaceQuotation = '_quot';
 const apostrophe = `'`;
-const replaceApostrophe = '_$apos';
+const replaceApostrophe = '_apos';
 
 export const preprocessAddTextDataToMysql = (data: any) => {
   if (data && typeof data == 'string') {
@@ -13,6 +13,7 @@ export const preprocessAddTextDataToMysql = (data: any) => {
 };
 
 export const processGetTextDataFromMysql = (data) => {
+  console.log(data);
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(replaceQuotation, 'g'), quotation)
