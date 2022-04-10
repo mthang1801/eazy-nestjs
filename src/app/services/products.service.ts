@@ -3761,7 +3761,6 @@ export class ProductService {
           APIPassword: 'KdTSFxFxzOKenbR8',
           APISignature:
             'Ss+N1LjJGiCrjtviRYpAN5yHPQZB7BMNHajFZ/lNj/iYOX`AlfjKbcehf6XlGU9eMi',
-          rejectUnauthorized: false,
         },
         data: JSON.stringify(dataReq),
       });
