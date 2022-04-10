@@ -103,7 +103,7 @@ export class CategoryService {
     category = await this.categoryRepository.update(
       { category_id: category['category_id'] },
       {
-        id_path: category['id_path']
+        id_path: categoryData['id_path']
           ? `${category['id_path']}/${category['category_id']}`
           : category['category_id'],
       },
