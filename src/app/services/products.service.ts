@@ -3745,7 +3745,7 @@ export class ProductService {
 
   async testSql() {
     console.log('ok');
-    let data = {
+    let dataReq = {
       RequestData:
         '{"OrderNo":"PR_ORD_20220411163842","ShopID":"1418","FromShipDate":"12/04/2022","ShipNumDay":"3","Description":"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..31927 duioqweu duqwodu dasudiowquiopd qwduqw iopduqw asdjioqpwjdiopq... Sốtiền thanh toán: 5000000","CyberCash":"5000000","PaymentExpireDate":"20220414201400","NotifyUrl":"https://ddvcmsdev.ntlogistics.vn/orders/payment/callback","InfoEx":"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e","BillingCode":null}',
       Signature:
@@ -3754,7 +3754,6 @@ export class ProductService {
     try {
       let response = await axios({
         url: 'https://bizsandbox.payoo.com.vn/BusinessRestAPI.svc/getbillingcode',
-
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -3764,7 +3763,7 @@ export class ProductService {
             'Ss+N1LjJGiCrjtviRYpAN5yHPQZB7BMNHajFZ/lNj/iYOX`AlfjKbcehf6XlGU9eMi',
           rejectUnauthorized: false,
         },
-        data: JSON.stringify(data),
+        data: JSON.stringify(dataReq),
       });
       console.log(response);
     } catch (error) {
