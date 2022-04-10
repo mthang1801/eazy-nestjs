@@ -419,7 +419,7 @@ export class CategoryService {
   }
 
   async updateLevelChildrenCategories(category_id) {
-    let currentCategory = await this.categoryRepository.find({
+    let currentCategory = await this.categoryRepository.findOne({
       category_id,
     });
     if (!currentCategory) return;
