@@ -14,7 +14,7 @@ import { CategoryDescriptionEntity } from '../entities/categoryDescription.entit
 import { CategoryEntity } from '../entities/category.entity';
 import { CategoryDescriptionRepository } from '../repositories/categoryDescriptions.repository';
 import * as _ from 'lodash';
-import { Like } from '../../database/operators/operators';
+import { Like, Equal, Not } from '../../database/operators/operators';
 import { ICategoryResult } from '../interfaces/categoryReult.interface';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
@@ -58,6 +58,7 @@ import * as fs from 'fs';
 import { sortBy } from 'lodash';
 import { categorySelector } from '../../database/sqlQuery/select/category.select';
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
+import { productCategoryJoinProductAndCategory } from '../../database/sqlQuery/join/category.join';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -208,15 +209,8 @@ export class CategoryService {
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
     const oldCategoryData = await this.categoryRepository.findOne({
-      select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-            rootJoin: `${Table.CATEGORIES}.category_id`,
-          },
-        },
-      },
+      select: '*',
+      join: categoryJoiner,
       where: {
         [`${Table.CATEGORIES}.category_id`]: id,
       },
@@ -226,18 +220,42 @@ export class CategoryService {
       throw new HttpException(`Không tìm thấy category với id là ${id}`, 404);
     }
 
-    if (data.slug && data.slug !== oldCategoryData.slug) {
+    if (data.slug) {
       const checkSlug = await this.categoryRepository.findOne({
         slug: convertToSlug(data.slug),
+        category_id: Not(Equal(id)),
       });
       if (checkSlug) {
         throw new HttpException(
-          'đường dẫn đã tồn tại, không thể cập nhật.',
+          'đường dẫn danh mục này đã tồn tại, không thể sử dụng. Cập nhật không thành công.',
           409,
         );
       }
     }
-    let updatedCategoryData = this.categoryRepository.setData(data);
+
+    let updatedCategoryData = {
+      ...this.categoryRepository.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
+
+    if (data.parent_id) {
+      let parentCategory = await this.categoryRepository.findOne({
+        category_id: data['parent_id'],
+      });
+      if (!parentCategory) {
+        throw new HttpException('Không tìm thấy danh mục cha', 404);
+      }
+
+      if (parentCategory['level'] <= oldCategoryData['level']) {
+        throw new HttpException(
+          'Danh mục cha không thể có level nhỏ hơn danh mục hiện tại',
+          400,
+        );
+      }
+
+      updatedCategoryData['id_path'] = `${parentCategory['id_path']}/${id}`;
+      updatedCategoryData['level'] = parentCategory['level'] + 1;
+    }
 
     let result = { ...oldCategoryData };
 
@@ -252,9 +270,7 @@ export class CategoryService {
 
       const updatedCategory = await this.categoryRepository.update(
         oldCategoryData.category_id,
-        {
-          ...updatedCategoryData,
-        },
+        updatedCategoryData,
       );
 
       result = { ...result, ...updatedCategory };
@@ -287,17 +303,10 @@ export class CategoryService {
     // update products
     if (data.products_list && data.products_list.length) {
       let currentProductsLists = await this.productCategoryRepository.find({
-        select: ['*'],
-        join: {
-          [JoinTable.leftJoin]: {
-            [Table.PRODUCTS]: {
-              fieldJoin: `${Table.PRODUCTS}.product_id`,
-              rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-            },
-          },
-        },
+        select: '*',
+        join: productCategoryJoinProductAndCategory,
         where: {
-          category_id: result.category_id,
+          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: result.category_id,
         },
       });
       const willDeleteProducts = currentProductsLists.filter(

@@ -21,3 +21,16 @@ export const categoryJoinProduct = {
     },
   },
 };
+
+export const productCategoryJoinProductAndCategory = {
+  [JoinTable.innerJoin]: {
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  },
+};
