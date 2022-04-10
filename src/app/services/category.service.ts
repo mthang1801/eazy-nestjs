@@ -96,6 +96,7 @@ export class CategoryService {
       }
       categoryData['level'] = parentCategory['level'] + 1;
       categoryData['id_path'] = parentCategory['id_path'];
+      categoryData['parent_appcore_id'] = parentCategory['category_appcore_id'];
     }
 
     let category = await this.categoryRepository.create(categoryData);
