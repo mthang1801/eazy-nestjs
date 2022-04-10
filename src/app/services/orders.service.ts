@@ -347,6 +347,7 @@ export class OrdersService {
       phone: data.b_phone,
       password: passwordHash,
       salt,
+      is_sync: 'N',
     };
 
     let result = await this.userRepo.create(userData);

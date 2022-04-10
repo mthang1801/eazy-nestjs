@@ -259,11 +259,7 @@ export const categoriesSearchFilter = (search = '', filterConditions = {}) => {
   if (search) {
     arraySearch = [
       { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
-      {
-        [`${Table.CATEGORIES}.slug`]: Like(
-          convertToSlug(removeVietnameseTones(search)),
-        ),
-      },
+      { [`${Table.CATEGORY_DESCRIPTIONS}.category_appcore`]: Like(search) },
     ];
   }
   return searchFilterTemplate(filterConditions, arraySearch);
@@ -340,12 +336,12 @@ export const getProductsListByCategoryIdSearchFilter = (
   filterConditions = {},
 ) => {
   let arraySearch = [];
-  if (search) {
-    arraySearch = [
-      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
-      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
-    ];
-  }
+  // if (search) {
+  //   arraySearch = [
+  //     { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+  //     { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+  //   ];
+  // }
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };

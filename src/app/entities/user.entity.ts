@@ -34,4 +34,5 @@ export class UserEntity {
   updated_at: string = formatStandardTimeStamp();
   lasted_buy_at: null | string = null;
   created_by: number = 0;
+  is_sync: string = 'N';
 }

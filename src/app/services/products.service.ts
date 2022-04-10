@@ -86,7 +86,7 @@ import * as fsExtra from 'fs-extra';
 import { getProductsListByCategoryIdSearchFilter } from '../../utils/tableConditioner';
 import axios from 'axios';
 import * as FormData from 'form-data';
-import { data } from '../../constants/category';
+
 import { DeleteProductImageDto } from '../dto/product/delete-productImage.dto';
 
 import {
@@ -1192,26 +1192,34 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    let filterCondition =
-      find_reverse == 'true'
-        ? {
-            [`${Table.PRODUCTS_CATEGORIES}.category_id`]: Not(
-              Equal(categoryId),
-            ),
-          }
-        : { [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId };
+    let filterCondition = {
+      [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+    };
 
     let productsList = await this.productCategoryRepo.find({
       select: '*',
-      join: productByCategoryIdJoiner,
+      // join: productByCategoryIdJoiner,
+      orderBy: [
+        { field: `${Table.PRODUCTS_CATEGORIES}.position`, sortBy: SortBy.ASC },
+      ],
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
       skip,
       limit,
     });
 
+    productsList = await this.productRepo.find({
+      select: getProductsListSelectorBE,
+      join: productLeftJoiner,
+      where: {
+        [`${Table.PRODUCTS}.product_id`]: In(
+          productsList.map(({ product_id }) => product_id),
+        ),
+      },
+    });
+
     let count = await this.productCategoryRepo.find({
-      select: `COUNT(${Table.PRODUCTS}.product_id) as total`,
-      join: productByCategoryIdJoiner,
+      select: `COUNT(${Table.PRODUCTS_CATEGORIES}.product_id) as total`,
+
       where: getProductsListByCategoryIdSearchFilter(search, filterCondition),
     });
 

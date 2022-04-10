@@ -108,10 +108,12 @@ export class CustomerService {
 
     const userData = {
       ...new UserEntity(),
+      created_by: creator.user_id,
       ...this.userRepo.setData(data),
       password: passwordHash,
       salt: salt,
       status: UserStatusEnum.Active,
+      is_sync: 'N',
     };
 
     const newUser = await this.userRepo.create(userData);
@@ -181,11 +183,13 @@ export class CustomerService {
       const user_appcore_id = data.data;
       await this.userRepo.update(
         { user_id: user.user_id },
-        { user_appcore_id, updated_at: formatStandardTimeStamp() },
+        {
+          user_appcore_id,
+          updated_at: formatStandardTimeStamp(),
+          is_sync: 'Y',
+        },
       );
     } catch (error) {
-      console.log('create customer', error);
-
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,

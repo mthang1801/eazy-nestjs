@@ -26,7 +26,7 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
-import { data as categoryData } from '../../constants/category';
+import * as categoryData from '../../constants/category.json';
 import { catalogCategoryJoiner } from 'src/utils/joinTable';
 import { DatabaseService } from 'src/database/database.service';
 import {
@@ -59,6 +59,7 @@ import { sortBy } from 'lodash';
 import { categorySelector } from '../../database/sqlQuery/select/category.select';
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { productCategoryJoinProductAndCategory } from '../../database/sqlQuery/join/category.join';
+import { getPageSkipLimit } from '../../utils/helper';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -591,10 +592,8 @@ export class CategoryService {
 
   async getList(params) {
     // ignore page and limit
-    let { page, limit, search, ...others } = params;
-    page = +page || 1;
-    limit = +limit || 10;
-    let skip = (page - 1) * limit;
+    let { search, ...others } = params;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
 
@@ -615,13 +614,21 @@ export class CategoryService {
         skip,
         limit,
       });
+
       const totalCategories = await this.categoryRepository.find({
         select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
         join: categoryJoiner,
         where: categoriesSearchFilter(search, filterCondition),
       });
 
+      let categoriesListResponse = await this.searchCategoriesListFromRoot(
+        categories,
+      );
+      console.log(JSON.stringify(categoriesListResponse, null, 4));
+
       for (let category of categories) {
+        let categoriesCascadeIds = category['id_path'].split('/');
+
         const categoriesList = await this.getCategoriesChildrenRecursive(
           category,
           Infinity,
@@ -697,6 +704,221 @@ export class CategoryService {
           : categoriesListRoot.length,
       },
     };
+  }
+
+  async searchCategoriesListFromRoot(categories) {
+    let listResponse = [];
+    if (categories && Array.isArray(categories) && categories.length) {
+      for (let category of categories) {
+        let categoryIdPaths = category['id_path'].split('/');
+
+        if (categoryIdPaths.length) {
+          for (let [level, idPath] of categoryIdPaths.entries()) {
+            if (level == 0) {
+              let findCategory = listResponse.find(
+                ({ category_id }) => category_id == idPath,
+              );
+
+              if (!findCategory) {
+                const _category = await this.categoryRepository.findOne({
+                  select: '*',
+                  join: categoryJoiner,
+                  where: { [`${Table.CATEGORIES}.category_id`]: idPath },
+                });
+                _category['children'] = [];
+                listResponse = [...listResponse, _category];
+                continue;
+              }
+            }
+
+            if (level == 1) {
+              let categoryIndexLevel0 = _.findIndex(listResponse, function (o) {
+                return o.category_id == categoryIdPaths[0];
+              });
+
+              if (
+                listResponse[categoryIndexLevel0]['children'].find(
+                  ({ category_id }) => category_id == idPath,
+                )
+              ) {
+                continue;
+              }
+              const _category = await this.categoryRepository.findOne({
+                select: '*',
+                join: categoryJoiner,
+                where: { [`${Table.CATEGORIES}.category_id`]: idPath },
+              });
+
+              _category['children'] = [];
+              listResponse[categoryIndexLevel0]['children'] = listResponse[
+                categoryIndexLevel0
+              ]['children']
+                ? [...listResponse[categoryIndexLevel0]['children'], _category]
+                : [_category];
+              continue;
+            }
+
+            if (level == 2) {
+              let categoryIndexLevel0 = _.findIndex(listResponse, function (o) {
+                return o.category_id == categoryIdPaths[0];
+              });
+              let categoryIndexLevel1 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[1];
+                },
+              );
+              if (
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'].find(({ category_id }) => category_id == idPath)
+              ) {
+                continue;
+              }
+              const _category = await this.categoryRepository.findOne({
+                select: '*',
+                join: categoryJoiner,
+                where: { [`${Table.CATEGORIES}.category_id`]: idPath },
+              });
+
+              _category['children'] = [];
+              listResponse[categoryIndexLevel0]['children'][
+                categoryIndexLevel1
+              ]['children'] = listResponse[categoryIndexLevel0]['children'][
+                categoryIndexLevel1
+              ]['children']
+                ? [
+                    ...listResponse[categoryIndexLevel0]['children'][
+                      categoryIndexLevel1
+                    ]['children'],
+                    _category,
+                  ]
+                : [_category];
+              continue;
+            }
+
+            if (level == 3) {
+              let categoryIndexLevel0 = _.findIndex(listResponse, function (o) {
+                return o.category_id == categoryIdPaths[0];
+              });
+              let categoryIndexLevel1 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[1];
+                },
+              );
+              let categoryIndexLevel2 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[2];
+                },
+              );
+              if (
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'][categoryIndexLevel2]['children'].find(
+                  ({ category_id }) => category_id == idPath,
+                )
+              ) {
+                continue;
+              }
+
+              const _category = await this.categoryRepository.findOne({
+                select: '*',
+                join: categoryJoiner,
+                where: { [`${Table.CATEGORIES}.category_id`]: idPath },
+              });
+
+              _category['children'] = [];
+              listResponse[categoryIndexLevel0]['children'][
+                categoryIndexLevel1
+              ]['children'][categoryIndexLevel2]['children'] = listResponse[
+                categoryIndexLevel0
+              ]['children'][categoryIndexLevel1]['children'][
+                categoryIndexLevel2
+              ]['children']
+                ? [
+                    ...listResponse[categoryIndexLevel0]['children'][
+                      categoryIndexLevel1
+                    ]['children'][categoryIndexLevel2]['children'],
+                    _category,
+                  ]
+                : [_category];
+              continue;
+            }
+
+            if (level == 4) {
+              let categoryIndexLevel0 = _.findIndex(listResponse, function (o) {
+                return o.category_id == categoryIdPaths[0];
+              });
+              let categoryIndexLevel1 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[1];
+                },
+              );
+              let categoryIndexLevel2 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[2];
+                },
+              );
+              let categoryIndexLevel3 = _.findIndex(
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'][categoryIndexLevel2]['children'],
+                function (o) {
+                  return o['category_id'] == categoryIdPaths[3];
+                },
+              );
+
+              if (
+                listResponse[categoryIndexLevel0]['children'][
+                  categoryIndexLevel1
+                ]['children'][categoryIndexLevel2]['children'][
+                  categoryIndexLevel3
+                ]['children'].find(({ category_id }) => category_id == idPath)
+              ) {
+                continue;
+              }
+
+              const _category = await this.categoryRepository.findOne({
+                select: '*',
+                join: categoryJoiner,
+                where: { [`${Table.CATEGORIES}.category_id`]: idPath },
+              });
+
+              _category['children'] = [];
+              listResponse[categoryIndexLevel0]['children'][
+                categoryIndexLevel1
+              ]['children'][categoryIndexLevel2]['children'][
+                categoryIndexLevel3
+              ]['children'] = listResponse[categoryIndexLevel0]['children'][
+                categoryIndexLevel1
+              ]['children'][categoryIndexLevel2]['children'][
+                categoryIndexLevel3
+              ]['children']
+                ? [
+                    ...listResponse[categoryIndexLevel0]['children'][
+                      categoryIndexLevel1
+                    ]['children'][categoryIndexLevel2]['children'][
+                      categoryIndexLevel3
+                    ]['children'],
+                    _category,
+                  ]
+                : [_category];
+              continue;
+            }
+          }
+        }
+      }
+    }
+
+    return listResponse;
   }
 
   async getAll(level = Infinity) {
