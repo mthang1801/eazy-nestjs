@@ -1003,4 +1003,8 @@ export class OrdersService {
       where: { order_id },
     });
   }
+
+  async paymentCallback(data) {
+    console.log(data);
+  }
 }

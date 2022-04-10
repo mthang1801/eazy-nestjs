@@ -67,4 +67,13 @@ export class OrderController extends BaseController {
     const result = await this.service.getHistory(order_id);
     return this.responseSuccess(res, result, 'Thành công.');
   }
+
+  @Post('/orders/payment/callback')
+  async paymentCallback(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    await this.service.paymentCallback(data);
+    return this.responseSuccess(res, null, 'Thành công');
+  }
 }
