@@ -246,13 +246,6 @@ export class CategoryService {
         throw new HttpException('Không tìm thấy danh mục cha', 404);
       }
 
-      if (parentCategory['level'] <= oldCategoryData['level']) {
-        throw new HttpException(
-          'Danh mục cha không thể có level nhỏ hơn danh mục hiện tại',
-          400,
-        );
-      }
-
       updatedCategoryData['id_path'] = `${parentCategory['id_path']}/${id}`;
       updatedCategoryData['level'] = parentCategory['level'] + 1;
     }
@@ -275,6 +268,8 @@ export class CategoryService {
 
       result = { ...result, ...updatedCategory };
     }
+
+    await this.updateLevelChildrenCategories(id);
 
     const oldCategoryDescription = await this.categoryDescriptionRepo.findOne({
       category_id: id,
@@ -406,6 +401,32 @@ export class CategoryService {
     }
 
     return result;
+  }
+
+  async updateLevelChildrenCategories(category_id) {
+    let currentCategory = await this.categoryRepository.find({
+      category_id,
+    });
+    if (!currentCategory) return;
+    if (currentCategory) {
+      let childrenCategories = await this.categoryRepository.find({
+        parent_id: category_id,
+      });
+      if (childrenCategories.length) {
+        for (let childCategory of childrenCategories) {
+          await this.categoryRepository.update(
+            {
+              category_id: childCategory['category_id'],
+            },
+            {
+              level: currentCategory['level'] + 1,
+              id_path: `${currentCategory['id_path']}/${childCategory.category_id}`,
+            },
+          );
+          await this.updateLevelChildrenCategories(childCategory.category_id);
+        }
+      }
+    }
   }
 
   async uploadMetaImage(file, category_id) {
