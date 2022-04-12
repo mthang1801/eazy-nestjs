@@ -327,28 +327,18 @@ export class BaseRepositorty<T> {
           }
           Object.entries(option).forEach(([key, val], i) => {
             if (i === 0) {
-              queryString +=
-                typeof val === 'number'
-                  ? `${key} = ${val}`
-                  : `${key} = '${val}'`;
+              queryString += `${key} = '${val}'`;
             } else {
-              queryString +=
-                typeof val === 'number'
-                  ? ` OR ${key} = ${val}`
-                  : ` OR ${key} = '${val}'`;
+              queryString += ` OR ${key} = '${val}'`;
             }
           });
         }
       } else {
         Object.entries(option).forEach(([key, val], i) => {
           if (i === 0) {
-            queryString +=
-              typeof val === 'number' ? `${key} = ${val}` : `${key} = '${val}'`;
+            queryString += `${key} = '${val}'`;
           } else {
-            queryString +=
-              typeof val === 'number'
-                ? ` AND ${key} = ${val}`
-                : ` AND ${key} = '${val}'`;
+            queryString += ` AND ${key} = '${val}'`;
           }
         });
       }

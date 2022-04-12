@@ -389,11 +389,13 @@ export class PromotionAccessoryService {
           let updatedData = {};
           switch (type) {
             case 1:
-              updatedData = { free_accessory_id: newAccessory['accessory_id'] };
+              updatedData = {
+                promotion_accessory_id: newAccessory['accessory_id'],
+              };
               break;
             case 2:
               updatedData = {
-                promotion_accessory_id: newAccessory['accessory_id'],
+                free_accessory_id: newAccessory['accessory_id'],
               };
               break;
             case 3:

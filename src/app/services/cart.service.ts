@@ -100,10 +100,49 @@ export class CartService {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
 
-    await this.cartRepo.update(
+    let currentCartItems = await this.cartItemRepo.find({
+      cart_id: currentCart.cart_id,
+    });
+
+    const alterUserCart = await this.cartRepo.findOne({
+      user_id: alter_user_id,
+    });
+
+    let alterUserCartItems = [];
+    if (alterUserCart) {
+      alterUserCartItems = await this.cartItemRepo.find({
+        cart_id: alterUserCart.cart_id,
+      });
+    }
+
+    await this.cartRepo.delete({ user_id: alter_user_id });
+    const updatedCart = await this.cartRepo.update(
       { cart_id: currentCart.cart_id },
       { user_id: alter_user_id },
     );
+
+    currentCartItems = [
+      ...currentCartItems,
+      ...alterUserCartItems.filter(
+        ({ product_id }) =>
+          !currentCartItems.some(
+            ({ product_id: current_product_id }) =>
+              product_id == current_product_id,
+          ),
+      ),
+    ];
+
+    console.log(currentCartItems);
+    await this.cartItemRepo.delete({ cart_id: alterUserCart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: currentCart.cart_id });
+    for (let cartItem of currentCartItems) {
+      let cartItemData = {
+        ...new CartItemEntity(),
+        ...this.cartItemRepo.setData(cartItem),
+        cart_id: updatedCart.cart_id,
+      };
+      await this.cartItemRepo.create(cartItemData);
+    }
   }
 
   async update(cart_item_id, amount) {
