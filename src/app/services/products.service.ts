@@ -1877,53 +1877,43 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
-    await this.checkProductGroup(result, convertedData);
+    await this.checkProductGroup(convertedData);
   }
 
-  async checkProductGroup(currentProduct, data) {
-    if ([1, 2].includes(+data['product_type'])) {
-      if (!data['parent_product_appcore_id']) {
-        const group = await this.productVariationGroupRepo.findOne({
-          product_root_id: currentProduct.product_id,
+  async checkProductGroup(data) {
+    if (+data['product_function'] == 2) {
+      let parentProduct = await this.productRepo.findOne({
+        product_appcore_id: data['parent_product_appcore_id'],
+      });
+
+      if (parentProduct) {
+        let group = await this.productVariationGroupRepo.findOne({
+          product_root_id: parentProduct.product_id,
         });
         if (!group) {
           const newGroupData = {
             ...new ProductVariationGroupsEntity(),
-            product_root_id: currentProduct.product_root_id,
-          };
-          const newGroup = await this.productVariationGroupRepo.create(
-            newGroupData,
-          );
-          let childrenProducts = await this.productRepo.find({
-            select: '*',
-            where: { parent_product_appcore_id: currentProduct.product_id },
-          });
-          if (childrenProducts.length) {
-            for (let childProduct of childrenProducts) {
-              await this.productVariationGroupProductsRepo.createSync({
-                product_id: childProduct['product_id'],
-                parent_product_id: currentProduct.product_id,
-                group_id: newGroup['group_id'],
-              });
-            }
-          }
-        }
-      } else {
-        let parentProduct = await this.productRepo.findOne({
-          parent_product_appcore_id: currentProduct.parent_product_appcore_id,
-        });
-        if (parentProduct) {
-          let group = await this.productVariationGroupRepo.findOne({
             product_root_id: parentProduct.product_id,
-          });
-          if (group) {
-            const checkProductInGroup =
+          };
+          group = await this.productVariationGroupRepo.create(newGroupData);
+        }
+        let childrenProducts = await this.productRepo.find({
+          select: '*',
+          where: {
+            parent_product_appcore_id: parentProduct.product_appcore_id,
+          },
+        });
+
+        if (childrenProducts.length) {
+          for (let childProduct of childrenProducts) {
+            let checkProductInGroup =
               await this.productVariationGroupProductsRepo.findOne({
-                product_id: currentProduct.product_id,
+                product_id: childProduct['product_id'],
+                group_id: group['group_id'],
               });
             if (!checkProductInGroup) {
               await this.productVariationGroupProductsRepo.createSync({
-                product_id: currentProduct['product_id'],
+                product_id: childProduct['product_id'],
                 parent_product_id: parentProduct.product_id,
                 group_id: group['group_id'],
               });
@@ -1931,6 +1921,50 @@ export class ProductService {
           }
         }
       }
+      return;
+    }
+    if (+data['product_function'] == 4) {
+      let childrenProducts = await this.productRepo.find({
+        parent_product_appcore_id: data['product_appcore_id'],
+      });
+
+      if (childrenProducts.length) {
+        const currentProduct = await this.productRepo.update(
+          { product_appcore_id: data['product_appcore_id'] },
+          { product_function: 1 },
+        );
+        let group = await this.productVariationGroupRepo.findOne({
+          product_root_id: currentProduct['product_id'],
+        });
+        if (!group) {
+          const newGroupData = {
+            ...new ProductVariationGroupsEntity(),
+            product_root_id: currentProduct['product_id'],
+          };
+          group = await this.productVariationGroupRepo.create(newGroupData);
+        }
+        for (let childProduct of childrenProducts) {
+          await this.productRepo.update(
+            { product_id: childProduct['product_id'] },
+            { parent_product_id: currentProduct['product_id'] },
+          );
+
+          let checkProductInGroup =
+            await this.productVariationGroupProductsRepo.findOne({
+              product_id: childProduct['product_id'],
+              group_id: group['group_id'],
+            });
+
+          if (!checkProductInGroup) {
+            await this.productVariationGroupProductsRepo.createSync({
+              product_id: childProduct['product_id'],
+              parent_product_id: currentProduct['product_id'],
+              group_id: group['group_id'],
+            });
+          }
+        }
+      }
+      return;
     }
   }
 
@@ -2306,7 +2340,7 @@ export class ProductService {
       }
     }
 
-    await this.checkProductGroup(result, convertedData);
+    await this.checkProductGroup(convertedData);
     // await this.requestIntegrateParentProduct();
   }
 
@@ -3656,14 +3690,14 @@ export class ProductService {
     const totalProducts = 17643;
     const limit = 30;
     let currentPage = 30;
-    let destPage = Math.ceil(totalProducts / limit - currentPage);
+    let destPage = Math.ceil(totalProducts / limit - currentPage) + 200;
 
     let headers = {
       Authorization: APPCORE_TOKEN,
     };
 
     try {
-      for (let page = currentPage; page <= destPage; page++) {
+      for (let page = currentPage; page <= 1200; page++) {
         const res = await axios({
           url: GET_PRODUCTS_APPCORE_LIST(page, limit),
           headers,

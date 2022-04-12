@@ -577,7 +577,7 @@ export const convertProductDataFromAppcore = (coreProduct) => {
     ['wholesalePrice', 'whole_price'],
     ['status', 'status'],
     ['totalQuantityInStock', 'amount'],
-    ['typeOfProduct', 'status_type'],
+    ['typeOfProduct', 'type'],
     ['listColor', 'color'],
     ['listSize', 'size'],
     ['note', 'note'],
