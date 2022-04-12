@@ -133,7 +133,10 @@ export class CartService {
     ];
 
     console.log(currentCartItems);
-    await this.cartItemRepo.delete({ cart_id: alterUserCart.cart_id });
+    if (alterUserCart) {
+      await this.cartItemRepo.delete({ cart_id: alterUserCart.cart_id });
+    }
+
     await this.cartItemRepo.delete({ cart_id: currentCart.cart_id });
     for (let cartItem of currentCartItems) {
       let cartItemData = {
