@@ -179,6 +179,8 @@ import {
 } from '../../database/sqlQuery/where/product.where';
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
+import { isNumeric } from '../../utils/helper';
+import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
 
 @Injectable()
 export class ProductService {
@@ -1667,6 +1669,20 @@ export class ProductService {
       }
     }
 
+    if (convertedData['color'] && isNumeric(convertedData['color'])) {
+      let variant = await this.productFeatureVariantRepo.findOne({
+        select: '*',
+        join: productVariantJoiner,
+        where: {
+          [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]:
+            convertedData['color'],
+        },
+      });
+      if (variant) {
+        convertedData['color'] = variant['variant'];
+      }
+    }
+
     // set product
     const productData = {
       ...new ProductsEntity(),
@@ -1986,6 +2002,20 @@ export class ProductService {
             400,
           );
         }
+      }
+    }
+
+    if (convertedData['color'] && isNumeric(convertedData['color'])) {
+      let variant = await this.productFeatureVariantRepo.findOne({
+        select: '*',
+        join: productVariantJoiner,
+        where: {
+          [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]:
+            convertedData['color'],
+        },
+      });
+      if (variant) {
+        convertedData['color'] = variant['variant'];
       }
     }
 

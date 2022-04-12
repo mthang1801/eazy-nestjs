@@ -163,3 +163,17 @@ export const getPageSkipLimit = (params) => {
   let skip = (page - 1) * limit;
   return { page, skip, limit };
 };
+
+export const isNumeric = (value: string | number) => {
+  if (typeof value == 'undefined' || !value) {
+    return false;
+  }
+  let fmtValue: any = value;
+  if (typeof fmtValue == 'string') {
+    fmtValue = fmtValue.trim();
+    if (fmtValue == '') {
+      return false;
+    }
+  }
+  return !isNaN(1 * fmtValue);
+};
