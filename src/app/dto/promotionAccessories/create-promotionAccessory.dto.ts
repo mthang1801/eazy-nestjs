@@ -26,6 +26,9 @@ export class CreatePromotionAccessoryDto {
   accessory_status: string = 'A';
 
   @IsOptional()
+  description: string;
+
+  @IsOptional()
   @IsDateString()
   display_at: string;
 

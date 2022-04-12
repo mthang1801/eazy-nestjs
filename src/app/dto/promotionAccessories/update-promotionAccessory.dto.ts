@@ -8,14 +8,20 @@ import {
 } from 'class-validator';
 
 export class UpdatePromotionAccessoryDto {
-  @IsNotEmpty()
+  @IsOptional()
   accessory_code: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   accessory_name: string;
 
   @IsOptional()
   accessory_type: number;
+
+  @IsOptional()
+  description: string;
+
+  @IsOptional()
+  applied_products: number[];
 
   @IsOptional()
   @ValidateNested()

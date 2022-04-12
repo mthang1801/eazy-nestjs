@@ -227,6 +227,32 @@ export class PromotionAccessoryService {
         await this.productPromoAccessoryRepo.createSync(newProductData);
       }
     }
+
+    if (data.applied_products && data.applied_products.length) {
+      let accessoryType = promoAccessory['accessory_type'];
+      let productFieldNameByAccessory = '';
+      switch (+accessoryType) {
+        case 1:
+          productFieldNameByAccessory = 'promotion_accessory_id';
+          break;
+        case 2:
+          productFieldNameByAccessory = 'free_accessory_id';
+          break;
+        case 3:
+          productFieldNameByAccessory = 'warranty_package_id';
+          break;
+      }
+      await this.productRepo.update(
+        { [productFieldNameByAccessory]: accessory_id },
+        { [productFieldNameByAccessory]: 0 },
+      );
+      for (let productId of data.applied_products) {
+        await this.productRepo.update(
+          { product_id: productId },
+          { [productFieldNameByAccessory]: accessory_id },
+        );
+      }
+    }
   }
 
   async getList(params) {
