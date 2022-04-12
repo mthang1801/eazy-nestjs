@@ -3287,7 +3287,9 @@ export class ProductService {
       product = await this.productRepo.findOne({
         select: productDetailSelector,
         join: { [JoinTable.leftJoin]: productFullJoiner },
-        product_id: product['parent_product_id'],
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: product['parent_product_id'],
+        },
       });
     }
 
