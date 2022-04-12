@@ -727,7 +727,7 @@ export const itgConvertProductsFromAppcore = (data) => {
   convertedData['product_function'] =
     convertedData['product_type'] < 3
       ? !convertedData['parent_product_appcore_id']
-        ? 1
+        ? 4
         : 2
       : convertedData['product_type'];
 

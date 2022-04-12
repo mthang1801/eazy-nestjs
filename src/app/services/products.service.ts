@@ -1665,6 +1665,10 @@ export class ProductService {
         product_appcore_id: convertedData['parent_product_appcore_id'],
       });
       if (parentProduct) {
+        await this.productRepo.update(
+          { product_id: parentProduct.product_id },
+          { product_function: 1 },
+        );
         convertedData['parent_product_id'] = parentProduct['product_id'];
       }
     }
@@ -1877,7 +1881,6 @@ export class ProductService {
   }
 
   async checkProductGroup(currentProduct, data) {
-    console.log(currentProduct, data);
     if ([1, 2].includes(+data['product_type'])) {
       if (!data['parent_product_appcore_id']) {
         const group = await this.productVariationGroupRepo.findOne({
@@ -2026,6 +2029,10 @@ export class ProductService {
         product_appcore_id: convertedData['parent_product_appcore_id'],
       });
       if (parentProduct) {
+        await this.productRepo.update(
+          { product_id: parentProduct.product_id },
+          { product_function: 1 },
+        );
         convertedData['parent_product_id'] = parentProduct['product_id'];
       }
     }
