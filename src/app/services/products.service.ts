@@ -3786,7 +3786,7 @@ export class ProductService {
     console.log('ok');
     let dataReq = {
       RequestData:
-        '{"OrderNo":"PR_ORD_20220411163842","ShopID":"1418","FromShipDate":"12/04/2022","ShipNumDay":"3","Description":"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..31927 duioqweu duqwodu dasudiowquiopd qwduqw iopduqw asdjioqpwjdiopq... Sốtiền thanh toán: 5000000","CyberCash":"5000000","PaymentExpireDate":"20220414201400","NotifyUrl":"https://ddvcmsdev.ntlogistics.vn/orders/payment/callback","InfoEx":"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e","BillingCode":null}',
+        '{"OrderNo":"PR_ORD_20220411163842","ShopID":"1388","FromShipDate":"15/04/2022","ShipNumDay":"3","Description":"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..31927 duioqweu duqwodu dasudiowquiopd qwduqw iopduqw asdjioqpwjdiopq... Sốtiền thanh toán: 5000000","CyberCash":"5000000","PaymentExpireDate":"20220414201400","NotifyUrl":"https://ddvcmsdev.ntlogistics.vn/orders/payment/callback","InfoEx":"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e","BillingCode":null}',
       Signature:
         'c949e1ebad20e5ce57d0e0bea156549a407d6ecd898ae03597cf6a65d11b68094cccda2598188b1dcac68629b14f931b9d6f70b9ec2b44a50e199f9b63e5977f',
     };

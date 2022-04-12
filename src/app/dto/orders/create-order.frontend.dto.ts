@@ -45,4 +45,16 @@ export class CreateOrderFEDto {
 
   @IsOptional()
   coupon_code: string;
+
+  @IsOptional()
+  store_id: string;
+
+  @IsOptional()
+  email: string = '';
+
+  @IsOptional()
+  order_type: string = '1';
+
+  @IsOptional()
+  utm_source: string = '';
 }
