@@ -26,7 +26,6 @@ import { UserGroupLinksModule } from './usergroupLinks.module';
 import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
 import { OrdersModule } from './orders.module';
 import { ProductsModule } from './products.module';
-
 import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
 import { QueueModule } from './queue.module';
@@ -39,11 +38,13 @@ import { ProductGroupModule } from './productGroup.module';
 import { UploadModule } from './upload.module';
 import { CartModule } from './cart.module';
 import { StickerModule } from './sticker.module';
-import * as path from 'path';
 import { PromotionAccessoryModule } from './promotionAccessory.module';
 import { IndexModule } from './index.modules';
 import { PromotionModule } from './promotion.module';
 import { FlashSaleModule } from './flashSale.module';
+import { CityModule } from './city.module';
+import { DistrictModule } from './district.module';
+import { WardModule } from './ward.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -90,6 +91,9 @@ import { FlashSaleModule } from './flashSale.module';
     IndexModule,
     PromotionModule,
     FlashSaleModule,
+    CityModule,
+    DistrictModule,
+    WardModule,
   ],
   providers: [
     {

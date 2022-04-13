@@ -624,19 +624,7 @@ export class ProductService {
       let arrCategories = category_id.split(',');
       filterJoiner['category_id'] = 1;
       // Theo danh mục
-      if (arrCategories.length < 2) {
-        categoriesList = await this.categoryService.childrenCategories(
-          category_id,
-        );
-        categoriesList = [
-          ...new Set([
-            category_id,
-            ...categoriesList.map(({ category_id }) => category_id),
-          ]),
-        ];
-      } else {
-        categoriesList = arrCategories.map((category_id) => category_id);
-      }
+      categoriesList = arrCategories.map((category_id) => category_id);
     }
 
     let productsList: any[] = [];
@@ -3823,29 +3811,32 @@ export class ProductService {
   }
 
   async testSql() {
-    let checkSumKey = 'ee655db230291d5c53bcd5170c0f257e';
+    let checkSumKey = 'NGE5ZGU0ZDdkY2ViNTMxNjU5ZWJhNTE5ZDc2N2JhNjA=';
     let data =
-      '<shops><shop><username>iss_shopdemo</username><shop_id>665</shop_id><session>007120170526</session><shop_title>ShopDemo</shop_title><shop_domain>https://ddv-fe-ecom.vercel.app</shop_domain><shop_back_url>https://ddv-fe-ecom.vercel.app</shop_back_url><order_no>NTL3261783</order_no><order_cash_amount>1000000</order_cash_amount><order_ship_date>04/05/2022</order_ship_date><order_ship_days>1</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sảnphẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạngvăn bản hoặc mã HTML)</order_description><notify_url>http://localhost:3000</notify_url><validity_time>20220554081203</validity_time><customer><name>Nguyen Van Hieu</name><phone>0905775888</phone><address>35 Nguyễn Huệ, p. Bến Nghé, Hồ Chí Minh</address><email>Hieu@gmail.com</email></customer></shop></shops>';
+      '<shops><shop><username>SB_DiDongViet</username><shop_id>11689</shop_id><session>007120170526</session><shop_title>DiDongViet</shop_title><shop_domain>https://ddv-fe-ecom.vercel.app</shop_domain><shop_back_url>https://ddv-fe-ecom.vercel.app</shop_back_url><order_no>NTL3261783</order_no><order_cash_amount>1000000</order_cash_amount><order_ship_date>04/05/2022</order_ship_date><order_ship_days>1</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sảnphẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạngvăn bản hoặc mã HTML)</order_description><notify_url>http://localhost:3000</notify_url><validity_time>20220554081203</validity_time><customer><name>Nguyen Van Hieu</name><phone>0905775888</phone><address>35 Nguyễn Huệ, p. Bến Nghé, Hồ Chí Minh</address><email>Hieu@gmail.com</email></customer></shop></shops>';
     let dataReq = {
       data,
       checksum: sha512.sha512(checkSumKey + JSON.stringify(data)),
-      refer: 'https://ddvwsdev.ntlogistics.vn/web-tester/v1/products/test',
+      refer: 'https://ddv-fe-ecom.vercel.app/',
       method: 'CC',
       bank: 'ABB',
     };
+
+    console.log(dataReq);
     try {
       let response = await axios({
         url: 'https://newsandbox.payoo.com.vn/v2/paynow/order/create',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          APIUsername: 'iss_ShopDemo_BizAPI',
-          APIPassword: 'h6RFoSpS1yGcfA4o',
+          APIUsername: 'SB_DiDongViet_BizAPI',
+          APIPassword: '500x0R6z05+uChQE',
           APISignature:
-            'TXPMWDjvabMu2TSih3GhtEOPVOjIdNaiR3zT3zVjMvTRFPw2p178VQk7yQJSgSIW',
+            'T9zlnsBKxceTZQdgswOAaLQTVwjFJ4l+7OhFT6sAODUrQcoUm5lKlKkIW8DbmW0g',
         },
         data: JSON.stringify(dataReq),
       });
+
       console.log(response);
     } catch (error) {
       console.log(error);

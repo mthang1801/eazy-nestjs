@@ -8,7 +8,7 @@ export class PromotionAccessoryEntity {
   description: string = '';
   accessory_status: string = 'A';
   display_at: string = formatStandardTimeStamp();
-  end_at: string = formatStandardTimeStamp();
+  end_at: string = null;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
   created_by: number = 0;

@@ -117,7 +117,11 @@ export class BaseController {
    * @param data
    * @returns object with code and data
    */
-  public responseSuccess(res, data = null, message: string = ''): IResponse {
+  public responseSuccess(
+    res,
+    data = null,
+    message: string = 'Thành công.',
+  ): IResponse {
     this.res = res;
     this.setStatusCode(200);
     this.message = message;
@@ -150,7 +154,7 @@ export class BaseController {
   public responseFail(
     res,
     satatusCode: number = 500,
-    message: string | string[] = '',
+    message: string | string[] = 'Thất bại.',
   ) {
     this.res = res;
     this.setStatusCode(satatusCode);

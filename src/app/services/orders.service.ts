@@ -43,7 +43,7 @@ import {
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import e from 'express';
-import { sortBy } from 'lodash';
+import { sortBy, get } from 'lodash';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImagesRepository } from '../repositories/image.repository';
@@ -79,9 +79,12 @@ import { CartItemEntity } from '../entities/cartItem.entity';
 import { productSearchJoiner } from '../../utils/joinTable';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 import { OrderHistoryEntity } from '../entities/orderHistory.entity';
-import { formatStandardTimeStamp } from '../../utils/helper';
+import { formatStandardTimeStamp, isNumeric } from '../../utils/helper';
 import { PromotionService } from './promotion.service';
 import { formatOrderTimestamp } from 'src/utils/services/order.helper';
+import { CityService } from './city.service';
+import { DistrictService } from './district.service';
+import { WardService } from './ward.service';
 
 @Injectable()
 export class OrdersService {
@@ -106,6 +109,9 @@ export class OrdersService {
     private orderHistoryRepo: OrderHistoryRepository<OrderHistoryEntity>,
     private locatorService: LocatorService,
     private promotionService: PromotionService,
+    private cityService: CityService,
+    private districtService: DistrictService,
+    private wardService: WardService,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -839,6 +845,8 @@ export class OrdersService {
       }
 
       // Lấy địa chỉ theo id
+      orderItem = await this.convertLocationIdIntoName(orderItem);
+
       if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
         const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
         if (city) {
@@ -874,6 +882,32 @@ export class OrdersService {
         total: count.length ? count[0].total : 0,
       },
     };
+  }
+
+  async convertLocationIdIntoName(order) {
+    order['b_city'] = isNumeric(order['b_city'])
+      ? await this.cityService.get(order['b_city'], true)
+      : order['b_city'];
+    order['s_city'] = isNumeric(order['s_city'])
+      ? this.cityService.get(order['s_city'], true)
+      : order['s_city'];
+
+    order['b_district'] = isNumeric(order['b_district'])
+      ? this.districtService.get(order['b_district'], true)
+      : order['b_district'];
+
+    order['s_district'] = isNumeric(order['s_district'])
+      ? this.districtService.get(order['s_district'], true)
+      : order['s_district'];
+
+    order['b_ward'] = isNumeric(order['b_ward'])
+      ? this.districtService.get(order['b_ward'], true)
+      : order['b_ward'];
+
+    order['s_ward'] = isNumeric(order['s_ward'])
+      ? this.districtService.get(order['s_ward'], true)
+      : order['s_ward'];
+    return order;
   }
 
   async getByOrderCode(order_code: number) {
