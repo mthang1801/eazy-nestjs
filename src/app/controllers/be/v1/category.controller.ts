@@ -40,12 +40,6 @@ export class CategoryController extends BaseController {
     super();
   }
 
-  @Get('/fill-idpath')
-  async fillIdPath(@Res() res) {
-    await this.service.fillCategoriesIdPath();
-    return this.responseSuccess(res, null, 'Hoan tat.');
-  }
-
   /**
    * Create new record in ddv_categories table
    * @param categoryDto
@@ -61,6 +55,12 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  /**
+   * Danh muc ngành hàng
+   * @param res
+   * @param params
+   * @returns
+   */
   @Get('catalog')
   async getCatalog(@Res() res: Response, @Query() params) {
     const result = await this.service.getCatalog(params);
@@ -80,6 +80,12 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, categoriesMenuList);
   }
 
+  /**
+   * Lấy tất cả danh mục trong db
+   * @param res
+   * @param level
+   * @returns
+   */
   @Get('/all')
   async getAll(
     @Res() res: Response,

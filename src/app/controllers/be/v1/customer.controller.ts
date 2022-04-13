@@ -40,12 +40,24 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, null, 'Thành công.');
   }
 
-  //@UseGuards(AuthGuard)
+  /**
+   * Lấy danh sách KH
+   * @param res
+   * @param params
+   * @returns
+   */
   @Get()
   async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result, `action return all customer`);
   }
+
+  /**
+   * Lấy ds KH theo id tù CMS
+   * @param res
+   * @param id
+   * @returns
+   */
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getById(id);
@@ -53,6 +65,13 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, result, `action return all customer`);
   }
 
+  /**
+   * Lấy lịch sử điểm của KH
+   * @param id
+   * @param res
+   * @param params
+   * @returns
+   */
   @Get('/:id/loyalty-histories')
   async getCustomerLoyaltyHistory(
     @Param('id') id: number,
@@ -63,6 +82,13 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  /**
+   * Update thông tin của KH
+   * @param res
+   * @param user_id
+   * @param body
+   * @returns
+   */
   @Put('/:user_id')
   async update(
     @Res() res,
@@ -74,6 +100,13 @@ export class CustomerController extends BaseController {
     return this.responseSuccess(res, result, `Cập nhật thành công.`);
   }
 
+  /**
+   * Lấy danh sách đơn hàng của KH
+   * @param user_id
+   * @param res
+   * @param params
+   * @returns
+   */
   @Get('/:user_id/orders')
   async getOrdersList(
     @Param('user_id') user_id: number,

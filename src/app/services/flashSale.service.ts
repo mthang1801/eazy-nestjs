@@ -231,7 +231,6 @@ export class FlashSalesService {
       updated_by: user.user_id,
     };
 
-    console.log(flashSaleData);
     await this.flashSaleRepo.update({ flash_sale_id }, flashSaleData);
     //Only update status will return immediately
     if (Object.entries(data).length == 1 && data.status) {
