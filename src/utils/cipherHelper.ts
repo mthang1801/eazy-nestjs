@@ -16,7 +16,6 @@ export function genRandomString(length): string {
 export function sha512(password, salt) {
   const hash = crypto.createHmac('sha512', getStringValue(salt));
   hash.update(getStringValue(password));
-  console.log(19, hash);
   const passwordHash = hash.digest('hex');
 
   return {

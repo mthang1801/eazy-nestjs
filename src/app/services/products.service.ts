@@ -181,7 +181,7 @@ import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
 import { isNumeric } from '../../utils/helper';
 import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
-
+import * as sha512 from 'js-sha512';
 @Injectable()
 export class ProductService {
   constructor(
@@ -504,7 +504,6 @@ export class ProductService {
       category_id, //  Danh mục SP
       product_status, // Tình trạng SP Demo, mới
       product_type, // Loai SP
-      productType, //SP cha con, doc lap, combo
       status_type, // Trạng thái SP Like, Demo
       catalog_category_id, // danh mục ngành hàng
       type, // Loại hàng cty, xách tay
@@ -541,7 +540,10 @@ export class ProductService {
 
     // Filter Sản phẩm thuộc về Sp cha hay SP con, combo hay độc lập
     if (product_function) {
-      filterCondition[`${Table.PRODUCTS}.product_function`] = product_function;
+      filterCondition[`${Table.PRODUCTS}.product_function`] =
+        product_function.split(',').length <= 1
+          ? product_function
+          : In(product_function.split(','));
     }
 
     // Filter danh mục ngành hàng
@@ -627,9 +629,13 @@ export class ProductService {
           category_id,
         );
         categoriesList = [
-          +category_id,
-          ...categoriesList.map(({ category_id }) => category_id),
+          ...new Set([
+            category_id,
+            ...categoriesList.map(({ category_id }) => category_id),
+          ]),
         ];
+      } else {
+        categoriesList = arrCategories.map((category_id) => category_id);
       }
     }
 
@@ -3817,23 +3823,26 @@ export class ProductService {
   }
 
   async testSql() {
-    console.log('ok');
+    let checkSumKey = 'ee655db230291d5c53bcd5170c0f257e';
+    let data =
+      '<shops><shop><username>iss_shopdemo</username><shop_id>665</shop_id><session>007120170526</session><shop_title>ShopDemo</shop_title><shop_domain>https://ddv-fe-ecom.vercel.app</shop_domain><shop_back_url>https://ddv-fe-ecom.vercel.app</shop_back_url><order_no>NTL3261783</order_no><order_cash_amount>1000000</order_cash_amount><order_ship_date>04/05/2022</order_ship_date><order_ship_days>1</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sảnphẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạngvăn bản hoặc mã HTML)</order_description><notify_url>http://localhost:3000</notify_url><validity_time>20220554081203</validity_time><customer><name>Nguyen Van Hieu</name><phone>0905775888</phone><address>35 Nguyễn Huệ, p. Bến Nghé, Hồ Chí Minh</address><email>Hieu@gmail.com</email></customer></shop></shops>';
     let dataReq = {
-      RequestData:
-        '{"OrderNo":"PR_ORD_20220411163842","ShopID":"1388","FromShipDate":"15/04/2022","ShipNumDay":"3","Description":"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..31927 duioqweu duqwodu dasudiowquiopd qwduqw iopduqw asdjioqpwjdiopq... Sốtiền thanh toán: 5000000","CyberCash":"5000000","PaymentExpireDate":"20220414201400","NotifyUrl":"https://ddvcmsdev.ntlogistics.vn/orders/payment/callback","InfoEx":"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e","BillingCode":null}',
-      Signature:
-        'c949e1ebad20e5ce57d0e0bea156549a407d6ecd898ae03597cf6a65d11b68094cccda2598188b1dcac68629b14f931b9d6f70b9ec2b44a50e199f9b63e5977f',
+      data,
+      checksum: sha512.sha512(checkSumKey + JSON.stringify(data)),
+      refer: 'https://ddvwsdev.ntlogistics.vn/web-tester/v1/products/test',
+      method: 'CC',
+      bank: 'ABB',
     };
     try {
       let response = await axios({
-        url: 'https://bizsandbox.payoo.com.vn/BusinessRestAPI.svc/getbillingcode',
+        url: 'https://newsandbox.payoo.com.vn/v2/paynow/order/create',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          APIUsername: 'SB_VienDiDong_BizAPI',
-          APIPassword: 'KdTSFxFxzOKenbR8',
+          APIUsername: 'iss_ShopDemo_BizAPI',
+          APIPassword: 'h6RFoSpS1yGcfA4o',
           APISignature:
-            'Ss+N1LjJGiCrjtviRYpAN5yHPQZB7BMNHajFZ/lNj/iYOX`AlfjKbcehf6XlGU9eMi',
+            'TXPMWDjvabMu2TSih3GhtEOPVOjIdNaiR3zT3zVjMvTRFPw2p178VQk7yQJSgSIW',
         },
         data: JSON.stringify(dataReq),
       });
