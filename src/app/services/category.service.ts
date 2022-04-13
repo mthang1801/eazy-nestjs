@@ -207,7 +207,7 @@ export class CategoryService {
     };
 
     if (convertedData['parent_appcore_id']) {
-      const parentCategory = await this.catalogCategoryRepo.findOne({
+      const parentCategory = await this.categoryRepository.findOne({
         category_appcore_id: convertedData['parent_appcore_id'],
       });
       if (parentCategory) {
