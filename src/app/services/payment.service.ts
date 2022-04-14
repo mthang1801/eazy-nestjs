@@ -327,4 +327,8 @@ export class PaymentService {
     )}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>https://ddvwsdev.ntlogistics.vn/web-tester/v1/products/test</notify_url><validity_time>20220808081203</validity_time><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
     return bodyData;
   }
+
+  async payooNotify(data) {
+    console.log(data);
+  }
 }

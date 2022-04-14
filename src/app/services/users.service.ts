@@ -13,6 +13,7 @@ import { Table } from '../../database/enums/index';
 import {
   convertNullDatetimeData,
   formatStandardTimeStamp,
+  getPageSkipLimit,
   preprocessUserResult,
 } from '../../utils/helper';
 
@@ -36,6 +37,10 @@ import { userJoiner } from 'src/utils/joinTable';
 import { itgCustomerToAppcore } from 'src/utils/integrateFunctions';
 import { CREATE_CUSTOMER_API } from 'src/constants/api.appcore';
 import axios from 'axios';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { userLoyaltyHistorySearchFilter } from 'src/database/sqlQuery/where/customer.where';
+import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
+import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 
 @Injectable()
 export class UsersService {
@@ -47,6 +52,8 @@ export class UsersService {
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
+    private userLoyaltyRepo: UserLoyaltyRepository<UserProfileEntity>,
+    private userLoyaltyHistoryRepo: UserLoyaltyHistoryRepository<UserLoyaltyHistoryEntity>,
   ) {}
 
   async createUser(registerData): Promise<UserEntity> {
@@ -402,5 +409,40 @@ export class UsersService {
     );
     result = { ...result, ..._userProfile };
     return result;
+  }
+
+  async getLoyalHistories(user_id: number, params) {
+    const { by_type, created_at, search } = params;
+    const { page, skip, limit } = getPageSkipLimit(params);
+    let filterConditions = {};
+    filterConditions[`${Table.USER_LOYALTY_HISTORY}.user_id`] = user_id;
+    if (by_type) {
+      filterConditions[`${Table.USER_LOYALTY_HISTORY}.by_type`] = by_type;
+    }
+
+    if (created_at) {
+      filterConditions[`${Table.USER_LOYALTY_HISTORY}.created_at`] = created_at;
+    }
+
+    const loyalHistories = await this.userLoyaltyHistoryRepo.find({
+      select: '*',
+      where: userLoyaltyHistorySearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    let count = await this.userLoyaltyHistoryRepo.find({
+      select: 'COUNT(*) as total',
+      where: userLoyaltyHistorySearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      loyalHistories,
+    };
   }
 }
