@@ -19,6 +19,7 @@ import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
 import { Query } from '@nestjs/common';
 import { Response } from 'express';
+import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
 /**
  * Controller for Category
  * @Author TrinhLong
@@ -39,12 +40,6 @@ export class PaymentController extends BaseController {
   async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
-  }
-
-  @Post('payoo')
-  async payooPayment(@Res() res: Response, @Body() data): Promise<IResponse> {
-    await this.service.payooPayment(data);
-    return this.responseSuccess(res, null, 'Thành công.');
   }
 
   @Get('/:id')

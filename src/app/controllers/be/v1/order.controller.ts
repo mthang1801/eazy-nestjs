@@ -68,13 +68,4 @@ export class OrderController extends BaseController {
     const result = await this.service.getHistory(order_id);
     return this.responseSuccess(res, result, 'Thành công.');
   }
-
-  @Post('/payment/paynow')
-  async paymentPaynow(
-    @Res() res: Response,
-    @Body() data: CreatePaynowDto,
-  ): Promise<IResponse> {
-    const result = await this.service.paymentPaynow(data);
-    return this.responseSuccess(res, result, 'Thành công');
-  }
 }

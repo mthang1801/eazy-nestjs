@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { PaymentEntity } from '../entities/payment.entity';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { Table, JoinTable } from '../../database/enums/index';
@@ -9,12 +9,46 @@ import { IPayment } from '../interfaces/payment.interface';
 import { Like } from 'src/database/operators/operators';
 import { paymentFilter } from 'src/utils/tableConditioner';
 import axios from 'axios';
+import { CreatePaynowDto } from '../dto/orders/create-paynow.dto';
+import { CartRepository } from '../repositories/cart.repository';
+import { CartEntity } from '../entities/cart.entity';
+import { CartItemRepository } from '../repositories/cartItem.repository';
+import { CartItemEntity } from '../entities/cartItem.entity';
+import { cartPaymentJoiner, userJoiner } from '../../utils/joinTable';
+import { PromotionService } from './promotion.service';
+import { generateRandomString } from '../../utils/helper';
+import { generateSHA512 } from '../../utils/cipherHelper';
+import {
+  payooChecksum,
+  payooRefer,
+  payooPaymentURL,
+  payooBusinessName,
+  payooAPIPassword,
+  payooAPISignature,
+  payooAPIUserName,
+  payooShopId,
+  payooShopTitle,
+  webDomain,
+} from '../../constants/payment';
+import { UserRepository } from '../repositories/user.repository';
+
+import { UserEntity } from '../entities/user.entity';
+import { CustomerService } from './customer.service';
+import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
+import { OrdersService } from './orders.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private paymentRepository: PaymentRepository<PaymentEntity>,
     private paymentDescriptionRepo: PaymentDescriptionsRepository<PaymentDescriptionsEntity>,
+    private cartRepo: CartRepository<CartEntity>,
+    private cartItemRepo: CartItemRepository<CartItemEntity>,
+    private promotionService: PromotionService,
+    private userRepo: UserRepository<UserEntity>,
+    private customerService: CustomerService,
+    private orderService: OrdersService,
   ) {}
 
   async getList(params) {
@@ -137,5 +171,146 @@ export class PaymentService {
       PaymentDesData,
     );
     return { ..._payment, ..._paymentDes };
+  }
+
+  async paymentPaynow(data: CreatePaynowDto) {
+    try {
+      // this.dbService.startTransaction();
+      const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+      if (!cart) {
+        throw new HttpException('Không tìm thấy giỏ hàng', 404);
+      }
+      let cartItems = await this.cartItemRepo.find({
+        select: '*',
+        join: cartPaymentJoiner,
+        where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+      });
+
+      let totalPrice = cartItems.reduce(
+        (acc, ele) => acc + ele.price * ele.amount,
+        0,
+      );
+
+      if (data.coupon_code) {
+        let checkCouponData = {
+          store_id: 67107,
+          coupon_code: data['coupon_code'],
+          coupon_programing_id: 'HELLO_123',
+          phone: data['s_phone'],
+          products: cartItems.map(({ product_id, amount }) => ({
+            product_id,
+            amount,
+          })),
+        };
+
+        let checkResult = await this.promotionService.checkCoupon(
+          checkCouponData,
+        );
+
+        if (checkResult['isValid']) {
+          totalPrice -= checkResult['discountMoney'];
+        }
+      }
+
+      const headers = {
+        APIUsername: payooAPIUserName,
+        APIPassword: payooAPIPassword,
+        APISignature: payooAPISignature,
+        'Content-Type': 'application/json',
+      };
+      let ref_order_id = generateRandomString();
+
+      const dataRequest = this.payooPaymentData(data, ref_order_id, totalPrice);
+
+      const checksum = generateSHA512(payooChecksum + dataRequest);
+      const refer = payooRefer;
+      const method = data['method'] || 'CC';
+      const bank = data['bank'] || 'VISA';
+
+      const body = {
+        data: dataRequest,
+        refer,
+        method,
+        bank,
+        checksum,
+      };
+
+      const response = await axios({
+        url: payooPaymentURL,
+        method: 'POST',
+        headers,
+        data: body,
+      });
+
+      if (!response?.data) {
+        throw new HttpException('Tạo thanh toán không thành công', 400);
+      }
+
+      if (
+        response?.data?.ordercode &&
+        ![200, 201].includes(+response.data.ordercode)
+      ) {
+        throw new HttpException(
+          `Tạo thanh toán không thành công : ${response.data.message}`,
+          response.data.errorcode,
+        );
+      }
+
+      let user = await this.userRepo.findOne({
+        select: `*, ${Table.USERS}.user_appcore_id`,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+      if (!user) {
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+        });
+        if (!user) {
+          await this.customerService.createCustomerFromWebPayment(data);
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { phone: data['s_phone'] },
+          });
+        }
+      }
+
+      const sendData = {
+        ...user,
+        order_items: cartItems,
+        pay_credit_type: PayCreditFeeType.Chuyen_khoan,
+        ref_order_id,
+        transfer_amount: totalPrice,
+        coupon_code: data.coupon_code ? data.coupon_code : null,
+        order_code: null,
+      };
+
+      await this.orderService.createOrder(user, sendData, false);
+
+      // await this.cartRepo.delete({ cart_id: cart.cart_id });
+      // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+      // await this.dbService.commitTransaction();
+    } catch (error) {
+      // await this.dbService.rollbackTransaction();
+
+      throw new HttpException(
+        error.message || error?.response?.data?.message,
+        error.status || error?.response?.status,
+      );
+    }
+  }
+
+  payooPaymentData(userWebInfo, ref_order_id, orderTotalPrice) {
+    const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
+    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${
+      userWebInfo.callback_url
+    }</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${moment(
+      new Date(),
+    ).format(
+      'DD/MM/YYYY',
+    )}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>https://ddvwsdev.ntlogistics.vn/web-tester/v1/products/test</notify_url><validity_time>20220808081203</validity_time><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
+    return bodyData;
   }
 }

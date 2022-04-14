@@ -3,15 +3,22 @@ import { PaymentController } from '../controllers/be/v1/payment.controller';
 import { PaymentService } from '../services/payment.service';
 import { PaymentRepository } from '../repositories/payment.repository';
 import { PaymentDescriptionsRepository } from '../repositories/paymentDescription.repository';
+import { CustomerService } from '../services/customer.service';
+import { OrdersModule } from './orders.module';
+import { CustomerModule } from './customer.module';
+import { CartModule } from './cart.module';
+import { PromotionModule } from './promotion.module';
+import { UserRepository } from '../repositories/user.repository';
+import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
 @Module({
-  controllers: [PaymentController],
+  controllers: [PaymentController, PaymentControllerFE],
   providers: [
     PaymentService,
     PaymentRepository,
     PaymentDescriptionsRepository,
-    String,
+    UserRepository,
   ],
   exports: [PaymentService],
-  imports: [],
+  imports: [CustomerModule, OrdersModule, CartModule, PromotionModule],
 })
 export class PaymentModule {}
