@@ -26,7 +26,8 @@ export class CityService {
 
   async get(id: number, onlyName = false) {
     const result = await this.cityRepo.findOne({ id });
-    if (onlyName) {
+    console.log(result);
+    if (onlyName && result) {
       return result['city_name'];
     }
     return result;

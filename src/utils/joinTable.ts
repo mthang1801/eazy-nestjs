@@ -558,6 +558,10 @@ export const orderJoiner = {
       fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
       rootJoin: `${Table.ORDERS}.store_id`,
     },
+    [Table.ORDER_PAYMENTS]: {
+      fieldJoin: `${Table.ORDER_PAYMENTS}.order_id`,
+      rootJoin: `${Table.ORDERS}.order_id`,
+    },
   },
 };
 

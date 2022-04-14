@@ -29,9 +29,9 @@ export class DistrictService {
     };
   }
 
-  async get(id, getOnlyName = false) {
+  async get(id, onlyName = false) {
     const result = await this.districtRepo.findOne({ id });
-    if (getOnlyName) {
+    if (onlyName && result) {
       return result['district_name'];
     }
     return result;

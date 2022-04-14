@@ -224,7 +224,7 @@ export class PaymentService {
       let ref_order_id = generateRandomString();
 
       const dataRequest = this.payooPaymentData(data, ref_order_id, totalPrice);
-
+      console.log(totalPrice);
       const checksum = generateSHA512(payooChecksum + dataRequest);
       const refer = payooRefer;
       const method = data['method'] || 'CC';

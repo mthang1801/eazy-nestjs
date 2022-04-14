@@ -27,9 +27,9 @@ export class WardService {
     };
   }
 
-  async get(id, getOnlyName = false) {
+  async get(id, onlyName = false) {
     const result = await this.wardRepo.findOne({ id });
-    if (getOnlyName) {
+    if (onlyName && result) {
       return result['ward_name'];
     }
     return result;

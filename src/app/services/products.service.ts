@@ -658,6 +658,7 @@ export class ProductService {
       ));
       isContinued = false;
     }
+
     if (catalog_category_id && isContinued) {
       ({ productsList, count } = await this.findProductsListAndCountFromCatalog(
         productSearchFilterParams,

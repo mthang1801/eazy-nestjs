@@ -111,6 +111,7 @@ import { userJoiner, cartPaymentJoiner } from '../../utils/joinTable';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
+import { Not, IsNull } from '../../database/operators/operators';
 
 @Injectable()
 export class OrdersService {
@@ -820,25 +821,57 @@ export class OrdersService {
   }
 
   async getOrdersList(params, filterConditions = {}, showDetails = false) {
-    let { page, limit, search, ...others } = params;
+    let {
+      page,
+      limit,
+      search,
+      shipping_id,
+      status,
+      payment_status,
+      shipping_service_id,
+      utm_source,
+      store_id,
+      created_at,
+    } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    if (Object.entries(others).length) {
-      for (let [key, val] of Object.entries(others)) {
-        if (this.orderRepo.tableProps.includes(key)) {
-          filterConditions[`${Table.ORDERS}.${key}`] = Like(val);
-          continue;
-        }
-      }
+    filterConditions[`${Table.ORDERS}.order_code`] = Not(IsNull());
+    if (shipping_id) {
+      filterConditions[`${Table.ORDERS}.shipping_id`] = shipping_id;
+    }
+
+    if (status) {
+      filterConditions[`${Table.ORDERS}.status`] = status;
+    }
+
+    if (payment_status) {
+      filterConditions[`${Table.ORDERS}.payment_status`] = payment_status;
+    }
+
+    if (shipping_service_id) {
+      filterConditions[`${Table.ORDERS}.shipping_service_id`] =
+        shipping_service_id;
+    }
+
+    if (utm_source) {
+      filterConditions[`${Table.ORDERS}.utm_source`] = utm_source;
+    }
+
+    if (store_id) {
+      filterConditions[`${Table.ORDERS}.store_id`] = store_id;
+    }
+
+    if (created_at) {
+      filterConditions[`${Table.ORDERS}.created_at`] = created_at;
     }
 
     const ordersList = await this.orderRepo.find({
       select: [`DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*`],
       join: orderJoiner,
       orderBy: [{ field: `${Table.ORDERS}.updated_date`, sortBy: SortBy.DESC }],
-      where: orderSearchFilter(search, { ...filterConditions }),
+      where: orderSearchFilter(search, filterConditions),
       skip,
       limit,
     });
@@ -889,27 +922,7 @@ export class OrdersService {
 
       // Lấy địa chỉ theo id
       orderItem = await this.convertLocationIdIntoName(orderItem);
-
-      if (orderItem['b_city'] && !isNaN(1 * orderItem['b_city'])) {
-        const city = await this.cityRepo.findOne({ id: orderItem['b_city'] });
-        if (city) {
-          orderItem['b_city'] = city['city_name'];
-        }
-      }
-      if (orderItem['b_district'] && !isNaN(1 * orderItem['b_district'])) {
-        const district = await this.districtRepo.findOne({
-          id: orderItem['b_district'],
-        });
-        if (district) {
-          orderItem['b_district'] = district['district_name'];
-        }
-      }
-      if (orderItem['b_ward'] && !isNaN(1 * orderItem['b_ward'])) {
-        const ward = await this.wardRepo.findOne({ id: orderItem['b_ward'] });
-        if (ward) {
-          orderItem['b_ward'] = ward['ward_name'];
-        }
-      }
+      console.log(orderItem);
     }
 
     const count = await this.orderRepo.find({
@@ -932,24 +945,25 @@ export class OrdersService {
       ? await this.cityService.get(order['b_city'], true)
       : order['b_city'];
     order['s_city'] = isNumeric(order['s_city'])
-      ? this.cityService.get(order['s_city'], true)
+      ? await this.cityService.get(order['s_city'], true)
       : order['s_city'];
 
     order['b_district'] = isNumeric(order['b_district'])
-      ? this.districtService.get(order['b_district'], true)
+      ? await this.districtService.get(order['b_district'], true)
       : order['b_district'];
 
     order['s_district'] = isNumeric(order['s_district'])
-      ? this.districtService.get(order['s_district'], true)
+      ? await this.districtService.get(order['s_district'], true)
       : order['s_district'];
 
     order['b_ward'] = isNumeric(order['b_ward'])
-      ? this.districtService.get(order['b_ward'], true)
+      ? await this.wardService.get(order['b_ward'], true)
       : order['b_ward'];
 
     order['s_ward'] = isNumeric(order['s_ward'])
-      ? this.districtService.get(order['s_ward'], true)
+      ? await this.wardService.get(order['s_ward'], true)
       : order['s_ward'];
+
     return order;
   }
 
