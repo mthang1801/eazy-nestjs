@@ -4,7 +4,7 @@ export enum PrimaryKeys {
   ddv_users_auth_external = 'auth_external_id',
   ddv_user_mailing_lists = 'list_id',
   ddv_user_profiles = 'profile_id',
-  ddv_user_data = 'user_id',
+  ddv_user_data = 'user_data_id',
   ddv_user_loyalty = 'loyalty_id',
   ddv_user_loyalty_histories = 'auto_increment_id',
 

@@ -49,6 +49,10 @@ export function desaltHashPassword(password, salt) {
   return hash.digest('hex');
 }
 
+export function generateSHA512(str) {
+  return crypto.createHash('sha512').update(str).digest('hex');
+}
+
 export function generateMD5(str) {
   const hash = crypto.createHash('md5').update(str).digest('hex');
   return hash;

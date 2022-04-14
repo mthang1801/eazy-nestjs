@@ -9,10 +9,10 @@ export class CheckCouponDto {
   coupon_code: string;
 
   @IsOptional()
-  coupon_programing_id: number;
+  coupon_programing_id: string;
 
   @IsOptional()
-  phone: number;
+  phone: string;
 
   @IsOptional()
   @ValidateNested()

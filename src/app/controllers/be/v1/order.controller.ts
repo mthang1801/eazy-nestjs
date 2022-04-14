@@ -21,6 +21,7 @@ import { AuthGuard } from '../../../../middlewares/be.auth';
 import { Response } from 'express';
 import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
+import { CreatePaynowDto } from 'src/app/dto/orders/create-paynow.dto';
 
 @Controller('/be/v1/orders')
 export class OrderController extends BaseController {
@@ -68,12 +69,12 @@ export class OrderController extends BaseController {
     return this.responseSuccess(res, result, 'Thành công.');
   }
 
-  @Post('/orders/payment/callback')
-  async paymentCallback(
+  @Post('/payment/paynow')
+  async paymentPaynow(
     @Res() res: Response,
-    @Body() data,
+    @Body() data: CreatePaynowDto,
   ): Promise<IResponse> {
-    await this.service.paymentCallback(data);
-    return this.responseSuccess(res, null, 'Thành công');
+    const result = await this.service.paymentPaynow(data);
+    return this.responseSuccess(res, result, 'Thành công');
   }
 }

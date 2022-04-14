@@ -91,7 +91,7 @@ export class OrderHistoryEntity {
   transfer_code: string = '';
   other_fees: number = 0;
   user_appcore_id: number = 0;
-  is_sync: number = 1;
+  is_sync: string = 'N';
   ref_order_id: string = generateRandomString();
   created_date: string = formatStandardTimeStamp();
   updated_date: string = formatStandardTimeStamp();

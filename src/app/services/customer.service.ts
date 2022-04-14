@@ -70,6 +70,8 @@ import * as moment from 'moment';
 import { Between } from '../../database/operators/operators';
 import { creatorJoiner } from '../../utils/joinTable';
 import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
+import { CreateCustomerPaymentDto } from '../dto/customer/create-customerPayment.dto';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class CustomerService {
@@ -82,6 +84,7 @@ export class CustomerService {
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
     private userLoyalHistory: UserLoyaltyHistoryRepository<UserLoyaltyHistoryEntity>,
+    private dbService: DatabaseService,
   ) {}
 
   async create(creator, data: CreateCustomerDto) {
@@ -194,6 +197,65 @@ export class CustomerService {
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
       );
+    }
+  }
+
+  async createCustomerFromWebPayment(data: CreateCustomerPaymentDto) {
+    const checkUserExist = await this.userRepo.findOne({ phone: data.s_phone });
+    if (checkUserExist) {
+      return;
+    }
+    const customerData = {
+      lastname: data.s_lastname,
+      b_lastname: data.s_lastname,
+      s_lastname: data.s_lastname,
+      phone: data.s_phone,
+      b_phone: data.s_phone,
+      s_phone: data.s_phone,
+      b_city: data.s_city,
+      s_city: data.s_city,
+      b_district: data.s_district,
+      s_district: data.s_district,
+      b_ward: data.s_ward,
+      s_ward: data.s_ward,
+      b_address: data.s_address,
+      s_address: data.s_address,
+    };
+    try {
+      const { passwordHash, salt } = saltHashPassword(defaultPassword);
+      const userData = {
+        ...new UserEntity(),
+        ...this.userRepo.setData(customerData),
+        password: passwordHash,
+        salt,
+      };
+
+      const user = await this.userRepo.create(userData);
+
+      const userProfileData = {
+        ...new UserProfileEntity(),
+        ...this.userProfileRepo.setData(customerData),
+        user_id: user['user_id'],
+      };
+      await this.userProfileRepo.create(userProfileData);
+
+      const userLoyaltyData = {
+        ...new UserLoyaltyEntity(),
+        ...this.userLoyalRepo.setData(customerData),
+        user_id: user.user_id,
+      };
+      this.userLoyalRepo.create(userLoyaltyData);
+
+      const userDataData = {
+        ...new UserDataEntity(),
+        ...this.userDataRepo.setData(customerData),
+        user_id: user['user_id'],
+      };
+      await this.userDataRepo.create(userDataData);
+
+      await this.createCustomerToAppcore(user);
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
     }
   }
 

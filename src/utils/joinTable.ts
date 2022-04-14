@@ -626,6 +626,32 @@ export const cartJoiner = {
   },
 };
 
+export const cartPaymentJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.cart_id`,
+      rootJoin: `${Table.CART_ITEMS}.cart_id`,
+    },
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.CART_ITEMS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+  },
+};
+
+export const cartItemPriceJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+  },
+};
+
 export const catalogCategoryJoiner = {
   [JoinTable.innerJoin]: {
     [Table.CATALOG_CATEGORY_DESCRIPTIONS]: {

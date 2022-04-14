@@ -106,7 +106,4 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   icon: string;
-
-  @IsOptional()
-  applied_products: number[];
 }
