@@ -228,24 +228,24 @@ export class PromotionAccessoryService {
       }
     }
 
+    let accessoryType = promoAccessory['accessory_type'];
+    let productFieldNameByAccessory = '';
+    switch (+accessoryType) {
+      case 1:
+        productFieldNameByAccessory = 'promotion_accessory_id';
+        break;
+      case 2:
+        productFieldNameByAccessory = 'free_accessory_id';
+        break;
+      case 3:
+        productFieldNameByAccessory = 'warranty_package_id';
+        break;
+    }
+    await this.productRepo.update(
+      { [productFieldNameByAccessory]: accessory_id },
+      { [productFieldNameByAccessory]: 0 },
+    );
     if (data.applied_products && data.applied_products.length) {
-      let accessoryType = promoAccessory['accessory_type'];
-      let productFieldNameByAccessory = '';
-      switch (+accessoryType) {
-        case 1:
-          productFieldNameByAccessory = 'promotion_accessory_id';
-          break;
-        case 2:
-          productFieldNameByAccessory = 'free_accessory_id';
-          break;
-        case 3:
-          productFieldNameByAccessory = 'warranty_package_id';
-          break;
-      }
-      await this.productRepo.update(
-        { [productFieldNameByAccessory]: accessory_id },
-        { [productFieldNameByAccessory]: 0 },
-      );
       for (let productId of data.applied_products) {
         await this.productRepo.update(
           { product_id: productId },
@@ -273,8 +273,6 @@ export class PromotionAccessoryService {
       skip,
       limit,
     });
-
-    console.log(277, accessoriesList);
 
     const count = await this.promoAccessoryRepo.find({
       select: `COUNT(DISTINCT(${Table.PROMOTION_ACCESSORY}.accessory_id)) as total`,
