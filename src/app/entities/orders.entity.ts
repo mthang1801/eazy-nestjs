@@ -4,7 +4,6 @@ import {
 } from 'src/utils/helper';
 
 export class OrderEntity {
-  order_id: number = 0;
   order_code: null | number = 0;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;

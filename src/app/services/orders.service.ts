@@ -109,6 +109,8 @@ import * as moment from 'moment';
 import { payooChecksum, payooPaymentURL } from '../../constants/payment';
 import { userJoiner, cartPaymentJoiner } from '../../utils/joinTable';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
+import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
+import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 
 @Injectable()
 export class OrdersService {
@@ -137,6 +139,7 @@ export class OrdersService {
     private districtService: DistrictService,
     private wardService: WardService,
     private dbService: DatabaseService,
+    private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -281,7 +284,6 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
-    console.log(284, result);
 
     // create order histories
     const orderHistoryData = {
@@ -290,6 +292,16 @@ export class OrdersService {
       is_sync: 'Y',
     };
     await this.orderHistoryRepo.createSync(orderHistoryData);
+
+    //order payment
+    if (data['orderPayment']) {
+      const orderPaymentData = {
+        ...new OrderPaymentEntity(),
+        ...this.orderPaymentRepo.setData(data['orderPayment']),
+        order_id: result['order_id'],
+      };
+      await this.orderPaymentRepo.createSync(orderPaymentData);
+    }
 
     if (!sendToAppcore) return;
 
@@ -436,7 +448,7 @@ export class OrdersService {
 
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
-        { order_id: order.order_id },
+        { order_id: order['order_id'] },
         orderData,
       );
       result = { ...result, ...updatedOrder };
@@ -453,7 +465,7 @@ export class OrdersService {
 
           if (
             currentOrderItem &&
-            currentOrderItem.order_id == result.order_id
+            currentOrderItem.order_id == result['order_id']
           ) {
             const orderItemData = this.orderDetailRepo.setData({
               ...orderItem,
@@ -476,7 +488,7 @@ export class OrdersService {
         } else {
           const currentOrderItem = await this.orderDetailRepo.findOne({
             product_id: orderItem.product_id,
-            order_id: result.order_id,
+            order_id: result['order_id'],
           });
 
           if (currentOrderItem) {
@@ -504,7 +516,7 @@ export class OrdersService {
           const newOrderItemData = {
             ...new OrderDetailsEntity(),
             ...this.orderDetailRepo.setData(orderItem),
-            order_id: result.order_id,
+            order_id: result['order_id'],
             status: 'A',
           };
           await this.orderDetailRepo.create(newOrderItemData);

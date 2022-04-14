@@ -22,6 +22,7 @@ import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunct
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
 import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
+import { In } from '../../database/operators/operators';
 import {
   getProductsListSelectorBE,
   getDetailProductsListSelectorFE,
@@ -422,32 +423,39 @@ export class PromotionAccessoryService {
     if (!accessory) {
       throw new HttpException('Không tìm thấy.', 404);
     }
+
+    let { category_id } = params;
     let { page, limit, search } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    let filterCondition = {
-      [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
-    };
+    let filterCondition = {};
+    // filterCondition[`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`] =
+    //   accessory_id;
+
+    if (category_id) {
+      filterCondition[`${Table.PRODUCTS_CATEGORIES}.category_id`] =
+        category_id.split(',').length > 1
+          ? In(category_id.split(','))
+          : category_id;
+    }
+    console.log(filterCondition);
 
     switch (+accessory.accessory_type) {
       case 1:
-        filterCondition = {
-          [`${Table.PRODUCTS}.promotion_accessory_id`]: accessory_id,
-        };
+        filterCondition[`${Table.PRODUCTS}.promotion_accessory_id`] =
+          accessory_id;
         break;
       case 2:
-        filterCondition = {
-          [`${Table.PRODUCTS}.free_accessory_id`]: accessory_id,
-        };
+        filterCondition[`${Table.PRODUCTS}.free_accessory_id`] = accessory_id;
         break;
       case 3:
-        filterCondition = {
-          [`${Table.PRODUCTS}.warranty_package_id`]: accessory_id,
-        };
+        filterCondition[`${Table.PRODUCTS}.warranty_package_id`] = accessory_id;
         break;
     }
+
+    console.log(filterCondition);
 
     const productsList = await this.productRepo.find({
       select: getProductAccessorySelector,

@@ -19,6 +19,7 @@ import { CartModule } from './cart.module';
 import { OrderSyncController } from '../controllers/sync/v1/order.controller';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 import { PromotionModule } from './promotion.module';
+import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -36,6 +37,7 @@ import { PromotionModule } from './promotion.module';
     ProductsRepository,
     UserProfileRepository,
     OrderHistoryRepository,
+    OrderPaymentRepository,
   ],
   exports: [
     OrdersService,
@@ -46,6 +48,7 @@ import { PromotionModule } from './promotion.module';
     OrderDataRepository,
     UserProfileRepository,
     OrderHistoryRepository,
+    OrderPaymentRepository,
   ],
   imports: [
     OrderStatusModule,

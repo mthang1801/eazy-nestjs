@@ -10,6 +10,7 @@ import { CartModule } from './cart.module';
 import { PromotionModule } from './promotion.module';
 import { UserRepository } from '../repositories/user.repository';
 import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
+import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 @Module({
   controllers: [PaymentController, PaymentControllerFE],
   providers: [
@@ -17,8 +18,15 @@ import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
     PaymentRepository,
     PaymentDescriptionsRepository,
     UserRepository,
+    OrderPaymentRepository,
   ],
-  exports: [PaymentService],
+  exports: [
+    PaymentService,
+    PaymentRepository,
+    PaymentDescriptionsRepository,
+    UserRepository,
+    OrderPaymentRepository,
+  ],
   imports: [CustomerModule, OrdersModule, CartModule, PromotionModule],
 })
 export class PaymentModule {}

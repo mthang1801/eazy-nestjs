@@ -16,7 +16,10 @@ import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { cartPaymentJoiner, userJoiner } from '../../utils/joinTable';
 import { PromotionService } from './promotion.service';
-import { generateRandomString } from '../../utils/helper';
+import {
+  generateRandomString,
+  formatStandardTimeStamp,
+} from '../../utils/helper';
 import { generateSHA512 } from '../../utils/cipherHelper';
 import {
   payooChecksum,
@@ -277,6 +280,14 @@ export class PaymentService {
         }
       }
 
+      let orderPaymentData = {
+        ...response.data.order,
+        order_gateway_id: response.data.order?.order_id || null,
+        checksum: response.data.checksum,
+        expiry_date: response.data.order?.expire_date
+          ? formatStandardTimeStamp(response.data.order.expire_date)
+          : null,
+      };
       const sendData = {
         ...user,
         order_items: cartItems,
@@ -285,10 +296,13 @@ export class PaymentService {
         transfer_amount: totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_code: null,
-      };
 
+        orderPayment: orderPaymentData,
+      };
+      console.log(sendData);
       await this.orderService.createOrder(user, sendData, false);
 
+      return response.data;
       // await this.cartRepo.delete({ cart_id: cart.cart_id });
       // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
       // await this.dbService.commitTransaction();
