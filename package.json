@@ -54,7 +54,6 @@
     "google-auth-library": "^7.11.0",
     "handlebars": "^4.7.7",
     "hbs": "^4.2.0",
-    "js-sha512": "^0.8.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.1",
     "mongoose": "^6.1.5",

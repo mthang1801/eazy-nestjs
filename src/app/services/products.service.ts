@@ -181,7 +181,6 @@ import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
 import { isNumeric } from '../../utils/helper';
 import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
-import * as sha512 from 'js-sha512';
 @Injectable()
 export class ProductService {
   constructor(
@@ -3816,7 +3815,7 @@ export class ProductService {
       '<shops><shop><username>SB_DiDongViet</username><shop_id>11689</shop_id><session>007120170526</session><shop_title>DiDongViet</shop_title><shop_domain>https://ddv-fe-ecom.vercel.app</shop_domain><shop_back_url>https://ddv-fe-ecom.vercel.app</shop_back_url><order_no>NTL3261783</order_no><order_cash_amount>1000000</order_cash_amount><order_ship_date>04/05/2022</order_ship_date><order_ship_days>1</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sảnphẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạngvăn bản hoặc mã HTML)</order_description><notify_url>http://localhost:3000</notify_url><validity_time>20220554081203</validity_time><customer><name>Nguyen Van Hieu</name><phone>0905775888</phone><address>35 Nguyễn Huệ, p. Bến Nghé, Hồ Chí Minh</address><email>Hieu@gmail.com</email></customer></shop></shops>';
     let dataReq = {
       data,
-      checksum: sha512.sha512(checkSumKey + JSON.stringify(data)),
+      // checksum: sha512.sha512(checkSumKey + JSON.stringify(data)),
       refer: 'https://ddv-fe-ecom.vercel.app/',
       method: 'CC',
       bank: 'ABB',
