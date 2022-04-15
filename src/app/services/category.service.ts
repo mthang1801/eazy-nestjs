@@ -597,14 +597,6 @@ export class CategoryService {
 
     let filterCondition = {};
 
-    for (let [key, val] of Object.entries(others)) {
-      if (this.categoryRepository.tableProps.includes(key)) {
-        filterCondition[`${Table.CATEGORIES}.${key}`] = Like(val);
-      } else {
-        filterCondition[`${Table.CATEGORY_DESCRIPTIONS}.${key}`] = Like(val);
-      }
-    }
-
     if (search) {
       const categories = await this.categoryRepository.find({
         select: '*',
@@ -624,8 +616,6 @@ export class CategoryService {
       let categoriesListResponse = await this.searchCategoriesListFromRoot(
         categories,
       );
-
-      console.log(categoriesListResponse);
 
       return {
         paging: {
