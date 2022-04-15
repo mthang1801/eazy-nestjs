@@ -209,6 +209,10 @@ export const convertDataToIntegrate = (data) => {
     itgData['parnerPaymentStatus'] = data['payment_status']; //Trạng thái thanh toán
   }
 
+  if (data['payment_date']) {
+    itgData['paymentDate'] = data['payment_date']; //Trạng thái thanh toán
+  }
+
   if (data['email']) {
     itgData['customerEmail'] = data['email']; //Địa chỉ email khách hàng
   }

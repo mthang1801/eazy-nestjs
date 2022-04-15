@@ -23,3 +23,10 @@ export const payooPaymentURL =
 export const payooPaymentNotifyURL =
   process.env.PAYOO_NOTIFY_URL ||
   'https://ddvwsdev.ntlogistics.vn/be/v1/payment/payoo/payment-result';
+
+export const PaymentStatus = {
+  paid: 1,
+  unpaid: 0,
+};
+
+export const shippingDate = 3 * 60 * 60 * 24 * 1000;

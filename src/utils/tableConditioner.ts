@@ -122,22 +122,19 @@ export const customersListSearchFilter = (
   let arraySearch = [];
 
   if (search) {
-    arraySearch = [
-      { [`${Table.USERS}.email`]: Like(search) },
-      { [`${Table.USERS}.phone`]: Like(search) },
-    ];
+    arraySearch = [{ [`${Table.USERS}.phone`]: Like(search) }];
     if (firstName) {
       arraySearch = [
         ...arraySearch,
-        { [`${Table.USERS}.firstname`]: Like(firstName) },
-        { [`${Table.USERS}.lastname`]: Like(firstName) },
+        { [`${Table.USER_PROFILES}.b_firstname`]: Like(firstName) },
+        { [`${Table.USER_PROFILES}.b_lastname`]: Like(firstName) },
       ];
     }
     if (lastName) {
       arraySearch = [
         ...arraySearch,
-        { [`${Table.USERS}.lastname`]: Like(lastName) },
-        { [`${Table.USERS}.firstname`]: Like(lastName) },
+        { [`${Table.USER_PROFILES}.b_lastname`]: Like(lastName) },
+        { [`${Table.USER_PROFILES}.b_firstname`]: Like(lastName) },
       ];
     }
   }

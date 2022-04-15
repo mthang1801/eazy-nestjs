@@ -301,10 +301,9 @@ export class OrdersService {
         ...this.orderPaymentRepo.setData(data['orderPayment']),
         order_id: result['order_id'],
       };
+      console.log(orderPaymentData);
       await this.orderPaymentRepo.createSync(orderPaymentData);
     }
-
-    if (!sendToAppcore) return;
 
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
@@ -343,6 +342,8 @@ export class OrdersService {
           ];
     }
 
+    if (!sendToAppcore) return;
+
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
       method: 'POST',
@@ -369,6 +370,53 @@ export class OrdersService {
         await this.orderDetailRepo.update(
           {
             order_id: result.order_id,
+            product_appcore_id: orderItem.productId,
+          },
+          { order_item_appcore_id: orderItem.orderItemId },
+        );
+      }
+      // update order history
+      await this.orderHistoryRepo.create(updatedOrder);
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
+  }
+
+  async pushOrderToAppcore(order_id) {
+    const order = await this.orderRepo.findOne({ order_id });
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+    const configPushOrderToAppcore: any = {
+      method: 'POST',
+      url: PUSH_ORDER_TO_APPCORE_API,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(order),
+    };
+    try {
+      const response = await axios(configPushOrderToAppcore);
+
+      const orderAppcoreResponse = response.data.data;
+      const updatedOrder = await this.orderRepo.update(
+        { order_id: order_id },
+        {
+          order_code: orderAppcoreResponse.orderId,
+          is_sync: 'N',
+          updated_date: formatStandardTimeStamp(),
+        },
+      );
+      for (let orderItem of orderAppcoreResponse['orderItemIds']) {
+        await this.orderDetailRepo.update(
+          {
+            order_id: order_id,
             product_appcore_id: orderItem.productId,
           },
           { order_item_appcore_id: orderItem.orderItemId },

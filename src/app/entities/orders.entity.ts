@@ -93,6 +93,7 @@ export class OrderEntity {
   other_fees: number = 0;
   user_appcore_id: number = 0;
   is_sync: string = 'N';
+  payment_date: string = null;
   installment_promotion_code: string = '';
   installment_interest_rate: string = '';
   installment_interest_rate_code: string = '';

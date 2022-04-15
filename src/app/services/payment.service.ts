@@ -33,6 +33,7 @@ import {
   payooShopTitle,
   webDomain,
   payooPaymentNotifyURL,
+  PaymentStatus,
 } from '../../constants/payment';
 import { UserRepository } from '../repositories/user.repository';
 
@@ -42,6 +43,9 @@ import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum
 import { OrdersService } from './orders.service';
 import * as moment from 'moment';
 import { Data } from 'ejs';
+import { OrdersRepository } from '../repositories/orders.repository';
+import { OrderEntity } from '../entities/orders.entity';
+import { shippingDate } from '../../constants/payment';
 
 @Injectable()
 export class PaymentService {
@@ -54,6 +58,7 @@ export class PaymentService {
     private userRepo: UserRepository<UserEntity>,
     private customerService: CustomerService,
     private orderService: OrdersService,
+    private orderRepo: OrdersRepository<OrderEntity>,
   ) {}
 
   async getList(params) {
@@ -179,6 +184,11 @@ export class PaymentService {
   }
 
   async paymentPaynow(data: CreatePaynowDto) {
+    let paymentMethod = 'CC';
+    return this.payment(data, paymentMethod);
+  }
+
+  async payment(data, method) {
     try {
       // this.dbService.startTransaction();
       const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
@@ -224,13 +234,23 @@ export class PaymentService {
         'Content-Type': 'application/json',
       };
       let ref_order_id = generateRandomString();
+      const paymentDate = moment(new Date(Date.now() + shippingDate)).format(
+        'DD/MM/YYYY',
+      );
+      const paymentDateTime = formatStandardTimeStamp(
+        new Date(Date.now() + shippingDate),
+      );
 
-      const dataRequest = this.payooPaymentData(data, ref_order_id, totalPrice);
-      console.log(totalPrice);
+      const dataRequest = this.payooPaymentData(
+        data,
+        ref_order_id,
+        paymentDate,
+        totalPrice,
+      );
+
       const checksum = generateSHA512(payooChecksum + dataRequest);
       const refer = payooRefer;
-      const method = data['method'] || 'CC';
-      const bank = data['bank'] || 'VISA';
+      const bank = data['bank'];
 
       const body = {
         data: dataRequest,
@@ -282,26 +302,41 @@ export class PaymentService {
         }
       }
 
+      const orderDataResponse = response.data.order;
+
       let orderPaymentData = {
-        ...response.data.order,
-        order_gateway_id: response.data.order?.order_id || null,
+        ...orderDataResponse,
+        order_gateway_id: orderDataResponse?.order_id || null,
         checksum: response.data.checksum,
-        expiry_date: response.data.order?.expire_date
+        expiry_date: orderDataResponse?.expire_date
           ? formatStandardTimeStamp(response.data.order.expire_date)
           : null,
       };
-      const sendData = {
+      let sendData = {
         ...user,
         order_items: cartItems,
-        pay_credit_type: PayCreditFeeType.Chuyen_khoan,
         ref_order_id,
         transfer_amount: totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_code: null,
-
         orderPayment: orderPaymentData,
       };
+
+      if (method == 'CC') {
+        sendData = {
+          ...sendData,
+          payment_status: PaymentStatus.unpaid,
+          transfer_bank: bank,
+          transfer_amount: orderDataResponse.amount,
+          transfer_ref_code: orderDataResponse.order_no,
+          transfer_account_id: orderDataResponse.order_id,
+          pay_credit_type: PayCreditFeeType.Chuyen_khoan,
+          payment_date: paymentDateTime,
+        };
+      }
+
       console.log(sendData);
+
       await this.orderService.createOrder(user, sendData, false);
 
       return response.data;
@@ -318,13 +353,9 @@ export class PaymentService {
     }
   }
 
-  payooPaymentData(userWebInfo, ref_order_id, orderTotalPrice) {
+  payooPaymentData(userWebInfo, ref_order_id, paymentDate, orderTotalPrice) {
     const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
-    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${moment(
-      new Date(),
-    ).format(
-      'DD/MM/YYYY',
-    )}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>20220808081203</validity_time><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
+    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>20220808081203</validity_time><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
     return bodyData;
   }
 
@@ -333,11 +364,29 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
-    let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length + 1;
+    let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
-    let decodedData = Buffer.from(_notifyData, 'utf8').toString('utf8');
-
-    console.log(decodedData);
+    console.log(notifyData);
+    let decodedData = Buffer.from(_notifyData, 'base64').toString('utf8');
+    const orderNoIndexStart =
+      decodedData.indexOf('<order_no>') + '<order_no>'.length;
+    const orderNoIndexEnd = decodedData.indexOf('</order_no>');
+    const orderNo = decodedData.substring(orderNoIndexStart, orderNoIndexEnd);
+    console.log(orderNo);
+    try {
+      const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
+      console.log(order);
+      const updateOrderData = {
+        payment_status: PaymentStatus.paid,
+      };
+      await this.orderRepo.update(
+        { order_id: order.order_id },
+        updateOrderData,
+      );
+      await this.orderService.pushOrderToAppcore(order.order_id);
+    } catch (error) {
+      throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
+    }
   }
 }
