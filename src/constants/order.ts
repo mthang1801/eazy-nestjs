@@ -275,3 +275,15 @@ export const convertDataToIntegrate = (data) => {
 
   return JSON.stringify(itgData);
 };
+
+export const OrderStatus = {
+  new: 1,
+  confirmed: 3,
+  shipping: 4,
+  packaging: 5,
+  success: 6,
+  failed: 7,
+  cancelled: 8,
+  purchased: 9,
+  dont_pickup_phone: 10,
+};

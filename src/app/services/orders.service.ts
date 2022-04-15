@@ -112,6 +112,7 @@ import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 import { Not, IsNull } from '../../database/operators/operators';
+import { OrderStatus } from '../../constants/order';
 
 @Injectable()
 export class OrdersService {
@@ -301,7 +302,6 @@ export class OrdersService {
         ...this.orderPaymentRepo.setData(data['orderPayment']),
         order_id: result['order_id'],
       };
-      console.log(orderPaymentData);
       await this.orderPaymentRepo.createSync(orderPaymentData);
     }
 
@@ -390,9 +390,21 @@ export class OrdersService {
 
   async pushOrderToAppcore(order_id) {
     const order = await this.orderRepo.findOne({ order_id });
+    console.log(order);
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
+
+    const orderItems = await this.orderDetailRepo.find({ order_id });
+    order['order_items'] = [];
+
+    for (let productItem of orderItems) {
+      order['order_items'].push({
+        ...productItem,
+        product_id: productItem.product_appcore_id,
+      });
+    }
+
     const configPushOrderToAppcore: any = {
       method: 'POST',
       url: PUSH_ORDER_TO_APPCORE_API,
@@ -667,6 +679,13 @@ export class OrdersService {
 
     if (convertedData.status) {
       convertedData['status'] = mappingStatusOrder(convertedData['status']);
+      if (
+        [OrderStatus.success, OrderStatus.purchased].includes(
+          +convertedData['status'],
+        )
+      ) {
+        convertedData['payment_status'] = 1;
+      }
     }
 
     const orderData = {
@@ -741,7 +760,14 @@ export class OrdersService {
     let result = { ...order };
 
     if (convertedData.status) {
-      convertedData['status'] = mappingStatusOrder(convertedData.status);
+      convertedData['status'] = mappingStatusOrder(convertedData['status']);
+      if (
+        [OrderStatus.success, OrderStatus.purchased].includes(
+          +convertedData['status'],
+        )
+      ) {
+        convertedData['payment_status'] = 1;
+      }
     }
 
     const orderData = await this.orderRepo.setData({ ...convertedData });

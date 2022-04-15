@@ -46,6 +46,7 @@ import { Data } from 'ejs';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { OrderEntity } from '../entities/orders.entity';
 import { shippingDate } from '../../constants/payment';
+import { OrderStatus } from '../../constants/order';
 
 @Injectable()
 export class PaymentService {
@@ -320,6 +321,7 @@ export class PaymentService {
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_code: null,
         orderPayment: orderPaymentData,
+        status: OrderStatus.new,
       };
 
       if (method == 'CC') {
@@ -364,21 +366,24 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
+
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
-    console.log(notifyData);
+
     let decodedData = Buffer.from(_notifyData, 'base64').toString('utf8');
+
     const orderNoIndexStart =
       decodedData.indexOf('<order_no>') + '<order_no>'.length;
     const orderNoIndexEnd = decodedData.indexOf('</order_no>');
     const orderNo = decodedData.substring(orderNoIndexStart, orderNoIndexEnd);
-    console.log(orderNo);
+
     try {
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
-      console.log(order);
+
       const updateOrderData = {
         payment_status: PaymentStatus.paid,
+        status: OrderStatus.purchased,
       };
       await this.orderRepo.update(
         { order_id: order.order_id },
