@@ -286,7 +286,7 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
-
+    console.log(result);
     // create order histories
     const orderHistoryData = {
       ...new OrderHistoryEntity(),

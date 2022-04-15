@@ -232,28 +232,32 @@ export class CustomerService {
 
       const user = await this.userRepo.create(userData);
 
+      let result = { ...user };
+
       const userProfileData = {
         ...new UserProfileEntity(),
         ...this.userProfileRepo.setData(customerData),
         user_id: user['user_id'],
       };
-      await this.userProfileRepo.create(userProfileData);
+      const userProfile = await this.userProfileRepo.create(userProfileData);
+
+      result = { ...result, ...userProfile };
 
       const userLoyaltyData = {
         ...new UserLoyaltyEntity(),
         ...this.userLoyalRepo.setData(customerData),
         user_id: user.user_id,
       };
-      this.userLoyalRepo.create(userLoyaltyData);
+      await this.userLoyalRepo.createSync(userLoyaltyData);
 
       const userDataData = {
         ...new UserDataEntity(),
         ...this.userDataRepo.setData(customerData),
         user_id: user['user_id'],
       };
-      await this.userDataRepo.create(userDataData);
+      await this.userDataRepo.createSync(userDataData);
 
-      await this.createCustomerToAppcore(user);
+      await this.createCustomerToAppcore(result);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

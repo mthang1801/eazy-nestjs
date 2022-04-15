@@ -4,7 +4,7 @@ import {
 } from 'src/utils/helper';
 
 export class OrderEntity {
-  order_code: null | number = 0;
+  order_code: number = null;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;
   company_id: number = 0;
