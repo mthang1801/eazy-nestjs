@@ -16,4 +16,10 @@ export const payooBusinessName =
 
 export const webDomain =
   process.env.WEB_DOMAIN || 'https://ddv-fe-ecom.vercel.app';
-export const payooPaymentURL = process.env.PAYOO_PAYNOW_URL;
+export const payooPaymentURL =
+  process.env.PAYOO_PAYNOW_URL ||
+  'https://newsandbox.payoo.com.vn/v2/paynow/order/create';
+
+export const payooPaymentNotifyURL =
+  process.env.PAYOO_NOTIFY_URL ||
+  'https://ddvwsdev.ntlogistics.vn/be/v1/payment/payoo/payment-result';

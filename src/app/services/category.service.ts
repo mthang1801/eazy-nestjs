@@ -624,39 +624,16 @@ export class CategoryService {
       let categoriesListResponse = await this.searchCategoriesListFromRoot(
         categories,
       );
-      console.log(JSON.stringify(categoriesListResponse, null, 4));
 
-      for (let category of categories) {
-        let categoriesCascadeIds = category['id_path'].split('/');
+      console.log(categoriesListResponse);
 
-        const categoriesList = await this.getCategoriesChildrenRecursive(
-          category,
-          Infinity,
-          true,
-        );
-
-        let count = 0;
-
-        if (categoriesList?.categoriesIdList?.length) {
-          for (let categoryId of categoriesList.categoriesIdList) {
-            const numberOfProductsByCategoryId =
-              await this.productCategoryRepository.count({
-                where: { category_id: categoryId },
-              });
-            count += numberOfProductsByCategoryId;
-          }
-        }
-
-        category['totalProducts'] = count;
-        category = categoriesList['currentCategory'];
-      }
       return {
         paging: {
           currentPage: page,
           pageSize: limit,
           total: totalCategories[0].total,
         },
-        categories,
+        categories: categoriesListResponse,
       };
     }
 
