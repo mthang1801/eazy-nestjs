@@ -433,6 +433,27 @@ export const productCategoryJoiner = {
   },
 };
 
+export const productListInCategoryJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    },
+  },
+};
+
 export const productInfoJoiner = {
   [Table.PRODUCT_DESCRIPTION]: {
     fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,

@@ -13,4 +13,5 @@ export class OrderPaymentEntity {
   payment_url: string = '';
   qr_code_uri: string = '';
   qrcode: string = '';
+  payment_status: string = 'D';
 }

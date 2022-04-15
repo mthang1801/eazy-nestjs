@@ -115,7 +115,22 @@ export const productsListsSearchFilter = (
 
   if (search) {
     arraySearch = [
-      ...arraySearch,
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const productListsInCategorySearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
       { [`${Table.PRODUCTS}.product_code`]: Like(search) },
       { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
     ];

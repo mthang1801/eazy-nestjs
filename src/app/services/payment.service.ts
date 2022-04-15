@@ -41,6 +41,7 @@ import { CustomerService } from './customer.service';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
 import { OrdersService } from './orders.service';
 import * as moment from 'moment';
+import { Data } from 'ejs';
 
 @Injectable()
 export class PaymentService {
@@ -328,6 +329,15 @@ export class PaymentService {
   }
 
   async payooNotify(data) {
-    console.log(data);
+    if (!data.NotifyData) {
+      throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
+    }
+    let notifyData = data.NotifyData;
+    let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length + 1;
+    let endIndex = notifyData.indexOf('</Data>');
+    let _notifyData = notifyData.substring(startIndex, endIndex);
+    let decodedData = Buffer.from(_notifyData, 'utf8').toString('utf8');
+
+    console.log(decodedData);
   }
 }

@@ -71,6 +71,6 @@ export class PaymentController extends BaseController {
   @Post('/payoo/payment-result')
   async payooNotify(@Res() res: Response, @Body() data) {
     await this.service.payooNotify(data);
-    return this.responseSuccess(res);
+    return this.responseSuccess(res, null, 'NOTIFY_RECEIVED');
   }
 }

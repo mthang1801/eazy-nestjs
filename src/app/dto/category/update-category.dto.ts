@@ -1,4 +1,5 @@
-import { IsOptional, IsNotEmpty, IsIn } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsOptional, IsNotEmpty, IsIn, ValidateNested } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -106,4 +107,20 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   icon: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AppliedProduct)
+  applied_products: AppliedProduct[];
+
+  @IsOptional()
+  removed_products: number[];
+}
+
+class AppliedProduct {
+  @IsNotEmpty()
+  product_id: number;
+
+  @IsOptional()
+  position: number;
 }

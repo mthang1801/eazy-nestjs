@@ -80,8 +80,12 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get(':id')
-  async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
-    const categoryRes = await this.service.get(id);
+  async get(
+    @Param('id') id: number,
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const categoryRes = await this.service.get(id, params);
     return this.responseSuccess(res, categoryRes);
   }
 

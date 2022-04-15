@@ -60,6 +60,12 @@ import { categorySelector } from '../../database/sqlQuery/select/category.select
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { productCategoryJoinProductAndCategory } from '../../database/sqlQuery/join/category.join';
 import { getPageSkipLimit } from '../../utils/helper';
+import {
+  productCategoryJoiner,
+  productJoiner,
+  productListInCategoryJoiner,
+} from '../../utils/joinTable';
+import { productListsInCategorySearchFilter } from '../../database/sqlQuery/where/product.where';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -449,6 +455,30 @@ export class CategoryService {
           image_id: image.image_id,
         });
         result = { ...result, image: { ...image, ...imageLink } };
+      }
+    }
+
+    if (data.removed_products && data.removed_products.length) {
+      for (let productId of data.removed_products) {
+        await this.productCategoryRepository.delete({
+          product_id: productId,
+          category_id: id,
+        });
+      }
+    }
+
+    if (data.applied_products && data.applied_products.length) {
+      for (let { product_id, position } of data.applied_products) {
+        const productCategory = await this.productCategoryRepository.findOne({
+          product_id,
+          category_id: id,
+        });
+        if (productCategory) {
+          await this.productCategoryRepository.update(
+            { product_id, category_id: id },
+            { position },
+          );
+        }
       }
     }
 
@@ -905,7 +935,9 @@ export class CategoryService {
     return categories;
   }
 
-  async get(id: number) {
+  async get(id: number, params) {
+    let { search } = params;
+    let { skip, limit, page } = getPageSkipLimit(params);
     let category = await this.categoryRepository.findOne({
       select: ['*'],
       join: {
@@ -920,7 +952,55 @@ export class CategoryService {
     });
 
     const categories = await this.getCategoriesChildrenRecursive(category);
-    return categories;
+
+    let filterProductCategory = {};
+    filterProductCategory[`${Table.PRODUCTS_CATEGORIES}.category_id`] = id;
+
+    let filterOrder = [
+      {
+        field: `${Table.PRODUCTS_CATEGORIES}.position`,
+        sortBy: SortBy.DESC,
+      },
+    ];
+
+    const productsListInCategory = await this.productCategoryRepository.find({
+      select: `${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,
+      join: productListInCategoryJoiner,
+      orderBy: filterOrder,
+      where: productListsInCategorySearchFilter(search, filterProductCategory),
+      skip,
+      limit,
+    });
+
+    const countProducts = await this.productCategoryRepository.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS_CATEGORIES}.product_id)) as total`,
+      join: productListInCategoryJoiner,
+      where: productListsInCategorySearchFilter(search, filterProductCategory),
+    });
+
+    return {
+      categories,
+      products: {
+        paging: {
+          currentPage: page,
+          pageSize: limit,
+          total: countProducts[0].total,
+        },
+        products: productsListInCategory,
+      },
+    };
+
+    // categories['currentCategory'] = category;
+    // categories['products'] = {
+    //   paging: {
+    //     currentPage: page,
+    //     pageSize: limit,
+    //     total: countProducts[0].total,
+    //   },
+    //   products: productsListInCategory,
+    // };
+
+    // return categories;
   }
 
   async getCategoriesChildrenRecursive(
