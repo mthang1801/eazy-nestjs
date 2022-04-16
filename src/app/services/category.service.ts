@@ -936,7 +936,8 @@ export class CategoryService {
   }
 
   async get(id: number, params) {
-    let { search } = params;
+    let { search, position } = params;
+
     let { skip, limit, page } = getPageSkipLimit(params);
     let category = await this.categoryRepository.findOne({
       select: ['*'],
@@ -958,10 +959,19 @@ export class CategoryService {
 
     let filterOrder = [
       {
-        field: `${Table.PRODUCTS_CATEGORIES}.position`,
-        sortBy: SortBy.DESC,
+        field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+        sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
       },
     ];
+
+    if (position && position != 0) {
+      [
+        {
+          field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position DESC`,
+        },
+      ];
+    }
 
     const productsListInCategory = await this.productCategoryRepository.find({
       select: `${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,

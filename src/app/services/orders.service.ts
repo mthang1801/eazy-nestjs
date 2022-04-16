@@ -111,7 +111,12 @@ import { userJoiner, cartPaymentJoiner } from '../../utils/joinTable';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
-import { Not, IsNull } from '../../database/operators/operators';
+import {
+  Not,
+  IsNull,
+  Between,
+  MoreThan,
+} from '../../database/operators/operators';
 import { OrderStatus } from '../../constants/order';
 
 @Injectable()
@@ -413,6 +418,7 @@ export class OrdersService {
       },
       data: convertDataToIntegrate(order),
     };
+
     try {
       const response = await axios(configPushOrderToAppcore);
 
@@ -905,13 +911,15 @@ export class OrdersService {
       shipping_service_id,
       utm_source,
       store_id,
-      created_at,
+      created_at_start,
+      created_at_end,
     } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
     filterConditions[`${Table.ORDERS}.order_code`] = Not(IsNull());
+    filterConditions[`${Table.ORDERS}.status`] = MoreThan(0);
     if (shipping_id) {
       filterConditions[`${Table.ORDERS}.shipping_id`] = shipping_id;
     }
@@ -937,8 +945,15 @@ export class OrdersService {
       filterConditions[`${Table.ORDERS}.store_id`] = store_id;
     }
 
-    if (created_at) {
-      filterConditions[`${Table.ORDERS}.created_at`] = created_at;
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.ORDERS}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
+      filterConditions[`${Table.ORDERS}.created_at`] = created_at_start;
+    } else if (created_at_end) {
+      filterConditions[`${Table.ORDERS}.created_at`] = created_at_end;
     }
 
     const ordersList = await this.orderRepo.find({

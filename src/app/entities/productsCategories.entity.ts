@@ -4,6 +4,6 @@ export class ProductsCategoriesEntity {
   category_id: number = 0;
   category_appcore_id: number = 0;
   link_type: string = 'M';
-  position: number = 0;
-  category_position: number = 0;
+  position: number = null;
+  category_position: number = null;
 }

@@ -56,97 +56,6 @@ export class BaseRepositorty<T> {
   }
 
   /**
-   * Create new record
-   * @param params
-   * @returns
-   */
-  async create(params: any): Promise<any> {
-    this.logger.log('=============== create ================');
-
-    if (Array.isArray(params) || typeof params !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào phải là một Object',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    let fmtParams: any = {};
-    for (let [key, val] of Object.entries(params)) {
-      if (typeof val === 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `INSERT INTO ${this.table} SET ? `;
-
-    await this.databaseService.executeQueryWritePool(sql, fmtParams);
-
-    const res = await this.databaseService.executeQueryWritePool(
-      'SELECT LAST_INSERT_ID();',
-    );
-
-    if (res[0][0]['LAST_INSERT_ID()'] === 0) {
-      return this.findOne({ where: fmtParams });
-    }
-
-    return this.findById(res[0][0]['LAST_INSERT_ID()']);
-  }
-
-  /**
-   * Create new record
-   * @param params
-   * @returns
-   */
-  async createSync(params: any): Promise<any> {
-    this.logger.log('=============== create ================');
-
-    if (Array.isArray(params) || typeof params !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào phải là một Object',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    let fmtParams: any = {};
-    for (let [key, val] of Object.entries(params)) {
-      if (typeof val == 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `INSERT INTO ${this.table} SET ? `;
-
-    await this.databaseService.executeQueryWritePool(sql, fmtParams);
-  }
-
-  /**
-   * Show one record by primary key id
-   * @param id
-   * @returns
-   */
-  async findById(id: number | any): Promise<T> {
-    this.logger.log('=============== Find By Id ================');
-
-    const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
-
-    let rows;
-    if (typeof id === 'object') {
-      rows = await this.databaseService.executeQueryReadPool(stringQuery, [id]);
-    } else {
-      rows = await this.databaseService.executeQueryReadPool(stringQuery, [
-        { [PrimaryKeys[this.table]]: id },
-      ]);
-    }
-
-    const result = rows[0];
-
-    return preprocessDatabaseBeforeResponse(result[0]);
-  }
-
-  /**
    * Find one record by item
    * @param options
    * @returns
@@ -256,6 +165,127 @@ export class BaseRepositorty<T> {
   }
 
   /**
+   * Create new record
+   * @param params
+   * @returns
+   */
+  async create(params: any): Promise<any> {
+    this.logger.log('=============== create ================');
+
+    if (Array.isArray(params) || typeof params !== 'object') {
+      throw new HttpException(
+        'Tham số truyền vào phải là một Object',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    let fmtParams: any = {};
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val === 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
+    let sql = `INSERT INTO ${this.table} SET ? `;
+
+    await this.databaseService.executeQueryWritePool(sql, fmtParams);
+
+    const res = await this.databaseService.executeQueryWritePool(
+      'SELECT LAST_INSERT_ID();',
+    );
+
+    if (res[0][0]['LAST_INSERT_ID()'] === 0) {
+      return this.findOne({ where: fmtParams });
+    }
+
+    return this.findById(res[0][0]['LAST_INSERT_ID()']);
+  }
+
+  /**
+   * Create new record
+   * @param params
+   * @returns
+   */
+  async createSync(params: any): Promise<any> {
+    this.logger.log('=============== create ================');
+
+    if (Array.isArray(params) || typeof params !== 'object') {
+      throw new HttpException(
+        'Tham số truyền vào phải là một Object',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let fmtParams: any = {};
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val == 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
+    let sql = `INSERT INTO ${this.table} SET ? `;
+
+    await this.databaseService.executeQueryWritePool(sql, fmtParams);
+  }
+
+  async createTransaction(params: any): Promise<any> {
+    this.logger.log('=============== create ================');
+
+    if (Array.isArray(params) || typeof params !== 'object') {
+      throw new HttpException(
+        'Tham số truyền vào phải là một Object',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let fmtParams: any = {};
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val == 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
+    let sql = `INSERT INTO ${this.table} SET ? `;
+
+    const result = await this.databaseService.executeQueryWritePool(
+      sql,
+      fmtParams,
+    );
+    const { insertId } = JSON.parse(JSON.stringify(result[0]));
+
+    return { user_id: insertId, ...fmtParams };
+  }
+
+  /**
+   * Show one record by primary key id
+   * @param id
+   * @returns
+   */
+  async findById(id: number | any): Promise<T> {
+    this.logger.log('=============== Find By Id ================');
+
+    const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
+
+    let rows;
+    if (typeof id === 'object') {
+      rows = await this.databaseService.executeQueryReadPool(stringQuery, [id]);
+    } else {
+      rows = await this.databaseService.executeQueryReadPool(stringQuery, [
+        { [PrimaryKeys[this.table]]: id },
+      ]);
+    }
+
+    const result = rows[0];
+
+    return preprocessDatabaseBeforeResponse(result[0]);
+  }
+
+  /**
    * Update one record by primary key
    * @param id primary key
    * @param params object<any> with
@@ -309,6 +339,51 @@ export class BaseRepositorty<T> {
       typeof id === 'object' ? await this.findOne(id) : await this.findById(id);
 
     return updatedUser;
+  }
+
+  async updateTransaction(id: number | any, params: any): Promise<void> {
+    this.logger.log('=============== UPDATE ================');
+
+    if (typeof params !== 'object') {
+      throw new HttpException(
+        'Tham số truyền vào không hợp lệ.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let fmtParams: any = { ...params };
+
+    for (let [key, val] of Object.entries(params)) {
+      if (typeof val == 'number') {
+        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+      } else {
+        fmtParams[key] = preprocessAddTextDataToMysql(val);
+      }
+    }
+
+    let sql = `UPDATE ${this.table} SET `;
+    Object.entries(fmtParams).forEach(([key, val], i) => {
+      if (i === 0) {
+        sql += formatTypeValueToInSertSQL(key, val);
+      } else {
+        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
+      }
+    });
+    sql += ' WHERE ';
+
+    if (typeof id === 'object') {
+      Object.entries(id).forEach(([key, val], i) => {
+        if (i === 0) {
+          sql += formatTypeValueToInSertSQL(key, val);
+        } else {
+          sql += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
+        }
+      });
+    } else {
+      sql += ` ${PrimaryKeys[this.table]} = '${id}'`;
+    }
+
+    await this.databaseService.executeQueryWritePool(sql);
   }
 
   async delete(option: number | any): Promise<boolean> {

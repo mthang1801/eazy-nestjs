@@ -601,7 +601,7 @@ export class DatabaseCollection {
       this.stringCondition +
       orderString;
     if (is_limit == true) {
-      sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset}`;
+      sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset} ; `;
     }
 
     this.reset();

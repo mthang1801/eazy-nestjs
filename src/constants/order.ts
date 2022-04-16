@@ -277,6 +277,7 @@ export const convertDataToIntegrate = (data) => {
 };
 
 export const OrderStatus = {
+  unfulfilled: 0,
   new: 1,
   confirmed: 3,
   shipping: 4,
