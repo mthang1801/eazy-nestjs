@@ -520,7 +520,7 @@ export class ProductService {
     let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
-    let filterOrders = [
+    let filterOrders: any[] = [
       { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
     ];
     let filterJoiner = {};
@@ -624,6 +624,12 @@ export class ProductService {
       filterJoiner['category_id'] = 1;
       // Theo danh mục
       categoriesList = arrCategories.map((category_id) => category_id);
+      filterOrders = [
+        {
+          field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
+        },
+      ];
     }
 
     let productsList: any[] = [];
@@ -799,7 +805,10 @@ export class ProductService {
 
     if (productsList.length) {
       productsList = await this.productCategoryRepo.find({
-        select: getProductsListSelectorBE,
+        select: [
+          ...getProductsListSelectorBE,
+          `${Table.PRODUCTS_CATEGORIES}.position`,
+        ],
         join: productJoiner(filterJoiner),
         where: {
           [`${Table.PRODUCTS}.product_id`]: In(
@@ -1663,6 +1672,7 @@ export class ProductService {
           { product_id: parentProduct.product_id },
           { product_function: 1 },
         );
+
         convertedData['parent_product_id'] = parentProduct['product_id'];
       }
     }
@@ -1871,16 +1881,17 @@ export class ProductService {
         result['combo_items'].push(newGroupProductItem);
       }
     }
-    await this.checkProductGroup(convertedData);
+    await this.checkProductGroupAndPrice(convertedData);
   }
 
-  async checkProductGroup(data) {
+  async checkProductGroupAndPrice(data) {
     if (+data['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
         product_appcore_id: data['parent_product_appcore_id'],
       });
 
       if (parentProduct) {
+        await this.supplyPriceToParentProduct(parentProduct['product_id']);
         let group = await this.productVariationGroupRepo.findOne({
           product_root_id: parentProduct.product_id,
         });
@@ -1927,6 +1938,7 @@ export class ProductService {
           { product_appcore_id: data['product_appcore_id'] },
           { product_function: 1 },
         );
+        await this.supplyPriceToParentProduct(currentProduct['product_id']);
         let group = await this.productVariationGroupRepo.findOne({
           product_root_id: currentProduct['product_id'],
         });
@@ -1979,6 +1991,32 @@ export class ProductService {
     //     await this.itgUpdate(productItemInfo.product_id, productItem);
     //   }
     // }
+  }
+
+  async supplyPriceToParentProduct(product_id) {
+    const parentProduct = await this.productRepo.findOne({
+      select: '*',
+      join: productPriceJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+
+    if (parentProduct['price'] == 0) {
+      let childProductPrice = await this.productRepo.findOne({
+        select: `price,  list_price, buy_price, collect_price, whole_price, percentage_discount`,
+        join: productPriceJoiner,
+        where: {
+          [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+            parentProduct['product_appcore_id'],
+        },
+      });
+
+      if (childProductPrice) {
+        await this.productPriceRepo.update(
+          { product_id: parentProduct.product_id },
+          { ...childProductPrice },
+        );
+      }
+    }
   }
 
   async getFromAppcore() {
@@ -2334,7 +2372,7 @@ export class ProductService {
       }
     }
 
-    await this.checkProductGroup(convertedData);
+    await this.checkProductGroupAndPrice(convertedData);
     // await this.requestIntegrateParentProduct();
   }
 
@@ -3720,7 +3758,18 @@ export class ProductService {
       }
       this.syncProductsIntoGroup();
     } catch (error) {
-      console.log(error);
+      await fs.writeFile(
+        'logs.txt',
+        error.message || error?.response?.data?.message,
+        (err) => {
+          if (err) console.log(err);
+          else {
+            console.log('File written successfully\n');
+            console.log('The written has the following contents:');
+            console.log(fs.readFileSync('logs.txt', 'utf8'));
+          }
+        },
+      );
     }
   }
 

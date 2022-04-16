@@ -965,7 +965,7 @@ export class CategoryService {
     ];
 
     if (position && position != 0) {
-      [
+      filterOrder = [
         {
           field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
           sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position DESC`,

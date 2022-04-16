@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
-export class CreatePaynowDto {
+export class CreateInstallmentDto {
   @IsNotEmpty()
   user_id: string;
 
@@ -30,9 +30,6 @@ export class CreatePaynowDto {
 
   @IsOptional()
   callback_url: string;
-
-  @IsNotEmpty()
-  method: string;
 
   @IsOptional()
   bank: string;

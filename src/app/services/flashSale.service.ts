@@ -17,7 +17,11 @@ import { flashSaleSearchFilter } from '../../utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { MoreThanOrEqual } from 'src/database/operators/operators';
 import { UpdateFlashSaleDto } from '../dto/flashSale/update-flashSale.dto';
-import { LessThan, MoreThan } from '../../database/operators/operators';
+import {
+  LessThan,
+  MoreThan,
+  LessThanOrEqual,
+} from '../../database/operators/operators';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
@@ -42,6 +46,35 @@ export class FlashSalesService {
     };
     const newFlashSale = await this.flashSaleRepo.create(newFlashSaleData);
 
+    if (data.status === 'A') {
+      const startDate = formatStandardTimeStamp(
+        newFlashSale['start_at'],
+      ).toString();
+      const endDate = formatStandardTimeStamp(
+        newFlashSale['end_at'],
+      ).toString();
+
+      await this.flashSaleRepo.update(
+        {
+          start_at: MoreThanOrEqual(startDate),
+          end_at: LessThanOrEqual(endDate),
+        },
+        { status: 'D' },
+      );
+
+      await this.flashSaleRepo.update(
+        {
+          end_at: LessThanOrEqual(formatStandardTimeStamp()),
+        },
+        { status: 'D' },
+      );
+
+      await this.flashSaleRepo.update(
+        { flash_sale_id: newFlashSale.flash_sale_id },
+        { status: 'A' },
+      );
+    }
+
     for (let flashSaleDetailItem of data.flash_sale_details) {
       const newFlashSaleDetailItem = {
         ...new FlashSaleDetailEntity(),
@@ -64,7 +97,10 @@ export class FlashSalesService {
   }
 
   async FEget() {
-    let flashSale = await this.flashSaleRepo.findOne({ status: 'A' });
+    let flashSale = await this.flashSaleRepo.findOne({
+      status: 'A',
+      end_at: MoreThanOrEqual(formatStandardTimeStamp()),
+    });
 
     let flashSaleDetails = await this.flashSaleDetailRepo.find({
       select: '*',
@@ -79,13 +115,13 @@ export class FlashSalesService {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
           select: getDetailProductsListSelectorFE,
           join: flashSaleProductJoiner,
+          where: { detail_id: flashSaleDetailItem['detail_id'] },
           orderBy: [
             {
               field: `${Table.FLASH_SALE_PRODUCTS}.position`,
               sortBy: SortBy.ASC,
             },
           ],
-          where: { detail_id: flashSaleDetailItem['detail_id'] },
         });
 
         if (flashSaleProducts.length) {
@@ -124,9 +160,15 @@ export class FlashSalesService {
     if (flashSaleDetails.length) {
       for (let flashSaleDetailItem of flashSaleDetails) {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
-          select: '*',
+          select: `*, ${Table.FLASH_SALE_PRODUCTS}.position`,
           join: flashSaleProductJoiner,
           where: { detail_id: flashSaleDetailItem['detail_id'] },
+          orderBy: [
+            {
+              field: `${Table.FLASH_SALE_PRODUCTS}.position`,
+              sortBy: SortBy.ASC,
+            },
+          ],
         });
 
         if (flashSaleProducts.length) {
@@ -231,6 +273,27 @@ export class FlashSalesService {
       updated_by: user.user_id,
     };
 
+    if (data.status === 'A') {
+      const startDate = formatStandardTimeStamp(
+        flashSale['start_at'],
+      ).toString();
+      const endDate = formatStandardTimeStamp(flashSale['end_at']).toString();
+
+      await this.flashSaleRepo.update(
+        {
+          start_at: MoreThanOrEqual(startDate),
+          end_at: LessThanOrEqual(endDate),
+        },
+        { status: 'D' },
+      );
+
+      await this.flashSaleRepo.update(
+        {
+          end_at: LessThanOrEqual(formatStandardTimeStamp()),
+        },
+        { status: 'D' },
+      );
+    }
     await this.flashSaleRepo.update({ flash_sale_id }, flashSaleData);
     //Only update status will return immediately
     if (Object.entries(data).length == 1 && data.status) {

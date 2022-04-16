@@ -510,6 +510,7 @@ export class OrdersService {
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
+
     let result = { ...order };
     const orderData = this.orderRepo.setData(data);
 

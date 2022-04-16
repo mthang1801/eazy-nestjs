@@ -187,8 +187,7 @@ export class PaymentService {
   }
 
   async paymentPaynow(data: CreatePaynowDto) {
-    let paymentMethod = 'CC';
-    return this.payment(data, paymentMethod);
+    return this.payment(data, 'paynow');
   }
 
   async payment(data, method) {
@@ -257,7 +256,7 @@ export class PaymentService {
       const body = {
         data: dataRequest,
         refer,
-        method,
+        method: data.method,
         bank,
         checksum,
       };
@@ -355,7 +354,7 @@ export class PaymentService {
         status: OrderStatus.unfulfilled,
       };
 
-      if (method == 'CC') {
+      if (method == 'paynow') {
         sendData = {
           ...sendData,
           payment_status: PaymentStatus.unpaid,

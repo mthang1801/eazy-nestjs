@@ -42,6 +42,7 @@ export const getProductsListSelectorBE = [
 export const getDetailProductsListSelectorFE = [
   ...getProductsListSelectorBE,
   `${Table.CATEGORIES}.slug`,
+  `${Table.FLASH_SALE_PRODUCTS}.position`,
 ];
 
 export const getProductByIdentifierSelector = [

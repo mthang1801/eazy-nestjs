@@ -18,4 +18,10 @@ export class PaymentControllerFE extends BaseController {
     const result = await this.service.paymentPaynow(data);
     return this.responseSuccess(res, result, 'Thành công');
   }
+
+  @Post('/payoo/installment')
+  async paymentInstallment(
+    @Res() res: Response,
+    @Body() data: CreatePaynowDto,
+  ) {}
 }
