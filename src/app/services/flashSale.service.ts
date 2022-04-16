@@ -160,7 +160,7 @@ export class FlashSalesService {
     if (flashSaleDetails.length) {
       for (let flashSaleDetailItem of flashSaleDetails) {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
-          select: `*, ${Table.FLASH_SALE_PRODUCTS}.position`,
+          select: `*`,
           join: flashSaleProductJoiner,
           where: { detail_id: flashSaleDetailItem['detail_id'] },
           orderBy: [
@@ -173,6 +173,7 @@ export class FlashSalesService {
 
         if (flashSaleProducts.length) {
           for (let flashSaleProductItem of flashSaleProducts) {
+            console.log(flashSaleProductItem);
             const flashSaleProductStickers = await this.productStickerRepo.find(
               {
                 select: '*',

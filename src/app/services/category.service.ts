@@ -707,7 +707,9 @@ export class CategoryService {
     let listResponse = [];
     if (categories && Array.isArray(categories) && categories.length) {
       for (let category of categories) {
-        let categoryIdPaths = category['id_path'].split('/');
+        let categoryIdPaths = category['id_path']
+          .split('/')
+          .filter((id) => id.trim() != '');
 
         if (categoryIdPaths.length) {
           for (let [level, idPath] of categoryIdPaths.entries()) {

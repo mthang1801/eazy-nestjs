@@ -1,1 +1,1 @@
-read ECONNRESET
+Cannot read properties of null (reading 'operator')
