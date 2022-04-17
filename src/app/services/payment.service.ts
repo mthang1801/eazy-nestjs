@@ -24,7 +24,6 @@ import { generateSHA512 } from '../../utils/cipherHelper';
 import {
   payooChecksum,
   payooRefer,
-  payooPaymentURL,
   payooBusinessName,
   payooAPIPassword,
   payooAPISignature,
@@ -45,9 +44,15 @@ import * as moment from 'moment';
 import { Data } from 'ejs';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { OrderEntity } from '../entities/orders.entity';
-import { shippingDate } from '../../constants/payment';
+import {
+  shippingDate,
+  payooPaynowURL,
+  payooInstallmentURL,
+} from '../../constants/payment';
 import { OrderStatus } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
+import { CreateInstallmentDto } from '../dto/orders/create-installment.dto';
+import { calculateInstallmentInterestRate } from '../../constants/payment';
 
 @Injectable()
 export class PaymentService {
@@ -123,12 +128,6 @@ export class PaymentService {
     };
   }
 
-  async payooPayment(data) {
-    let requestData = `{\"OrderNo\":\"273ASOA3621897\",\"ShopID\":\"590\",\"FromShipDate\":\"14/08/2017\",\"ShipNumDay\":\"1\",\"Description\":\"Đơn hàng: PR_ORD_20170814171400 Thanh toán cho dịch vụ/ chương trình/ chuyến đi..... Sốtiền thanh toán: 50000\",\"CyberCash\":\"50000\",\"PaymentExpireDate\":\"20220814201400\",\"NotifyUrl\":\"http://localhost:5000\",\"InfoEx\":\"%3cInfoEx%3e%3cCustomerPhone%3e09022333556%3c%2fCustomerPhone%3e%3cCustomerEmail%3email%40gmail.com%3c%2fCustomerEmail%3e%3cTitle%3eTest+title%3c%2fTitle%3e%3c%2fInfoEx%3e\"}`;
-    let signNature = '9ea7434ff04572a64c61cd602f6de2e3';
-    let response = await axios({});
-  }
-
   async getById(id): Promise<IPayment[]> {
     const string = `${Table.PAYMENT}.payment_id`;
 
@@ -186,18 +185,104 @@ export class PaymentService {
     return { ..._payment, ..._paymentDes };
   }
 
-  async paymentPaynow(data: CreatePaynowDto) {
-    return this.payment(data, 'paynow');
-  }
-
-  async payment(data, method) {
+  async paymentInstallment(data) {
     try {
       const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
       if (!cart) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
       let cartItems = await this.cartItemRepo.find({
-        select: '*',
+        select: `*, ${Table.CART_ITEMS}.amount`,
+        join: cartPaymentJoiner,
+        where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+      });
+
+      let totalPrice = cartItems.reduce(
+        (acc, ele) => acc + ele.price * ele.amount,
+        0,
+      );
+
+      if (data.coupon_code) {
+        let checkCouponData = {
+          store_id: 67107,
+          coupon_code: data['coupon_code'],
+          coupon_programing_id: 'HELLO_123',
+          phone: data['s_phone'],
+          products: cartItems.map(({ product_id, amount }) => ({
+            product_id,
+            amount,
+          })),
+        };
+
+        let checkResult = await this.promotionService.checkCoupon(
+          checkCouponData,
+        );
+
+        if (checkResult['isValid']) {
+          totalPrice -= checkResult['discountMoney'];
+        }
+      }
+
+      const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
+        calculateInstallmentInterestRate(
+          totalPrice,
+          data.repaidPercentage,
+          data.tenor,
+        );
+
+      let user = await this.userRepo.findOne({
+        select: `*, ${Table.USERS}.user_appcore_id`,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+
+      if (!user) {
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+        });
+        if (!user) {
+          await this.customerService.createCustomerFromWebPayment(data);
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { phone: data['s_phone'] },
+          });
+        }
+      }
+      let sendData = {
+        ...user,
+        order_items: cartItems,
+        ref_order_id: generateRandomString(),
+        transfer_amount: totalPrice,
+        coupon_code: data.coupon_code ? data.coupon_code : null,
+        order_code: null,
+        status: OrderStatus.unfulfilled,
+        repaid: repaidAmount,
+        installed_money_amount: paymentPerMonth,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async payooPaymentPaynow(data: CreatePaynowDto) {
+    return this.payooPayment(data, 'paynow');
+  }
+
+  async payooPaymentInstallment(data: CreateInstallmentDto) {
+    return this.payooPayment(data, 'installment');
+  }
+
+  async payooPayment(data, method) {
+    try {
+      const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+      if (!cart) {
+        throw new HttpException('Không tìm thấy giỏ hàng', 404);
+      }
+      let cartItems = await this.cartItemRepo.find({
+        select: `*, ${Table.CART_ITEMS}.amount`,
         join: cartPaymentJoiner,
         where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
       });
@@ -242,12 +327,28 @@ export class PaymentService {
         new Date(Date.now() + shippingDate),
       );
 
-      const dataRequest = this.payooPaymentData(
-        data,
-        ref_order_id,
-        paymentDate,
-        totalPrice,
-      );
+      let dataRequest;
+      let urlRequest;
+      switch (method) {
+        case 'paynow':
+          dataRequest = this.payooPaymentData(
+            data,
+            ref_order_id,
+            paymentDate,
+            totalPrice,
+          );
+          urlRequest = payooPaynowURL;
+          break;
+        case 'installment':
+          dataRequest = this.payooInstallmentData(
+            data,
+            ref_order_id,
+            paymentDate,
+            totalPrice,
+          );
+          urlRequest = payooPaynowURL;
+          break;
+      }
 
       const checksum = generateSHA512(payooChecksum + dataRequest);
       const refer = payooRefer;
@@ -262,7 +363,7 @@ export class PaymentService {
       };
 
       const response = await axios({
-        url: payooPaymentURL,
+        url: urlRequest,
         method: 'POST',
         headers,
         data: body,
@@ -374,6 +475,7 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         error.message || error?.response?.data?.message,
         error.status || error?.response?.status,
@@ -384,6 +486,17 @@ export class PaymentService {
   payooPaymentData(userWebInfo, ref_order_id, paymentDate, orderTotalPrice) {
     const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
     let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>20220808081203</validity_time><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
+    return bodyData;
+  }
+
+  payooInstallmentData(
+    userWebInfo,
+    ref_order_id,
+    paymentDate,
+    orderTotalPrice,
+  ) {
+    const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
+    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>20220808081203</validity_time><installment><tenors>3,6,9,12</tenors></installment> <customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
     return bodyData;
   }
 

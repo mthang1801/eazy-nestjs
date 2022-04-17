@@ -181,6 +181,7 @@ import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
 import { isNumeric } from '../../utils/helper';
 import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -415,25 +416,25 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy sp', 404);
     }
-    return this.getProductDetails(product, true);
-  }
-
-  async getBySlug(slug: string): Promise<any> {
-    let product = await this.productRepo.findOne({
-      select: getProductByIdentifierSelector,
-      join: {
-        [JoinTable.leftJoin]: productFullJoiner,
-      },
-      where: getProductBySlugCondition(slug),
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy sản phẩm.', 404);
-    }
-
-    // Get product Image
     return this.getProductDetails(product);
   }
+
+  // async getBySlug(slug: string): Promise<any> {
+  //   let product = await this.productRepo.findOne({
+  //     select: getProductByIdentifierSelector,
+  //     join: {
+  //       [JoinTable.leftJoin]: productFullJoiner,
+  //     },
+  //     where: getProductBySlugCondition(slug),
+  //   });
+
+  //   if (!product) {
+  //     throw new HttpException('Không tìm thấy sản phẩm.', 404);
+  //   }
+
+  //   // Get product Image
+  //   return this.getProductDetails(product);
+  // }
 
   async getListFE(params) {
     let {
@@ -2853,6 +2854,192 @@ export class ProductService {
     }
   }
 
+  async testGetProductDetails(product_id) {
+    let product = await this.productRepo.findOne({
+      select: productDetailSelector,
+      join: { [JoinTable.leftJoin]: productFullJoiner },
+      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+    });
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    if (product['product_function'] == 2) {
+      product = await this.productRepo.findOne({
+        select: productDetailSelector,
+        join: { [JoinTable.leftJoin]: productFullJoiner },
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: product['parent_product_id'],
+        },
+      });
+    }
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
+
+    let result: any = { ...product };
+
+    if (result['product_function'] >= 4) {
+      result['productType'] = 4;
+      result['prodyctTypeName'] = 'Sản phẩm độc lập';
+    }
+
+    if (result['product_function'] == 3) {
+      let group = await this.productVariationGroupRepo.findOne({
+        product_root_id: product.product_id,
+      });
+      if (!group) {
+        let groupProducts =
+          await this.productVariationGroupProductsRepo.findOne({
+            product_id: product.product_id,
+          });
+        group = await this.productVariationGroupRepo.findOne({
+          group_id: groupProducts.group_id,
+        });
+        if (!group) {
+          throw new HttpException('Không tìm thấy SP combo', 404);
+        }
+      }
+      let productsComboList = await this.productVariationGroupProductsRepo.find(
+        {
+          where: { group_id: group.group_id },
+        },
+      );
+
+      if (productsComboList.length) {
+        for (let productComboItem of productsComboList) {
+          let productCombo = await this.productRepo.findOne({
+            select: productDetailSelector,
+            join: { [JoinTable.leftJoin]: productFullJoiner },
+            where: {
+              [`${Table.PRODUCTS}.product_id`]: productComboItem.product_id,
+            },
+          });
+
+          if (productComboItem.product_id == group.product_root_id) {
+            result['configurableProduct'] = productCombo;
+          } else {
+            result['comboItems'] = result['comboItems']
+              ? [...result['comboItems'], productCombo]
+              : [productCombo];
+          }
+        }
+      }
+
+      result['productType'] = 3;
+      result['prodyctTypeName'] = 'Sản phẩm combo';
+    }
+
+    if (result['product_function'] == 1) {
+      let group = await this.productVariationGroupRepo.findOne({
+        product_root_id: result.product_id,
+      });
+
+      if (group) {
+        let childrenProducts = await this.getChildrenProducts(
+          result['product_id'],
+          1,
+        );
+        result['children_products'] = childrenProducts;
+
+        // Find relevant products
+        if (group.index_id) {
+          let relevantGroups = await this.productVariationGroupRepo.find({
+            select: '*',
+            where: {
+              index_id: group.index_id,
+            },
+          });
+
+          relevantGroups = [
+            group,
+            ...relevantGroups.filter(
+              ({ group_id }) => group_id !== group.group_id,
+            ),
+          ];
+
+          if (relevantGroups.length) {
+            for (let relevantGroupItem of relevantGroups) {
+              if (relevantGroupItem.product_root_id) {
+                let productRoot = await this.productRepo.findOne({
+                  select: [
+                    ...getDetailProductsListSelectorFE,
+                    `${Table.PRODUCT_VARIATION_GROUPS}.*`,
+                  ],
+                  join: { [JoinTable.innerJoin]: productFullJoiner },
+                  where: {
+                    [`${Table.PRODUCTS}.product_id`]:
+                      relevantGroupItem.product_root_id,
+                  },
+                });
+
+                result['relevantProducts'] = result['relevantProducts']
+                  ? [...result['relevantProducts'], productRoot]
+                  : [productRoot];
+              }
+              result['relevantProducts'] = [
+                result['relevantProducts'].find(
+                  (product) => product['product_id'] === result['product_id'],
+                ),
+                ...result['relevantProducts'].filter(
+                  (product) => product['product_id'] !== result['product_id'],
+                ),
+              ];
+            }
+          }
+        }
+      }
+    }
+
+    // Get stores
+    result['stores'] = await this.getProductsStores(result.product_id);
+
+    // get Image
+    result['images'] = await this.getProductImages(result.product_id);
+
+    //Get Features
+    result['productFeatures'] = await this.getProductFeatures(
+      result.product_id,
+    );
+
+    // Get accessory
+    if (result['promotion_accessory_id']) {
+      result['promotion_accessory_products'] =
+        await this.getAccessoriesByProductId(
+          result['promotion_accessory_id'],
+          1,
+        );
+    }
+
+    if (result['free_accessory_id']) {
+      result['free_accessory_products'] = await this.getAccessoriesByProductId(
+        result['free_accessory_id'],
+        1,
+      );
+    }
+
+    if (result['warranty_package_id']) {
+      result['warranty_package_products'] =
+        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
+    }
+
+    // Get Current category info
+    result['currentCategories'] = await this.productCategoryRepo.find({
+      select: '*',
+      join: productCategoryJoiner,
+      where: {
+        [`${Table.PRODUCTS_CATEGORIES}.product_id`]: result['product_id'],
+      },
+    });
+
+    // Get relative products
+    result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+      result,
+    );
+    return result;
+  }
+
   async getRelativeProductsByCategory(product, exclusive_lists = []) {
     let { minPrice, maxPrice } = this.setMinMaxPriceRelevantProducts(
       product.price,
@@ -3339,7 +3526,7 @@ export class ProductService {
     };
   }
 
-  async testGetBySlug(slug) {
+  async getBySlug(slug) {
     let product = await this.productRepo.findOne({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
@@ -3684,12 +3871,12 @@ export class ProductService {
     }
   }
 
-  async getAccessoriesByProductId(accessory_id: number, role = 0) {
-    // role = 0 : CMS, 1 : FE
+  async getAccessoriesByProductId(accessory_id: number, source = 0) {
+    // source = 0 : CMS, 1 : FE
     let condition: any = {
       [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
     };
-    if (role === 1) {
+    if (source === 1) {
       condition = {
         ...condition,
         [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
@@ -3847,16 +4034,8 @@ export class ProductService {
   }
 
   async testGetById(product_id) {
-    const product = await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
-    }
-    console.log(product);
+    console.log(4037, product_id);
+    return this.testGetProductDetails(product_id);
   }
 
   async testSql() {

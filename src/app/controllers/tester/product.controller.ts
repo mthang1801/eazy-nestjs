@@ -44,22 +44,22 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':slug')
-  async getBySlug(
-    @Res() res: Response,
-    @Param('slug') slug: string,
-  ): Promise<IResponse> {
-    const result = await this.service.testGetBySlug(slug);
-    return this.responseSuccess(res, result);
-  }
-
-  @Get('product_id')
+  @Get(':product_id')
   async getById(
     @Res() res: Response,
     @Param('product_id') product_id: number,
   ): Promise<IResponse> {
     const result = await this.service.testGetById(product_id);
     return this.responseSuccess(res, result, 'Thành công.');
+  }
+
+  @Get(':slug')
+  async getBySlug(
+    @Res() res: Response,
+    @Param('slug') slug: string,
+  ): Promise<IResponse> {
+    const result = await this.service.getBySlug(slug);
+    return this.responseSuccess(res, result);
   }
 
   @Post('test')

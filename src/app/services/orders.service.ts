@@ -106,7 +106,7 @@ import {
   payooShopTitle,
 } from '../../constants/payment';
 import * as moment from 'moment';
-import { payooChecksum, payooPaymentURL } from '../../constants/payment';
+import { payooChecksum } from '../../constants/payment';
 import { userJoiner, cartPaymentJoiner } from '../../utils/joinTable';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';

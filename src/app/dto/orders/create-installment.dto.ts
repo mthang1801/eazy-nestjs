@@ -31,6 +31,9 @@ export class CreateInstallmentDto {
   @IsOptional()
   callback_url: string;
 
+  @IsNotEmpty()
+  method: string;
+
   @IsOptional()
   bank: string;
 }

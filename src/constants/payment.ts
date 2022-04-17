@@ -16,9 +16,13 @@ export const payooBusinessName =
 
 export const webDomain =
   process.env.WEB_DOMAIN || 'https://ddv-fe-ecom.vercel.app';
-export const payooPaymentURL =
+export const payooPaynowURL =
   process.env.PAYOO_PAYNOW_URL ||
   'https://newsandbox.payoo.com.vn/v2/paynow/order/create';
+
+export const payooInstallmentURL =
+  process.env.PAYOO_PAYNOW_URL ||
+  'https://newsandbox.payoo.com.vn/v2/installment/order/create';
 
 export const payooPaymentNotifyURL =
   process.env.PAYOO_NOTIFY_URL ||
@@ -30,3 +34,28 @@ export const PaymentStatus = {
 };
 
 export const shippingDate = 3 * 60 * 60 * 24 * 1000;
+
+export const calculateInstallmentInterestRate = (
+  amount,
+  repaidPercentage,
+  tenor,
+) => {
+  let needToPay = (amount * (100 - repaidPercentage)) / 100;
+  let repaidAmount = amount - needToPay;
+  let interestRate = 1.89;
+  let accInterestRate = 0.42;
+  let periodAmount =
+    (needToPay * interestRate) / 100 +
+    needToPay / tenor +
+    (needToPay * accInterestRate) / 100 +
+    12;
+
+  let totalInterest = periodAmount * tenor - needToPay;
+  let interestPerMonth = totalInterest / tenor;
+  return {
+    paymentPerMonth: periodAmount,
+    totalInterest,
+    interestPerMonth,
+    repaidAmount,
+  };
+};

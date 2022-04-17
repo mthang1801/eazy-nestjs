@@ -5,23 +5,33 @@ import { PaymentService } from '../../../services/payment.service';
 import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
 import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
+import { CreateInstallmentDto } from 'src/app/dto/orders/create-installment.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
     super();
   }
   @Post('payoo/paynow')
-  async paymentPaynow(
+  async payooPaymentPaynow(
     @Res() res: Response,
     @Body() data: CreatePaynowDto,
   ): Promise<IResponse> {
-    const result = await this.service.paymentPaynow(data);
-    return this.responseSuccess(res, result, 'Thành công');
+    const result = await this.service.payooPaymentPaynow(data);
+    return this.responseSuccess(res, result);
   }
 
   @Post('/payoo/installment')
-  async paymentInstallment(
+  async payooPaymentInstallment(
     @Res() res: Response,
-    @Body() data: CreatePaynowDto,
-  ) {}
+    @Body() data: CreateInstallmentDto,
+  ) {
+    const result = await this.service.payooPaymentInstallment(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/installment')
+  async paymentInstallment(@Res() res: Response, @Body() data) {
+    const result = await this.service.paymentInstallment(data);
+    return this.responseSuccess(res, result);
+  }
 }
