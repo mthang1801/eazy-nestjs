@@ -631,6 +631,13 @@ export class CategoryService {
     );
   }
 
+  async getListFE() {
+    return this.categoryRepository.find({
+      select: '*',
+      join: categoryJoiner,
+    });
+  }
+
   async getList(params) {
     // ignore page and limit
     let { search, ...others } = params;
@@ -987,7 +994,7 @@ export class CategoryService {
     }
 
     const productsListInCategory = await this.productCategoryRepository.find({
-      select: `${Table.PRODUCTS}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,
+      select: `${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,
       join: productListInCategoryJoiner,
       orderBy: filterOrder,
       where: productListsInCategorySearchFilter(search, filterProductCategory),
