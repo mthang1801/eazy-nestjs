@@ -436,6 +436,11 @@ export class UsersService {
       where: userLoyaltyHistorySearchFilter(search, filterConditions),
     });
 
+    const totalLoyaltyPoint = await this.userLoyaltyRepo.findOne({
+      select: '*',
+      where: { user_id },
+    });
+
     return {
       paging: {
         currentPage: page,
@@ -443,6 +448,7 @@ export class UsersService {
         total: count[0].total,
       },
       loyalHistories,
+      totalPoint: totalLoyaltyPoint,
     };
   }
 }

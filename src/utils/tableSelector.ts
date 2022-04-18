@@ -70,5 +70,6 @@ export const getProductAccessorySelector = [
 export const productDetailSelector = [
   `*`,
   `${Table.PRODUCTS}.*`,
+  `${Table.PRODUCT_DESCRIPTION}.*`,
   `${Table.CATEGORIES}.slug as categorySlug`,
 ];
