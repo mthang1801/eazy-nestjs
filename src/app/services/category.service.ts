@@ -479,17 +479,17 @@ export class CategoryService {
             { position },
           );
         } else {
+          console.log(product_id, position);
           let newProductCategory = {
             ...new ProductsCategoriesEntity(),
             product_id,
             position,
+            category_id: id,
           };
           await this.productCategoryRepository.create(newProductCategory);
         }
       }
     }
-
-    return result;
   }
 
   async updateLevelChildrenCategories(category_id) {
