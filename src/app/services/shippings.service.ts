@@ -37,25 +37,22 @@ export class ShippingService {
       ...this.shippingRepo.setData(data),
       created_at: formatStandardTimeStamp(new Date(data.created_at)),
     };
+
     const newShipping = await this.shippingRepo.create(shippingData);
-    let result = { ...newShipping };
 
     const shippingDescData = {
       ...new ShippingsDescriptionEntity(),
       ...this.shippingDescriptionRepo.setData(data),
-      shipping_id: result.shipping_id,
+      shipping_id: newShipping.shipping_id,
     };
-    const newShippingDesc = await this.shippingDescriptionRepo.create(
-      shippingDescData,
-    );
-    result = { ...result, ...newShippingDesc };
 
-    result = { ...result, services: [] };
+    await this.shippingDescriptionRepo.create(shippingDescData);
+
     for (let service of data.services) {
       const serviceData = {
         ...new ShippingsServiceEntity(),
         ...this.shippingServiceRepo.setData(service),
-        shipping_id: result.shipping_id,
+        shipping_id: newShipping.shipping_id,
       };
       const newService = await this.shippingServiceRepo.create(serviceData);
 
@@ -64,25 +61,19 @@ export class ShippingService {
         ...this.shippingServiceDescriptionRepo.setData(service),
         service_id: newService.service_id,
       };
-      const newServiceDesc = await this.shippingServiceDescriptionRepo.create(
-        serviceDescData,
-      );
-
-      result = { ...result, services: [...result['services'], newServiceDesc] };
+      await this.shippingServiceDescriptionRepo.create(serviceDescData);
     }
 
+    //Create image in order to get image_id
     const shippingImage = await this.imageRepo.create({
       image_path: data.image_path,
     });
-    const shippingImageLink = await this.imageLinkRepo.create({
-      object_id: result.shipping_id,
+    //Create image link
+    await this.imageLinkRepo.create({
+      object_id: newShipping.shipping_id,
       object_type: ImageObjectType.LOGO,
       image_id: shippingImage.image_id,
     });
-
-    result = { ...result, image: { ...shippingImageLink, ...shippingImage } };
-
-    return result;
   }
 
   async update(id: number, data: UpdateShippingDto) {

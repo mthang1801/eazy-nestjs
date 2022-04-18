@@ -113,7 +113,10 @@ export class FlashSalesService {
           continue;
         }
         let flashSaleProducts = await this.flashSaleProductRepo.find({
-          select: getDetailProductsListSelectorFE,
+          select: [
+            ...getDetailProductsListSelectorFE,
+            `${Table.FLASH_SALE_PRODUCTS}.position`,
+          ],
           join: flashSaleProductJoiner,
           where: { detail_id: flashSaleDetailItem['detail_id'] },
           orderBy: [

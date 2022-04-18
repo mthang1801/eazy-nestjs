@@ -1281,7 +1281,7 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
-    let { page, limit, search, ...others } = params;
+    let { page, limit, search } = params;
 
     page = +page || 1;
     limit = +limit || 10;

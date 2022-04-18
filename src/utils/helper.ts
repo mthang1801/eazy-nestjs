@@ -177,3 +177,7 @@ export const isNumeric = (value: string | number) => {
   }
   return !isNaN(1 * fmtValue);
 };
+
+export const startToday = moment(new Date().toLocaleDateString()).format(
+  'YYYY-MM-DD HH:mm:ss',
+);

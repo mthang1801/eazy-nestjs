@@ -45,6 +45,7 @@ import { FlashSaleModule } from './flashSale.module';
 import { CityModule } from './city.module';
 import { DistrictModule } from './district.module';
 import { WardModule } from './ward.module';
+import { DashboardModule } from './dashboard.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +59,7 @@ import { WardModule } from './ward.module';
         dest: './uploads',
       }),
     }),
+    DashboardModule,
     UploadModule,
     AuthModule,
     UsersModule,
