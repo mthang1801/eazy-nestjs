@@ -478,6 +478,13 @@ export class CategoryService {
             { product_id, category_id: id },
             { position },
           );
+        } else {
+          let newProductCategory = {
+            ...new ProductsCategoriesEntity(),
+            product_id,
+            position,
+          };
+          await this.productCategoryRepository.create(newProductCategory);
         }
       }
     }

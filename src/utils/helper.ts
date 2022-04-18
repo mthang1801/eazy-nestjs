@@ -136,7 +136,7 @@ export const formatStandardTimeStamp = (
 ) => moment(timestamp).format('YYYY-MM-DD HH:mm:ss');
 
 export const formatDateTime = (timestamp: string | Date = new Date()) =>
-  moment(timestamp).format('YYYY-MM-DD');
+  moment(timestamp, 'YYYY-MM-DD');
 
 export const formatTime = (timestamp: string | Date = new Date()) =>
   moment(timestamp).format('HH:mm:ss');
