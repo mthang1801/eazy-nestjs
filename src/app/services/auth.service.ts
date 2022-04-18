@@ -2,9 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthCredentialsDto } from '../dto/auth/auth-credential.dto';
 import { UsersService } from './users.service';
 import { JwtService } from '@nestjs/jwt';
-
 import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
-
 import { AuthProviderRepository } from '../repositories/auth.repository';
 import { AuthProviderEntity } from '../entities/authProvider.entity';
 import { Table } from '../../database/enums/tables.enum';
@@ -15,7 +13,6 @@ import {
   preprocessUserResult,
 } from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-loginProvider.dto';
-
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
 import { ImagesRepository } from '../repositories/image.repository';
@@ -23,9 +20,7 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
-
 import { UserGroupsService } from './usergroups.service';
-
 import { UserGroupEntity } from '../entities/usergroups.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { MailService } from './mail.service';

@@ -2938,7 +2938,7 @@ export class ProductService {
 
       if (group) {
         let childrenProducts = await this.getChildrenProducts(
-          result['product_id'],
+          result['product_appcore_id'],
           1,
         );
         result['children_products'] = childrenProducts;
@@ -3611,7 +3611,7 @@ export class ProductService {
 
       if (group) {
         let childrenProducts = await this.getChildrenProducts(
-          result['product_id'],
+          result['product_appcore_id'],
           1,
         );
         result['children_products'] = childrenProducts;
@@ -3718,12 +3718,12 @@ export class ProductService {
     return result;
   }
 
-  async getChildrenProducts(product_id, role = 0) {
+  async getChildrenProducts(product_appcore_id, role = 0) {
     const childrenProducts = await this.productRepo.find({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: {
-        [`${Table.PRODUCTS}.parent_product_id`]: product_id,
+        [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
       },
     });
 
