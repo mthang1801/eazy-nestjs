@@ -44,7 +44,7 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':product_id')
+  @Get('/detail/:product_id')
   async getById(
     @Res() res: Response,
     @Param('product_id') product_id: number,

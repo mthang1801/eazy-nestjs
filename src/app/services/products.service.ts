@@ -3532,6 +3532,7 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
     });
+    console.log(product);
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
