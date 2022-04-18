@@ -486,6 +486,10 @@ export class CategoryService {
             position,
             category_id: id,
           };
+          if (result['category_appcore_id']) {
+            newProductCategory['category_appcore_id'] =
+              result['category_appcore_id'];
+          }
           await this.productCategoryRepository.create(newProductCategory);
         }
       }

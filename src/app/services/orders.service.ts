@@ -291,7 +291,7 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
-    console.log(result);
+
     // create order histories
     const orderHistoryData = {
       ...new OrderHistoryEntity(),
@@ -409,6 +409,8 @@ export class OrdersService {
         product_id: productItem.product_appcore_id,
       });
     }
+
+    console.log(convertDataToIntegrate(order));
 
     const configPushOrderToAppcore: any = {
       method: 'POST',
