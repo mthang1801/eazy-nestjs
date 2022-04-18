@@ -13,6 +13,9 @@ export class CreateCustomerLoyalHistoryDto {
   ref_id: string;
 
   @IsOptional()
+  order_appcore_id: number;
+
+  @IsOptional()
   @IsDateString()
   created_at: string;
 }

@@ -3532,7 +3532,7 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
     });
-    console.log(product);
+
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
@@ -4035,7 +4035,6 @@ export class ProductService {
   }
 
   async testGetById(product_id) {
-    console.log(4037, product_id);
     return this.testGetProductDetails(product_id);
   }
 

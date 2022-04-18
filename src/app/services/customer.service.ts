@@ -928,7 +928,7 @@ export class CustomerService {
         updated_at: formatStandardTimeStamp(),
       },
     );
-    console.log('Loyalty point', customer_appcore_id, point);
+
     const userLoyalty = await this.userLoyalRepo.findOne({
       user_id: user.user_id,
     });
@@ -981,7 +981,7 @@ export class CustomerService {
           total -= loyaltyHistory['point'];
         }
       }
-      console.log(916, total);
+
       await this.userLoyalRepo.update(
         { user_id: user.user_id },
         { loyalty_point: total },
