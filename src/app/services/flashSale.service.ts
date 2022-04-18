@@ -104,7 +104,7 @@ export class FlashSalesService {
 
     let flashSaleDetails = await this.flashSaleDetailRepo.find({
       select: '*',
-      where: { flash_sale_id: flashSale.flash_sale_id },
+      where: { flash_sale_id: flashSale.flash_sale_id, detail_status: 'A' },
     });
 
     if (flashSaleDetails.length) {
@@ -118,7 +118,10 @@ export class FlashSalesService {
             `${Table.FLASH_SALE_PRODUCTS}.position`,
           ],
           join: flashSaleProductJoiner,
-          where: { detail_id: flashSaleDetailItem['detail_id'] },
+          where: {
+            detail_id: flashSaleDetailItem['detail_id'],
+            flash_sale_product_status: 'A',
+          },
           orderBy: [
             {
               field: `${Table.FLASH_SALE_PRODUCTS}.position`,

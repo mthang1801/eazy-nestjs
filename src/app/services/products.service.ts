@@ -2999,7 +2999,7 @@ export class ProductService {
     result['images'] = await this.getProductImages(result.product_id);
 
     //Get Features
-    result['productFeatures'] = await this.getProductFeatures(
+    result['product_features'] = await this.getProductFeatures(
       result.product_id,
     );
 
