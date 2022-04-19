@@ -3585,60 +3585,62 @@ export class ProductService {
         product_root_id: result.product_id,
       });
 
-      if (group) {
-        let childrenProducts = await this.getChildrenProducts(
-          result['product_appcore_id'],
-          1,
-        );
-        result['children_products'] = childrenProducts;
+      // if (group) {
+      //   let childrenProducts = await this.getChildrenProducts(
+      //     result['product_appcore_id'],
+      //     1,
+      //   );
+      //   result['children_products'] = childrenProducts;
 
-        // Find relevant products
-        if (group.index_id) {
-          let relevantGroups = await this.productVariationGroupRepo.find({
-            select: '*',
-            where: {
-              index_id: group.index_id,
-            },
-          });
+      //   // Find relevant products
+      //   if (group.index_id) {
+      //     let relevantGroups = await this.productVariationGroupRepo.find({
+      //       select: '*',
+      //       where: {
+      //         index_id: group.index_id,
+      //       },
+      //     });
 
-          relevantGroups = [
-            group,
-            ...relevantGroups.filter(
-              ({ group_id }) => group_id !== group.group_id,
-            ),
-          ];
+      //     relevantGroups = [
+      //       group,
+      //       ...relevantGroups.filter(
+      //         ({ group_id }) => group_id !== group.group_id,
+      //       ),
+      //     ];
 
-          if (relevantGroups.length) {
-            for (let relevantGroupItem of relevantGroups) {
-              if (relevantGroupItem.product_root_id) {
-                let productRoot = await this.productRepo.findOne({
-                  select: [
-                    ...getDetailProductsListSelectorFE,
-                    `${Table.PRODUCT_VARIATION_GROUPS}.*`,
-                  ],
-                  join: { [JoinTable.innerJoin]: productFullJoiner },
-                  where: {
-                    [`${Table.PRODUCTS}.product_id`]:
-                      relevantGroupItem.product_root_id,
-                  },
-                });
+      //     if (relevantGroups.length) {
+      //       for (let relevantGroupItem of relevantGroups) {
+      //         if (relevantGroupItem.product_root_id) {
+      //           let productRoot = await this.productRepo.findOne({
+      //             select: [
+      //               ...getDetailProductsListSelectorFE,
+      //               `${Table.PRODUCT_VARIATION_GROUPS}.*`,
+      //             ],
+      //             join: { [JoinTable.innerJoin]: productFullJoiner },
+      //             where: {
+      //               [`${Table.PRODUCTS}.product_id`]:
+      //                 relevantGroupItem.product_root_id,
+      //             },
+      //           });
 
-                result['relevantProducts'] = result['relevantProducts']
-                  ? [...result['relevantProducts'], productRoot]
-                  : [productRoot];
-              }
-              result['relevantProducts'] = [
-                result['relevantProducts'].find(
-                  (product) => product['product_id'] === result['product_id'],
-                ),
-                ...result['relevantProducts'].filter(
-                  (product) => product['product_id'] !== result['product_id'],
-                ),
-              ];
-            }
-          }
-        }
-      }
+      //           if (productRoot) {
+      //             result['relevantProducts'] = result['relevantProducts']
+      //               ? [...result['relevantProducts'], productRoot]
+      //               : [productRoot];
+      //           }
+      //         }
+      //         result['relevantProducts'] = [
+      //           result['relevantProducts'].find(
+      //             (product) => product['product_id'] === result['product_id'],
+      //           ),
+      //           ...result['relevantProducts'].filter(
+      //             (product) => product['product_id'] !== result['product_id'],
+      //           ),
+      //         ];
+      //       }
+      //     }
+      //   }
+      // }
     }
 
     // Get stores
