@@ -50,11 +50,27 @@ export const preprocessDatabaseBeforeResponse = (data) => {
   }
 
   for (let [key, val] of iterate_object(dataObject)) {
+    if (val == null) {
+      dataObject[key] = null;
+      continue;
+    }
     if (key === 'created_at') {
       dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
       continue;
     }
     if (key === 'updated_at') {
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
+      continue;
+    }
+    if (key === 'display_at') {
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
+      continue;
+    }
+    if (key === 'start_date') {
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
+      continue;
+    }
+    if (key === 'end_date') {
       dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
       continue;
     }

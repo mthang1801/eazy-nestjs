@@ -204,10 +204,12 @@ export class OrdersService {
     userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
     userProfile['s_address'] = data.s_address || userProfile['s_address'];
 
-    userProfile = await this.userProfileRepo.update(
-      { user_id: user.user_id },
-      userProfile,
-    );
+    if (Object.entries(userProfile).length) {
+      userProfile = await this.userProfileRepo.update(
+        { user_id: user.user_id },
+        userProfile,
+      );
+    }
 
     const sendData = { ...userProfile, order_items: cartItems };
 
@@ -242,10 +244,7 @@ export class OrdersService {
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
       });
 
-      if (
-        productInfo?.parent_product_id == 0 ||
-        !productInfo?.parent_product_id
-      ) {
+      if (productInfo.product_function == 1) {
         throw new HttpException('Không thể dùng SP cha', 401);
       }
 
@@ -409,8 +408,6 @@ export class OrdersService {
         product_id: productItem.product_appcore_id,
       });
     }
-
-    console.log(convertDataToIntegrate(order));
 
     const configPushOrderToAppcore: any = {
       method: 'POST',

@@ -113,8 +113,7 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['customerMobile'] = data['b_phone']; // Số điện thoại khách hàng
 
-  itgData['customerName'] =
-    data['b_firstname'].trim() + ` ` + data['b_lastname']; //Tên khách hàng
+  itgData['customerName'] = data['b_firstname'] + ` ` + data['b_lastname']; //Tên khách hàng
 
   itgData['customerAddress'] = data['b_address']; //Địa chỉ khách hàng
 
@@ -124,8 +123,7 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['customerWardName'] = data['b_ward']; //Lấy id huyện
 
-  itgData['receivingFullName'] =
-    data['s_firstname'].trim() + ` ` + data['s_lastname']; // tên người nhận
+  itgData['receivingFullName'] = data['s_firstname'] + ` ` + data['s_lastname']; // tên người nhận
 
   itgData['receivingPhone'] = data['s_phone']; // sdt người nhận
 

@@ -688,24 +688,6 @@ export class ProductService {
 
     // determine product type and  get Image
     for (let productItem of productsList) {
-      if (
-        (productItem['parent_product_appcore_id'] == null ||
-          !productItem['parent_product_appcore_id']) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productItem['productType'] = 1; //Sản phẩm cha
-      } else if (
-        (productItem['parent_product_appcore_id'] > 0 ||
-          productItem['parent_product_appcore_id'] != null) &&
-        (productItem.product_type == 1 || productItem.product_type == 2)
-      ) {
-        productItem['productType'] = 2; // Sản phẩm con
-      } else if (productItem.product_type == 3) {
-        productItem['productType'] = 3; //SP combo
-      } else {
-        productItem['productType'] = 4; // SP độc lập
-      }
-
       let currentCategory = await this.productCategoryRepo.findOne({
         select: '*',
         join: productCategoryJoiner,
@@ -1213,15 +1195,17 @@ export class ProductService {
       limit,
     });
 
-    productsList = await this.productRepo.find({
-      select: getProductsListSelectorBE,
-      join: productLeftJoiner,
-      where: {
-        [`${Table.PRODUCTS}.product_id`]: In(
-          productsList.map(({ product_id }) => product_id),
-        ),
-      },
-    });
+    if (productsList.length) {
+      productsList = await this.productRepo.find({
+        select: getProductsListSelectorBE,
+        join: productLeftJoiner,
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: In(
+            productsList.map(({ product_id }) => product_id),
+          ),
+        },
+      });
+    }
 
     let count = await this.productCategoryRepo.find({
       select: `COUNT(${Table.PRODUCTS_CATEGORIES}.product_id) as total`,
@@ -1269,6 +1253,7 @@ export class ProductService {
     let filterCondition = {
       [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
     };
+    console.log(1272, filterCondition);
 
     categoriesListByLevel = _.orderBy(
       categoriesListByLevel,
@@ -3529,17 +3514,17 @@ export class ProductService {
     }
 
     if (product['product_function'] == 2) {
-      product = await this.productRepo.findOne({
+      let parentProduct = await this.productRepo.findOne({
         select: productDetailSelector,
         join: { [JoinTable.leftJoin]: productFullJoiner },
         where: {
-          [`${Table.PRODUCTS}.product_id`]: product['parent_product_id'],
+          [`${Table.PRODUCTS}.product_appcore_id`]:
+            product['parent_product_appcore_id'],
         },
       });
-    }
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
+      if (parentProduct) {
+        product = parentProduct;
+      }
     }
 
     let result: any = { ...product };

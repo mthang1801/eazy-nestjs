@@ -188,18 +188,24 @@ export class BaseRepositorty<T> {
     }
 
     let sql = `INSERT INTO ${this.table} SET ? `;
-
-    await this.databaseService.executeQueryWritePool(sql, fmtParams);
-
-    const res = await this.databaseService.executeQueryWritePool(
-      'SELECT LAST_INSERT_ID();',
+    console.log(sql);
+    let response = await this.databaseService.executeQueryWritePool(
+      sql,
+      fmtParams,
     );
 
-    if (res[0][0]['LAST_INSERT_ID()'] === 0) {
-      return this.findOne({ where: fmtParams });
+    let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
+
+    if (!lastInsertId) {
+      throw new HttpException(
+        'Không tìm thấy auto_increment_id của entity vừa tạo',
+        404,
+      );
     }
 
-    return this.findById(res[0][0]['LAST_INSERT_ID()']);
+    return this.findOne({
+      [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
+    });
   }
 
   /**
@@ -310,6 +316,7 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
+    console.log(313, fmtParams);
 
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
@@ -319,6 +326,7 @@ export class BaseRepositorty<T> {
         sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
       }
     });
+
     sql += ' WHERE ';
 
     if (typeof id === 'object') {

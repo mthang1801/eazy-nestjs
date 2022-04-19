@@ -22,6 +22,12 @@ export const processGetTextDataFromMysql = (data) => {
 };
 
 export const formatTypeValueToInSertSQL = (key, value) => {
+  if (value == null) return `${key} = null`;
+
+  if (+value === 0) return `${key} = 0`;
+
+  if (value == '') return `${key} = ''`;
+
   if (
     (typeof value === 'string' && value.trim() === '') ||
     typeof value == 'undefined'
@@ -31,10 +37,6 @@ export const formatTypeValueToInSertSQL = (key, value) => {
   if (typeof value === 'object' && value.operator && value.value) {
     return `${key} ${value.operator} '${value.value}' `;
   }
-
-  if (value === null) return `${key} = null`;
-
-  if (+value === 0) return `${key} = 0`;
 
   if (!isNaN(1 * +value) && value[0] == 0) {
     return `${key} = '${value}'`;
