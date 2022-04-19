@@ -1,3 +1,4 @@
+import * as moment from 'moment';
 export const payooRefer =
   process.env.PAYOO_REFER || 'https://ddv-fe-ecom.vercel.app';
 export const payooChecksum =
@@ -34,6 +35,9 @@ export const PaymentStatus = {
 };
 
 export const shippingDate = 3 * 60 * 60 * 24 * 1000;
+export const validTime = moment(
+  new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+).format('YYYYMMDDHHmmss');
 
 export const calculateInstallmentInterestRate = (
   amount,
