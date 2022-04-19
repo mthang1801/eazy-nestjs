@@ -2860,18 +2860,9 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: { [`${Table.PRODUCTS}.product_id`]: product_id },
     });
+
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
-    }
-
-    if (product['product_function'] == 2) {
-      product = await this.productRepo.findOne({
-        select: productDetailSelector,
-        join: { [JoinTable.leftJoin]: productFullJoiner },
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: product['parent_product_id'],
-        },
-      });
     }
 
     if (!product) {
@@ -2942,7 +2933,7 @@ export class ProductService {
           1,
         );
         result['children_products'] = childrenProducts;
-
+        result['relevantProducts'] = [];
         // Find relevant products
         if (group.index_id) {
           let relevantGroups = await this.productVariationGroupRepo.find({

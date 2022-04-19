@@ -59,13 +59,34 @@ export class StoreService {
   }
 
   async getList(params) {
-    let { page, limit, search, status, product_count } = params;
+    let {
+      page,
+      limit,
+      search,
+      status,
+      product_count,
+      city_id,
+      ward_id,
+      district_id,
+    } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
     let filterConditions = {};
     if (status) {
       filterConditions[`${Table.STORE_LOCATIONS}.status`] = status;
+    }
+
+    if (city_id) {
+      filterConditions[`${Table.STORE_LOCATIONS}.city_id`] = city_id;
+    }
+
+    if (district_id) {
+      filterConditions[`${Table.STORE_LOCATIONS}.district_id`] = district_id;
+    }
+
+    if (ward_id) {
+      filterConditions[`${Table.STORE_LOCATIONS}.ward_id`] = ward_id;
     }
 
     if (product_count) {
