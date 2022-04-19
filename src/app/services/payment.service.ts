@@ -370,6 +370,7 @@ export class PaymentService {
         data: body,
       });
 
+      /*
       // const response: any = {
       //   statusCode: 200,
       //   data: {
@@ -398,6 +399,7 @@ export class PaymentService {
       //   message: 'Thành công',
       //   timestamp: '15/04/2022, 16:55:24',
       // };
+      */
 
       if (!response?.data) {
         throw new HttpException('Tạo thanh toán không thành công', 400);
@@ -435,6 +437,7 @@ export class PaymentService {
         }
       }
 
+      console.log(response);
       const orderDataResponse = response.data.order;
 
       let orderPaymentData = {

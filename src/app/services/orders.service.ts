@@ -1110,7 +1110,7 @@ export class OrdersService {
     }
 
     const orderDetails = await this.orderDetailRepo.find({
-      select: `${Table.PRODUCTS}.slug, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
+      select: `${Table.PRODUCTS}.slug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
       join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
@@ -1118,47 +1118,19 @@ export class OrdersService {
       },
     });
 
-    if (orderDetails.length) {
-      for (let orderDetail of orderDetails) {
-        orderDetail['image'] = null;
-        const productImage = await this.imageLinkRepo.findOne({
-          object_id: orderDetail.product_id,
-          object_type: ImageObjectType.PRODUCT,
-        });
-        if (productImage) {
-          let image = await this.imageRepo.findOne({
-            image_id: productImage.image_id,
-          });
-          orderDetail['image'] = image;
-        }
-      }
-    }
-
     if (order['s_city']) {
-      let city = await this.locatorService.getCitiesList(order['s_city']);
-      if (city.length) {
-        order['cityName'] = city[0].city_name;
-      }
+      order['s_cityName'] = await this.cityService.get(order['s_city'], true);
     }
 
-    if (order['s_district'] && order['s_city']) {
-      let district = await this.locatorService.getDistrictsList(
-        order['s_city'],
+    if (order['s_district']) {
+      order['s_districtName'] = await this.districtService.get(
         order['s_district'],
+        true,
       );
-      if (district.length) {
-        order['districtName'] = district[0].district_name;
-      }
     }
 
-    if (order['s_ward'] && order['s_district']) {
-      let ward = await this.locatorService.getWardsList(
-        order['s_district'],
-        order['ward'],
-      );
-      if (ward.length) {
-        order['wardName'] = ward[0].ward_name;
-      }
+    if (order['s_ward']) {
+      order['s_wardName'] = await this.wardService.get(order['s_ward'], true);
     }
 
     order['order_items'] = orderDetails;

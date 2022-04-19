@@ -451,4 +451,6 @@ export class UsersService {
       totalPoint: totalLoyaltyPoint,
     };
   }
+
+  async getOrdersByUserId(user_id, params) {}
 }

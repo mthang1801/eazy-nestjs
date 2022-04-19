@@ -13,8 +13,10 @@ import { UsersService } from '../../../services/users.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { IResponse } from '../../../interfaces/response.interface';
 import { AuthGuard } from '../../../../middlewares/fe.auth';
-import { Param, Query } from '@nestjs/common';
+import { Param, Query, Inject, forwardRef } from '@nestjs/common';
 import { Response } from 'express';
+import { CustomerService } from '../../../services/customer.service';
+import { OrdersService } from '../../../services/orders.service';
 @Controller('/fe/v1/users')
 export class UsersController extends BaseController {
   constructor(private readonly service: UsersService) {
@@ -58,6 +60,16 @@ export class UsersController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.getLoyalHistories(user_id, params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/:user_id/orders')
+  async getOrdersList(
+    @Param('user_id') user_id: number,
+    @Res() res: Response,
+    @Query() params,
+  ) {
+    const result = await this.service.getOrdersByUserId(user_id, params);
     return this.responseSuccess(res, result);
   }
 }
