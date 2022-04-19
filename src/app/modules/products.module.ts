@@ -1,4 +1,10 @@
-import { Module, forwardRef, HttpModule } from '@nestjs/common';
+import {
+  Module,
+  forwardRef,
+  HttpModule,
+  NestModule,
+  MiddlewareConsumer,
+} from '@nestjs/common';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductService } from '../services/products.service';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
@@ -33,6 +39,9 @@ import { ProductVariationGroupIndexRepository } from '../repositories/productVar
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
 import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductsReportController } from '../controllers/report/v1/product.controller';
+import { CommentRepository } from '../repositories/comment.repository';
+import { ReviewRepository } from '../repositories/reviews.repository';
+import { getUserFromToken } from '../../middlewares/getUserFromToken';
 
 @Module({
   imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
@@ -60,6 +69,8 @@ import { ProductsReportController } from '../controllers/report/v1/product.contr
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
+    CommentRepository,
+    ReviewRepository,
   ],
   exports: [
     ProductService,
@@ -85,6 +96,8 @@ import { ProductsReportController } from '../controllers/report/v1/product.contr
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
+    CommentRepository,
+    ReviewRepository,
   ],
   controllers: [
     ProductsControllerBE,
@@ -95,4 +108,8 @@ import { ProductsReportController } from '../controllers/report/v1/product.contr
     ProductsReportController,
   ],
 })
-export class ProductsModule {}
+export class ProductsModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(getUserFromToken).forRoutes(ProductsControllerFE);
+  }
+}

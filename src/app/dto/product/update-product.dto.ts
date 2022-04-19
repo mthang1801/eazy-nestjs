@@ -145,6 +145,10 @@ export class UpdateProductDto {
   free_accessory_id: number;
 
   @IsOptional()
+  @IsIn(['Y', 'N'])
+  allow_comment: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => JoinedProduct)
   joined_products: JoinedProduct[];

@@ -63,6 +63,9 @@ export class ProductsEntity {
   redirect_url: string = '';
   is_installment: string = 'N';
   product_function: number = 4;
+  allow_comment: string = 'Y';
+  ratings: string = null;
+  avg_ratings: number = null;
   created_at: string = formatStandardTimeStamp();
   display_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();

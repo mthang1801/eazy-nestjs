@@ -112,4 +112,8 @@ export enum Table {
   CITIES = 'ddv_cities',
   DISTRICTS = 'ddv_districts',
   WARDS = 'ddv_wards',
+
+  //============= Comment Rating ============
+  COMMENTS = 'ddv_comments',
+  REVIEWS = 'ddv_reviews',
 }

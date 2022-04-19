@@ -107,4 +107,8 @@ export enum PrimaryKeys {
   ddv_cities = 'id',
   ddv_districts = 'id',
   ddv_ward = 'id',
+
+  //============= Comment, rating ==========
+  ddv_comments = 'comment_id',
+  ddv_reviews = 'rating_index',
 }
