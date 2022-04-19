@@ -61,7 +61,7 @@ export class ProductsEntity {
   status_type: string = '1';
   catalog_category_id: number = 3;
   redirect_url: string = '';
-  is_installment: string = 'N';
+  is_installment: string = 'Y';
   product_function: number = 4;
   allow_comment: string = 'Y';
   ratings: string = null;

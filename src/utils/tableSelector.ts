@@ -37,6 +37,7 @@ export const getProductsListSelectorBE = [
   `${Table.PRODUCTS}.parent_product_appcore_id`,
   `${Table.PRODUCTS}.product_appcore_id`,
   `${Table.PRODUCTS}.product_status`,
+  `${Table.PRODUCTS}.is_installment`,
 ];
 
 export const getDetailProductsListSelectorFE = [
@@ -65,6 +66,7 @@ export const getProductAccessorySelector = [
   `${Table.PRODUCT_PRICES}.*`,
   `${Table.PRODUCTS}.amount`,
   `${Table.PRODUCTS}.thumbnail`,
+  `${Table.PRODUCTS}.is_installment`,
 ];
 
 export const productDetailSelector = [
