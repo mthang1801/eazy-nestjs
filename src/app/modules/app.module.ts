@@ -46,6 +46,7 @@ import { CityModule } from './city.module';
 import { DistrictModule } from './district.module';
 import { WardModule } from './ward.module';
 import { DashboardModule } from './dashboard.module';
+import { ShippingFeeModule } from './shippingFee.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,6 +81,7 @@ import { DashboardModule } from './dashboard.module';
     PaymentModule,
     ImageModule,
     ShippingModule,
+    ShippingFeeModule,
     ProductsModule,
     CustomerModule,
     ProductFeaturesModule,

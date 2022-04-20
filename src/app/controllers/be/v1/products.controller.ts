@@ -74,7 +74,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/reviews-comments/:item_id')
+  @Get('/response-reviews-comments/:item_id')
   async getCommentReviewResponse(
     @Param('item_id') item_id: number,
     @Res() res: Response,

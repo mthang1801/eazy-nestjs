@@ -4249,7 +4249,7 @@ export class ProductService {
         sum += (i + 1) * ratings[i];
         count += ratings[i];
       }
-      console.log(4247, ratings, sum, count);
+
       await this.reviewRepo.update(
         { product_id },
         {

@@ -56,6 +56,8 @@ export enum PrimaryKeys {
   ddv_shipping_descriptions = 'shipping_id',
   ddv_shipping_services = 'service_id',
   ddv_shipping_service_descriptions = 'service_id',
+  ddv_shipping_fees = 'shipping_fee_id',
+  ddv_shipping_fee_locations = 'shipping_fee_location_id',
 
   //============== Promotion Accessories =============
   ddv_promotion_accessories = 'accessory_id',

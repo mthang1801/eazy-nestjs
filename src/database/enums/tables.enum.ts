@@ -56,6 +56,8 @@ export enum Table {
   SHIPPINGS_DESCRIPTION = 'ddv_shipping_descriptions',
   SHIPPING_SERVICE = 'ddv_shipping_services',
   SHIPPING_SERVICE_DESCRIPTION = 'ddv_shipping_service_descriptions',
+  SHIPPING_FEE = 'ddv_shipping_fees',
+  SHIPPING_FEE_LOCATION = 'ddv_shipping_fee_locations',
 
   //============== Cart ===============
   CART = 'ddv_user_carts',
@@ -114,7 +116,6 @@ export enum Table {
   WARDS = 'ddv_wards',
 
   //============= Comment Rating ============
-  COMMENTS = 'ddv_comments',
   REVIEW_COMMENT_ITEMS = 'ddv_review_comment_items',
   REVIEWS = 'ddv_reviews',
 }

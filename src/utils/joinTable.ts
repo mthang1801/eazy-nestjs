@@ -793,3 +793,10 @@ export const flashSaleProductJoinerFE = {
     },
   },
 };
+
+export const shippingFeeLocationsJoiner = {
+  [JoinTable.innerJoin]: {
+    fieldJoin: `${Table.SHIPPING_FEE}.shipping_fee_id`,
+    rootJoin: `${Table.SHIPPING_FEE_LOCATION}.shipping_fee_id`,
+  },
+};

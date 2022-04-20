@@ -37,7 +37,6 @@ import { StickerModule } from './sticker.module';
 import { ProductTesterController } from '../controllers/tester/product.controller';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductsReportController } from '../controllers/report/v1/product.controller';
-import { CommentRepository } from '../repositories/comment.repository';
 
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
 
@@ -70,7 +69,6 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
-    CommentRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
   ],
@@ -98,7 +96,6 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
-    CommentRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
   ],

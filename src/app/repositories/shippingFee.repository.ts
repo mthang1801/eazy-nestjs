@@ -1,13 +1,14 @@
 import { BaseRepositorty } from '../../base/base.repository';
 import { DatabaseService } from '../../database/database.service';
 import { Table } from '../../database/enums/index';
-import { CommentEntity } from '../entities/comment.entity';
-export class CommentRepository<
-  CommentEntity,
-> extends BaseRepositorty<CommentEntity> {
+import { ShippingFeeEntity } from '../entities/shippingFee.entity';
+
+export class ShippingFeeRepository<
+  ShippingFeeEntity,
+> extends BaseRepositorty<ShippingFeeEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.COMMENTS;
-    this.tableProps = Object.getOwnPropertyNames(new CommentEntity());
+    this.table = Table.SHIPPING_FEE;
+    this.tableProps = Object.getOwnPropertyNames(new ShippingFeeEntity());
   }
 }
