@@ -73,6 +73,9 @@ export class AuthService {
       sub: {
         user_id: user['user_id'],
         email: user.email,
+        phone: user.phone,
+        lastname: user.lastname,
+        firstname: user.firstname,
         permission: `UID_${user['user_id']}`,
       },
     };

@@ -13,6 +13,8 @@ import { BaseController } from '../../../../base/base.controllers';
 import { CreateProductDto } from '../../../dto/product/create-product.dto';
 import { IResponse } from '../../../interfaces/response.interface';
 import { Response, Request } from 'express';
+import { CreateReviewDto } from '../../../dto/reviewComment/create-review.dto';
+import { CreateCommentDto } from '../../../dto/reviewComment/create-comment.dto';
 @Controller('fe/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -49,11 +51,43 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/reviews')
+  @Post('/:product_id/reviews')
   async createReviews(
-    @Req() req: Request,
+    @Param('product_id') product_id: number,
+    @Req() req,
+    @Res() res: Response,
+    @Body() data: CreateReviewDto,
+  ): Promise<IResponse> {
+    await this.service.createReviewComment(data, product_id, req.user, 1);
+    return this.responseSuccess(res);
+  }
+
+  @Post('/:product_id/comments')
+  async createComments(
+    @Param('product_id') product_id: number,
+    @Req() req,
+    @Res() res: Response,
+    @Body() data: CreateCommentDto,
+  ): Promise<IResponse> {
+    await this.service.createReviewComment(data, product_id, req.user, 2);
+    return this.responseSuccess(res);
+  }
+
+  @Get('/:product_id/reviews')
+  async getReviewsList(
+    @Param('product_id') product_id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    return this.responseSuccess(res);
+    const result = await this.service.getReviewsCommentsList(product_id, 1);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/:product_id/comments')
+  async getComments(
+    @Param('product_id') product_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getReviewsCommentsList(product_id, 2);
+    return this.responseSuccess(res, result);
   }
 }

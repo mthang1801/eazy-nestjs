@@ -4,6 +4,7 @@ export enum ImageObjectType {
   BANNER = 'banners',
   USER = 'users',
   CATEGORY = 'categories',
+  COMMENT_REVIEWS = 'comments_reviews',
 }
 
 export enum ImageType {

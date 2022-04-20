@@ -56,6 +56,33 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/reviews')
+  async getReviewsList(
+    @Query() params,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getReviewsListCMS(params, 1);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/comments')
+  async getCommentsList(
+    @Query() params,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getReviewsListCMS(params, 2);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/reviews-comments/:item_id')
+  async getCommentReviewResponse(
+    @Param('item_id') item_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getCommentReviewResponse(item_id);
+    return this.responseSuccess(res, result);
+  }
+
   @Post('grouping-products/:start_product_id')
   async groupingProducts(
     @Res() res: Response,
@@ -91,6 +118,16 @@ export class ProductsController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.getProductsStores(id);
     return this.responseSuccess(res, result);
+  }
+
+  @Put('/reviews/:item_id')
+  async updateReviews(
+    @Param('item_id') item_id: string,
+    @Body() data,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.updateReviewComment(item_id, data, 1);
+    return this.responseSuccess(res);
   }
 
   @Put(':identifier')

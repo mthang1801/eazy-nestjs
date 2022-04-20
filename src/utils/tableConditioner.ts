@@ -367,3 +367,12 @@ export const getProductsListByAccessoryIdSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const reviewCommentItemsSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

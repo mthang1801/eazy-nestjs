@@ -115,5 +115,6 @@ export enum Table {
 
   //============= Comment Rating ============
   COMMENTS = 'ddv_comments',
+  REVIEW_COMMENT_ITEMS = 'ddv_review_comment_items',
   REVIEWS = 'ddv_reviews',
 }

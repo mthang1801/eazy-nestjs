@@ -110,5 +110,6 @@ export enum PrimaryKeys {
 
   //============= Comment, rating ==========
   ddv_comments = 'comment_id',
-  ddv_reviews = 'rating_index',
+  ddv_reviews = 'review_id',
+  ddv_review_comment_items = 'item_id',
 }

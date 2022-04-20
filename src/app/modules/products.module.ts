@@ -36,12 +36,13 @@ import { ProductSyncController } from '../controllers/sync/v1/product.controller
 import { StickerModule } from './sticker.module';
 import { ProductTesterController } from '../controllers/tester/product.controller';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
-import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
-import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
 import { ProductsReportController } from '../controllers/report/v1/product.controller';
 import { CommentRepository } from '../repositories/comment.repository';
-import { ReviewRepository } from '../repositories/reviews.repository';
+
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
+
+import { ReviewRepository } from '../repositories/review.repository';
+import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 
 @Module({
   imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
@@ -71,6 +72,7 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
     ProductStoreHistoryRepository,
     CommentRepository,
     ReviewRepository,
+    ReviewCommentItemRepository,
   ],
   exports: [
     ProductService,
@@ -98,6 +100,7 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
     ProductStoreHistoryRepository,
     CommentRepository,
     ReviewRepository,
+    ReviewCommentItemRepository,
   ],
   controllers: [
     ProductsControllerBE,
