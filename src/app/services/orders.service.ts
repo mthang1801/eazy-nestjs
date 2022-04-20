@@ -107,7 +107,11 @@ import {
 } from '../../constants/payment';
 import * as moment from 'moment';
 import { payooChecksum } from '../../constants/payment';
-import { userJoiner, cartPaymentJoiner } from '../../utils/joinTable';
+import {
+  userJoiner,
+  cartPaymentJoiner,
+  productCategoryJoiner,
+} from '../../utils/joinTable';
 import { PayCreditFeeType } from '../../database/enums/tableFieldEnum/order.enum';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
@@ -118,6 +122,8 @@ import {
   MoreThan,
 } from '../../database/operators/operators';
 import { OrderStatus } from '../../constants/order';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 
 @Injectable()
 export class OrdersService {
@@ -147,6 +153,7 @@ export class OrdersService {
     private wardService: WardService,
     private dbService: DatabaseService,
     private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
+    private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -735,10 +742,15 @@ export class OrdersService {
 
     if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData['order_items']) {
+        let product = await this.productRepo.findOne({
+          product_appcore_id: orderItem['product_id'],
+        });
+
         let orderDetailData = {
           ...new OrderDetailsEntity(),
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
           product_appcore_id: orderItem['product_id'],
+          product_id: product ? product.product_id : null,
         };
 
         const newOrderDetail = await this.orderDetailRepo.create(
@@ -1057,7 +1069,9 @@ export class OrdersService {
   }
 
   async getByOrderCode(order_code: number) {
-    const order = await this.orderRepo.findOne({ order_code });
+    const order = await this.orderRepo.findOne({
+      where: [{ order_code }, { order_id: order_code }],
+    });
     if (!order) {
       throw new HttpException('Đơn hàng không tồn tại', 404);
     }
@@ -1110,13 +1124,23 @@ export class OrdersService {
     }
 
     const orderDetails = await this.orderDetailRepo.find({
-      select: `${Table.PRODUCTS}.slug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
+      select: `${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
       join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
         [`${Table.ORDER_DETAILS}.status`]: 'A',
       },
     });
+
+    // if (orderDetails.length) {
+    //   for (let orderDetailItem of orderDetails) {
+    //     let productCategory = await this.productCategoryRepo.findOne({
+    //       select: '*',
+    //       join: productCategoryJoiner,
+    //       where: { product_appcore_id: orderDetailItem['product_appcore_id'] },
+    //     });
+    //   }
+    // }
 
     if (order['s_city']) {
       order['s_cityName'] = await this.cityService.get(order['s_city'], true);

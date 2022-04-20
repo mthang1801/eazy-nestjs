@@ -20,6 +20,7 @@ import { OrderSyncController } from '../controllers/sync/v1/order.controller';
 import { OrderHistoryRepository } from '../repositories/orderHistory.repository';
 import { PromotionModule } from './promotion.module';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
+import { ProductsModule } from './products.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -58,6 +59,7 @@ import { OrderPaymentRepository } from '../repositories/orderPayment.repository'
     forwardRef(() => CustomerModule),
     CartModule,
     PromotionModule,
+    ProductsModule,
   ],
 })
 export class OrdersModule {}
