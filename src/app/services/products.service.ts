@@ -3135,11 +3135,11 @@ export class ProductService {
       minPrice = price / 1.5;
       maxPrice = price * 1.5;
     } else if (price <= 50000000) {
+      minPrice = price / 1.4;
+      maxPrice = price * 1.4;
+    } else {
       minPrice = price / 1.3;
       maxPrice = price * 1.3;
-    } else {
-      minPrice = price / 1.2;
-      maxPrice = price * 1.2;
     }
     return { minPrice, maxPrice };
   }

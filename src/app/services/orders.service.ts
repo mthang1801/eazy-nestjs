@@ -430,7 +430,7 @@ export class OrdersService {
         installmentAccountId: 20630206,
         installmentCode: orderPayment['order_no'],
         paymentStatus: 'success',
-        totalAmount: orderPayment['amount'],
+        totalAmount: +orderPayment['amount'],
       };
 
       await axios({
