@@ -64,11 +64,15 @@ export class ShippingFeeService {
       city_name: cityName,
       shipping_fee_id,
     };
-    await this.shippingFeeLocationRepo.create(shippingFeeLocationData);
+    const result = await this.shippingFeeLocationRepo.create(
+      shippingFeeLocationData,
+    );
     await this.shippingFeeRepo.update(
       { shipping_fee_id },
       { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
     );
+
+    return result;
   }
 
   async updateShippingFeeLocation(

@@ -77,8 +77,13 @@ export class ProductsController extends BaseController {
   async getReviewsList(
     @Param('product_id') product_id: number,
     @Res() res: Response,
+    @Query() params,
   ): Promise<IResponse> {
-    const result = await this.service.getReviewsCommentsList(product_id, 1);
+    const result = await this.service.getReviewsCommentsList(
+      product_id,
+      params,
+      1,
+    );
     return this.responseSuccess(res, result);
   }
 
@@ -86,8 +91,13 @@ export class ProductsController extends BaseController {
   async getComments(
     @Param('product_id') product_id: number,
     @Res() res: Response,
+    @Query() params,
   ): Promise<IResponse> {
-    const result = await this.service.getReviewsCommentsList(product_id, 2);
+    const result = await this.service.getReviewsCommentsList(
+      product_id,
+      params,
+      2,
+    );
     return this.responseSuccess(res, result);
   }
 }

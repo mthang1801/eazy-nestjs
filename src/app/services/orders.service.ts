@@ -441,8 +441,6 @@ export class OrdersService {
         data: paymentAppcoreData,
       });
 
-      console.log(response);
-
       await this.orderRepo.update(
         { order_id },
         { status: OrderStatus.purchased },

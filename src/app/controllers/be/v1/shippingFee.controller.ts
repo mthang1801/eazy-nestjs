@@ -30,8 +30,8 @@ export class ShippingFeesController extends BaseController {
     @Res() res: Response,
     @Req() req,
   ): Promise<IResponse> {
-    await this.service.createShippingFee(data, req.user);
-    return this.responseSuccess(res);
+    const result = await this.service.createShippingFee(data, req.user);
+    return this.responseSuccess(res, result);
   }
 
   @Put('/:shipping_fee_id')
@@ -54,12 +54,12 @@ export class ShippingFeesController extends BaseController {
     @Res() res: Response,
     @Req() req,
   ): Promise<IResponse> {
-    await this.service.createShippingFeeByLocation(
+    const result = await this.service.createShippingFeeByLocation(
       data,
       shipping_fee_id,
       req.user,
     );
-    return this.responseSuccess(res);
+    return this.responseSuccess(res, result);
   }
 
   @Put('/locations/:shipping_fee_location_id')

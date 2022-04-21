@@ -7,9 +7,11 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
   UploadedFile,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ProductService } from 'src/app/services/products.service';
@@ -20,6 +22,9 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { DeleteProductImageDto } from '../../../dto/product/delete-productImage.dto';
 import { UpdateProductDto } from '../../../dto/product/update-product.dto';
+import { CreateCommentDto } from '../../../dto/reviewComment/create-comment.dto';
+import { AuthGuard } from '../../../../middlewares/be.auth';
+import { CreateCommentReviewCMSDto } from '../../../dto/reviewComment/create-commentReview.cms.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -136,6 +141,18 @@ export class ProductsController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.service.updateReviewComment(item_id, data);
+    return this.responseSuccess(res);
+  }
+
+  @Post('/:product_id/reviews-comments/')
+  @UseGuards(AuthGuard)
+  async createReviewComment(
+    @Body() data: CreateCommentReviewCMSDto,
+    @Res() res,
+    @Req() req,
+    @Param('product_id') product_id: number,
+  ): Promise<IResponse> {
+    await this.service.createReviewCommentCMS(data, product_id, req.user);
     return this.responseSuccess(res);
   }
 

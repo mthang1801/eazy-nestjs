@@ -196,6 +196,7 @@ import { ReviewCommentItemsEntity } from '../entities/reviewCommentItems.entity'
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
+import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
 
 @Injectable()
 export class ProductService {
@@ -4281,12 +4282,34 @@ export class ProductService {
     }
   }
 
-  async getReviewsCommentsList(product_id: number, type) {
+  async getReviewsCommentsList(product_id: number, params, type) {
+    let { page, skip, limit } = getPageSkipLimit(params);
     const reviewCommentItems = await this.reviewCommentItemsRepo.find({
-      product_id,
-      type,
-      status: 'A',
-      parent_item_id: IsNull(),
+      select: '*',
+      orderBy: [
+        {
+          field: `${Table.REVIEW_COMMENT_ITEMS}.updated_at`,
+          sortBy: SortBy.DESC,
+        },
+      ],
+      where: {
+        product_id,
+        type,
+        status: 'A',
+        parent_item_id: IsNull(),
+      },
+      skip,
+      limit,
+    });
+    const count = await this.reviewCommentItemsRepo.find({
+      select: 'COUNT(item_id) as total',
+
+      where: {
+        product_id,
+        type,
+        status: 'A',
+        parent_item_id: IsNull(),
+      },
     });
 
     if (reviewCommentItems.length) {
@@ -4334,9 +4357,16 @@ export class ProductService {
 
     if (type == 1) {
       const review = await this.reviewRepo.findOne({ product_id });
-      return { summary: review, items: reviewCommentItems };
+      return {
+        paging: { currentPage: page, pageSize: limit, total: count[0].total },
+        summary: review,
+        items: reviewCommentItems,
+      };
     }
-    return { items: reviewCommentItems };
+    return {
+      paging: { currentPage: page, pageSize: limit, total: count[0].total },
+      items: reviewCommentItems,
+    };
   }
 
   async getReviewsListCMS(params, type) {
@@ -4532,6 +4562,75 @@ export class ProductService {
         { item_id },
         updateReviewComment,
       );
+    }
+
+    if (data.images && data.images.length) {
+      let oldImages = await this.imageLinkRepo.find({
+        object_type: ImageObjectType.COMMENT_REVIEWS,
+        object_id: item_id,
+      });
+      if (oldImages.length) {
+        await this.imageLinkRepo.delete({
+          object_type: ImageObjectType.COMMENT_REVIEWS,
+          object_id: item_id,
+        });
+        for (let oldImage of oldImages) {
+          if (oldImage.image_id) {
+            await this.imageRepo.delete({ image_id: oldImage.image_id });
+          }
+        }
+      }
+
+      for (let image of data.images) {
+        let newImage = await this.imageRepo.create({ image_path: image });
+        if (newImage) {
+          await this.imageLinkRepo.create({
+            object_id: item_id,
+            object_type: ImageObjectType.COMMENT_REVIEWS,
+            image_id: newImage.image_id,
+          });
+        }
+      }
+    }
+  }
+
+  async createReviewCommentCMS(
+    data: CreateCommentReviewCMSDto,
+    product_id,
+    user,
+  ) {
+    let email = user.email;
+    let phone = user.phone;
+    let fullname = user`${user?.firstname || ''} ${
+      user?.lastname || ''
+    }`.trim();
+
+    let reviewItemData = {
+      ...new ReviewCommentItemsEntity(),
+      ...this.reviewCommentItemsRepo.setData(data),
+      product_id,
+      email: email || null,
+      phone,
+      fullname,
+      user_id: user.user_id,
+      type: data.type,
+    };
+
+    const reviewComment = await this.reviewCommentItemsRepo.create(
+      reviewItemData,
+    );
+
+    if (data?.images && data?.images?.length) {
+      for (let imageItem of data.images) {
+        const image = await this.imageRepo.create({ image_path: imageItem });
+        if (image) {
+          await this.imageLinkRepo.create({
+            object_type: ImageObjectType.COMMENT_REVIEWS,
+            object_id: reviewComment.item_id,
+            image_id: image.image_id,
+          });
+        }
+      }
     }
   }
 }
