@@ -27,7 +27,7 @@ export class ShippingFeeService {
       ...this.shippingFeeRepo.setData(data),
       created_by: user.user_id,
     };
-    await this.shippingFeeRepo.create(shippingFeeData);
+    return this.shippingFeeRepo.create(shippingFeeData);
   }
 
   async updateShippingFee(shipping_fee_id, data, user) {
