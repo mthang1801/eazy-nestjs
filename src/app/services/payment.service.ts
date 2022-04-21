@@ -420,41 +420,21 @@ export class PaymentService {
         );
       }
 
-      // const orderDataResponse = response.data.order;
+      const orderDataResponse = response.data.order;
+      const currentOrder = await this.orderRepo.findOne({ ref_order_id });
+      let orderPaymentData = {
+        ...orderDataResponse,
+        order_gateway_id: orderDataResponse?.order_id || null,
+        checksum: response.data.checksum,
+        expiry_date: orderDataResponse?.expire_date
+          ? formatStandardTimeStamp(response.data.order.expiry_date)
+          : null,
+      };
 
-      // let orderPaymentData = {
-      //   ...orderDataResponse,
-      //   order_gateway_id: orderDataResponse?.order_id || null,
-      //   checksum: response.data.checksum,
-      //   expiry_date: orderDataResponse?.expire_date
-      //     ? formatStandardTimeStamp(response.data.order.expiry_date)
-      //     : null,
-      // };
-      // let sendData = {
-      //   ...user,
-      //   order_items: cartItems,
-      //   ref_order_id,
-      //   transfer_amount: totalPrice,
-      //   coupon_code: data.coupon_code ? data.coupon_code : null,
-      //   order_code: null,
-      //   orderPayment: orderPaymentData,
-      //   status: OrderStatus.unfulfilled,
-      // };
-
-      // if (method == 'paynow') {
-      //   sendData = {
-      //     ...sendData,
-      //     payment_status: PaymentStatus.unpaid,
-      //     transfer_bank: bank,
-      //     transfer_amount: orderDataResponse.amount,
-      //     transfer_ref_code: orderDataResponse.order_no,
-      //     transfer_account_id: orderDataResponse.order_id,
-      //     pay_credit_type: PayCreditFeeType.Chuyen_khoan,
-      //     payment_date: paymentDateTime,
-      //   };
-      // }
-
-      // await this.orderService.createOrder(user, sendData, false);
+      await this.orderService.updateOrderPayment(
+        currentOrder.order_id,
+        orderPaymentData,
+      );
 
       // await this.cartRepo.delete({ cart_id: cart.cart_id });
       // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
@@ -497,7 +477,7 @@ export class PaymentService {
     let _notifyData = notifyData.substring(startIndex, endIndex);
 
     let decodedData = Buffer.from(_notifyData, 'base64').toString('utf8');
-
+    console.log(decodedData);
     const orderNoIndexStart =
       decodedData.indexOf('<order_no>') + '<order_no>'.length;
     const orderNoIndexEnd = decodedData.indexOf('</order_no>');
@@ -514,7 +494,7 @@ export class PaymentService {
         { order_id: order.order_id },
         updateOrderData,
       );
-      await this.orderService.pushOrderToAppcore(order.order_id);
+      // await this.orderService.updateAppcoreOrderPayment(order.order_id);
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }

@@ -399,6 +399,25 @@ export class OrdersService {
     }
   }
 
+  async updateOrderPayment(order_id, data) {
+    const orderPayment = await this.orderPaymentRepo.findOne({ order_id });
+    if (orderPayment) {
+      let updatedData = this.orderPaymentRepo.setData(data);
+      if (Object.entries(updatedData).length) {
+        await this.orderPaymentRepo.update({ order_id }, updatedData);
+      }
+    } else {
+      let newData = {
+        ...new OrderPaymentEntity(),
+        ...this.orderPaymentRepo.setData(data),
+        order_id,
+      };
+      await this.orderPaymentRepo.create(newData);
+    }
+  }
+
+  async updateAppcoreOrderPayment(order_id, data) {}
+
   async pushOrderToAppcore(order_id) {
     const order = await this.orderRepo.findOne({ order_id });
     console.log(order);
