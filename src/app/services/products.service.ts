@@ -4447,7 +4447,7 @@ export class ProductService {
     }
 
     const reviewCommentItems = await this.reviewCommentItemsRepo.find({
-      select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status`,
+      select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status, ${Table.PRODUCTS}.slug as productSlug`,
       join: reviewCommentProductJoiner,
       where: reviewCommentItemsSearchFilter(search, filterConditions),
       skip,
