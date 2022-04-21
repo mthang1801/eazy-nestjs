@@ -129,13 +129,13 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put('/reviews/:item_id')
-  async updateReviews(
+  @Put('/reviews-comments/:item_id')
+  async updateReviewComment(
     @Param('item_id') item_id: string,
     @Body() data,
     @Res() res: Response,
   ): Promise<IResponse> {
-    await this.service.updateReviewComment(item_id, data, 1);
+    await this.service.updateReviewComment(item_id, data);
     return this.responseSuccess(res);
   }
 

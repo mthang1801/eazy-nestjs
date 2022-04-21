@@ -235,6 +235,7 @@ export class OrdersService {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
       is_sync: 'Y',
+      status: OrderStatus.new,
     };
 
     if (!user['user_appcore_id']) {
@@ -426,6 +427,7 @@ export class OrdersService {
       if (!order) {
         throw new HttpException('Không tìm thấy đơn hàng', 404);
       }
+
       const paymentAppcoreData = {
         installmentAccountId: 20630206,
         installmentCode: orderPayment['order_no'],
@@ -439,8 +441,12 @@ export class OrdersService {
         data: paymentAppcoreData,
       });
 
-      console.log(442, response);
-      console.log('pushed to appcore');
+      console.log(response);
+
+      await this.orderRepo.update(
+        { order_id },
+        { status: OrderStatus.purchased },
+      );
     } catch (error) {
       throw new HttpException('Something went wrong', 409);
     }

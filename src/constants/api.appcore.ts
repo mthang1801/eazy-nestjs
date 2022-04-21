@@ -11,7 +11,7 @@ export const PUSH_ORDER_TO_APPCORE_API = `${CORE_API}/orders/cms/create`;
 export const GET_ORDERS_FROM_APPCORE_API = `${CORE_API}/orders`;
 
 export const UPDATE_ORDER_PAYMENT = (order_appcore_id) =>
-  `${CORE_API}/core-api/v1/orders/cms/${order_appcore_id}/update-payment`;
+  `${CORE_API}/orders/cms/${order_appcore_id}/update-payment`;
 
 export const GET_ORDER_BY_ID_FROM_APPCORE_API = (order_id) =>
   `${CORE_API}/orders?id=${order_id}`;

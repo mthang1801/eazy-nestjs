@@ -4516,15 +4516,12 @@ export class ProductService {
     };
   }
 
-  async updateReviewComment(item_id, data, type) {
+  async updateReviewComment(item_id, data) {
     const reviewCommentItem = await this.reviewCommentItemsRepo.findOne({
       item_id,
     });
     if (!reviewCommentItem) {
-      throw new HttpException(
-        `Không tìm thấy ${type == 1 ? 'review' : 'bình luận'} `,
-        404,
-      );
+      throw new HttpException(`Không tìm thấy review/ bình luận`, 404);
     }
     const updateReviewComment = {
       ...this.reviewCommentItemsRepo.setData(data),

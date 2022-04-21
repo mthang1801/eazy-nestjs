@@ -492,7 +492,6 @@ export class PaymentService {
     let amount = decodedData.substring(startAmountIndex, endAmountIndex);
 
     try {
-      console.log(495);
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
 
       const updateOrderData = {
@@ -506,7 +505,7 @@ export class PaymentService {
       let orderPayment = await this.orderPaymentRepo.findOne({
         order_id: order.order_id,
       });
-      console.log(509);
+
       if (!orderPayment) {
         const newOrderPaymentData = {
           ...new OrderPaymentEntity(),
@@ -516,7 +515,7 @@ export class PaymentService {
         };
         orderPayment = await this.orderPaymentRepo.create(newOrderPaymentData);
       }
-      console.log(517);
+
       await this.orderService.updateAppcoreOrderPayment(order.order_id);
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
