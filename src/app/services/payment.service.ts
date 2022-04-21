@@ -54,6 +54,8 @@ import { OrderStatus } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 import { CreateInstallmentDto } from '../dto/orders/create-installment.dto';
 import { calculateInstallmentInterestRate } from '../../constants/payment';
+import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
+import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 
 @Injectable()
 export class PaymentService {
@@ -67,6 +69,7 @@ export class PaymentService {
     private customerService: CustomerService,
     private orderService: OrdersService,
     private orderRepo: OrdersRepository<OrderEntity>,
+    private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
     private dbService: DatabaseService,
   ) {}
 
@@ -471,7 +474,7 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
-
+    console.log(decodedData);
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
@@ -494,7 +497,9 @@ export class PaymentService {
         { order_id: order.order_id },
         updateOrderData,
       );
-      // await this.orderService.updateAppcoreOrderPayment(order.order_id);
+      const orderPayment = await this.orderPaymentRepo.findOne({ order_id });
+      const newOrderPaymentData = { ...new OrderPaymentEntity() };
+      await this.orderService.updateAppcoreOrderPayment(order.order_id);
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
