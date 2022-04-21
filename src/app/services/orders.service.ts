@@ -443,7 +443,10 @@ export class OrdersService {
 
       await this.orderRepo.update(
         { order_id },
-        { status: OrderStatus.purchased },
+        {
+          status: OrderStatus.purchased,
+          updated_at: formatStandardTimeStamp(),
+        },
       );
     } catch (error) {
       throw new HttpException('Something went wrong', 409);
