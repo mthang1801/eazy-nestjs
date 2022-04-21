@@ -76,7 +76,6 @@ export class ShippingFeeService {
     data: UpdateShippingFeeLocationDto,
     user,
   ) {
-    console.log(data);
     const shippingFeeLocationData = {
       ...this.shippingFeeLocationRepo.setData(data),
       updated_at: formatStandardTimeStamp(),

@@ -427,15 +427,10 @@ export class OrdersService {
         throw new HttpException('Không tìm thấy đơn hàng', 404);
       }
       const paymentAppcoreData = {
-        installmentAccountId: 724888,
+        installmentAccountId: 20630206,
         installmentCode: orderPayment['order_no'],
         paymentStatus: 'success',
         totalAmount: orderPayment['amount'],
-      };
-      const config = {
-        method: 'PUT',
-        url: UPDATE_ORDER_PAYMENT(order.order_code),
-        data: paymentAppcoreData,
       };
 
       await axios({
