@@ -374,5 +374,9 @@ export const reviewCommentItemsSearchFilter = (
 ) => {
   let arraySearch = [];
 
+  if (search) {
+    arraySearch = [{ [`${Table.REVIEW_COMMENT_ITEMS}.comment`]: Like(search) }];
+  }
+
   return searchFilterTemplate(filterConditions, arraySearch);
 };

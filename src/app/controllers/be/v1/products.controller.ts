@@ -74,6 +74,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/reviews-comments')
+  async getCommentsReviewsList(
+    @Query() params,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getCommentsReviewsList(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/response-reviews-comments/:item_id')
   async getCommentReviewResponse(
     @Param('item_id') item_id: number,

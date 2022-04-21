@@ -4435,6 +4435,75 @@ export class ProductService {
     return responseReviews;
   }
 
+  async getCommentsReviewsList(params) {
+    let { search } = params;
+    let { page, skip, limit } = getPageSkipLimit(params);
+
+    let filterConditions = {};
+    if (!search) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
+        IsNull();
+    }
+
+    const reviewCommentItems = await this.reviewCommentItemsRepo.find({
+      select: '*',
+      where: reviewCommentItemsSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    let reviewCommentResults = [];
+    for (let reviewCommentItem of reviewCommentItems) {
+      if (
+        reviewCommentItem['parent_item_id'] &&
+        reviewCommentItem['parent_item_id'] != 0
+      ) {
+        if (
+          reviewCommentResults.length &&
+          reviewCommentResults.some(
+            ({ item_id }) => item_id == reviewCommentItem['parent_item_id'],
+          )
+        ) {
+          reviewCommentResults = reviewCommentResults.map((item) => {
+            if (item.item_id == reviewCommentItem['parent_item_id']) {
+              item['responses'] = item['responses']
+                ? [...item['responses'], reviewCommentItem]
+                : [reviewCommentItem];
+            }
+            return item;
+          });
+        } else {
+          let temp = { ...reviewCommentItem };
+          reviewCommentItem = await this.reviewCommentItemsRepo.findOne({
+            item_id: reviewCommentItem['parent_item_id'],
+          });
+
+          reviewCommentItem['responses'] = [temp];
+
+          reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
+        }
+        continue;
+      }
+
+      reviewCommentItem['responses'] = [];
+      reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
+    }
+
+    let count = await this.reviewCommentItemsRepo.find({
+      select: `COUNT(product_id) as total`,
+      where: reviewCommentItemsSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      items: reviewCommentResults,
+    };
+  }
+
   async updateReviewComment(item_id, data, type) {
     const reviewCommentItem = await this.reviewCommentItemsRepo.findOne({
       item_id,

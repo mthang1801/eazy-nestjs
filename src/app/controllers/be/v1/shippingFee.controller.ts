@@ -45,7 +45,8 @@ export class ShippingFeesController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Post('/shipping_fee_id/locations')
+  @Post('/:shipping_fee_id/locations')
+  @UseGuards(AuthGuard)
   async createShippingFeeByLocation(
     @Body() data: CreateShippingFeeLocationDto,
     @Param('shipping_fee_id') shipping_fee_id: number,
