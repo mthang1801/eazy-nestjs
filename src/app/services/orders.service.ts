@@ -292,7 +292,7 @@ export class OrdersService {
 
   async createOrder(user, data, sendToAppcore = true) {
     data['store_id'] = data['store_id'] || 67107;
-    data['utm_source'] = data['utm_source'] || 10;
+    data['utm_source'] = data['utm_source'] || 9;
 
     const orderData = {
       ...new OrderEntity(),
@@ -1325,6 +1325,28 @@ export class OrdersService {
       throw new HttpException(
         error?.response?.data?.message || error?.message,
         error?.response?.status || error?.status,
+      );
+    }
+  }
+
+  async requestSyncOrders() {
+    try {
+      const ordersSync = await this.orderRepo.find({
+        where: { order_code: IsNull() },
+      });
+      if (ordersSync.length) {
+        for (let orderItem of ordersSync) {
+          await this.pushOrderToAppcore(orderItem.order_id);
+        }
+      }
+      await this.orderRepo.update(
+        { order_code: Not(IsNull()) },
+        { is_sync: 'N' },
+      );
+    } catch (error) {
+      throw new HttpException(
+        error?.response?.data?.message || error?.response,
+        error?.response?.status || error.status,
       );
     }
   }

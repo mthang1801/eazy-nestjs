@@ -78,4 +78,10 @@ export class OrderController extends BaseController {
     await this.service.cancelOrder(order_code);
     return this.responseSuccess(res);
   }
+
+  @Post('/sync')
+  async syncOrder(@Res() res: Response): Promise<IResponse> {
+    await this.service.requestSyncOrders();
+    return this.responseSuccess(res);
+  }
 }
