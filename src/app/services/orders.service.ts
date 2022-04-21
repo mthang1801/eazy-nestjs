@@ -439,7 +439,7 @@ export class OrdersService {
         data: paymentAppcoreData,
       });
 
-      console.log(response);
+      console.log(442, response);
       console.log('pushed to appcore');
     } catch (error) {
       throw new HttpException('Something went wrong', 409);

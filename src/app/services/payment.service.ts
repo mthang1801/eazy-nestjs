@@ -514,7 +514,7 @@ export class PaymentService {
         };
         orderPayment = await this.orderPaymentRepo.create(newOrderPaymentData);
       }
-
+      console.log(517);
       await this.orderService.updateAppcoreOrderPayment(order.order_id);
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
