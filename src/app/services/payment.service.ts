@@ -189,9 +189,44 @@ export class PaymentService {
     return { ..._payment, ..._paymentDes };
   }
 
-  async paymentInstallment(data) {
+  async paymentInstallment(data, userAuth) {
     try {
-      const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+      let cart;
+      let user;
+      console.log(data, userAuth);
+      if (userAuth) {
+        cart = await this.cartRepo.findOne({ user_id: userAuth['user_id'] });
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: userAuth['user_id'] },
+        });
+      } else {
+        cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: data['user_id'] },
+        });
+        console.log(210, user);
+        if (!user) {
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+          });
+
+          if (!user) {
+            await this.customerService.createCustomerFromWebPayment(data);
+            user = await this.userRepo.findOne({
+              select: `*, ${Table.USERS}.user_appcore_id`,
+              join: userJoiner,
+              where: { phone: data['s_phone'] },
+            });
+          }
+        }
+      }
+
       if (!cart) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
@@ -200,6 +235,10 @@ export class PaymentService {
         join: cartPaymentJoiner,
         where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
       });
+
+      if (!cartItems.length) {
+        throw new HttpException('Giỏ hàng trống', 400);
+      }
 
       let totalPrice = cartItems.reduce(
         (acc, ele) => acc + ele.price * ele.amount,
@@ -223,7 +262,7 @@ export class PaymentService {
         );
 
         if (checkResult['isValid']) {
-          totalPrice -= checkResult['discountMoney'];
+          // totalPrice -= checkResult['discountMoney'];
         }
       }
 
@@ -234,38 +273,21 @@ export class PaymentService {
           data.tenor,
         );
 
-      let user = await this.userRepo.findOne({
-        select: `*, ${Table.USERS}.user_appcore_id`,
-        join: userJoiner,
-        where: { [`${Table.USERS}.user_id`]: data.user_id },
-      });
-
-      if (!user) {
-        user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
-          join: userJoiner,
-          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
-        });
-        if (!user) {
-          await this.customerService.createCustomerFromWebPayment(data);
-          user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
-            join: userJoiner,
-            where: { phone: data['s_phone'] },
-          });
-        }
-      }
       let sendData = {
         ...user,
+        s_phone: data.s_phone,
+        s_lastname: data.s_lastname,
+        s_city: data.s_city,
+        s_district: data.s_district,
+        s_ward: data.s_ward,
+        s_address: data.s_address,
         order_items: cartItems,
         ref_order_id: generateRandomString(),
         transfer_amount: totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
-        order_code: null,
-        status: OrderStatus.unfulfilled,
-        repaid: repaidAmount,
-        installed_money_amount: paymentPerMonth,
       };
+
+      await this.orderService.createOrder(user, sendData);
     } catch (error) {
       console.log(error);
     }

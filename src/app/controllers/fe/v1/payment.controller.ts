@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body, Res, Req } from '@nestjs/common';
 import { BaseController } from '../../../../base/base.controllers';
 import { PaymentService } from '../../../services/payment.service';
 
@@ -30,8 +30,8 @@ export class PaymentControllerFE extends BaseController {
   }
 
   @Post('/installment')
-  async paymentInstallment(@Res() res: Response, @Body() data) {
-    const result = await this.service.paymentInstallment(data);
-    return this.responseSuccess(res, result);
+  async paymentInstallment(@Res() res: Response, @Body() data, @Req() req) {
+    await this.service.paymentInstallment(data, req.user);
+    return this.responseSuccess(res);
   }
 }

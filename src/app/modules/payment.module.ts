@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { PaymentController } from '../controllers/be/v1/payment.controller';
 import { PaymentService } from '../services/payment.service';
 import { PaymentRepository } from '../repositories/payment.repository';
@@ -11,6 +11,7 @@ import { PromotionModule } from './promotion.module';
 import { UserRepository } from '../repositories/user.repository';
 import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
+import { getUserFromToken } from '../../middlewares/getUserFromToken';
 @Module({
   controllers: [PaymentController, PaymentControllerFE],
   providers: [
@@ -29,4 +30,8 @@ import { OrderPaymentRepository } from '../repositories/orderPayment.repository'
   ],
   imports: [CustomerModule, OrdersModule, CartModule, PromotionModule],
 })
-export class PaymentModule {}
+export class PaymentModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(getUserFromToken).forRoutes(PaymentControllerFE);
+  }
+}

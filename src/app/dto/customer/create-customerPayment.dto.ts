@@ -18,4 +18,7 @@ export class CreateCustomerPaymentDto {
 
   @IsNotEmpty()
   s_address: string;
+
+  @IsOptional()
+  identifier_number: string = '';
 }

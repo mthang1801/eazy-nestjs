@@ -220,6 +220,7 @@ export class CustomerService {
       s_ward: data.s_ward,
       b_address: data.s_address,
       s_address: data.s_address,
+      identifier_number: data.identifier_number,
     };
     try {
       const { passwordHash, salt } = saltHashPassword(defaultPassword);

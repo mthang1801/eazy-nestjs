@@ -4,5 +4,5 @@ export class UserDataEntity {
   note: string = '';
   total_purchase: number = 0;
   total_purchase_amount: number = 0;
-  indentify_number: number = 0;
+  indentify_number: string = '';
 }
