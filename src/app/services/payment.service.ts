@@ -474,7 +474,7 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
-
+    console.log(data);
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
@@ -492,6 +492,7 @@ export class PaymentService {
     let amount = decodedData.substring(startAmountIndex, endAmountIndex);
 
     try {
+      console.log(495);
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
 
       const updateOrderData = {
@@ -505,6 +506,7 @@ export class PaymentService {
       let orderPayment = await this.orderPaymentRepo.findOne({
         order_id: order.order_id,
       });
+      console.log(509);
       if (!orderPayment) {
         const newOrderPaymentData = {
           ...new OrderPaymentEntity(),
