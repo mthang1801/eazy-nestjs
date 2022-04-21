@@ -124,7 +124,10 @@ import {
 import { OrderStatus } from '../../constants/order';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
-import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
+import {
+  UPDATE_ORDER_PAYMENT,
+  CANCEL_ORDER,
+} from '../../constants/api.appcore';
 import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTransport.dto';
 
 @Injectable()
@@ -1292,5 +1295,27 @@ export class OrdersService {
       select: '*',
       where: { order_id },
     });
+  }
+
+  async cancelOrder(order_code) {
+    const order = await this.orderRepo.findOne({ order_code });
+    if (!order) {
+      throw new HttpException('Không tìm thấy đơn hàng', 404);
+    }
+    if (order['status'] != OrderStatus.new) {
+      throw new HttpException('Không thể huỷ đơn hàng', 400);
+    }
+    await axios({
+      method: 'PUT',
+      url: CANCEL_ORDER(order_code),
+    });
+    const updatedOrder = await this.orderRepo.update(
+      { order_id: order.order_id },
+      {
+        status: OrderStatus.cancelled,
+        updated_date: formatStandardTimeStamp(),
+      },
+    );
+    await this.orderHistoryRepo.create(updatedOrder);
   }
 }

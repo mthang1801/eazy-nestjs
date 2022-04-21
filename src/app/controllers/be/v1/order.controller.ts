@@ -69,4 +69,13 @@ export class OrderController extends BaseController {
     const result = await this.service.getHistory(order_id);
     return this.responseSuccess(res, result, 'Thành công.');
   }
+
+  @Put('/:order_code/cancel')
+  async cancelOrder(
+    @Param('order_code') order_code: number,
+    @Res() res,
+  ): Promise<IResponse> {
+    await this.service.cancelOrder(order_code);
+    return this.responseSuccess(res);
+  }
 }

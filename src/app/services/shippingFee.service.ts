@@ -167,7 +167,7 @@ export class ShippingFeeService {
         pageSize: limit,
         total: count[0].total,
       },
-      shipingFees: shippingFeesList,
+      shippingFees: shippingFeesList,
     };
   }
 }
