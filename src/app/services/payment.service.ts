@@ -360,9 +360,6 @@ export class PaymentService {
       const paymentDate = moment(new Date(Date.now() + shippingDate)).format(
         'DD/MM/YYYY',
       );
-      const paymentDateTime = formatStandardTimeStamp(
-        new Date(Date.now() + shippingDate),
-      );
 
       let dataRequest;
       let urlRequest;

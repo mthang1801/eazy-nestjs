@@ -4599,11 +4599,10 @@ export class ProductService {
     product_id,
     user,
   ) {
+    console.log(user);
     let email = user.email;
     let phone = user.phone;
-    let fullname = user`${user?.firstname || ''} ${
-      user?.lastname || ''
-    }`.trim();
+    let fullname = `${user?.firstname || ''} ${user?.lastname || ''}`.trim();
 
     let reviewItemData = {
       ...new ReviewCommentItemsEntity(),

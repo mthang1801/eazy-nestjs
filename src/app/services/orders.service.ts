@@ -294,7 +294,7 @@ export class OrdersService {
       );
 
       if (checkResult['isValid']) {
-        orderData['total'] -= checkResult['discountMoney'];
+        // orderData['total'] -= checkResult['discountMoney'];
       }
     }
 
