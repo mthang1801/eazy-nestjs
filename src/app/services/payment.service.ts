@@ -310,9 +310,42 @@ export class PaymentService {
         );
 
         if (checkResult['isValid']) {
-          totalPrice -= checkResult['discountMoney'];
+          // totalPrice -= checkResult['discountMoney'];
         }
       }
+
+      let user = await this.userRepo.findOne({
+        select: `*, ${Table.USERS}.user_appcore_id`,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+
+      if (!user) {
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+        });
+        if (!user) {
+          await this.customerService.createCustomerFromWebPayment(data);
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { phone: data['s_phone'] },
+          });
+        }
+      }
+      let ref_order_id = generateRandomString();
+
+      let sendData = {
+        ...user,
+        order_items: cartItems,
+        ref_order_id,
+        transfer_amount: totalPrice,
+        coupon_code: data.coupon_code ? data.coupon_code : null,
+      };
+
+      await this.orderService.createOrder(user, sendData);
 
       const headers = {
         APIUsername: payooAPIUserName,
@@ -320,7 +353,7 @@ export class PaymentService {
         APISignature: payooAPISignature,
         'Content-Type': 'application/json',
       };
-      let ref_order_id = generateRandomString();
+
       const paymentDate = moment(new Date(Date.now() + shippingDate)).format(
         'DD/MM/YYYY',
       );
@@ -359,9 +392,12 @@ export class PaymentService {
         data: dataRequest,
         refer,
         method: data.method,
-        bank,
         checksum,
       };
+
+      if (bank) {
+        body['bank'] = bank;
+      }
 
       const response = await axios({
         url: urlRequest,
@@ -369,37 +405,6 @@ export class PaymentService {
         headers,
         data: body,
       });
-
-      /*
-      // const response: any = {
-      //   statusCode: 200,
-      //   data: {
-      //     shop: {
-      //       title: 'DiDongViet',
-      //       domain: 'https://ddv-fe-ecom.vercel.app',
-      //       logo: '/shop/default.png',
-      //     },
-      //     result: 'success',
-      //     checksum:
-      //       '27e2695fd81ac1eeff8bd53b04c171fef7a8e41911c509f1c2aa32895d6af46831e3a7ecf3c5a6c68505162079c65fee2534ad873f23cbb1a5cb4e912cd1b42e',
-      //     order: {
-      //       order_id: 725308,
-      //       order_no: '5825c445972d4101be01bbc585fb30ab',
-      //       amount: '21350000',
-      //       payment_code: null,
-      //       expiry_date: '08/08/2022 08:12:03',
-      //       token: '62a12bf5cb998b5ccfeb5a97445621ca',
-      //       payment_url:
-      //         'https://newsandbox.payoo.com.vn/v2/paynow/prepare?_token=62a12bf5cb998b5ccfeb5a97445621ca',
-      //       qr_code_uri:
-      //         'https://qrgw-sb.payoo.vn/qrlink/browser?QRCodeKey=3854225705b2853737935d1f70cb533f909a6728b1539c141abbda4a90cf09565cec68d99edec9d9f277419f7613ba4c75431de60ac931250a348b86edd51fd2&Width=250&Height=250&Date=20220415',
-      //       qrcode: 'QR295499',
-      //     },
-      //   },
-      //   message: 'Thành công',
-      //   timestamp: '15/04/2022, 16:55:24',
-      // };
-      */
 
       if (!response?.data) {
         throw new HttpException('Tạo thanh toán không thành công', 400);
@@ -415,64 +420,41 @@ export class PaymentService {
         );
       }
 
-      let user = await this.userRepo.findOne({
-        select: `*, ${Table.USERS}.user_appcore_id`,
-        join: userJoiner,
-        where: { [`${Table.USERS}.user_id`]: data.user_id },
-      });
+      // const orderDataResponse = response.data.order;
 
-      if (!user) {
-        user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
-          join: userJoiner,
-          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
-        });
-        if (!user) {
-          await this.customerService.createCustomerFromWebPayment(data);
-          user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
-            join: userJoiner,
-            where: { phone: data['s_phone'] },
-          });
-        }
-      }
+      // let orderPaymentData = {
+      //   ...orderDataResponse,
+      //   order_gateway_id: orderDataResponse?.order_id || null,
+      //   checksum: response.data.checksum,
+      //   expiry_date: orderDataResponse?.expire_date
+      //     ? formatStandardTimeStamp(response.data.order.expiry_date)
+      //     : null,
+      // };
+      // let sendData = {
+      //   ...user,
+      //   order_items: cartItems,
+      //   ref_order_id,
+      //   transfer_amount: totalPrice,
+      //   coupon_code: data.coupon_code ? data.coupon_code : null,
+      //   order_code: null,
+      //   orderPayment: orderPaymentData,
+      //   status: OrderStatus.unfulfilled,
+      // };
 
-      console.log(response);
-      const orderDataResponse = response.data.order;
+      // if (method == 'paynow') {
+      //   sendData = {
+      //     ...sendData,
+      //     payment_status: PaymentStatus.unpaid,
+      //     transfer_bank: bank,
+      //     transfer_amount: orderDataResponse.amount,
+      //     transfer_ref_code: orderDataResponse.order_no,
+      //     transfer_account_id: orderDataResponse.order_id,
+      //     pay_credit_type: PayCreditFeeType.Chuyen_khoan,
+      //     payment_date: paymentDateTime,
+      //   };
+      // }
 
-      let orderPaymentData = {
-        ...orderDataResponse,
-        order_gateway_id: orderDataResponse?.order_id || null,
-        checksum: response.data.checksum,
-        expiry_date: orderDataResponse?.expire_date
-          ? formatStandardTimeStamp(response.data.order.expiry_date)
-          : null,
-      };
-      let sendData = {
-        ...user,
-        order_items: cartItems,
-        ref_order_id,
-        transfer_amount: totalPrice,
-        coupon_code: data.coupon_code ? data.coupon_code : null,
-        order_code: null,
-        orderPayment: orderPaymentData,
-        status: OrderStatus.unfulfilled,
-      };
-
-      if (method == 'paynow') {
-        sendData = {
-          ...sendData,
-          payment_status: PaymentStatus.unpaid,
-          transfer_bank: bank,
-          transfer_amount: orderDataResponse.amount,
-          transfer_ref_code: orderDataResponse.order_no,
-          transfer_account_id: orderDataResponse.order_id,
-          pay_credit_type: PayCreditFeeType.Chuyen_khoan,
-          payment_date: paymentDateTime,
-        };
-      }
-
-      await this.orderService.createOrder(user, sendData, false);
+      // await this.orderService.createOrder(user, sendData, false);
 
       // await this.cartRepo.delete({ cart_id: cart.cart_id });
       // await this.cartItemRepo.delete({ cart_id: cart.cart_id });

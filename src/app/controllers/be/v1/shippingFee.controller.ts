@@ -62,6 +62,7 @@ export class ShippingFeesController extends BaseController {
   }
 
   @Put('/locations/:shipping_fee_location_id')
+  @UseGuards(AuthGuard)
   async updateShippingFeeLocation(
     @Body() data: UpdateShippingFeeLocationDto,
     @Param('shipping_fee_location_id') shipping_fee_location_id: number,
