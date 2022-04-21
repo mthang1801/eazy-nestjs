@@ -433,11 +433,13 @@ export class OrdersService {
         totalAmount: +orderPayment['amount'],
       };
 
-      await axios({
+      const response = await axios({
         method: 'PUT',
         url: UPDATE_ORDER_PAYMENT(order.order_code),
         data: paymentAppcoreData,
       });
+
+      console.log(response);
       console.log('pushed to appcore');
     } catch (error) {
       throw new HttpException('Something went wrong', 409);
