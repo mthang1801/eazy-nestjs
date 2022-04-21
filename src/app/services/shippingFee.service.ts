@@ -66,7 +66,10 @@ export class ShippingFeeService {
     data: UpdateShippingFeeLocationDto,
     user,
   ) {
-    const shippingFeeLocationData = this.shippingFeeLocationRepo.setData(data);
+    const shippingFeeLocationData = {
+      ...this.shippingFeeLocationRepo.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
     if (data.city_id) {
       shippingFeeLocationData['city_name'] = await this.cityService.get(
         +data.city_id,
