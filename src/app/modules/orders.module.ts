@@ -1,4 +1,9 @@
-import { forwardRef, Module } from '@nestjs/common';
+import {
+  forwardRef,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { OrdersRepository } from '../repositories/orders.repository';
 import { OrderDocsRepository } from '../repositories/orderDocs.repository';
 import { OrdersService } from '../services/orders.service';
@@ -21,6 +26,7 @@ import { OrderHistoryRepository } from '../repositories/orderHistory.repository'
 import { PromotionModule } from './promotion.module';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { ProductsModule } from './products.module';
+import { getUserFromToken } from '../../middlewares/getUserFromToken';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -62,4 +68,8 @@ import { ProductsModule } from './products.module';
     ProductsModule,
   ],
 })
-export class OrdersModule {}
+export class OrdersModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(getUserFromToken).forRoutes(OrdersControllerFE);
+  }
+}

@@ -8,8 +8,11 @@ export class CreateOrderSelfTransportDto {
   b_phone: string;
 
   @IsOptional()
-  email: string;
+  email: string = '';
 
   @IsNotEmpty()
   store_id: number;
+
+  @IsOptional()
+  user_id: string;
 }

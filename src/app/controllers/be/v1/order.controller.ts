@@ -22,6 +22,7 @@ import { Response } from 'express';
 import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { CreatePaynowDto } from 'src/app/dto/orders/create-paynow.dto';
+import { CreateOrderSelfTransportDto } from '../../../dto/orders/create-orderSelfTransport.dto';
 
 @Controller('/be/v1/orders')
 export class OrderController extends BaseController {
@@ -32,7 +33,7 @@ export class OrderController extends BaseController {
   @Post()
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
     const result = await this.service.CMScreate(body);
-    return this.responseSuccess(res, result, 'Tạo thành công');
+    return this.responseSuccess(res, result);
   }
 
   @Get()

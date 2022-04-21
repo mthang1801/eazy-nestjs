@@ -137,7 +137,7 @@ export class ShippingFeeService {
         shippingFeesResult.push(shippingFeeItem);
       }
 
-      return shippingFeesResult;
+      return { shippingFees: shippingFeesResult };
     }
 
     let shippingFeesList = await this.shippingFeeRepo.find({

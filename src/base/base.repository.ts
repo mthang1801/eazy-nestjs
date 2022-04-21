@@ -327,6 +327,8 @@ export class BaseRepositorty<T> {
       }
     });
 
+    console.log(330, sql);
+
     sql += ' WHERE ';
 
     if (typeof id === 'object') {

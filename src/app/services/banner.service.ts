@@ -44,7 +44,8 @@ export class bannerService {
     private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
   ) {}
   async getList(params) {
-    let { page, limit, search, created_at, updated_at, status } = params;
+    let { page, limit, search, created_at, updated_at, status, device_type } =
+      params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
@@ -62,6 +63,10 @@ export class bannerService {
       filterCondition['updated_at'] = Like(
         moment(updated_at).format('YYYY-MM-DD'),
       );
+    }
+
+    if (device_type) {
+      filterCondition['device_type'] = device_type;
     }
 
     const banners = await this.bannerRepo.find({

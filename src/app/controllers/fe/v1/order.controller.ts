@@ -16,6 +16,7 @@ import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
 import { Body } from '@nestjs/common';
 import { AuthGuard } from 'src/middlewares/fe.auth';
 import { CreateOrderFEDto } from 'src/app/dto/orders/create-order.frontend.dto';
+import { CreateOrderSelfTransportDto } from '../../../dto/orders/create-orderSelfTransport.dto';
 @Controller('/fe/v1/orders')
 export class OrdersController extends BaseController {
   constructor(private service: OrdersService) {
@@ -31,6 +32,16 @@ export class OrdersController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.FEcreate(data, req.user);
     return this.responseSuccess(res, result, 'Tạo thành công');
+  }
+
+  @Post('self-transport')
+  async createSelfTransport(
+    @Res() res,
+    @Body() data: CreateOrderSelfTransportDto,
+    @Req() req,
+  ): Promise<IResponse> {
+    await this.service.createSelfTransport(data, req.user);
+    return this.responseSuccess(res);
   }
 
   @Get()

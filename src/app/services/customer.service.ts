@@ -1044,4 +1044,49 @@ export class CustomerService {
     };
     await this.userDataRepo.createSync(newCustomerDataData);
   }
+
+  async createUserSelfTransport(data) {
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
+    const userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(data),
+      password: passwordHash,
+      salt,
+      is_sync: 'Y',
+    };
+
+    const newUser = await this.userRepo.create(userData);
+
+    let result = { ...newUser };
+
+    const userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    const userProfile = await this.userProfileRepo.create(userProfileData);
+
+    result = { ...result, ...userProfile };
+
+    const userDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    await this.userDataRepo.create(userDataData);
+
+    const userLoyaltData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalHistory.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    await this.userLoyalRepo.create(userLoyaltData);
+
+    await this.createCustomerToAppcore(result);
+
+    return result;
+  }
 }
