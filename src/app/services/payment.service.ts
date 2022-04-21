@@ -474,17 +474,22 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
-    console.log(notifyData);
+
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
 
     let decodedData = Buffer.from(_notifyData, 'base64').toString('utf8');
-    console.log(decodedData);
+
     const orderNoIndexStart =
       decodedData.indexOf('<order_no>') + '<order_no>'.length;
     const orderNoIndexEnd = decodedData.indexOf('</order_no>');
     const orderNo = decodedData.substring(orderNoIndexStart, orderNoIndexEnd);
+
+    let startAmountIndex =
+      decodedData.indexOf('<order_cash_amount>') + '<order_cash_amount>'.length;
+    let endAmountIndex = decodedData.indexOf('</order_cash_amount>');
+    let amount = decodedData.substring(startAmountIndex, endAmountIndex);
 
     try {
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
@@ -497,9 +502,20 @@ export class PaymentService {
         { order_id: order.order_id },
         updateOrderData,
       );
-      // const orderPayment = await this.orderPaymentRepo.findOne({ order_id });
-      // const newOrderPaymentData = { ...new OrderPaymentEntity() };
-      // await this.orderService.updateAppcoreOrderPayment(order.order_id);
+      let orderPayment = await this.orderPaymentRepo.findOne({
+        order_id: order.order_id,
+      });
+      if (!orderPayment) {
+        const newOrderPaymentData = {
+          ...new OrderPaymentEntity(),
+          order_no: orderNo,
+          amount,
+          order_id: order.order_id,
+        };
+        orderPayment = await this.orderPaymentRepo.create(newOrderPaymentData);
+      }
+
+      await this.orderService.updateAppcoreOrderPayment(order.order_id);
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }

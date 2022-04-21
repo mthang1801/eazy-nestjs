@@ -195,6 +195,7 @@ import { ReviewEntity } from '../entities/review.entity';
 import { ReviewCommentItemsEntity } from '../entities/reviewCommentItems.entity';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
+import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 
 @Injectable()
 export class ProductService {
@@ -4446,7 +4447,8 @@ export class ProductService {
     }
 
     const reviewCommentItems = await this.reviewCommentItemsRepo.find({
-      select: '*',
+      select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status`,
+      join: reviewCommentProductJoiner,
       where: reviewCommentItemsSearchFilter(search, filterConditions),
       skip,
       limit,
@@ -4466,8 +4468,8 @@ export class ProductService {
         ) {
           reviewCommentResults = reviewCommentResults.map((item) => {
             if (item.item_id == reviewCommentItem['parent_item_id']) {
-              item['responses'] = item['responses']
-                ? [...item['responses'], reviewCommentItem]
+              item['children'] = item['children']
+                ? [...item['children'], reviewCommentItem]
                 : [reviewCommentItem];
             }
             return item;
@@ -4478,14 +4480,24 @@ export class ProductService {
             item_id: reviewCommentItem['parent_item_id'],
           });
 
-          reviewCommentItem['responses'] = [temp];
+          reviewCommentItem['children'] = [temp];
 
           reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
         }
         continue;
       }
 
-      reviewCommentItem['responses'] = [];
+      if (reviewCommentItem.type === 1) {
+        reviewCommentItem['review'] = {};
+        let review = await this.reviewRepo.findOne({
+          product_id: reviewCommentItem.product_id,
+        });
+        if (review) {
+          reviewCommentItem['review'] = review;
+        }
+      }
+
+      reviewCommentItem['children'] = [];
       reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
     }
 

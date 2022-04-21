@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { ShippingFeeEntity } from '../entities/shippingFee.entity';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
 import { ShippingFeeRepository } from '../repositories/shippingFee.repository';
@@ -47,6 +47,16 @@ export class ShippingFeeService {
     shipping_fee_id: number,
     user,
   ) {
+    const checkExist = await this.shippingFeeLocationRepo.findOne({
+      city_id: data.city_id,
+      shipping_fee_id,
+    });
+    if (checkExist) {
+      throw new HttpException(
+        'Tỉnh/thành đã tồn tại trong hình thức phí vận chuyển này.',
+        422,
+      );
+    }
     let cityName = await this.cityService.get(+data.city_id, true);
     let shippingFeeLocationData = {
       ...new ShippingFeeLocationEntity(),

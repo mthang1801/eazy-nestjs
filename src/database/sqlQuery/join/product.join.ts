@@ -9,3 +9,16 @@ export const productJoinCategory = {
     },
   },
 };
+
+export const reviewCommentProductJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.REVIEW_COMMENT_ITEMS}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.REVIEW_COMMENT_ITEMS}.product_id`,
+    },
+  },
+};

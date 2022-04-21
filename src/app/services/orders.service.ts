@@ -124,6 +124,7 @@ import {
 import { OrderStatus } from '../../constants/order';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
+import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
 
 @Injectable()
 export class OrdersService {
@@ -416,7 +417,37 @@ export class OrdersService {
     }
   }
 
-  async updateAppcoreOrderPayment(order_id, data) {}
+  async updateAppcoreOrderPayment(order_id) {
+    try {
+      let orderPayment = await this.orderPaymentRepo.findOne({
+        order_id,
+      });
+      const order = await this.orderRepo.findOne({ order_id });
+      if (!order) {
+        throw new HttpException('Không tìm thấy đơn hàng', 404);
+      }
+      const paymentAppcoreData = {
+        installmentAccountId: 724888,
+        installmentCode: orderPayment['order_no'],
+        paymentStatus: 'success',
+        totalAmount: orderPayment['amount'],
+      };
+      const config = {
+        method: 'PUT',
+        url: UPDATE_ORDER_PAYMENT(order.order_code),
+        data: paymentAppcoreData,
+      };
+
+      await axios({
+        method: 'PUT',
+        url: UPDATE_ORDER_PAYMENT(order.order_code),
+        data: paymentAppcoreData,
+      });
+      console.log('pushed to appcore');
+    } catch (error) {
+      throw new HttpException('Something went wrong', 409);
+    }
+  }
 
   async pushOrderToAppcore(order_id) {
     const order = await this.orderRepo.findOne({ order_id });
