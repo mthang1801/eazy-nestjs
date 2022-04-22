@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 
 import { OrderEntity } from '../entities/orders.entity';
 import { OrdersRepository } from '../repositories/orders.repository';
@@ -7,6 +7,7 @@ import { formatDateTime } from '../../utils/helper';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { DatabaseService } from '../../database/database.service';
+import { getProductsBestSeller } from '../../database/sqlQuery/others/reports/dashboard';
 import {
   getNumberCustomersMonthlyByYear,
   getProductsAmountInStores,
@@ -171,6 +172,22 @@ export class DashboardService {
     let results = [];
     if (productAmountStore[0]) {
       results = productAmountStore[0];
+    }
+    return results;
+  }
+  async getProductsBestSeller(params) {
+    let { start_at, end_at, sortBy, type } = params;
+
+    if (!start_at || !end_at) {
+      throw new HttpException('Cần truyền vào ngày bắt đầu, kết thúc', 400);
+    }
+    let productsBestSeller = await this.db.executeQueryReadPool(
+      getProductsBestSeller(start_at, end_at, type, sortBy),
+    );
+
+    let results = [];
+    if (productsBestSeller[0]) {
+      results = productsBestSeller[0];
     }
     return results;
   }
