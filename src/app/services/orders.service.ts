@@ -201,8 +201,6 @@ export class OrdersService {
         cart = await this.cartRepo.findOne({ user_id: data.user_id });
       }
 
-      console.log(204, user, cart);
-
       if (!cart) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
@@ -222,11 +220,10 @@ export class OrdersService {
         ...userProfile,
         b_phone: data.b_phone,
         b_lastname: data.b_lastname,
-        s_phone: data.b_phone,
-        s_lastname: userProfile.s_lastname,
-        email: data.email,
+        email: data.email || '',
         order_items: cartItems,
         store_id: data.store_id,
+        pay_credit_type: 1,
       };
       await this.createOrder(user, sendData);
     } catch (error) {

@@ -14,7 +14,12 @@ import { CartRepository } from '../repositories/cart.repository';
 import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
-import { cartPaymentJoiner, userJoiner } from '../../utils/joinTable';
+import {
+  cartPaymentJoiner,
+  userJoiner,
+  productJoiner,
+  productLeftJoiner,
+} from '../../utils/joinTable';
 import { PromotionService } from './promotion.service';
 import {
   generateRandomString,
@@ -56,6 +61,9 @@ import { CreateInstallmentDto } from '../dto/orders/create-installment.dto';
 import { calculateInstallmentInterestRate } from '../../constants/payment';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
+import { Not, Equal } from '../../database/operators/operators';
 
 @Injectable()
 export class PaymentService {
@@ -71,6 +79,7 @@ export class PaymentService {
     private orderRepo: OrdersRepository<OrderEntity>,
     private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
     private dbService: DatabaseService,
+    private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
   async getList(params) {
@@ -191,24 +200,33 @@ export class PaymentService {
 
   async paymentInstallment(data, userAuth) {
     try {
-      let cart;
+      let product = await this.productRepo.findOne({
+        select: '*',
+        join: productLeftJoiner,
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: data.product_id,
+          product_function: Not(Equal('1')),
+        },
+      });
+
+      if (!product) {
+        throw new HttpException('Không tìm thấy sản phẩm', 404);
+      }
+
       let user;
-      console.log(data, userAuth);
+
       if (userAuth) {
-        cart = await this.cartRepo.findOne({ user_id: userAuth['user_id'] });
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
           where: { [`${Table.USERS}.phone`]: userAuth['user_id'] },
         });
       } else {
-        cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
           where: { [`${Table.USERS}.phone`]: data['user_id'] },
         });
-        console.log(210, user);
         if (!user) {
           user = await this.userRepo.findOne({
             select: `*, ${Table.USERS}.user_appcore_id`,
@@ -226,45 +244,9 @@ export class PaymentService {
           }
         }
       }
+      const totalPrice = product['price'];
 
-      if (!cart) {
-        throw new HttpException('Không tìm thấy giỏ hàng', 404);
-      }
-      let cartItems = await this.cartItemRepo.find({
-        select: `*, ${Table.CART_ITEMS}.amount`,
-        join: cartPaymentJoiner,
-        where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-      });
-
-      if (!cartItems.length) {
-        throw new HttpException('Giỏ hàng trống', 400);
-      }
-
-      let totalPrice = cartItems.reduce(
-        (acc, ele) => acc + ele.price * ele.amount,
-        0,
-      );
-
-      if (data.coupon_code) {
-        let checkCouponData = {
-          store_id: 67107,
-          coupon_code: data['coupon_code'],
-          coupon_programing_id: 'HELLO_123',
-          phone: data['s_phone'],
-          products: cartItems.map(({ product_id, amount }) => ({
-            product_id,
-            amount,
-          })),
-        };
-
-        let checkResult = await this.promotionService.checkCoupon(
-          checkCouponData,
-        );
-
-        if (checkResult['isValid']) {
-          // totalPrice -= checkResult['discountMoney'];
-        }
-      }
+      let cartItems = [product];
 
       const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
         calculateInstallmentInterestRate(
@@ -284,6 +266,7 @@ export class PaymentService {
         order_items: cartItems,
         ref_order_id: generateRandomString(),
         transfer_amount: totalPrice,
+        pay_credit_type: 3,
         coupon_code: data.coupon_code ? data.coupon_code : null,
       };
 

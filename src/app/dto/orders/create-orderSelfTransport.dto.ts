@@ -14,5 +14,8 @@ export class CreateOrderSelfTransportDto {
   store_id: number;
 
   @IsOptional()
+  order_code: string;
+
+  @IsOptional()
   user_id: string;
 }

@@ -12,6 +12,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
+import { ProductsModule } from './products.module';
 @Module({
   controllers: [PaymentController, PaymentControllerFE],
   providers: [
@@ -28,7 +29,13 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
     UserRepository,
     OrderPaymentRepository,
   ],
-  imports: [CustomerModule, OrdersModule, CartModule, PromotionModule],
+  imports: [
+    CustomerModule,
+    OrdersModule,
+    CartModule,
+    PromotionModule,
+    ProductsModule,
+  ],
 })
 export class PaymentModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
