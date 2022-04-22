@@ -1,4 +1,4 @@
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { BaseController } from '../../../../base/base.controllers';
 import { DashboardService } from '../../../services/dashboard.service';
@@ -8,9 +8,18 @@ export class DashboardController extends BaseController {
   constructor(private service: DashboardService) {
     super();
   }
-  @Get()
+  @Get('overview')
   async getReportOverview(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getReportOverview();
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('orders')
+  async getNumberOrdersMonthly(
+    @Res() res: Response,
+    @Query('year') year,
+  ): Promise<IResponse> {
+    const result = await this.service.getNumberOrdersMonthly(year);
     return this.responseSuccess(res, result);
   }
 }

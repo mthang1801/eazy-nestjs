@@ -6,7 +6,11 @@ import { OrdersRepository } from '../repositories/orders.repository';
 import { formatDateTime } from '../../utils/helper';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
-import { getNumberOfOrdersInDaySQL } from '../../database/sqlQuery/others/reports/dashboard';
+import { DatabaseService } from '../../database/database.service';
+import {
+  getNumberOfOrdersInDaySQL,
+  getNumberOrderMonthlyByYear,
+} from '../../database/sqlQuery/others/reports/dashboard';
 import {
   getOrderRevenueInDaySQL,
   getCustomerInDaySQL,
@@ -17,6 +21,7 @@ export class DashboardService {
   constructor(
     private orderRepo: OrdersRepository<OrderEntity>,
     private userRepo: UserRepository<UserEntity>,
+    private db: DatabaseService,
   ) {}
   async getReportOverview() {
     let orderRevenueInDay = await this.getRevenueInDay();
@@ -92,5 +97,15 @@ export class DashboardService {
       }
     }
     return numberOfOrderInDay;
+  }
+
+  async getNumberOrdersMonthly(year) {
+    let ordersMonthlyByYear = await this.db.executeQueryReadPool(
+      getNumberOrderMonthlyByYear(year),
+    );
+    if (ordersMonthlyByYear[0]) {
+      return ordersMonthlyByYear[0];
+    }
+    return [];
   }
 }

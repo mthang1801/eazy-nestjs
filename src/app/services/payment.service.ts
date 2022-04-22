@@ -246,7 +246,8 @@ export class PaymentService {
       }
       const totalPrice = product['price'];
 
-      let cartItems = [product];
+      let cartItems = [{ ...product, amount: 1 }];
+      console.log(cartItems);
 
       const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
         calculateInstallmentInterestRate(
