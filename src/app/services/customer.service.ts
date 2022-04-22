@@ -174,12 +174,17 @@ export class CustomerService {
   async createCustomerToAppcore(user) {
     try {
       const customerAppcoreData = itgCustomerToAppcore(user);
-      console.log(user, customerAppcoreData);
-      // // const response = await axios({
-      // //   url: CREATE_CUSTOMER_API,
-      // //   method: 'POST',
-      // //   data: customerAppcoreData,
-      // // });
+      // console.log(user);
+      // const response = await axios({
+      //   url: CREATE_CUSTOMER_API,
+      //   method: 'POST',
+      //   data: customerAppcoreData,
+      // });
+
+      // if (!response?.data) {
+      //   console.log(response);
+      //   return;
+      // }
 
       // const data = response.data;
 
@@ -195,6 +200,7 @@ export class CustomerService {
 
       // return updatedUser;
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -1115,7 +1121,27 @@ export class CustomerService {
             };
             await this.userProfileRepo.create(newCustomerProfileData);
           }
-          // await this.createCustomerToAppcore(customer);
+          let customerLoyalty = await this.userLoyalRepo.findOne({
+            user_id: customer.user_id,
+          });
+          if (!customerLoyalty) {
+            const newCustomerLoyaltyData = {
+              ...new UserLoyaltyEntity(),
+              user_id: customer.user_id,
+            };
+            await this.userLoyalRepo.create(newCustomerLoyaltyData);
+          }
+          let userData = await this.userDataRepo.findOne({
+            user_id: customer.user_id,
+          });
+          if (!userData) {
+            const userDataData = {
+              ...new UserDataEntity(),
+              user_id: customer.user_id,
+            };
+            await this.userDataRepo.create(userDataData);
+          }
+          await this.createCustomerToAppcore(customer);
         }
       }
       await this.userRepo.update(
