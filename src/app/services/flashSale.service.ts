@@ -102,6 +102,10 @@ export class FlashSalesService {
       end_at: MoreThanOrEqual(formatStandardTimeStamp()),
     });
 
+    if (!flashSale) {
+      return;
+    }
+
     let flashSaleDetails = await this.flashSaleDetailRepo.find({
       select: '*',
       where: { flash_sale_id: flashSale.flash_sale_id, detail_status: 'A' },
