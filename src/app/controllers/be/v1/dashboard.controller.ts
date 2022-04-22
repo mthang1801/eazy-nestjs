@@ -22,4 +22,13 @@ export class DashboardController extends BaseController {
     const result = await this.service.getOrdersCustomers(year);
     return this.responseSuccess(res, result);
   }
+
+  @Get('/stores')
+  async getProductAmountInStores(
+    @Res() res: Response,
+    @Query('sortBy') sortBy: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductsAmountInStores(sortBy);
+    return this.responseSuccess(res, result);
+  }
 }

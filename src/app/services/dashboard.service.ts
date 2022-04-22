@@ -7,7 +7,10 @@ import { formatDateTime } from '../../utils/helper';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { DatabaseService } from '../../database/database.service';
-import { getNumberCustomersMonthlyByYear } from '../../database/sqlQuery/others/reports/dashboard';
+import {
+  getNumberCustomersMonthlyByYear,
+  getProductsAmountInStores,
+} from '../../database/sqlQuery/others/reports/dashboard';
 import {
   getNumberOfOrdersInDaySQL,
   getNumberOrderMonthlyByYear,
@@ -158,6 +161,17 @@ export class DashboardService {
       }
     }
 
+    return results;
+  }
+
+  async getProductsAmountInStores(sortBy) {
+    let productAmountStore = await this.db.executeQueryReadPool(
+      getProductsAmountInStores(sortBy),
+    );
+    let results = [];
+    if (productAmountStore[0]) {
+      results = productAmountStore[0];
+    }
     return results;
   }
 }
