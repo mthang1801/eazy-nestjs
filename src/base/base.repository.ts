@@ -316,7 +316,6 @@ export class BaseRepositorty<T> {
         fmtParams[key] = preprocessAddTextDataToMysql(val);
       }
     }
-    console.log(313, fmtParams);
 
     let sql = `UPDATE ${this.table} SET `;
     Object.entries(fmtParams).forEach(([key, val], i) => {
@@ -326,8 +325,6 @@ export class BaseRepositorty<T> {
         sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
       }
     });
-
-    console.log(330, sql);
 
     sql += ' WHERE ';
 

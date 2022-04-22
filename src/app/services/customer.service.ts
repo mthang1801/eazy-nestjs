@@ -67,7 +67,7 @@ import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { CreateCustomerLoyalHistoryDto } from '../dto/customer/crate-customerLoyalHistory';
 import * as moment from 'moment';
-import { Between } from '../../database/operators/operators';
+import { Between, IsNull } from '../../database/operators/operators';
 import { creatorJoiner } from '../../utils/joinTable';
 import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
 import { CreateCustomerPaymentDto } from '../dto/customer/create-customerPayment.dto';
@@ -171,27 +171,29 @@ export class CustomerService {
     return this.createCustomerToAppcore(result);
   }
 
-  async createCustomerToAppcore(user): Promise<void> {
+  async createCustomerToAppcore(user) {
     try {
       const customerAppcoreData = itgCustomerToAppcore(user);
+      console.log(user, customerAppcoreData);
+      // // const response = await axios({
+      // //   url: CREATE_CUSTOMER_API,
+      // //   method: 'POST',
+      // //   data: customerAppcoreData,
+      // // });
 
-      const response = await axios({
-        url: CREATE_CUSTOMER_API,
-        method: 'POST',
-        data: customerAppcoreData,
-      });
+      // const data = response.data;
 
-      const data = response.data;
+      // const user_appcore_id = data.data;
+      // const updatedUser = await this.userRepo.update(
+      //   { user_id: user.user_id },
+      //   {
+      //     user_appcore_id,
+      //     updated_at: formatStandardTimeStamp(),
+      //     is_sync: 'N',
+      //   },
+      // );
 
-      const user_appcore_id = data.data;
-      await this.userRepo.update(
-        { user_id: user.user_id },
-        {
-          user_appcore_id,
-          updated_at: formatStandardTimeStamp(),
-          is_sync: 'Y',
-        },
-      );
+      // return updatedUser;
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error.response,
@@ -1086,8 +1088,45 @@ export class CustomerService {
 
     await this.userLoyalRepo.create(userLoyaltData);
 
-    await this.createCustomerToAppcore(result);
+    const userCore = await this.createCustomerToAppcore(result);
 
-    return result;
+    return userCore;
+  }
+
+  async requestSyncCustomerFromCMS() {
+    try {
+      const customersUnsync = await this.userRepo.find({
+        select: `*, ${Table.USERS}.user_id`,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_appcore_id`]: IsNull() },
+      });
+      if (customersUnsync.length) {
+        for (let customer of customersUnsync) {
+          let customerProfile = await this.userProfileRepo.findOne({
+            user_id: customer.user_id,
+          });
+          if (!customerProfile) {
+            const newCustomerProfileData = {
+              ...new UserProfileEntity(),
+              b_firstname: customer.fistname,
+              b_lastname: customer.lastname,
+              b_phone: customer.phone,
+              user_id: customer.user_id,
+            };
+            await this.userProfileRepo.create(newCustomerProfileData);
+          }
+          // await this.createCustomerToAppcore(customer);
+        }
+      }
+      await this.userRepo.update(
+        { user_appcore_id: Not(IsNull()) },
+        { is_sync: 'N' },
+      );
+    } catch (error) {
+      throw new HttpException(
+        error?.response?.data?.message || error?.response,
+        error?.response?.status || error.status,
+      );
+    }
   }
 }

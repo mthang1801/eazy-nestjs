@@ -112,8 +112,14 @@ export class CustomerController extends BaseController {
     @Param('user_id') user_id: number,
     @Res() res: Response,
     @Query() params,
-  ) {
+  ): Promise<IResponse> {
     const result = await this.orderService.getByCustomerId(user_id, params);
     return this.responseSuccess(res, result);
+  }
+
+  @Post('/sync')
+  async sync(@Res() res: Response): Promise<IResponse> {
+    await this.service.requestSyncCustomerFromCMS();
+    return this.responseSuccess(res);
   }
 }

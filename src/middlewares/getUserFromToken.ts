@@ -10,6 +10,7 @@ export const getUserFromToken = (
 
   if (!authoriazationToken) {
     req['user'] = null;
+    next();
   } else {
     const token = authoriazationToken.split(' ').slice(-1)[0].trim();
 
@@ -25,6 +26,6 @@ export const getUserFromToken = (
       req['user'] = null;
     }
     req['user'] = user;
+    next();
   }
-  next();
 };

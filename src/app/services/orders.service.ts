@@ -175,62 +175,64 @@ export class OrdersService {
   }
 
   async createSelfTransport(data: CreateOrderSelfTransportDto, authUser) {
-    let user;
-    let cart;
+    try {
+      let user;
+      let cart;
 
-    if (authUser) {
-      user = authUser = await this.userRepo.findOne({
-        user_id: authUser.user_id,
-      });
-      cart = await this.cartRepo.findOne({ user_id: user.user_id });
-    } else {
-      user = await this.userRepo.findOne({ phone: data.b_phone });
-      if (!user) {
-        let userData = {
-          phone: data.b_phone,
-          email: data.email,
-          lastname: data.b_lastname,
-          b_lastname: data.b_lastname,
-          b_phone: data.b_phone,
-        };
+      if (authUser) {
+        user = await this.userRepo.findOne({
+          user_id: authUser.user_id,
+        });
+        cart = await this.cartRepo.findOne({ user_id: user.user_id });
+      } else {
+        user = await this.userRepo.findOne({ phone: data.b_phone });
+        if (!user) {
+          let userData = {
+            phone: data.b_phone,
+            email: data.email,
+            lastname: data.b_lastname,
+            b_lastname: data.b_lastname,
+            b_phone: data.b_phone,
+          };
 
-        user = await this.customerService.createUserSelfTransport(userData);
+          user = await this.customerService.createUserSelfTransport(userData);
+        }
+
+        cart = await this.cartRepo.findOne({ user_id: data.user_id });
       }
 
-      cart = await this.cartRepo.findOne({ user_id: data.user_id });
-    }
+      console.log(204, user, cart);
 
-    if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng', 404);
-    }
-    const cartItems = await this.cartItemRepo.find({
-      select: 'product_id, amount',
-      where: { cart_id: cart.cart_id },
-    });
+      if (!cart) {
+        throw new HttpException('Không tìm thấy giỏ hàng', 404);
+      }
+      const cartItems = await this.cartItemRepo.find({
+        select: 'product_id, amount',
+        where: { cart_id: cart.cart_id },
+      });
 
-    if (!cartItems.length) {
-      throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
-    }
-    let userProfile = await this.userProfileRepo.findOne({
-      user_id: user.user_id,
-    });
+      if (!cartItems.length) {
+        throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
+      }
+      let userProfile = await this.userProfileRepo.findOne({
+        user_id: user.user_id,
+      });
 
-    const sendData = {
-      ...userProfile,
-      b_phone: data.b_phone,
-      b_lastname: data.b_lastname,
-      s_phone: data.b_phone,
-      s_lastname: userProfile.s_lastname,
-      s_address: 'Nhận tại cửa hàng',
-      s_city: '255',
-      s_district: '330',
-      s_ward: '10390',
-      email: data.email,
-      order_items: cartItems,
-      order_type: 3,
-      store_id: data.store_id,
-    };
-    await this.createOrder(user, sendData);
+      const sendData = {
+        ...userProfile,
+        b_phone: data.b_phone,
+        b_lastname: data.b_lastname,
+        s_phone: data.b_phone,
+        s_lastname: userProfile.s_lastname,
+        email: data.email,
+        order_items: cartItems,
+        store_id: data.store_id,
+      };
+      await this.createOrder(user, sendData);
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(error.message, error.status);
+    }
   }
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
@@ -300,7 +302,7 @@ export class OrdersService {
       is_sync: 'Y',
       status: OrderStatus.new,
     };
-
+    console.log(user);
     if (!user['user_appcore_id']) {
       throw new HttpException('User_appcore_id không được nhận diện.', 400);
     }

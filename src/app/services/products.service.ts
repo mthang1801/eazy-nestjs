@@ -197,6 +197,7 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
 import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
+import { productGroupJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -436,23 +437,6 @@ export class ProductService {
     }
     return this.getProductDetails(product);
   }
-
-  // async getBySlug(slug: string): Promise<any> {
-  //   let product = await this.productRepo.findOne({
-  //     select: getProductByIdentifierSelector,
-  //     join: {
-  //       [JoinTable.leftJoin]: productFullJoiner,
-  //     },
-  //     where: getProductBySlugCondition(slug),
-  //   });
-
-  //   if (!product) {
-  //     throw new HttpException('Không tìm thấy sản phẩm.', 404);
-  //   }
-
-  //   // Get product Image
-  //   return this.getProductDetails(product);
-  // }
 
   async getListFE(params) {
     let {
@@ -3660,17 +3644,18 @@ export class ProductService {
     }
 
     if (result['product_function'] == 1) {
+      result['children_products'] = await this.getChildrenProducts(
+        result['product_appcore_id'],
+        1,
+      );
+
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: result.product_id,
       });
 
-      if (group) {
-        let childrenProducts = await this.getChildrenProducts(
-          result['product_appcore_id'],
-          1,
-        );
-        result['children_products'] = childrenProducts;
+      result['relevantProducts'] = [];
 
+      if (group) {
         // Find relevant products
         if (group.index_id) {
           let relevantGroups = await this.productVariationGroupRepo.find({
@@ -3680,23 +3665,16 @@ export class ProductService {
             },
           });
 
-          relevantGroups = [
-            group,
-            ...relevantGroups.filter(
-              ({ group_id }) => group_id !== group.group_id,
-            ),
-          ];
-
           if (relevantGroups.length) {
-            result['relevantProducts'] = [];
             for (let relevantGroupItem of relevantGroups) {
               if (relevantGroupItem.product_root_id) {
                 let productRoot = await this.productRepo.findOne({
                   select: [
                     ...getDetailProductsListSelectorFE,
-                    `${Table.PRODUCT_VARIATION_GROUPS}.*`,
+                    `${Table.PRODUCT_VARIATION_GROUPS}.index_id`,
+                    `${Table.PRODUCT_VARIATION_GROUPS}.group_name`,
                   ],
-                  join: { [JoinTable.innerJoin]: productFullJoiner },
+                  join: productGroupJoiner,
                   where: {
                     [`${Table.PRODUCTS}.product_id`]:
                       relevantGroupItem.product_root_id,
@@ -3704,11 +3682,13 @@ export class ProductService {
                 });
 
                 if (productRoot) {
-                  result['relevantProducts'] = result['relevantProducts']
-                    ? [...result['relevantProducts'], productRoot]
-                    : [productRoot];
+                  result['relevantProducts'] = [
+                    ...result['relevantProducts'],
+                    productRoot,
+                  ];
                 }
               }
+
               // result['relevantProducts'] = [
               //   result['relevantProducts'].find(
               //     (product) => product['product_id'] === result['product_id'],
@@ -3752,6 +3732,11 @@ export class ProductService {
       result['warranty_package_products'] =
         await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
     }
+
+    //Get ratings
+    result['ratings'] = await this.reviewRepo.findOne({
+      product_id: result.product_id,
+    });
 
     // Get Current category info
     result['currentCategory'] = await this.categoryRepo.findOne({

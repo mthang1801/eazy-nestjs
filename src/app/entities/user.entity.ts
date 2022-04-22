@@ -4,7 +4,7 @@ export class UserEntity {
   status: string = 'A';
   user_type: string = 'C';
   user_login: string = 'SYSTEM';
-  user_appcore_id: number = 0;
+  user_appcore_id: number = null;
   is_root: string = '';
   company_id: number = 0;
   store_id: number = 0;
