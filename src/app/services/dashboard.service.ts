@@ -7,6 +7,7 @@ import { formatDateTime } from '../../utils/helper';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { DatabaseService } from '../../database/database.service';
+import { getNumberCustomersMonthlyByYear } from '../../database/sqlQuery/others/reports/dashboard';
 import {
   getNumberOfOrdersInDaySQL,
   getNumberOrderMonthlyByYear,
@@ -27,10 +28,11 @@ export class DashboardService {
     let orderRevenueInDay = await this.getRevenueInDay();
     let numberOfCustomersInDay = await this.getCustomersInDay();
     let numberOrdersInDay = await this.getNumberOfOrdersInDay();
+
     return {
       revenueInDay: orderRevenueInDay,
       numberOfCustomersInDay,
-      numberOrdersInDay,
+      numberOrdersInDay: numberOrdersInDay,
     };
   }
 
@@ -52,6 +54,14 @@ export class DashboardService {
         orderRevenueInDay['date'] = formatDateTime(orderRevenueInDay['date']);
       }
     }
+
+    if (!orderRevenueInDay) {
+      orderRevenueInDay = {
+        date: formatDateTime(),
+        totalRevenue: 0,
+      };
+    }
+
     return orderRevenueInDay;
   }
 
@@ -76,6 +86,13 @@ export class DashboardService {
       }
     }
 
+    if (!numberOfCustomerInDay) {
+      numberOfCustomerInDay = {
+        date: formatDateTime(),
+        totalUsers: 0,
+      };
+    }
+
     return numberOfCustomerInDay;
   }
 
@@ -96,16 +113,51 @@ export class DashboardService {
         numberOfOrderInDay['date'] = formatDateTime(numberOfOrderInDay['date']);
       }
     }
+
+    if (!numberOfOrderInDay) {
+      numberOfOrderInDay = {
+        date: formatDateTime(),
+        numberOfOrders: 0,
+      };
+    }
+
     return numberOfOrderInDay;
+  }
+
+  async getOrdersCustomers(year) {
+    const orders = await this.getNumberOrdersMonthly(year);
+    const customers = await this.getNumberCustomersMonthly(year);
+
+    return { orders, customers };
   }
 
   async getNumberOrdersMonthly(year) {
     let ordersMonthlyByYear = await this.db.executeQueryReadPool(
       getNumberOrderMonthlyByYear(year),
     );
-    if (ordersMonthlyByYear[0]) {
-      return ordersMonthlyByYear[0];
+    let results = Array.from({ length: 12 }).map((_) => 0);
+    if (ordersMonthlyByYear[0] && ordersMonthlyByYear[0].length) {
+      for (let numOrderMonthly of ordersMonthlyByYear[0]) {
+        results[numOrderMonthly['month'] - 1] = numOrderMonthly['total'];
+      }
     }
-    return [];
+
+    return results;
+  }
+
+  async getNumberCustomersMonthly(year) {
+    let customersMonthlyByYear = await this.db.executeQueryReadPool(
+      getNumberCustomersMonthlyByYear(year),
+    );
+
+    let results = Array.from({ length: 12 }).map((_) => 0);
+    if (customersMonthlyByYear[0] && customersMonthlyByYear[0].length) {
+      for (let numCustomersMonthly of customersMonthlyByYear[0]) {
+        results[numCustomersMonthly['month'] - 1] =
+          numCustomersMonthly['total'];
+      }
+    }
+
+    return results;
   }
 }

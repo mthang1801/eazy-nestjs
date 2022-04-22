@@ -1,3 +1,4 @@
+import { formatStandardTimeStamp } from '../../utils/helper';
 export class OrderDetailsEntity {
   item_id: number = 0;
   order_id: number = 0;
@@ -13,4 +14,6 @@ export class OrderDetailsEntity {
   note: string = '';
   status: string = 'A';
   discount_type: number = 1;
+  created_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
 }

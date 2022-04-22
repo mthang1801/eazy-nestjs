@@ -14,12 +14,12 @@ export class DashboardController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('orders')
+  @Get('orders-customers')
   async getNumberOrdersMonthly(
     @Res() res: Response,
     @Query('year') year,
   ): Promise<IResponse> {
-    const result = await this.service.getNumberOrdersMonthly(year);
+    const result = await this.service.getOrdersCustomers(year);
     return this.responseSuccess(res, result);
   }
 }
