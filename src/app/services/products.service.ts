@@ -197,7 +197,10 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
 import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
-import { productGroupJoiner } from '../../utils/joinTable';
+import {
+  productGroupJoiner,
+  productVariationGroupJoiner,
+} from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -2940,6 +2943,7 @@ export class ProductService {
           throw new HttpException('Không tìm thấy SP combo', 404);
         }
       }
+
       let productsComboList = await this.productVariationGroupProductsRepo.find(
         {
           where: { group_id: group.group_id },
@@ -2991,24 +2995,18 @@ export class ProductService {
             },
           });
 
-          relevantGroups = [
-            group,
-            ...relevantGroups.filter(
-              ({ group_id }) => group_id !== group.group_id,
-            ),
-          ];
-
           if (relevantGroups.length) {
             for (let relevantGroupItem of relevantGroups) {
               if (relevantGroupItem.product_root_id) {
-                let productRoot = await this.productRepo.findOne({
+                console.log(relevantGroupItem);
+                let productRoot = await this.productVariationGroupRepo.findOne({
                   select: [
                     ...getDetailProductsListSelectorFE,
                     `${Table.PRODUCT_VARIATION_GROUPS}.*`,
                   ],
-                  join: { [JoinTable.innerJoin]: productFullJoiner },
+                  join: productVariationGroupJoiner,
                   where: {
-                    [`${Table.PRODUCTS}.product_id`]:
+                    [`${Table.PRODUCT_VARIATION_GROUPS}.product_root_id`]:
                       relevantGroupItem.product_root_id,
                   },
                 });
@@ -3017,14 +3015,6 @@ export class ProductService {
                   ? [...result['relevantProducts'], productRoot]
                   : [productRoot];
               }
-              result['relevantProducts'] = [
-                result['relevantProducts'].find(
-                  (product) => product['product_id'] === result['product_id'],
-                ),
-                ...result['relevantProducts'].filter(
-                  (product) => product['product_id'] !== result['product_id'],
-                ),
-              ];
             }
           }
         }

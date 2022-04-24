@@ -39,6 +39,44 @@ export const productFullJoiner = {
   },
 };
 
+export const productVariationGroupJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_VARIATION_GROUPS}.product_root_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
+    },
+    [Table.PRODUCT_SALES]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_SALES}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+    },
+    [Table.CATEGORY_DESCRIPTIONS]: {
+      fieldJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  },
+};
+
 export const productFeaturesJoiner = {
   [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
     fieldJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
