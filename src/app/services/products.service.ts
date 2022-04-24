@@ -1319,7 +1319,6 @@ export class ProductService {
     let filterCondition = {
       [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
     };
-    console.log(1272, filterCondition);
 
     categoriesListByLevel = _.orderBy(
       categoriesListByLevel,
@@ -1338,8 +1337,18 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
+    let filterOrder = [
+      {
+        field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+        sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
+      },
+    ];
+
     const productsList = await this.productCategoryRepo.find({
-      select: getDetailProductsListSelectorFE,
+      select: [
+        ...getDetailProductsListSelectorFE,
+        `${Table.PRODUCTS_CATEGORIES}.position as position`,
+      ],
       join: productsListByCategoryJoiner(),
       where: categoriesList.length
         ? productsListCategorySearchFilter(
@@ -1348,6 +1357,7 @@ export class ProductService {
             filterCondition,
           )
         : productsListsSearchFilter(search, filterCondition),
+      orderBy: filterOrder,
       skip,
       limit,
     });
