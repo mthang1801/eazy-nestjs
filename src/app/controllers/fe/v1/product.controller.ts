@@ -54,22 +54,20 @@ export class ProductsController extends BaseController {
   @Post('/:product_id/reviews')
   async createReviews(
     @Param('product_id') product_id: number,
-    @Req() req,
     @Res() res: Response,
     @Body() data: CreateReviewDto,
   ): Promise<IResponse> {
-    await this.service.createReviewComment(data, product_id, req.user, 1);
+    await this.service.createReviewComment(data, product_id, 1);
     return this.responseSuccess(res);
   }
 
   @Post('/:product_id/comments')
   async createComments(
     @Param('product_id') product_id: number,
-    @Req() req,
     @Res() res: Response,
     @Body() data: CreateCommentDto,
   ): Promise<IResponse> {
-    await this.service.createReviewComment(data, product_id, req.user, 2);
+    await this.service.createReviewComment(data, product_id, 2);
     return this.responseSuccess(res);
   }
 

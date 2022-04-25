@@ -48,6 +48,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const responseBody = {
       statusCode: httpStatus,
+      data: null,
       message,
       timestamp: new Date().toLocaleString(),
     };

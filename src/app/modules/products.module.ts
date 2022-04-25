@@ -108,8 +108,4 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
     ProductsReportController,
   ],
 })
-export class ProductsModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(getUserFromToken).forRoutes(ProductsControllerFE);
-  }
-}
+export class ProductsModule {}

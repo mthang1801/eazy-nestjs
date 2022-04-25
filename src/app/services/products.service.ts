@@ -4167,15 +4167,10 @@ export class ProductService {
     }
   }
 
-  async createReviewComment(data, product_id: number, user, type) {
-    if (!user && (!data.phone || !data.fullname.trim())) {
-      throw new HttpException('Cần nhập số điện thoại và tên', 400);
-    }
-    let email = user?.email || data?.email || null;
-    let phone = user?.phone || data?.phone;
-    let fullname = user
-      ? `${user?.firstname || ''} ${user?.lastname || ''}`.trim()
-      : data.fullname;
+  async createReviewComment(data, product_id: number, type) {
+    let email = data?.email || null;
+    let phone = data?.phone;
+    let fullname = data.fullname;
 
     if (data.point && data.parent_item_id) {
       throw new HttpException('Không thể đánh giá SP bằng phản hồi', 400);
@@ -4198,10 +4193,9 @@ export class ProductService {
       ...new ReviewCommentItemsEntity(),
       ...this.reviewCommentItemsRepo.setData(data),
       product_id,
-      email: email || null,
+      email,
       phone,
       fullname,
-      user_id: user ? user.user_id : null,
       type,
     };
 
