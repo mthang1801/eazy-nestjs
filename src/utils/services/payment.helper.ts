@@ -61,7 +61,7 @@ export const calculateInstallmentInterestRateHomeCredit = (
   let prepaidAmount = (amount * prepaidPercentage) / 100;
 
   let restAmount = amount - prepaidAmount;
-
+  console.log(restAmount);
   let interestRate = 3.75;
   let paymentPerMonthBeforeOtherFees = PMT(
     interestRate / 100,
@@ -69,9 +69,9 @@ export const calculateInstallmentInterestRateHomeCredit = (
     -restAmount,
   );
 
-  console.log(paymentPerMonthBeforeOtherFees);
   let warrantyDuration = tenor * 30 + 14;
-  let warrantyAmount = amount * 2.5;
+  let warrantyAmount = restAmount * 2.5;
+
   let warrantyFeePerYear = (warrantyAmount * 2.4) / 100;
   let warrantyInTerm = (warrantyFeePerYear / 365) * warrantyDuration;
   let warrantyFeePerMonth = warrantyInTerm / tenor;
@@ -86,6 +86,7 @@ export const calculateInstallmentInterestRateHomeCredit = (
     paymentPerMonth: paymentPerMonthAfterOtherFees,
     restAmount,
     warrantyFeePerMonth,
-    totalPriceAfterInstallment: paymentPerMonthAfterOtherFees * tenor,
+    totalPriceAfterInstallment:
+      paymentPerMonthAfterOtherFees * tenor - restAmount + amount,
   };
 };

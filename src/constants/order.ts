@@ -93,6 +93,18 @@ export const convertDataToIntegrate = (data) => {
     itgData['orderType'] = data['order_type']; //Loại đơn
   }
 
+  if (data['installed_money_account_id']) {
+    itgData['installmentAccountId'] = data['installed_money_account_id'];
+  }
+
+  if (data['installed_money_code']) {
+    itgData['installmentCode'] = data['installed_money_code'];
+  }
+
+  if (data['payment_status'] == 2) {
+    itgData['paymentStatus'] = data['payment_status'];
+  }
+
   if (data['status']) {
     itgData['status'] = data['status'];
   }
@@ -270,7 +282,7 @@ export const convertDataToIntegrate = (data) => {
       ? [...itgData['orderItems'], cvOrderItem]
       : [cvOrderItem];
   }
-
+  console.log(281, itgData);
   return JSON.stringify(itgData);
 };
 

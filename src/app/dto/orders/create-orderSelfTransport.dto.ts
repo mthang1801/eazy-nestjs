@@ -18,4 +18,7 @@ export class CreateOrderSelfTransportDto {
 
   @IsOptional()
   user_id: string;
+
+  @IsOptional()
+  coupon_code: string;
 }

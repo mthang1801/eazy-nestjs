@@ -22,7 +22,7 @@ export class UserEntity {
   tax_exempt: string = '';
   lang_code: string = 'vi';
   type: number = 1;
-  birthday: string = formatStandardTimeStamp();
+  birthday: string = null;
   purchase_timestamp_from: null | string;
   purchase_timestamp_to: null | string;
   responsible_email: string = '';

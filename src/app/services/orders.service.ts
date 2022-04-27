@@ -300,7 +300,7 @@ export class OrdersService {
       is_sync: 'Y',
       status: OrderStatus.new,
     };
-    console.log(user);
+
     if (!user['user_appcore_id']) {
       throw new HttpException('User_appcore_id không được nhận diện.', 400);
     }
@@ -313,7 +313,10 @@ export class OrdersService {
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
         join: productLeftJoiner,
-        where: { [`${Table.PRODUCTS}.product_id`]: orderItem.product_id },
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
+          [`${Table.PRODUCTS}.product_type`]: Not(Equal('4')),
+        },
       });
 
       if (productInfo.product_function == 1) {
@@ -490,9 +493,9 @@ export class OrdersService {
       if (!order) {
         throw new HttpException('Không tìm thấy đơn hàng', 404);
       }
-
+      let installed_money_account_id = 20630206;
       const paymentAppcoreData = {
-        installmentAccountId: 20630206,
+        installmentAccountId: installed_money_account_id,
         installmentCode: orderPayment['order_no'],
         paymentStatus: 'success',
         totalAmount: +orderPayment['amount'],
@@ -507,6 +510,8 @@ export class OrdersService {
       await this.orderRepo.update(
         { order_id },
         {
+          installed_money_account_id,
+          installed_money_code: orderPayment['order_no'],
           status: OrderStatus.purchased,
           updated_at: formatStandardTimeStamp(),
         },

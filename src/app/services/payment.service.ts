@@ -249,12 +249,7 @@ export class PaymentService {
         data.tenor,
       );
 
-      console.log(
-        paymentPerMonth,
-        totalInterest,
-        interestPerMonth,
-        prepaidAmount,
-      );
+      let refOrderId = generateRandomString();
       let sendData = {
         ...user,
         s_phone: data.s_phone,
@@ -264,14 +259,23 @@ export class PaymentService {
         s_ward: data.s_ward,
         s_address: data.s_address,
         order_items: cartItems,
-        ref_order_id: generateRandomString(),
         transfer_amount: totalPrice,
         pay_credit_type: 3,
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
         installment_interest_rate_code: totalInterest,
         installed_money_amount: paymentPerMonth,
+        installed_money_account_id: 20630206,
+        ref_order_id: refOrderId,
+        installmentCode: refOrderId,
+        payment_status: '2',
       };
+
+      delete sendData['created_at'];
+      delete sendData['updated_at'];
+
+      console.log(sendData);
+
       await this.orderService.createOrder(user, sendData);
     } catch (error) {
       console.log(error);
@@ -543,7 +547,7 @@ export class PaymentService {
       },
     });
 
-    let totalPrice = product.price;
+    let totalPrice = 9390000;
     let results = [];
 
     switch (+company_id) {

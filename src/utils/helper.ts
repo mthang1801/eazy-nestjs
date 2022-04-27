@@ -54,29 +54,20 @@ export const preprocessDatabaseBeforeResponse = (data) => {
       dataObject[key] = null;
       continue;
     }
-    if (key === 'created_at') {
+    if (
+      [
+        'created_at',
+        'created_date',
+        'updated_at',
+        'updated_date',
+        'display_at',
+        'start_date',
+        'end_date',
+        'start_at',
+        'end_at',
+      ].includes(key)
+    ) {
       dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-    if (key === 'updated_at') {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-    if (key === 'display_at') {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-    if (key === 'start_date') {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-    if (key === 'end_date') {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-
-    if (val && typeof val === 'string') {
-      dataObject[key] = processGetTextDataFromMysql(val);
       continue;
     }
   }
