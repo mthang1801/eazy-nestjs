@@ -4,6 +4,9 @@ const apostrophe = `'`;
 const replaceApostrophe = '_apos';
 
 export const preprocessAddTextDataToMysql = (data: any) => {
+  if (data == null) {
+    return null;
+  }
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(quotation, 'g'), replaceQuotation)
@@ -43,12 +46,12 @@ export const formatTypeValueToInSertSQL = (key, value) => {
 };
 
 export const formatTypeValueConditionSQL = (value) => {
+  if (value === null) return `null`;
   if (
     (typeof value === 'string' && value.trim() === '') ||
     typeof value == 'undefined'
   )
     return `''`;
-  if (value === null) return `null`;
 
   if (+value === 0) return `0`;
 

@@ -14,17 +14,18 @@ export class ReviewsCommentService {
         await this.restrictedCommentRepo.delete({ id: comment.id });
       }
     }
+
     const restrictedData = {
       ...new RestrictedCommentEntity(),
       ...this.restrictedCommentRepo.setData(data),
-      keywords: JSON.stringify(data.keywords),
+      keywords: data.keywords,
     };
     await this.restrictedCommentRepo.create(restrictedData);
   }
 
   async getRestrictedCommentsKeywords() {
     const result = await this.restrictedCommentRepo.findOne({});
-    result['keywords'] = JSON.parse(result['keywords']);
+
     return result;
   }
 }

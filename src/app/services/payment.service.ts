@@ -58,7 +58,6 @@ import {
 import { OrderStatus } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
-import { calculateInstallmentInterestRateHDSaiGon } from '../../constants/payment';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 import { ProductsRepository } from '../repositories/products.repository';
@@ -66,6 +65,10 @@ import { ProductsEntity } from '../entities/products.entity';
 import { Not, Equal } from '../../database/operators/operators';
 import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
+import {
+  calculateInstallmentInterestRateHDSaiGon,
+  calculateInstallmentInterestRateHomeCredit,
+} from '../../utils/services/payment.helper';
 
 @Injectable()
 export class PaymentService {
@@ -540,7 +543,7 @@ export class PaymentService {
       },
     });
 
-    let totalPrice = product.price;
+    let totalPrice = 28790000;
     let results = [];
 
     switch (+company_id) {
@@ -549,6 +552,19 @@ export class PaymentService {
         let tenors = [6, 9, 12];
         for (let tenor of tenors) {
           let result = calculateInstallmentInterestRateHDSaiGon(
+            totalPrice,
+            prepaid_percentage,
+            tenor,
+          );
+          results.push(result);
+        }
+        return results;
+      }
+      case 2: {
+        // HOME Credit
+        let tenors = [6, 9, 12];
+        for (let tenor of tenors) {
+          let result = calculateInstallmentInterestRateHomeCredit(
             totalPrice,
             prepaid_percentage,
             tenor,

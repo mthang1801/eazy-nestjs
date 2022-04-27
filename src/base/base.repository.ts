@@ -163,7 +163,6 @@ export class BaseRepositorty<T> {
 
     return result[0][0]['total'] || 0;
   }
-
   /**
    * Create new record
    * @param params
@@ -187,12 +186,17 @@ export class BaseRepositorty<T> {
       }
     }
 
-    let sql = `INSERT INTO ${this.table} SET ? `;
-    console.log(sql);
-    let response = await this.databaseService.executeQueryWritePool(
-      sql,
-      fmtParams,
-    );
+    let sql = `INSERT INTO ${this.table} SET `;
+
+    Object.entries(fmtParams).forEach(([key, val], i) => {
+      if (i === 0) {
+        sql += formatTypeValueToInSertSQL(key, val);
+      } else {
+        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
+      }
+    });
+
+    let response = await this.databaseService.executeQueryWritePool(sql);
 
     let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
 
@@ -207,7 +211,6 @@ export class BaseRepositorty<T> {
       [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
     });
   }
-
   /**
    * Create new record
    * @param params

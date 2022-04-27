@@ -37,6 +37,7 @@ export class BaseController {
     if (!this.data) {
       dataResponse = {
         statusCode: this.statusCode,
+        data: null,
         message: this.message,
         timestamp: new Date().toLocaleString(),
       };
