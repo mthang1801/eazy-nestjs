@@ -543,7 +543,7 @@ export class PaymentService {
       },
     });
 
-    let totalPrice = 28790000;
+    let totalPrice = product.price;
     let results = [];
 
     switch (+company_id) {
