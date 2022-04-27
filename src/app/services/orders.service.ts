@@ -1041,13 +1041,16 @@ export class OrdersService {
       store_id,
       created_at_start,
       created_at_end,
+      synced,
     } = params;
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    filterConditions[`${Table.ORDERS}.order_code`] = Not(IsNull());
     filterConditions[`${Table.ORDERS}.status`] = MoreThan(0);
+    if (synced) {
+      filterConditions[`${Table.ORDERS}.order_code`] = Not(IsNull());
+    }
     if (shipping_id) {
       filterConditions[`${Table.ORDERS}.shipping_id`] = shipping_id;
     }
