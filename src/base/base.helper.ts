@@ -1,3 +1,5 @@
+import { formatStandardTimeStamp } from 'src/utils/helper';
+
 const quotation = `"`;
 const replaceQuotation = '_quot';
 const apostrophe = `'`;
@@ -42,6 +44,24 @@ export const formatTypeValueToInSertSQL = (key, value) => {
   if (!isNaN(1 * +value) && value[0] == 0) {
     return `${key} = '${value}'`;
   }
+
+  if (
+    [
+      'created_at',
+      'created_date',
+      'updated_at',
+      'updated_date',
+      'display_at',
+      'start_date',
+      'end_date',
+      'start_at',
+      'end_at',
+      'birthday',
+    ].includes(key)
+  ) {
+    return `${key} = '${formatStandardTimeStamp(new Date(value))}'`;
+  }
+
   return `${key} = '${value}'`;
 };
 
@@ -59,7 +79,7 @@ export const formatTypeValueConditionSQL = (value) => {
     if (value[0] == 0) {
       return `'${value}'`;
     }
-    // return `${key} = ${value}`;
   }
+
   return `'${value}'`;
 };

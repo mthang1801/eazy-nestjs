@@ -35,4 +35,7 @@ export class CreateInstallmentDto {
 
   @IsOptional()
   prepaid_percentage: number;
+
+  @IsOptional()
+  company_id: number;
 }

@@ -37,8 +37,4 @@ import { ProductsModule } from './products.module';
     ProductsModule,
   ],
 })
-export class PaymentModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(getUserFromToken).forRoutes(PaymentControllerFE);
-  }
-}
+export class PaymentModule {}

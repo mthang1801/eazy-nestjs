@@ -65,6 +65,7 @@ import { ProductsEntity } from '../entities/products.entity';
 import { Not, Equal } from '../../database/operators/operators';
 import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
+import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
 import {
   calculateInstallmentInterestRateHDSaiGon,
   calculateInstallmentInterestRateHomeCredit,
@@ -249,6 +250,18 @@ export class PaymentService {
         data.tenor,
       );
 
+      let installed_money_account_id = 20574861;
+      switch (+data.company_id) {
+        case 1:
+          installed_money_account_id = 20574861;
+          break; //HD Saigon
+        case 2:
+          installed_money_account_id = 20574874;
+          break; // Home Credit
+      }
+      //20574874 Home credit
+      //20630206 payoo
+
       let refOrderId = generateRandomString();
       let sendData = {
         ...user,
@@ -265,7 +278,7 @@ export class PaymentService {
         installed_prepaid_amount: prepaidAmount,
         installment_interest_rate_code: totalInterest,
         installed_money_amount: paymentPerMonth,
-        installed_money_account_id: 20630206,
+        installed_money_account_id,
         ref_order_id: refOrderId,
         installmentCode: refOrderId,
         payment_status: '2',
@@ -274,9 +287,20 @@ export class PaymentService {
       delete sendData['created_at'];
       delete sendData['updated_at'];
 
-      console.log(sendData);
+      const result = await this.orderService.createOrder(user, sendData);
 
-      await this.orderService.createOrder(user, sendData);
+      const paymentAppcoreData = {
+        installmentAccountId: installed_money_account_id,
+        installmentCode: refOrderId,
+        paymentStatus: 'success',
+        totalAmount: +totalPrice,
+      };
+
+      const response = await axios({
+        method: 'PUT',
+        url: UPDATE_ORDER_PAYMENT(result.order_code),
+        data: paymentAppcoreData,
+      });
     } catch (error) {
       console.log(error);
     }
@@ -547,7 +571,7 @@ export class PaymentService {
       },
     });
 
-    let totalPrice = 9390000;
+    let totalPrice = product.price;
     let results = [];
 
     switch (+company_id) {

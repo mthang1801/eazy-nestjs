@@ -65,6 +65,7 @@ export const preprocessDatabaseBeforeResponse = (data) => {
         'end_date',
         'start_at',
         'end_at',
+        'birthday',
       ].includes(key)
     ) {
       dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));

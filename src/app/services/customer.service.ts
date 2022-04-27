@@ -126,17 +126,17 @@ export class CustomerService {
     data['b_phone'] = data['phone'];
     data['s_phone'] = data['s_phone'] || data['phone'];
     data['b_firstname'] = data['firstname'];
-    data['b_lastname'] = data['lastname'];
-    data['b_district'] = data['b_district'];
-    data['b_city'] = data['b_city'];
-    data['b_ward'] = data['b_ward'];
-    data['b_address'] = data['b_address'];
-    data['s_firstname'] = data['s_firstname'] || data['firstname'];
-    data['s_lastname'] = data['s_lastname'] || data['lastname'];
-    data['s_district'] = data['s_district'] || data['b_district'];
-    data['s_city'] = data['s_city'] || data['b_city'];
-    data['s_ward'] = data['s_ward'] || data['b_ward'];
-    data['s_address'] = data['s_address'] || data['b_address'];
+    data['b_lastname'] = data['lastname'] || '';
+    data['b_district'] = data['b_district'] || '';
+    data['b_city'] = data['b_city'] || '';
+    data['b_ward'] = data['b_ward'] || '';
+    data['b_address'] = data['b_address'] || '';
+    data['s_firstname'] = data['s_firstname'] || data['firstname'] || '';
+    data['s_lastname'] = data['s_lastname'] || data['lastname'] || '';
+    data['s_district'] = data['s_district'] || data['b_district'] || '';
+    data['s_city'] = data['s_city'] || data['b_city'] || '';
+    data['s_ward'] = data['s_ward'] || data['b_ward'] || '';
+    data['s_address'] = data['s_address'] || data['b_address'] || '';
 
     const userProfileData = {
       ...new UserProfileEntity(),

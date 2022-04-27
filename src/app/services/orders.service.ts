@@ -291,7 +291,17 @@ export class OrdersService {
   }
 
   async createOrder(user, data, sendToAppcore = true) {
-    data['store_id'] = data['store_id'] || 67107;
+    if (data['store_id']) {
+      const checkStore = await this.storeLocationRepo.findOne({
+        store_location_id: data['store_id'],
+      });
+      if (!checkStore) {
+        throw new HttpException('Cửa hàng không có trong hệ thống', 400);
+      }
+    } else {
+      data['store_id'] = 67107;
+    }
+
     data['utm_source'] = data['utm_source'] || 9;
 
     const orderData = {
@@ -456,6 +466,7 @@ export class OrdersService {
       }
       // update order history
       await this.orderHistoryRepo.create(updatedOrder);
+      return updatedOrder;
     } catch (error) {
       console.log(error);
       throw new HttpException(
