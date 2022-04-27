@@ -58,10 +58,12 @@ export const calculateInstallmentInterestRate = (
   let interestPerMonth = totalInterest / tenor;
 
   return {
-    paymentPerMonth: periodAmount,
-    totalInterest,
-    interestPerMonth,
+    price: +amount,
+    tenor: +tenor,
     prepaidAmount,
+    paymentPerMonth: periodAmount,
     needToPay,
+    interestPerMonth,
+    totalInterest,
   };
 };
