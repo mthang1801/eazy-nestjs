@@ -129,6 +129,7 @@ import {
   CANCEL_ORDER,
 } from '../../constants/api.appcore';
 import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTransport.dto';
+import { Equal } from '../../database/operators/operators';
 
 @Injectable()
 export class OrdersService {
@@ -1334,14 +1335,20 @@ export class OrdersService {
   async requestSyncOrders() {
     try {
       const ordersSync = await this.orderRepo.find({
-        where: { order_code: IsNull() },
+        where: {
+          order_code: IsNull(),
+          status: Not(Equal(OrderStatus.invalid)),
+        },
       });
       if (ordersSync.length) {
         for (let orderItem of ordersSync) {
           try {
             await this.pushOrderToAppcore(orderItem.order_id);
           } catch (error) {
-            continue;
+            await this.orderRepo.update(
+              { order_id: orderItem.order_id },
+              { status: OrderStatus.invalid },
+            );
           }
         }
       }

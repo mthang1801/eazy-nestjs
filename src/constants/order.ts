@@ -285,4 +285,5 @@ export const OrderStatus = {
   cancelled: 8,
   purchased: 9,
   dont_pickup_phone: 10,
+  invalid: 11,
 };
