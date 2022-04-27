@@ -1335,7 +1335,11 @@ export class OrdersService {
       });
       if (ordersSync.length) {
         for (let orderItem of ordersSync) {
-          await this.pushOrderToAppcore(orderItem.order_id);
+          try {
+            await this.pushOrderToAppcore(orderItem.order_id);
+          } catch (error) {
+            continue;
+          }
         }
       }
       await this.orderRepo.update(
