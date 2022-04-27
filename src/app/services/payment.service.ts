@@ -58,7 +58,7 @@ import {
 import { OrderStatus } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
-import { calculateInstallmentInterestRate } from '../../constants/payment';
+import { calculateInstallmentInterestRateHDSaiGon } from '../../constants/payment';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 import { ProductsRepository } from '../repositories/products.repository';
@@ -240,8 +240,7 @@ export class PaymentService {
         totalInterest,
         interestPerMonth,
         prepaidAmount,
-        needToPay,
-      } = calculateInstallmentInterestRate(
+      } = calculateInstallmentInterestRateHDSaiGon(
         totalPrice,
         data.prepaid_percentage,
         data.tenor,
@@ -268,7 +267,7 @@ export class PaymentService {
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
         installment_interest_rate_code: totalInterest,
-        installed_money_amount: needToPay,
+        installed_money_amount: paymentPerMonth,
       };
       await this.orderService.createOrder(user, sendData);
     } catch (error) {
@@ -525,8 +524,9 @@ export class PaymentService {
   }
 
   async getProductInstallment(params) {
-    let { tenor, product_id, prepaid_percentage } = params;
-    if (!product_id || !tenor || !prepaid_percentage) {
+    let { product_id, prepaid_percentage, company_id } = params;
+
+    if (!product_id || !prepaid_percentage) {
       throw new HttpException(
         'Cần truyền id sản phẩm, kỳ hạn thanh toán và lãi suất',
         400,
@@ -541,10 +541,23 @@ export class PaymentService {
     });
 
     let totalPrice = product.price;
-    return calculateInstallmentInterestRate(
-      totalPrice,
-      prepaid_percentage,
-      tenor,
-    );
+    let results = [];
+
+    switch (+company_id) {
+      case 1: {
+        // HD Saigon
+        let tenors = [6, 9, 12];
+        for (let tenor of tenors) {
+          let result = calculateInstallmentInterestRateHDSaiGon(
+            totalPrice,
+            prepaid_percentage,
+            tenor,
+          );
+          results.push(result);
+        }
+        return results;
+      },
+      
+    }
   }
 }

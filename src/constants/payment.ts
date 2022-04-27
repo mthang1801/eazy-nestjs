@@ -39,22 +39,22 @@ export const validTime = moment(
   new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
 ).format('YYYYMMDDHHmmss');
 
-export const calculateInstallmentInterestRate = (
+export const calculateInstallmentInterestRateHDSaiGon = (
   amount,
   prepaidPercentage,
   tenor,
 ) => {
-  let needToPay = (amount * (100 - prepaidPercentage)) / 100;
-  let prepaidAmount = amount - needToPay;
+  let restAmount = (amount * (100 - prepaidPercentage)) / 100;
+  let prepaidAmount = amount - restAmount;
   let interestRate = 1.89;
   let accInterestRate = 0.42;
   let periodAmount =
-    (needToPay * interestRate) / 100 +
-    needToPay / tenor +
-    (needToPay * accInterestRate) / 100 +
+    (restAmount * interestRate) / 100 +
+    restAmount / tenor +
+    (restAmount * accInterestRate) / 100 +
     12;
 
-  let totalInterest = periodAmount * tenor - needToPay;
+  let totalInterest = periodAmount * tenor - restAmount;
   let interestPerMonth = totalInterest / tenor;
 
   return {
@@ -62,8 +62,9 @@ export const calculateInstallmentInterestRate = (
     tenor: +tenor,
     prepaidAmount,
     paymentPerMonth: periodAmount,
-    needToPay,
+    restAmount,
     interestPerMonth,
     totalInterest,
+    totalPriceAfterInstallment: +amount + totalInterest,
   };
 };

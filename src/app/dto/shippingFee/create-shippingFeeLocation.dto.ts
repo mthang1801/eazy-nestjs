@@ -1,6 +1,13 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 export class CreateShippingFeeLocationDto {
-  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => ShippingFee)
+  shippingFees: ShippingFee[];
+}
+
+class ShippingFee {
+  @IsOptional()
   city_id: string;
 
   @IsOptional()

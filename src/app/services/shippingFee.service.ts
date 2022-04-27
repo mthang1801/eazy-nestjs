@@ -47,58 +47,48 @@ export class ShippingFeeService {
     shipping_fee_id: number,
     user,
   ) {
-    const checkExist = await this.shippingFeeLocationRepo.findOne({
-      city_id: data.city_id,
-      shipping_fee_id,
-    });
-    if (checkExist) {
-      throw new HttpException(
-        'Tỉnh/thành đã tồn tại trong hình thức phí vận chuyển này.',
-        422,
-      );
-    }
-    let cityName = await this.cityService.get(+data.city_id, true);
-    let shippingFeeLocationData = {
-      ...new ShippingFeeLocationEntity(),
-      ...this.shippingFeeLocationRepo.setData(data),
-      city_name: cityName,
-      shipping_fee_id,
-    };
-    const result = await this.shippingFeeLocationRepo.create(
-      shippingFeeLocationData,
-    );
-    await this.shippingFeeRepo.update(
-      { shipping_fee_id },
-      { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
-    );
+    if (data.shippingFees && data.shippingFees.length) {
+      for (let shippingFee of data.shippingFees) {
+        const checkExist = await this.shippingFeeLocationRepo.findOne({
+          city_id: shippingFee.city_id,
+          shipping_fee_id,
+        });
+        if (checkExist) {
+          await this.shippingFeeLocationRepo.update(
+            { shipping_fee_location_id: checkExist.shipping_fee_location_id },
+            { value_fee: shippingFee.value_fee },
+          );
+          continue;
+        }
 
-    return result;
+        let cityName = await this.cityService.get(+shippingFee.city_id, true);
+        let shippingFeeLocationData = {
+          ...new ShippingFeeLocationEntity(),
+          ...this.shippingFeeLocationRepo.setData(shippingFee),
+          city_name: cityName,
+          shipping_fee_id,
+        };
+        const result = await this.shippingFeeLocationRepo.create(
+          shippingFeeLocationData,
+        );
+        await this.shippingFeeRepo.update(
+          { shipping_fee_id },
+          { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
+        );
+
+        return result;
+      }
+    }
   }
 
   async updateShippingFeeLocation(
-    shipping_fee_location_id,
-    data: UpdateShippingFeeLocationDto,
+    shipping_fee_id,
+    data: CreateShippingFeeLocationDto,
     user,
   ) {
-    const shippingFeeLocationData = {
-      ...this.shippingFeeLocationRepo.setData(data),
-      updated_at: formatStandardTimeStamp(),
-    };
-    if (data.city_id) {
-      shippingFeeLocationData['city_name'] = await this.cityService.get(
-        +data.city_id,
-        true,
-      );
-    }
-    const shippingFeeLocation = await this.shippingFeeLocationRepo.update(
-      { shipping_fee_location_id },
-      shippingFeeLocationData,
-    );
-    if (shippingFeeLocation) {
-      await this.shippingFeeRepo.update(
-        { shipping_fee_id: shippingFeeLocation.shipping_fee_id },
-        { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
-      );
+    if (data.shippingFees && data.shippingFees.length) {
+      await this.shippingFeeLocationRepo.delete({ shipping_fee_id });
+      await this.createShippingFeeByLocation(data, shipping_fee_id, user);
     }
   }
 
