@@ -556,8 +556,7 @@ export class PaymentService {
           results.push(result);
         }
         return results;
-      },
-      
+      }
     }
   }
 }
