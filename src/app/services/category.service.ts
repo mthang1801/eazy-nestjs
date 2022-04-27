@@ -640,10 +640,13 @@ export class CategoryService {
 
   async getList(params) {
     // ignore page and limit
-    let { search, ...others } = params;
+    let { search, level } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
+    if (level) {
+      filterCondition[`${Table.CATEGORIES}.level`] = +level;
+    }
 
     if (search) {
       const categories = await this.categoryRepository.find({
@@ -689,24 +692,26 @@ export class CategoryService {
       where: { [`${Table.CATEGORIES}.level`]: 0 },
     });
 
-    for (let categoryRoot of categoriesListRoot) {
-      const categoriesList = await this.getCategoriesChildrenRecursive(
-        categoryRoot,
-        Infinity,
-        true,
-      );
-      let count = 0;
-      if (categoriesList?.categoriesIdList?.length) {
-        for (let categoryId of categoriesList.categoriesIdList) {
-          const numberOfProductsByCategoryId =
-            await this.productCategoryRepository.count({
-              where: { category_id: categoryId },
-            });
-          count += numberOfProductsByCategoryId;
+    if (level) {
+      for (let categoryRoot of categoriesListRoot) {
+        const categoriesList = await this.getCategoriesChildrenRecursive(
+          categoryRoot,
+          +level,
+          true,
+        );
+        let count = 0;
+        if (categoriesList?.categoriesIdList?.length) {
+          for (let categoryId of categoriesList.categoriesIdList) {
+            const numberOfProductsByCategoryId =
+              await this.productCategoryRepository.count({
+                where: { category_id: categoryId },
+              });
+            count += numberOfProductsByCategoryId;
+          }
         }
+        categoryRoot['totalProducts'] = count;
+        categoryRoot = categoriesList['currentCategory'];
       }
-      categoryRoot['totalProducts'] = count;
-      categoryRoot = categoriesList['currentCategory'];
     }
 
     return {
@@ -957,6 +962,7 @@ export class CategoryService {
 
   async get(id: number, params) {
     let { search, position, level, get_products } = params;
+
     level = +level || Infinity;
     get_products = get_products && get_products == 'false' ? false : true;
 
@@ -973,6 +979,7 @@ export class CategoryService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: id },
     });
+
     let childrenCategories = await this.getCategoriesChildrenRecursive(
       category,
       level,
@@ -1014,7 +1021,9 @@ export class CategoryService {
 
     return {
       categories: childrenCategories,
-      childrenCategories,
+      childrenCategories: childrenCategories['children']
+        ? childrenCategories['children']
+        : [],
       currentCategory: category,
       products: {
         paging: {
