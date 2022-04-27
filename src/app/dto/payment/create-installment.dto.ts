@@ -29,4 +29,10 @@ export class CreateInstallmentDto {
 
   @IsOptional()
   s_address: string;
+
+  @IsOptional()
+  tenor: number;
+
+  @IsOptional()
+  prepaid_percentage: number;
 }

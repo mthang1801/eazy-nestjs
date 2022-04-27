@@ -28,4 +28,5 @@ export class UserProfileEntity {
   s_phone: string = '';
   s_address_type: string = '';
   profile_name: string = '';
+  id_card: string = '';
 }

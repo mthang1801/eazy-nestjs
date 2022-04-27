@@ -30,6 +30,7 @@ export class UserEntity {
   password_change_timestamp: number = 0;
   api_key: string = '';
   janrain_identifier: string = '';
+  avatar: string = '';
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
   lasted_buy_at: null | string = null;

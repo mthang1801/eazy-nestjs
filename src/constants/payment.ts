@@ -41,11 +41,11 @@ export const validTime = moment(
 
 export const calculateInstallmentInterestRate = (
   amount,
-  repaidPercentage,
+  prepaidPercentage,
   tenor,
 ) => {
-  let needToPay = (amount * (100 - repaidPercentage)) / 100;
-  let repaidAmount = amount - needToPay;
+  let needToPay = (amount * (100 - prepaidPercentage)) / 100;
+  let prepaidAmount = amount - needToPay;
   let interestRate = 1.89;
   let accInterestRate = 0.42;
   let periodAmount =
@@ -56,10 +56,12 @@ export const calculateInstallmentInterestRate = (
 
   let totalInterest = periodAmount * tenor - needToPay;
   let interestPerMonth = totalInterest / tenor;
+
   return {
     paymentPerMonth: periodAmount,
     totalInterest,
     interestPerMonth,
-    repaidAmount,
+    prepaidAmount,
+    needToPay,
   };
 };

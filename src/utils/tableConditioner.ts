@@ -251,6 +251,17 @@ export const productSearch = (search = '', filterConditions = {}) => {
   return searchFilterTemplate(filterConditions, arraySearch);
 };
 
+export const categorySearch = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+  if (search) {
+    arraySearch = [
+      { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
 export const categoriesSearchFilter = (search = '', filterConditions = {}) => {
   let arraySearch = [];
   if (search) {

@@ -174,31 +174,31 @@ export class CustomerService {
   async createCustomerToAppcore(user) {
     try {
       const customerAppcoreData = itgCustomerToAppcore(user);
-      // console.log(user);
-      // const response = await axios({
-      //   url: CREATE_CUSTOMER_API,
-      //   method: 'POST',
-      //   data: customerAppcoreData,
-      // });
 
-      // if (!response?.data) {
-      //   console.log(response);
-      //   return;
-      // }
+      const response = await axios({
+        url: CREATE_CUSTOMER_API,
+        method: 'POST',
+        data: customerAppcoreData,
+      });
 
-      // const data = response.data;
+      if (!response?.data) {
+        console.log(response);
+        return;
+      }
 
-      // const user_appcore_id = data.data;
-      // const updatedUser = await this.userRepo.update(
-      //   { user_id: user.user_id },
-      //   {
-      //     user_appcore_id,
-      //     updated_at: formatStandardTimeStamp(),
-      //     is_sync: 'N',
-      //   },
-      // );
+      const data = response.data;
 
-      // return updatedUser;
+      const user_appcore_id = data.data;
+      const updatedUser = await this.userRepo.update(
+        { user_id: user.user_id },
+        {
+          user_appcore_id,
+          updated_at: formatStandardTimeStamp(),
+          is_sync: 'N',
+        },
+      );
+
+      return updatedUser;
     } catch (error) {
       console.log(error);
       throw new HttpException(
@@ -208,7 +208,7 @@ export class CustomerService {
     }
   }
 
-  async createCustomerFromWebPayment(data: CreateCustomerPaymentDto) {
+  async createCustomerFromWebPayment(data) {
     const checkUserExist = await this.userRepo.findOne({ phone: data.s_phone });
     if (checkUserExist) {
       return;
@@ -228,7 +228,7 @@ export class CustomerService {
       s_ward: data.s_ward,
       b_address: data.s_address,
       s_address: data.s_address,
-      identifier_number: data.identifier_number,
+      id_card: data.id_card,
     };
     try {
       const { passwordHash, salt } = saltHashPassword(defaultPassword);

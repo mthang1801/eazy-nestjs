@@ -202,71 +202,75 @@ export class PaymentService {
 
   async paymentInstallment(data: CreateInstallmentDto) {
     try {
-      // let product = await this.productRepo.findOne({
-      //   select: '*',
-      //   join: productLeftJoiner,
-      //   where: {
-      //     [`${Table.PRODUCTS}.product_id`]: data.product_id,
-      //     product_function: Not(Equal('1')),
-      //     product_type: Not(Equal('4')),
-      //   },
-      // });
-      // if (!product) {
-      //   throw new HttpException('Không tìm thấy sản phẩm', 404);
-      // }
-      // let user;
-      // if (userAuth) {
-      //   user = await this.userRepo.findOne({
-      //     select: `*, ${Table.USERS}.user_appcore_id`,
-      //     join: userJoiner,
-      //     where: { [`${Table.USERS}.phone`]: userAuth['user_id'] },
-      //   });
-      // } else {
-      //   user = await this.userRepo.findOne({
-      //     select: `*, ${Table.USERS}.user_appcore_id`,
-      //     join: userJoiner,
-      //     where: { [`${Table.USERS}.phone`]: data['user_id'] },
-      //   });
-      //   if (!user) {
-      //     user = await this.userRepo.findOne({
-      //       select: `*, ${Table.USERS}.user_appcore_id`,
-      //       join: userJoiner,
-      //       where: { [`${Table.USERS}.phone`]: data['s_phone'] },
-      //     });
-      //     if (!user) {
-      //       await this.customerService.createCustomerFromWebPayment(data);
-      //       user = await this.userRepo.findOne({
-      //         select: `*, ${Table.USERS}.user_appcore_id`,
-      //         join: userJoiner,
-      //         where: { phone: data['s_phone'] },
-      //       });
-      //     }
-      //   }
-      // }
-      // const totalPrice = product['price'];
-      // let cartItems = [{ ...product, amount: 1 }];
-      // console.log(cartItems);
-      // const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
-      //   calculateInstallmentInterestRate(
-      //     totalPrice,
-      //     data.repaidPercentage,
-      //     data.tenor,
-      //   );
-      // let sendData = {
-      //   ...user,
-      //   s_phone: data.s_phone,
-      //   s_lastname: data.s_lastname,
-      //   s_city: data.s_city,
-      //   s_district: data.s_district,
-      //   s_ward: data.s_ward,
-      //   s_address: data.s_address,
-      //   order_items: cartItems,
-      //   ref_order_id: generateRandomString(),
-      //   transfer_amount: totalPrice,
-      //   pay_credit_type: 3,
-      //   coupon_code: data.coupon_code ? data.coupon_code : null,
-      // };
-      // await this.orderService.createOrder(user, sendData);
+      let product = await this.productRepo.findOne({
+        select: '*',
+        join: productLeftJoiner,
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: data.product_id,
+          product_function: Not(Equal('1')),
+          product_type: Not(Equal('4')),
+        },
+      });
+      if (!product) {
+        throw new HttpException(
+          'Không tìm thấy sản phẩm hoặc sản phẩm không thể bán.',
+          404,
+        );
+      }
+
+      let user = await this.userRepo.findOne({
+        select: `*, ${Table.USERS}.user_appcore_id`,
+        join: userJoiner,
+        where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+      });
+      if (!user) {
+        await this.customerService.createCustomerFromWebPayment(data);
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { phone: data['s_phone'] },
+        });
+      }
+
+      const totalPrice = product['price'];
+      let cartItems = [{ ...product, amount: 1 }];
+
+      const {
+        paymentPerMonth,
+        totalInterest,
+        interestPerMonth,
+        prepaidAmount,
+        needToPay,
+      } = calculateInstallmentInterestRate(
+        totalPrice,
+        data.prepaid_percentage,
+        data.tenor,
+      );
+
+      console.log(
+        paymentPerMonth,
+        totalInterest,
+        interestPerMonth,
+        prepaidAmount,
+      );
+      let sendData = {
+        ...user,
+        s_phone: data.s_phone,
+        s_lastname: data.s_lastname,
+        s_city: data.s_city,
+        s_district: data.s_district,
+        s_ward: data.s_ward,
+        s_address: data.s_address,
+        order_items: cartItems,
+        ref_order_id: generateRandomString(),
+        transfer_amount: totalPrice,
+        pay_credit_type: 3,
+        installed_tenor: data.tenor,
+        installed_prepaid_amount: prepaidAmount,
+        installment_interest_rate_code: totalInterest,
+        installed_money_amount: needToPay,
+      };
+      await this.orderService.createOrder(user, sendData);
     } catch (error) {
       console.log(error);
     }
@@ -518,5 +522,29 @@ export class PaymentService {
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
+  }
+
+  async getProductInstallment(params) {
+    let { tenor, product_id, prepaid_percentage } = params;
+    if (!product_id || !tenor || !prepaid_percentage) {
+      throw new HttpException(
+        'Cần truyền id sản phẩm, kỳ hạn thanh toán và lãi suất',
+        400,
+      );
+    }
+    let product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: {
+        [`${Table.PRODUCTS}.product_id`]: product_id,
+      },
+    });
+
+    let totalPrice = product.price;
+    return calculateInstallmentInterestRate(
+      totalPrice,
+      prepaid_percentage,
+      tenor,
+    );
   }
 }

@@ -179,6 +179,7 @@ export class AuthService {
 
     await this.userService.update(user.user_id, {
       user_login: AuthProviderEnum.SYSTEM,
+      last_login: formatStandardTimeStamp(),
     });
 
     user['image'] = await this.getUserImage(user.user_id);

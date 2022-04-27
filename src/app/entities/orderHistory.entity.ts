@@ -76,6 +76,8 @@ export class OrderHistoryEntity {
   credit_card_no: null | string = '';
   credit_fee_account_id: number = 0;
   installed_money_amount: number = 0;
+  installed_tenor: number = 0;
+  installed_prepaid_amount: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;
   pay_credit_type: null | number = 1;

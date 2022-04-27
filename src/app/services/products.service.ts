@@ -197,6 +197,7 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
 import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
+import { categorySearch } from '../../utils/tableConditioner';
 import {
   productGroupJoiner,
   productVariationGroupJoiner,
@@ -3363,7 +3364,7 @@ export class ProductService {
       };
     }
 
-    const productLists = await this.productRepo.find({
+    const productsList = await this.productRepo.find({
       select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug`,
       join: productSearchJoiner,
       where: productSearch(q, filterConditions),
@@ -3371,7 +3372,15 @@ export class ProductService {
       limit,
     });
 
-    return productLists;
+    let categoriesList = await this.categoryRepo.find({
+      select: '*',
+      join: categoryJoiner,
+      where: categorySearch(q),
+      skip,
+      limit,
+    });
+
+    return { categoriesList, productsList };
   }
 
   async getProductsAmountFromStores() {
