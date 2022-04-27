@@ -114,4 +114,5 @@ export enum PrimaryKeys {
   ddv_comments = 'comment_id',
   ddv_reviews = 'review_id',
   ddv_review_comment_items = 'item_id',
+  ddv_restricted_comments = 'id',
 }

@@ -57,13 +57,15 @@ import {
 } from '../../constants/payment';
 import { OrderStatus } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
-import { CreateInstallmentDto } from '../dto/orders/create-installment.dto';
+
 import { calculateInstallmentInterestRate } from '../../constants/payment';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { OrderPaymentEntity } from '../entities/orderPayment.entity';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { Not, Equal } from '../../database/operators/operators';
+import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment.dto';
+import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
 
 @Injectable()
 export class PaymentService {
@@ -198,80 +200,73 @@ export class PaymentService {
     return { ..._payment, ..._paymentDes };
   }
 
-  async paymentInstallment(data, userAuth) {
+  async paymentInstallment(data: CreateInstallmentDto) {
     try {
-      let product = await this.productRepo.findOne({
-        select: '*',
-        join: productLeftJoiner,
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: data.product_id,
-          product_function: Not(Equal('1')),
-        },
-      });
-
-      if (!product) {
-        throw new HttpException('Không tìm thấy sản phẩm', 404);
-      }
-
-      let user;
-
-      if (userAuth) {
-        user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
-          join: userJoiner,
-          where: { [`${Table.USERS}.phone`]: userAuth['user_id'] },
-        });
-      } else {
-        user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
-          join: userJoiner,
-          where: { [`${Table.USERS}.phone`]: data['user_id'] },
-        });
-        if (!user) {
-          user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
-            join: userJoiner,
-            where: { [`${Table.USERS}.phone`]: data['s_phone'] },
-          });
-
-          if (!user) {
-            await this.customerService.createCustomerFromWebPayment(data);
-            user = await this.userRepo.findOne({
-              select: `*, ${Table.USERS}.user_appcore_id`,
-              join: userJoiner,
-              where: { phone: data['s_phone'] },
-            });
-          }
-        }
-      }
-      const totalPrice = product['price'];
-
-      let cartItems = [{ ...product, amount: 1 }];
-      console.log(cartItems);
-
-      const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
-        calculateInstallmentInterestRate(
-          totalPrice,
-          data.repaidPercentage,
-          data.tenor,
-        );
-
-      let sendData = {
-        ...user,
-        s_phone: data.s_phone,
-        s_lastname: data.s_lastname,
-        s_city: data.s_city,
-        s_district: data.s_district,
-        s_ward: data.s_ward,
-        s_address: data.s_address,
-        order_items: cartItems,
-        ref_order_id: generateRandomString(),
-        transfer_amount: totalPrice,
-        pay_credit_type: 3,
-        coupon_code: data.coupon_code ? data.coupon_code : null,
-      };
-
-      await this.orderService.createOrder(user, sendData);
+      // let product = await this.productRepo.findOne({
+      //   select: '*',
+      //   join: productLeftJoiner,
+      //   where: {
+      //     [`${Table.PRODUCTS}.product_id`]: data.product_id,
+      //     product_function: Not(Equal('1')),
+      //     product_type: Not(Equal('4')),
+      //   },
+      // });
+      // if (!product) {
+      //   throw new HttpException('Không tìm thấy sản phẩm', 404);
+      // }
+      // let user;
+      // if (userAuth) {
+      //   user = await this.userRepo.findOne({
+      //     select: `*, ${Table.USERS}.user_appcore_id`,
+      //     join: userJoiner,
+      //     where: { [`${Table.USERS}.phone`]: userAuth['user_id'] },
+      //   });
+      // } else {
+      //   user = await this.userRepo.findOne({
+      //     select: `*, ${Table.USERS}.user_appcore_id`,
+      //     join: userJoiner,
+      //     where: { [`${Table.USERS}.phone`]: data['user_id'] },
+      //   });
+      //   if (!user) {
+      //     user = await this.userRepo.findOne({
+      //       select: `*, ${Table.USERS}.user_appcore_id`,
+      //       join: userJoiner,
+      //       where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+      //     });
+      //     if (!user) {
+      //       await this.customerService.createCustomerFromWebPayment(data);
+      //       user = await this.userRepo.findOne({
+      //         select: `*, ${Table.USERS}.user_appcore_id`,
+      //         join: userJoiner,
+      //         where: { phone: data['s_phone'] },
+      //       });
+      //     }
+      //   }
+      // }
+      // const totalPrice = product['price'];
+      // let cartItems = [{ ...product, amount: 1 }];
+      // console.log(cartItems);
+      // const { paymentPerMonth, totalInterest, interestPerMonth, repaidAmount } =
+      //   calculateInstallmentInterestRate(
+      //     totalPrice,
+      //     data.repaidPercentage,
+      //     data.tenor,
+      //   );
+      // let sendData = {
+      //   ...user,
+      //   s_phone: data.s_phone,
+      //   s_lastname: data.s_lastname,
+      //   s_city: data.s_city,
+      //   s_district: data.s_district,
+      //   s_ward: data.s_ward,
+      //   s_address: data.s_address,
+      //   order_items: cartItems,
+      //   ref_order_id: generateRandomString(),
+      //   transfer_amount: totalPrice,
+      //   pay_credit_type: 3,
+      //   coupon_code: data.coupon_code ? data.coupon_code : null,
+      // };
+      // await this.orderService.createOrder(user, sendData);
     } catch (error) {
       console.log(error);
     }
@@ -281,7 +276,7 @@ export class PaymentService {
     return this.payooPayment(data, 'paynow');
   }
 
-  async payooPaymentInstallment(data: CreateInstallmentDto) {
+  async payooPaymentInstallment(data: CreatePayooInstallmentDto) {
     return this.payooPayment(data, 'installment');
   }
 

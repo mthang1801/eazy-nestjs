@@ -5,7 +5,8 @@ import { PaymentService } from '../../../services/payment.service';
 import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
 import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
-import { CreateInstallmentDto } from 'src/app/dto/orders/create-installment.dto';
+import { CreatePayooInstallmentDto } from '../../../dto/orders/create-payooInstallment.dto';
+import { CreateInstallmentDto } from '../../../dto/payment/create-installment.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
@@ -23,15 +24,18 @@ export class PaymentControllerFE extends BaseController {
   @Post('/payoo/installment')
   async payooPaymentInstallment(
     @Res() res: Response,
-    @Body() data: CreateInstallmentDto,
+    @Body() data: CreatePayooInstallmentDto,
   ) {
     const result = await this.service.payooPaymentInstallment(data);
     return this.responseSuccess(res, result);
   }
 
   @Post('/installment')
-  async paymentInstallment(@Res() res: Response, @Body() data, @Req() req) {
-    await this.service.paymentInstallment(data, req.user);
+  async paymentInstallment(
+    @Res() res: Response,
+    @Body() data: CreateInstallmentDto,
+  ) {
+    await this.service.paymentInstallment(data);
     return this.responseSuccess(res);
   }
 }

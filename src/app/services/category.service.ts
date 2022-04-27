@@ -956,7 +956,9 @@ export class CategoryService {
   }
 
   async get(id: number, params) {
-    let { search, position } = params;
+    let { search, position, level, get_products } = params;
+    level = +level || Infinity;
+    get_products = get_products && get_products == 'false' ? false : true;
 
     let { skip, limit, page } = getPageSkipLimit(params);
     let category = await this.categoryRepository.findOne({
@@ -971,8 +973,10 @@ export class CategoryService {
       },
       where: { [`${Table.CATEGORIES}.category_id`]: id },
     });
-
-    const categories = await this.getCategoriesChildrenRecursive(category);
+    let childrenCategories = await this.getCategoriesChildrenRecursive(
+      category,
+      level,
+    );
 
     let filterProductCategory = {};
     filterProductCategory[`${Table.PRODUCTS_CATEGORIES}.category_id`] = id;
@@ -1009,7 +1013,9 @@ export class CategoryService {
     });
 
     return {
-      categories,
+      categories: childrenCategories,
+      childrenCategories,
+      currentCategory: category,
       products: {
         paging: {
           currentPage: page,

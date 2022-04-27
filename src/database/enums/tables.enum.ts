@@ -118,4 +118,5 @@ export enum Table {
   //============= Comment Rating ============
   REVIEW_COMMENT_ITEMS = 'ddv_review_comment_items',
   REVIEWS = 'ddv_reviews',
+  RESTRICTED_COMMENTS = 'ddv_restricted_comments',
 }

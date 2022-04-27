@@ -64,6 +64,7 @@ export class OrderEntity {
   fax: string = '';
   url: string = '';
   email: string = '';
+  birthday: string = null;
   id_card: number = 0;
   cash_account_id: number = 0;
   transfer_no: number = 0;
