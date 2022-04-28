@@ -93,7 +93,7 @@ export class DashboardService {
     if (!numberOfCustomerInDay) {
       numberOfCustomerInDay = {
         date: formatDateTime(),
-        totalUsers: 0,
+        numberOfUsers: 0,
       };
     }
 
@@ -121,7 +121,7 @@ export class DashboardService {
     if (!numberOfOrderInDay) {
       numberOfOrderInDay = {
         date: formatDateTime(),
-        numberOfOrders: 0,
+        totalUsers: 0,
       };
     }
 

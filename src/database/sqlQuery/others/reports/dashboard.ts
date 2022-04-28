@@ -8,7 +8,7 @@ export const getNumberOfOrdersInDaySQL = `
  SELECT CAST(${Table.ORDERS}.created_date AS DATE) as date, COUNT(order_id) as numberOfOrders FROM ${Table.ORDERS}  GROUP BY CAST(${Table.ORDERS}.created_date AS DATE);
 `;
 export const getCustomerInDaySQL = `
- SELECT CAST(${Table.USERS}.created_at AS DATE) as date, COUNT(user_id) as numberOfCustomerInDay FROM ${Table.USERS} GROUP BY CAST(${Table.USERS}.created_at AS DATE);
+ SELECT CAST(${Table.USERS}.created_at AS DATE) as date, COUNT(user_id) as totalUsers FROM ${Table.USERS} GROUP BY CAST(${Table.USERS}.created_at AS DATE);
 `;
 
 export const getNumberOrderMonthlyByYear = (year = new Date().getFullYear()) =>
