@@ -64,8 +64,6 @@ export class ProductsEntity {
   is_installment: string = 'Y';
   product_function: number = 4;
   allow_comment: string = 'Y';
-  ratings: string = null;
-  avg_ratings: number = null;
   created_at: string = formatStandardTimeStamp();
   display_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();

@@ -4181,6 +4181,17 @@ export class ProductService {
     let phone = data?.phone;
     let fullname = data.fullname;
 
+    const checkAllowComment = await this.productRepo.findOne({
+      product_id,
+      allow_comment: 'Y',
+    });
+    if (!checkAllowComment) {
+      throw new HttpException(
+        'Sản phẩm hiện tại không thể bình luận, đánh giá.',
+        403,
+      );
+    }
+
     if (data.point && data.parent_item_id) {
       throw new HttpException('Không thể đánh giá SP bằng phản hồi', 400);
     }
@@ -4272,6 +4283,16 @@ export class ProductService {
 
   async getReviewsCommentsList(product_id: number, params, type) {
     let { page, skip, limit } = getPageSkipLimit(params);
+    const checkAllowComment = await this.productRepo.findOne({
+      product_id,
+      allow_comment: 'Y',
+    });
+    if (!checkAllowComment) {
+      throw new HttpException(
+        'Sản phẩm hiện tại không thể bình luận, đánh giá.',
+        403,
+      );
+    }
     const reviewCommentItems = await this.reviewCommentItemsRepo.find({
       select: '*',
       orderBy: [

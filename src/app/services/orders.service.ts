@@ -226,7 +226,7 @@ export class OrdersService {
         store_id: data.store_id,
         pay_credit_type: 1,
       };
-      await this.createOrder(user, sendData);
+      let result = await this.createOrder(user, sendData);
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, error.status);
@@ -1064,7 +1064,7 @@ export class OrdersService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
 
-    filterConditions[`${Table.ORDERS}.status`] = MoreThan(0);
+    filterConditions[`${Table.ORDERS}.status`] = MoreThan('0');
     if (synced) {
       filterConditions[`${Table.ORDERS}.order_code`] = Not(IsNull());
     }
