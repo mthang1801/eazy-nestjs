@@ -534,7 +534,7 @@ export class OrdersService {
 
   async pushOrderToAppcore(order_id) {
     const order = await this.orderRepo.findOne({ order_id });
-    console.log(order);
+
     if (!order) {
       throw new HttpException('Không tìm thấy đơn hàng', 404);
     }
@@ -1094,14 +1094,14 @@ export class OrdersService {
     }
 
     if (created_at_start && created_at_end) {
-      filterConditions[`${Table.ORDERS}.created_at`] = Between(
+      filterConditions[`${Table.ORDERS}.created_date`] = Between(
         created_at_start,
         created_at_end,
       );
     } else if (created_at_start) {
-      filterConditions[`${Table.ORDERS}.created_at`] = created_at_start;
+      filterConditions[`${Table.ORDERS}.created_date`] = created_at_start;
     } else if (created_at_end) {
-      filterConditions[`${Table.ORDERS}.created_at`] = created_at_end;
+      filterConditions[`${Table.ORDERS}.created_date`] = created_at_end;
     }
 
     const ordersList = await this.orderRepo.find({
@@ -1159,7 +1159,6 @@ export class OrdersService {
 
       // Lấy địa chỉ theo id
       orderItem = await this.convertLocationIdIntoName(orderItem);
-      console.log(orderItem);
     }
 
     const count = await this.orderRepo.find({
