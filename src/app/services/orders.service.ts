@@ -130,6 +130,7 @@ import {
 } from '../../constants/api.appcore';
 import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTransport.dto';
 import { Equal } from '../../database/operators/operators';
+import { PaymentStatus } from '../../utils/services/payment.helper';
 
 @Injectable()
 export class OrdersService {
@@ -524,6 +525,7 @@ export class OrdersService {
           installed_money_account_id,
           installed_money_code: orderPayment['order_no'],
           status: OrderStatus.purchased,
+          payment_status: PaymentStatus.success,
           updated_at: formatStandardTimeStamp(),
         },
       );

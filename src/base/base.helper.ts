@@ -5,6 +5,19 @@ const replaceQuotation = '_quot';
 const apostrophe = `'`;
 const replaceApostrophe = '_apos';
 
+export const datetimeFieldsList = [
+  'created_at',
+  'created_date',
+  'updated_at',
+  'updated_date',
+  'display_at',
+  'start_date',
+  'end_date',
+  'start_at',
+  'end_at',
+  'birthday',
+];
+
 export const preprocessAddTextDataToMysql = (data: any) => {
   if (data == null) {
     return null;
@@ -45,20 +58,7 @@ export const formatTypeValueToInSertSQL = (key, value) => {
     return `${key} = '${value}'`;
   }
 
-  if (
-    [
-      'created_at',
-      'created_date',
-      'updated_at',
-      'updated_date',
-      'display_at',
-      'start_date',
-      'end_date',
-      'start_at',
-      'end_at',
-      'birthday',
-    ].includes(key)
-  ) {
+  if (datetimeFieldsList.includes(key)) {
     return `${key} = '${formatStandardTimeStamp(new Date(value))}'`;
   }
 
@@ -82,4 +82,32 @@ export const formatTypeValueConditionSQL = (value) => {
   }
 
   return `'${value}'`;
+};
+
+export const preprocessDatabaseBeforeResponse = (data) => {
+  if (!data || (typeof data === 'object' && !Object.entries(data).length)) {
+    return null;
+  }
+
+  let dataObject = { ...data };
+
+  function* iterate_object(o) {
+    var keys = Object.keys(o);
+    for (var i = 0; i < keys.length; i++) {
+      yield [keys[i], o[keys[i]]];
+    }
+  }
+
+  for (let [key, val] of iterate_object(dataObject)) {
+    if (val == null) {
+      dataObject[key] = null;
+      continue;
+    }
+    if (datetimeFieldsList.includes(key)) {
+      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
+      continue;
+    }
+  }
+
+  return dataObject;
 };

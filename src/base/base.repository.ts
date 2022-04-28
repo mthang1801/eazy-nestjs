@@ -3,8 +3,8 @@ import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
 import { Table, PrimaryKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
+import { preprocessDatabaseBeforeResponse } from './base.helper';
 
-import { preprocessDatabaseBeforeResponse } from '../utils/helper';
 import {
   preprocessAddTextDataToMysql,
   formatTypeValueToInSertSQL,

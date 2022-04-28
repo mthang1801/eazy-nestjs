@@ -35,47 +35,6 @@ export const generateRandomPassword = (length = 10) => {
   return password;
 };
 
-export const preprocessDatabaseBeforeResponse = (data) => {
-  if (!data || (typeof data === 'object' && !Object.entries(data).length)) {
-    return null;
-  }
-
-  let dataObject = { ...data };
-
-  function* iterate_object(o) {
-    var keys = Object.keys(o);
-    for (var i = 0; i < keys.length; i++) {
-      yield [keys[i], o[keys[i]]];
-    }
-  }
-
-  for (let [key, val] of iterate_object(dataObject)) {
-    if (val == null) {
-      dataObject[key] = null;
-      continue;
-    }
-    if (
-      [
-        'created_at',
-        'created_date',
-        'updated_at',
-        'updated_date',
-        'display_at',
-        'start_date',
-        'end_date',
-        'start_at',
-        'end_at',
-        'birthday',
-      ].includes(key)
-    ) {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
-      continue;
-    }
-  }
-
-  return dataObject;
-};
-
 export const convertToSlug = (text) =>
   text
     .toLowerCase()

@@ -38,6 +38,7 @@ export const getProductsListSelectorBE = [
   `${Table.PRODUCTS}.product_appcore_id`,
   `${Table.PRODUCTS}.product_status`,
   `${Table.PRODUCTS}.is_installment`,
+  `${Table.PRODUCTS}.status`,
 ];
 
 export const getProductsByCategoryListSelectorBE = [

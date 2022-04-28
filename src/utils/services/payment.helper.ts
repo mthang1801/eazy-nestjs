@@ -90,3 +90,9 @@ export const calculateInstallmentInterestRateHomeCredit = (
       paymentPerMonthAfterOtherFees * tenor - restAmount + amount,
   };
 };
+
+export const PaymentStatus = {
+  new: 1,
+  success: 2,
+  failed: 3,
+};

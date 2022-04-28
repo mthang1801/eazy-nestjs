@@ -37,7 +37,6 @@ import {
   payooShopTitle,
   webDomain,
   payooPaymentNotifyURL,
-  PaymentStatus,
   validTime,
 } from '../../constants/payment';
 import { UserRepository } from '../repositories/user.repository';
@@ -66,6 +65,7 @@ import { Not, Equal } from '../../database/operators/operators';
 import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
 import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
+import { PaymentStatus } from '../../utils/services/payment.helper';
 import {
   calculateInstallmentInterestRateHDSaiGon,
   calculateInstallmentInterestRateHomeCredit,
@@ -281,7 +281,7 @@ export class PaymentService {
         installed_money_account_id,
         ref_order_id: refOrderId,
         installmentCode: refOrderId,
-        payment_status: '2',
+        payment_status: PaymentStatus.success,
       };
 
       delete sendData['created_at'];
@@ -527,7 +527,7 @@ export class PaymentService {
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
 
       const updateOrderData = {
-        payment_status: PaymentStatus.paid,
+        payment_status: PaymentStatus.success,
         status: OrderStatus.purchased,
       };
       await this.orderRepo.update(

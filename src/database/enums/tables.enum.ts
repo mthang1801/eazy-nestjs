@@ -119,4 +119,9 @@ export enum Table {
   REVIEW_COMMENT_ITEMS = 'ddv_review_comment_items',
   REVIEWS = 'ddv_reviews',
   RESTRICTED_COMMENTS = 'ddv_restricted_comments',
+
+  //============= Trade in ================
+  TRADEIN_PROGRAM = 'ddv_tradein_programs',
+  TRADEIN_PROGRAM_DETAIL = 'ddv_tradein_program_details',
+  TRADEIN_PROGRAM_CRITERIA = 'ddv_tradein_program_criteria',
 }

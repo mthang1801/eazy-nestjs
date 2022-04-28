@@ -217,7 +217,7 @@ export class AuthService {
   async loginWithAuthProvider(
     providerData: AuthLoginProviderDto,
     providerName: AuthProviderEnum,
-  ): Promise<IResponseUserToken> {
+  ): Promise<any> {
     // Check if user has been existings or not
 
     let userExists = await this.userService.findUserAllInfo({
@@ -239,7 +239,9 @@ export class AuthService {
         b_lastname: userExists.lastname,
         s_firstname: userExists.firstname,
         s_lastname: userExists.lastname,
-        profile_name: `${userExists.firstname} ${userExists.lastname}`,
+        profile_name: `${userExists.firstname || ''} ${
+          userExists.lastname || ''
+        }`,
       });
 
       // Create a new record at ddv_user_data
@@ -252,8 +254,6 @@ export class AuthService {
       //create a new record at ddv_user_loyalty
       const newUserLoyalty = await this.userLoyaltyRepo.create({
         user_id: userExists.user_id,
-        created_at: formatStandardTimeStamp(),
-        updated_at: formatStandardTimeStamp(),
       });
 
       await this.customerService.createCustomerToAppcore(userExists);
@@ -295,10 +295,8 @@ export class AuthService {
 
     // Create or update at ddv_users_auth_external table
     let authProvider: AuthProviderEntity = await this.authRepository.findOne({
-      where: {
-        user_id: userExists.user_id,
-        provider_name: providerName,
-      },
+      user_id: userExists.user_id,
+      provider_name: providerName,
     });
 
     if (!authProvider) {
@@ -319,10 +317,6 @@ export class AuthService {
       );
     }
 
-    const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
-      userExists.usergroup_id,
-    );
-
     //Update current provider at ddv_users
     await this.userService.update(userExists.user_id, {
       user_login: providerName,
@@ -336,7 +330,6 @@ export class AuthService {
     return {
       token: this.generateToken(userData),
       userData,
-      menu,
     };
   }
 
