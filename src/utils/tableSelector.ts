@@ -67,6 +67,12 @@ export const getDetailProductsListSelectorFE = [
   `${Table.CATEGORIES}.slug`,
 ];
 
+export const getTradeinDetailProductsListSelectorBE = [
+  ...getProductsListSelectorBE,
+  `${Table.CATEGORIES}.slug`,
+  `${Table.TRADEIN_PROGRAM_DETAIL}.*`,
+];
+
 export const getProductByIdentifierSelector = [
   '*',
   `${Table.PRODUCT_DESCRIPTION}.*`,

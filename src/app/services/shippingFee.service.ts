@@ -40,6 +40,8 @@ export class ShippingFeeService {
       { shipping_fee_id },
       updateShippingFeeData,
     );
+
+    return this.get(shipping_fee_id);
   }
 
   async createShippingFeeByLocation(
@@ -90,6 +92,7 @@ export class ShippingFeeService {
       await this.shippingFeeLocationRepo.delete({ shipping_fee_id });
       await this.createShippingFeeByLocation(data, shipping_fee_id, user);
     }
+    return this.get(shipping_fee_id);
   }
 
   async getList(params) {
@@ -159,5 +162,22 @@ export class ShippingFeeService {
       },
       shippingFees: shippingFeesList,
     };
+  }
+
+  async get(shipping_fee_id, params: any = {}) {
+    let shippingFee = await this.shippingFeeRepo.findOne({ shipping_fee_id });
+    if (!shippingFee) {
+      throw new HttpException('Không tìm thấy phí vận chuyển', 404);
+    }
+
+    let shippingFeeLocations = await this.shippingFeeLocationRepo.find({
+      select: '*',
+      where: {
+        [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_id`]: shipping_fee_id,
+      },
+    });
+
+    shippingFee['locationFees'] = shippingFeeLocations;
+    return shippingFee;
   }
 }

@@ -48,6 +48,7 @@ import { WardModule } from './ward.module';
 import { DashboardModule } from './dashboard.module';
 import { ShippingFeeModule } from './shippingFee.module';
 import { ReviewsCommentsModule } from './reviewsComment.module';
+import { TradeinProgramModule } from './tradeinProgram.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -100,6 +101,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     DistrictModule,
     WardModule,
     ReviewsCommentsModule,
+    TradeinProgramModule,
   ],
   providers: [
     {

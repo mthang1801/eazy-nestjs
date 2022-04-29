@@ -42,8 +42,12 @@ export class ShippingFeesController extends BaseController {
     @Res() res: Response,
     @Req() req,
   ): Promise<IResponse> {
-    await this.service.updateShippingFee(shipping_fee_id, data, req.user);
-    return this.responseSuccess(res);
+    const result = await this.service.updateShippingFee(
+      shipping_fee_id,
+      data,
+      req.user,
+    );
+    return this.responseSuccess(res, result);
   }
 
   @Post('/:shipping_fee_id/locations')
@@ -70,17 +74,27 @@ export class ShippingFeesController extends BaseController {
     @Res() res: Response,
     @Req() req,
   ): Promise<IResponse> {
-    await this.service.updateShippingFeeLocation(
+    const result = await this.service.updateShippingFeeLocation(
       shipping_fee_id,
       data,
       req.user,
     );
-    return this.responseSuccess(res);
+    return this.responseSuccess(res, result);
   }
 
   @Get()
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':shipping_fee_id')
+  async getShippingFee(
+    @Res() res: Response,
+    @Query() params,
+    @Param('shipping_fee_id') shipping_fee_id,
+  ): Promise<IResponse> {
+    const result = await this.service.get(shipping_fee_id, params);
     return this.responseSuccess(res, result);
   }
 }

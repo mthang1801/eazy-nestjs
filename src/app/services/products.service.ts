@@ -187,7 +187,10 @@ import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
 import { isNumeric } from '../../utils/helper';
 import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
-import { getProductsByCategoryListSelectorBE } from '../../utils/tableSelector';
+import {
+  getProductsByCategoryListSelectorBE,
+  getTradeinDetailProductsListSelectorBE,
+} from '../../utils/tableSelector';
 import { CreateReviewDto } from '../dto/reviewComment/create-review.dto';
 
 import { ReviewRepository } from '../repositories/review.repository';
@@ -742,7 +745,7 @@ export class ProductService {
 
     if (productsList.length) {
       productsList = await this.productStoreRepo.find({
-        select: getProductsListSelectorBE,
+        select: getTradeinDetailProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
           [`${Table.PRODUCTS}.product_id`]: In(

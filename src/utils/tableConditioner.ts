@@ -391,3 +391,31 @@ export const reviewCommentItemsSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const tradeinProgramSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.TRADEIN_PROGRAM}.name`]: Like(search) }];
+    arraySearch = [{ [`${Table.TRADEIN_PROGRAM}.desc`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const tradeinProgramDetailSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) }];
+    arraySearch = [{ [`${Table.PRODUCTS}.product_code`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

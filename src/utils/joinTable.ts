@@ -323,6 +323,31 @@ export const productLeftJoiner = {
   },
 };
 
+export const tradeinDetailLeftJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.product_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.PRODUCTS_CATEGORIES]: {
+      fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
+    },
+  },
+};
+
 export const productGroupJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {
