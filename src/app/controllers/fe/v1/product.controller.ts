@@ -77,7 +77,7 @@ export class ProductsController extends BaseController {
     @Res() res: Response,
     @Query() params,
   ): Promise<IResponse> {
-    const result = await this.service.getReviewsCommentsList(
+    const result = await this.service.getReviewsCommentsListWebsite(
       product_id,
       params,
       1,
@@ -91,7 +91,7 @@ export class ProductsController extends BaseController {
     @Res() res: Response,
     @Query() params,
   ): Promise<IResponse> {
-    const result = await this.service.getReviewsCommentsList(
+    const result = await this.service.getReviewsCommentsListWebsite(
       product_id,
       params,
       2,

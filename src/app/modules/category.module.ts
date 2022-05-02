@@ -10,9 +10,10 @@ import { CategoryController as CategoryControllerIntegration } from '../controll
 import { CategorySyncController } from '../controllers/sync/v1/category.controller';
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
+import { ReviewsCommentsModule } from './reviewsComment.module';
 
 @Module({
-  imports: [forwardRef(() => ProductsModule)],
+  imports: [forwardRef(() => ProductsModule), ReviewsCommentsModule],
   providers: [
     CategoryService,
     CategoryDescriptionRepository,

@@ -42,9 +42,14 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
 
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
+import { ReviewsCommentsModule } from './reviewsComment.module';
 
 @Module({
-  imports: [forwardRef(() => CategoryModule), forwardRef(() => StickerModule)],
+  imports: [
+    forwardRef(() => CategoryModule),
+    forwardRef(() => StickerModule),
+    ReviewsCommentsModule,
+  ],
   providers: [
     ProductService,
     ProductsRepository,

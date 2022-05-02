@@ -1,10 +1,5 @@
 import { formatStandardTimeStamp } from 'src/utils/helper';
 
-const quotation = `"`;
-const replaceQuotation = '_quot';
-const apostrophe = `'`;
-const replaceApostrophe = '_apos';
-
 export const datetimeFieldsList = [
   'created_at',
   'created_date',
@@ -17,6 +12,11 @@ export const datetimeFieldsList = [
   'end_at',
   'birthday',
 ];
+
+const quotation = `"`;
+const replaceQuotation = '_quot';
+const apostrophe = `'`;
+const replaceApostrophe = '_apos';
 
 export const preprocessAddTextDataToMysql = (data: any) => {
   if (data == null) {
@@ -31,6 +31,9 @@ export const preprocessAddTextDataToMysql = (data: any) => {
 };
 
 export const processGetTextDataFromMysql = (data) => {
+  if (data == null) {
+    return null;
+  }
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(replaceQuotation, 'g'), quotation)
@@ -104,9 +107,10 @@ export const preprocessDatabaseBeforeResponse = (data) => {
       continue;
     }
     if (datetimeFieldsList.includes(key)) {
-      dataObject[key] = formatStandardTimeStamp(new Date(dataObject[key]));
+      dataObject[key] = formatStandardTimeStamp(new Date(val));
       continue;
     }
+    dataObject[key] = processGetTextDataFromMysql(val);
   }
 
   return dataObject;

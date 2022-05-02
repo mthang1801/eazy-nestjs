@@ -185,7 +185,10 @@ import {
 } from '../../database/sqlQuery/where/product.where';
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { categoryJoinProduct } from '../../database/sqlQuery/join/category.join';
-import { isNumeric } from '../../utils/helper';
+import {
+  isNumeric,
+  checkRestrictedCommentsListIntoRegularExpress,
+} from '../../utils/helper';
 import { productVariantJoiner } from 'src/database/sqlQuery/join/productFeature.join';
 import {
   getProductsByCategoryListSelectorBE,
@@ -201,6 +204,7 @@ import { CreateCommentDto } from '../dto/reviewComment/create-comment.dto';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
 import { categorySearch } from '../../utils/tableConditioner';
+import { ReviewsCommentService } from './reviewsComments.service';
 import {
   productGroupJoiner,
   productVariationGroupJoiner,
@@ -246,6 +250,7 @@ export class ProductService {
     private categoryService: CategoryService,
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private reviewCommentItemsRepo: ReviewCommentItemRepository<ReviewCommentItemsEntity>,
+    private reviewCommentService: ReviewsCommentService,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -4180,205 +4185,19 @@ export class ProductService {
   }
 
   async createReviewComment(data, product_id: number, type) {
-    let email = data?.email || null;
-    let phone = data?.phone;
-    let fullname = data.fullname;
-
-    const checkAllowComment = await this.productRepo.findOne({
+    return this.reviewCommentService.createReviewComment(
+      data,
       product_id,
-      allow_comment: 'Y',
-    });
-    if (!checkAllowComment) {
-      throw new HttpException(
-        'Sản phẩm hiện tại không thể bình luận, đánh giá.',
-        403,
-      );
-    }
-
-    if (data.point && data.parent_item_id) {
-      throw new HttpException('Không thể đánh giá SP bằng phản hồi', 400);
-    }
-
-    if (type == 1 && data.point && !data.parent_item_id) {
-      const checkReviewExist = await this.reviewCommentItemsRepo.findOne({
-        product_id,
-        phone,
-      });
-      if (checkReviewExist) {
-        throw new HttpException(
-          'Người dùng đã đánh giá bài viết, không thể đánh giá thêm',
-          400,
-        );
-      }
-    }
-
-    let reviewItemData = {
-      ...new ReviewCommentItemsEntity(),
-      ...this.reviewCommentItemsRepo.setData(data),
-      product_id,
-      email,
-      phone,
-      fullname,
       type,
-    };
-
-    const reviewComment = await this.reviewCommentItemsRepo.create(
-      reviewItemData,
     );
-
-    if (data?.images && data?.images?.length) {
-      for (let imageItem of data.images) {
-        const image = await this.imageRepo.create({ image_path: imageItem });
-        if (image) {
-          await this.imageLinkRepo.create({
-            object_type: ImageObjectType.COMMENT_REVIEWS,
-            object_id: reviewComment.item_id,
-            image_id: image.image_id,
-          });
-        }
-      }
-    }
-
-    if (type !== 1 || !data.point) return;
-
-    const review = await this.reviewRepo.findOne({ product_id });
-    if (review) {
-      let ratings = JSON.parse(review.ratings);
-      let sum = 0;
-      let count = 0;
-      for (let i = 0; i <= ratings.length - 1; i++) {
-        if (i == data.point - 1) {
-          ratings[i]++;
-        }
-        sum += (i + 1) * ratings[i];
-        count += ratings[i];
-      }
-
-      await this.reviewRepo.update(
-        { product_id },
-        {
-          ratings: JSON.stringify(ratings),
-          avg_point: sum / count,
-          updated_at: formatStandardTimeStamp(),
-        },
-      );
-    } else {
-      let ratings = [];
-      for (let i = 0; i <= 4; i++) {
-        if (i === data.point - 1) {
-          ratings[i] = 1;
-        } else {
-          ratings[i] = 0;
-        }
-      }
-
-      const newReviewData = {
-        ...new ReviewEntity(),
-        ...this.reviewRepo.setData(data),
-        ratings: JSON.stringify(ratings),
-        avg_point: data.point,
-        product_id,
-      };
-
-      await this.reviewRepo.create(newReviewData);
-    }
   }
 
-  async getReviewsCommentsList(product_id: number, params, type) {
-    let { page, skip, limit } = getPageSkipLimit(params);
-    const checkAllowComment = await this.productRepo.findOne({
+  async getReviewsCommentsListWebsite(product_id: number, params, type) {
+    return this.reviewCommentService.getReviewsCommentsListWebsite(
       product_id,
-      allow_comment: 'Y',
-    });
-    if (!checkAllowComment) {
-      throw new HttpException(
-        'Sản phẩm hiện tại không thể bình luận, đánh giá.',
-        403,
-      );
-    }
-    const reviewCommentItems = await this.reviewCommentItemsRepo.find({
-      select: '*',
-      orderBy: [
-        {
-          field: `${Table.REVIEW_COMMENT_ITEMS}.updated_at`,
-          sortBy: SortBy.DESC,
-        },
-      ],
-      where: {
-        product_id,
-        type,
-        status: 'A',
-        parent_item_id: IsNull(),
-      },
-      skip,
-      limit,
-    });
-    const count = await this.reviewCommentItemsRepo.find({
-      select: 'COUNT(item_id) as total',
-
-      where: {
-        product_id,
-        type,
-        status: 'A',
-        parent_item_id: IsNull(),
-      },
-    });
-
-    if (reviewCommentItems.length) {
-      for (let reviewItem of reviewCommentItems) {
-        reviewItem['images'] = [];
-        const images = await this.imageLinkRepo.find({
-          object_type: ImageObjectType.COMMENT_REVIEWS,
-          object_id: reviewItem.item_id,
-        });
-        if (images.length) {
-          for (let imageItem of images) {
-            const imageLink = await this.imageRepo.findOne({
-              image_id: imageItem.image_id,
-            });
-            reviewItem['images'].push(imageLink);
-          }
-        }
-
-        reviewItem['responses'] = [];
-        let responseReviews = await this.reviewCommentItemsRepo.find({
-          parent_item_id: reviewItem.item_id,
-          status: 'A',
-        });
-        if (responseReviews.length) {
-          for (let responseReview of responseReviews) {
-            responseReview['images'] = [];
-            const images = await this.imageLinkRepo.find({
-              object_type: ImageObjectType.COMMENT_REVIEWS,
-              object_id: responseReview.item_id,
-            });
-
-            if (images.length) {
-              for (let imageItem of images) {
-                const imageLink = await this.imageRepo.findOne({
-                  image_id: imageItem.image_id,
-                });
-                responseReview['images'].push(imageLink);
-              }
-            }
-            reviewItem['responses'].push(responseReview);
-          }
-        }
-      }
-    }
-
-    if (type == 1) {
-      const review = await this.reviewRepo.findOne({ product_id });
-      return {
-        paging: { currentPage: page, pageSize: limit, total: count[0].total },
-        summary: review,
-        items: reviewCommentItems,
-      };
-    }
-    return {
-      paging: { currentPage: page, pageSize: limit, total: count[0].total },
-      items: reviewCommentItems,
-    };
+      params,
+      type,
+    );
   }
 
   async getReviewsListCMS(params, type) {
@@ -4479,83 +4298,7 @@ export class ProductService {
   }
 
   async getCommentsReviewsList(params) {
-    let { search } = params;
-    let { page, skip, limit } = getPageSkipLimit(params);
-
-    let filterConditions = {};
-    if (!search) {
-      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
-        IsNull();
-    }
-
-    const reviewCommentItems = await this.reviewCommentItemsRepo.find({
-      select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status, ${Table.PRODUCTS}.slug as productSlug`,
-      join: reviewCommentProductJoiner,
-      where: reviewCommentItemsSearchFilter(search, filterConditions),
-      skip,
-      limit,
-    });
-
-    let reviewCommentResults = [];
-    for (let reviewCommentItem of reviewCommentItems) {
-      if (
-        reviewCommentItem['parent_item_id'] &&
-        reviewCommentItem['parent_item_id'] != 0
-      ) {
-        if (
-          reviewCommentResults.length &&
-          reviewCommentResults.some(
-            ({ item_id }) => item_id == reviewCommentItem['parent_item_id'],
-          )
-        ) {
-          reviewCommentResults = reviewCommentResults.map((item) => {
-            if (item.item_id == reviewCommentItem['parent_item_id']) {
-              item['children'] = item['children']
-                ? [...item['children'], reviewCommentItem]
-                : [reviewCommentItem];
-            }
-            return item;
-          });
-        } else {
-          let temp = { ...reviewCommentItem };
-          reviewCommentItem = await this.reviewCommentItemsRepo.findOne({
-            item_id: reviewCommentItem['parent_item_id'],
-          });
-
-          reviewCommentItem['children'] = [temp];
-
-          reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
-        }
-        continue;
-      }
-
-      if (reviewCommentItem.type === 1) {
-        reviewCommentItem['review'] = {};
-        let review = await this.reviewRepo.findOne({
-          product_id: reviewCommentItem.product_id,
-        });
-        if (review) {
-          reviewCommentItem['review'] = review;
-        }
-      }
-
-      reviewCommentItem['children'] = [];
-      reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
-    }
-
-    let count = await this.reviewCommentItemsRepo.find({
-      select: `COUNT(product_id) as total`,
-      where: reviewCommentItemsSearchFilter(search, filterConditions),
-    });
-
-    return {
-      paging: {
-        currentPage: page,
-        pageSize: limit,
-        total: count[0].total,
-      },
-      items: reviewCommentResults,
-    };
+    return this.reviewCommentService.getCommentsReviewsList(params);
   }
 
   async updateReviewComment(item_id, data) {
@@ -4563,7 +4306,7 @@ export class ProductService {
       item_id,
     });
     if (!reviewCommentItem) {
-      throw new HttpException(`Không tìm thấy review/ bình luận`, 404);
+      throw new HttpException(`Không tìm thấy đánh giá/ bình luận`, 404);
     }
     const updateReviewComment = {
       ...this.reviewCommentItemsRepo.setData(data),
@@ -4611,7 +4354,6 @@ export class ProductService {
     product_id,
     user,
   ) {
-    console.log(user);
     let email = user.email;
     let phone = user.phone;
     let fullname = `${user?.firstname || ''} ${user?.lastname || ''}`.trim();

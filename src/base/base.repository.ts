@@ -24,11 +24,17 @@ const orderCmds = [
 export class BaseRepositorty<T> {
   private logger = new Logger(BaseRepositorty.name);
   private _tableProps: string[];
+
   constructor(
     protected readonly databaseService: DatabaseService,
     protected table: Table,
   ) {
     this.table = table;
+  }
+
+  dbCollection() {
+    let collection = new DatabaseCollection(this.table);
+    return collection;
   }
 
   set tableProps(tableProps) {

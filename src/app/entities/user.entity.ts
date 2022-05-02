@@ -5,10 +5,10 @@ export class UserEntity {
   user_type: string = 'C';
   user_login: string = 'SYSTEM';
   user_appcore_id: number = null;
-  is_root: string = '';
+  account_type: number = 2;
   company_id: number = 0;
   store_id: number = 0;
-  last_login: number = 0;
+  last_login: string = formatStandardTimeStamp();
   password: string = '';
   salt: string = '';
   firstname: string = '';
@@ -28,8 +28,6 @@ export class UserEntity {
   responsible_email: string = '';
   last_passwords: string = '';
   password_change_timestamp: number = 0;
-  api_key: string = '';
-  janrain_identifier: string = '';
   avatar: string = '';
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();

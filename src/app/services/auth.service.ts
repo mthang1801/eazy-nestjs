@@ -24,7 +24,10 @@ import { UserGroupsService } from './usergroups.service';
 import { UserGroupEntity } from '../entities/usergroups.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { MailService } from './mail.service';
-import { UserStatusEnum } from '../../database/enums/tableFieldEnum/user.enum';
+import {
+  UserStatusEnum,
+  UserTypeEnum,
+} from '../../database/enums/tableFieldEnum/user.enum';
 import { UserMailingListRepository } from '../repositories/userMailingLists.repository';
 import { UserMailingListsEntity } from '../entities/userMailingLists.entity';
 import { v4 as uuid } from 'uuid';
@@ -47,6 +50,7 @@ import { CustomerService } from './customer.service';
 import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
+import { generateRandomNumber } from '../../utils/helper';
 
 @Injectable()
 export class AuthService {
@@ -76,6 +80,7 @@ export class AuthService {
         phone: user.phone,
         lastname: user.lastname,
         firstname: user.firstname,
+        salt: user.salt,
         permission: `UID_${user['user_id']}`,
       },
     };
@@ -92,12 +97,55 @@ export class AuthService {
     }
 
     const checkPhoneExist = await this.userRepository.findOne({ phone });
+    let user;
+    if (checkPhoneExist && checkPhoneExist.account_type === 2) {
+      user = await this.userRepository.update(
+        {
+          user_id: checkPhoneExist.user_id,
+        },
+        {
+          firstname,
+          lastname,
+          email,
+          password: passwordHash,
+          salt,
+          account_type: 1,
+          status: 'D',
+          user_type: UserTypeEnum.Customer,
+        },
+      );
+
+      let userProfile = await this.userProfileRepository.findOne({
+        user_id: checkPhoneExist.user_id,
+      });
+      if (!userProfile) {
+        const newUserProfile = {
+          ...new UserProfileEntity(),
+          b_phone: phone,
+          b_firstname: firstname,
+          b_lastname: lastname,
+          user_id: checkPhoneExist.user_id,
+        };
+        await this.userProfileRepository.create(newUserProfile);
+      }
+
+      await this.userMailingListRepository.delete({
+        subscriber_id: user.user_id,
+        type: UserMailingListsTypeEnum.ActivateSignUpAccount,
+      });
+
+      await this.sendMailService(
+        user,
+        UserMailingListsTypeEnum.ActivateSignUpAccount,
+      );
+      return;
+    }
 
     if (checkPhoneExist) {
       throw new HttpException('Số điện thoại đã tồn tại.', 409);
     }
 
-    let user = await this.userService.createUser({
+    user = await this.userService.createUser({
       firstname,
       lastname,
       user_login: AuthProviderEnum.SYSTEM,
@@ -105,6 +153,7 @@ export class AuthService {
       password: passwordHash,
       phone,
       salt,
+      account_type: 1,
       status: UserStatusEnum.Deactive,
       created_at: formatStandardTimeStamp(),
     });
@@ -117,8 +166,6 @@ export class AuthService {
       b_firstname: firstname,
       b_lastname: lastname,
       b_phone: phone,
-      s_firstname: firstname,
-      s_lastname: lastname,
       profile_name: `${firstname} ${lastname}`,
     });
 
@@ -177,9 +224,12 @@ export class AuthService {
       );
     }
 
+    const { passwordHash, salt } = saltHashPassword(password);
     await this.userService.update(user.user_id, {
       user_login: AuthProviderEnum.SYSTEM,
       last_login: formatStandardTimeStamp(),
+      password: passwordHash,
+      salt,
     });
 
     user['image'] = await this.getUserImage(user.user_id);
@@ -220,78 +270,62 @@ export class AuthService {
   ): Promise<any> {
     // Check if user has been existings or not
 
-    let userExists = await this.userService.findUserAllInfo({
+    let userExists: any = await this.userService.findUserAllInfo({
       email: providerData.email,
     });
 
     if (!userExists) {
-      userExists = await this.userService.create({
-        firstname: providerData.givenName,
-        lastname: providerData.familyName,
-        email: providerData.email,
-        created_at: formatStandardTimeStamp(),
-      });
+      try {
+        const userData = {
+          ...new UserEntity(),
+          firstname: providerData.givenName,
+          lastname: providerData.familyName,
+          email: providerData.email,
+          phone: generateRandomNumber(10),
+          account_type: 1,
+          avatar: providerData.imageUrl,
+        };
+        userExists = await this.userRepository.create(userData);
 
-      // Create a new record at ddv_user_profiles
-      const userProfile = await this.userProfileRepository.create({
-        user_id: userExists.user_id,
-        b_firstname: userExists.firstname,
-        b_lastname: userExists.lastname,
-        s_firstname: userExists.firstname,
-        s_lastname: userExists.lastname,
-        profile_name: `${userExists.firstname || ''} ${
-          userExists.lastname || ''
-        }`,
-      });
-
-      // Create a new record at ddv_user_data
-      const userData = {
-        ...new UserDataEntity(),
-        user_id: userExists.user_id,
-      };
-      const newUserData = await this.userService.createUserData(userData);
-
-      //create a new record at ddv_user_loyalty
-      const newUserLoyalty = await this.userLoyaltyRepo.create({
-        user_id: userExists.user_id,
-      });
-
-      await this.customerService.createCustomerToAppcore(userExists);
-
-      userExists = {
-        ...userExists,
-        ...userProfile,
-        ...newUserLoyalty,
-        ...newUserData,
-      };
-    }
-
-    // Create image at ddv_images and ddv_image_links
-    let userImageLink = await this.imageLinksRepository.findOne({
-      where: {
-        object_id: userExists.user_id,
-        object_type: ImageObjectType.USER,
-      },
-    });
-
-    let userImage;
-
-    if (!userImageLink) {
-      const userImage = await this.imagesRepository.create({
-        image_path: providerData.imageUrl,
-      });
-      if (userImage) {
-        userImageLink = await this.imageLinksRepository.create({
-          object_id: userExists.user_id,
-          object_type: ImageObjectType.USER,
-          image_id: userImage.image_id,
+        // Create a new record at ddv_user_profiles
+        const userProfile = await this.userProfileRepository.create({
+          user_id: userExists.user_id,
+          b_firstname: userExists.firstname,
+          b_lastname: userExists.lastname,
         });
-      }
-    } else {
-      userImage = await this.imagesRepository.findById(userImageLink.image_id);
-    }
 
-    userExists['image'] = userImage;
+        // Create a new record at ddv_user_data
+        const userDataData = {
+          ...new UserDataEntity(),
+          user_id: userExists.user_id,
+        };
+        const newUserData = await this.userService.createUserData(userDataData);
+
+        //create a new record at ddv_user_loyalty
+        const newUserLoyalty = await this.userLoyaltyRepo.create({
+          user_id: userExists.user_id,
+        });
+
+        await this.customerService.createCustomerToAppcore(userExists);
+
+        userExists = {
+          ...userExists,
+          ...userProfile,
+          ...newUserLoyalty,
+          ...newUserData,
+        };
+      } catch (error) {
+        console.log(error);
+        throw new HttpException(
+          `Có lỗi xảy ra : ${
+            error?.response?.data?.message ||
+            error?.response?.data ||
+            error.message
+          }`,
+          error.response.status || error.status,
+        );
+      }
+    }
 
     // Create or update at ddv_users_auth_external table
     let authProvider: AuthProviderEntity = await this.authRepository.findOne({

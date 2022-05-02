@@ -58,7 +58,7 @@ export class DatabaseCollection {
     this.offset = 0;
   }
 
-  addSelect(arrayField: string[]): string {
+  public addSelect(arrayField: string[]): string {
     if (Array.isArray(arrayField) && arrayField.length) {
       for (let i = 0; i < arrayField.length; i++) {
         if (i === 0) {

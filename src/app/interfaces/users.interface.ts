@@ -4,7 +4,7 @@ export interface IUser {
   user_type: string;
   user_login: string;
   user_appcore_id: string;
-  is_root: string;
+  account_type: number;
   company_id: number;
   store_id: number;
   last_login: number;
@@ -24,8 +24,6 @@ export interface IUser {
   responsible_email: string;
   last_passwords: string;
   password_change_timestamp: number;
-  api_key: string;
-  janrain_identifier: string;
   verify_token: string;
   verify_token_exp: Date;
   otp: number;

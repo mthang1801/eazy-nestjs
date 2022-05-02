@@ -8,7 +8,7 @@ export const preprocessUserResult = (user) => {
     let users = [];
     user.forEach((item) => {
       let userObject = { ...item };
-      delete userObject.password;
+      // delete userObject.password;
       delete userObject.salt;
       users.push(userObject);
     });
@@ -22,6 +22,26 @@ export const preprocessUserResult = (user) => {
 
 export const generateOTPDigits = () =>
   Math.floor(100000 + Math.random() * 900000);
+
+export const generateRandomNumber = (length) => {
+  let result = '';
+  if (length < 0) {
+    return result;
+  }
+  for (let i = 0; i < length; i++) {
+    let value = Math.random() * 10;
+
+    if (value < 1) {
+      value = 0;
+    } else if (value > 9) {
+      value = 9;
+    } else {
+      value = Math.ceil(value);
+    }
+    result += value.toString();
+  }
+  return result;
+};
 
 export const generateRandomString = () => uuid().replace(/-/g, '');
 
@@ -171,3 +191,9 @@ function distance(lat1, lon1, lat2, lon2, unit) {
   }
   return dist;
 }
+
+export const checkRestrictedCommentsListIntoRegularExpress = (str) =>
+  str
+    .split(',')
+    .map((item) => `(${item})`)
+    .join('|');
