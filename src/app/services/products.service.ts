@@ -2094,20 +2094,26 @@ export class ProductService {
       where: { [`${Table.PRODUCTS}.product_id`]: product_id },
     });
 
-    if (parentProduct['price'] == 0) {
-      let childProductPrice = await this.productRepo.findOne({
-        select: `price,  list_price, buy_price, collect_price, whole_price, percentage_discount`,
-        join: productPriceJoiner,
-        where: {
-          [`${Table.PRODUCTS}.parent_product_appcore_id`]:
-            parentProduct['product_appcore_id'],
-        },
-      });
+    let childrenProducts = await this.productRepo.find({
+      select: `price,  list_price, buy_price, collect_price, whole_price, percentage_discount`,
+      join: productPriceJoiner,
+      where: {
+        [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+          parentProduct['product_appcore_id'],
+      },
+    });
 
-      if (childProductPrice) {
+    if (childrenProducts.length) {
+      let sortProductsByPrice = _.sortBy(childrenProducts, [
+        function (o) {
+          return o.price;
+        },
+      ]);
+      if (sortProductsByPrice.length) {
+        let firstChild = sortProductsByPrice[0];
         await this.productPriceRepo.update(
           { product_id: parentProduct.product_id },
-          { ...childProductPrice },
+          { ...firstChild },
         );
       }
     }

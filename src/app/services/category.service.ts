@@ -10,7 +10,7 @@ import { CategoryEntity } from '../entities/category.entity';
 import { CategoryDescriptionRepository } from '../repositories/categoryDescriptions.repository';
 import * as _ from 'lodash';
 import { Like, Equal, Not } from '../../database/operators/operators';
-import { ICategoryResult } from '../interfaces/categoryReult.interface';
+
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
