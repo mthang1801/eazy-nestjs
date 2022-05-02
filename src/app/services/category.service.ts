@@ -1,12 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
-import {
-  convertNullDatetimeData,
-  formatStandardTimeStamp,
-  convertToSlug,
-  removeVietnameseTones,
-} from '../../utils/helper';
+import { formatStandardTimeStamp, convertToSlug } from '../../utils/helper';
 import { CreateCategoryDto } from '../dto/category/create-category.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
@@ -161,7 +156,7 @@ export class CategoryService {
     const categoryData = {
       ...new CategoryEntity(),
       ...this.categoryRepository.setData(convertedData),
-      slug: convertToSlug(removeVietnameseTones(data['category'])),
+      slug: convertToSlug(data['category']),
     };
 
     if (convertedData['parent_appcore_id']) {
@@ -1110,7 +1105,7 @@ export class CategoryService {
       const newCategoryData = {
         ...new CategoryEntity(),
         ...this.categoryRepository.setData(convertedData),
-        slug: convertToSlug(removeVietnameseTones(convertedData['category'])),
+        slug: convertToSlug(convertedData['category']),
       };
       const newCategory = await this.categoryRepository.create(newCategoryData);
 
@@ -1246,9 +1241,7 @@ export class CategoryService {
       let cmsData = {};
       for (let [core, cms] of mappingData) {
         if (core === 'name') {
-          cmsData['slug'] = convertToSlug(
-            removeVietnameseTones(coreData[core]),
-          );
+          cmsData['slug'] = convertToSlug(coreData[core]);
           cmsData['category_appcore'] = coreData[core];
         }
         cmsData[cms] = coreData[core];

@@ -1,6 +1,14 @@
 import { v4 as uuid } from 'uuid';
 import * as moment from 'moment';
-import { processGetTextDataFromMysql } from '../base/base.helper';
+
+import * as crypto from 'crypto';
+
+export function genRandomString(length: number): string {
+  return crypto
+    .randomBytes(Math.ceil(+length / 2))
+    .toString('hex')
+    .slice(0, length);
+}
 
 export const preprocessUserResult = (user) => {
   if (!user) return null;
@@ -55,12 +63,19 @@ export const generateRandomPassword = (length = 10) => {
   return password;
 };
 
-export const convertToSlug = (text) =>
-  text
+export const convertToSlug = (text, genTailRandomString = true) => {
+  let slug = removeVietnameseTones(text);
+
+  if (genTailRandomString) {
+    slug = `${slug}-${genRandomString(6)}`;
+  }
+
+  return slug
     .toLowerCase()
     .trim()
     .replace(/[^\w ]+/g, '')
     .replace(/ +/g, '-');
+};
 
 export const removeVietnameseTones = (str) => {
   str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');

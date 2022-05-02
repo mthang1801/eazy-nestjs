@@ -717,9 +717,7 @@ export const itgConvertProductsFromAppcore = (data) => {
   }
 
   if (convertedData['product']) {
-    convertedData['slug'] = convertToSlug(
-      removeVietnameseTones(convertedData['product']),
-    );
+    convertedData['slug'] = convertToSlug(convertedData['product']);
   }
 
   delete convertedData['product_id'];

@@ -19,15 +19,9 @@ import { ProductFeatureValueEntity } from '../entities/productFeaturesValues.ent
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
 import * as _ from 'lodash';
-import {
-  productFeatures as productFeaturesData,
-  productFeatures,
-} from '../../constants/productFeatures';
+
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
-import {
-  formatStandardTimeStamp,
-  removeVietnameseTones,
-} from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/helper';
 import { convertToSlug, hasWhiteSpace } from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import {
@@ -103,7 +97,7 @@ export class ProductFeatureService {
             ...featureVariantData,
             variant_code: featureVariantData['variant_code']
               ? featureVariantData['variant_code']
-              : convertToSlug(removeVietnameseTones(feature_value.variant)),
+              : convertToSlug(feature_value.variant),
             feature_id: newFeature.feature_id,
           });
 
@@ -649,7 +643,7 @@ export class ProductFeatureService {
             ...productFeatureVariantData,
             variant_code:
               productFeatureVariantData['variant_code'] ??
-              convertToSlug(removeVietnameseTones(variantItem['variant'])),
+              convertToSlug(variantItem['variant']),
             feature_id: result['feature_id'],
           });
 

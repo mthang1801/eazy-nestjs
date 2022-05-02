@@ -2,7 +2,7 @@ import { customer_type } from 'src/constants/customer';
 import { Table } from 'src/database/enums';
 import { UserTypeEnum } from 'src/database/enums/tableFieldEnum/user.enum';
 import { Equal, Like, Not } from 'src/database/operators/operators';
-import { convertToSlug, removeVietnameseTones } from './helper';
+import { convertToSlug } from './helper';
 
 const searchFilterTemplate = (filterConditions = {}, fieldsSearch = []) => {
   if (!fieldsSearch.length && !Object.entries(filterConditions).length)
@@ -241,9 +241,7 @@ export const productSearch = (search = '', filterConditions = {}) => {
     arraySearch = [
       { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
       {
-        [`${Table.PRODUCTS}.slug`]: Like(
-          convertToSlug(removeVietnameseTones(search)),
-        ),
+        [`${Table.PRODUCTS}.slug`]: Like(convertToSlug(search)),
       },
     ];
   }
