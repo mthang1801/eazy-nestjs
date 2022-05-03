@@ -50,6 +50,7 @@ export class ShippingFeeService {
     user,
   ) {
     if (data.shippingFees && data.shippingFees.length) {
+      await this.shippingFeeLocationRepo.delete({ shipping_fee_id });
       for (let shippingFee of data.shippingFees) {
         const checkExist = await this.shippingFeeLocationRepo.findOne({
           city_id: shippingFee.city_id,
@@ -90,7 +91,6 @@ export class ShippingFeeService {
     user,
   ) {
     if (data.shippingFees && data.shippingFees.length) {
-      await this.shippingFeeLocationRepo.delete({ shipping_fee_id });
       await this.createShippingFeeByLocation(data, shipping_fee_id, user);
     }
     return this.get(shipping_fee_id);
