@@ -32,6 +32,17 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Post('criteria')
+  @UseGuards(AuthGuard)
+  async cmsCreateCriteria(
+    @Res() res: Response,
+    @Body() data,
+    @Req() req,
+  ): Promise<IResponse> {
+    const result = await this.service.cmsCreateCriteria(data, req.user);
+    return this.responseSuccess(res, result);
+  }
+
   @Get()
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);

@@ -3,7 +3,8 @@ import { TradeinProgramRepository } from '../repositories/tradeinProgram.reposit
 import { TradeinProgramService } from '../services/tradeinProgram.service';
 import { TradeinProgramDetailRepository } from '../repositories/tradeinProgramDetail.repository';
 import { TradeinProgramCriteriaRepository } from '../repositories/tradeinProgramCriteria.repository';
-import { TradeinProgramController } from '../controllers/be/v1/tradeinProgram.controller';
+import { TradeinProgramController as TradeinProgramControllerBE } from '../controllers/be/v1/tradeinProgram.controller';
+import { TradeinProgramController as TradeinProgramControllerFE } from '../controllers/fe/v1/tradeinProgram.controller';
 
 @Module({
   providers: [
@@ -18,6 +19,6 @@ import { TradeinProgramController } from '../controllers/be/v1/tradeinProgram.co
     TradeinProgramDetailRepository,
     TradeinProgramCriteriaRepository,
   ],
-  controllers: [TradeinProgramController],
+  controllers: [TradeinProgramControllerBE, TradeinProgramControllerFE],
 })
 export class TradeinProgramModule {}

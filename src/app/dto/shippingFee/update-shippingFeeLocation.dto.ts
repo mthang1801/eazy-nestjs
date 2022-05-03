@@ -5,5 +5,5 @@ export class UpdateShippingFeeLocationDto {
   value_fee: number;
 
   @IsOptional()
-  fee_location_status: string = 'A';
+  fee_location_status: string;
 }

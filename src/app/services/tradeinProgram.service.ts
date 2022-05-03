@@ -18,6 +18,10 @@ import {
   tradeinProgramDetailSearchFilter,
 } from '../../utils/tableConditioner';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import {
+  LessThanOrEqual,
+  MoreThanOrEqual,
+} from '../../database/operators/operators';
 
 export class TradeinProgramService {
   constructor(
@@ -62,6 +66,8 @@ export class TradeinProgramService {
     return this.get(newTradeinProgram.tradein_id);
   }
 
+  async cmsCreateCriteria(data, user) {}
+
   async getList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search } = params;
@@ -76,6 +82,58 @@ export class TradeinProgramService {
       skip,
       limit,
     });
+
+    let count = await this.tradeinProgramRepo.find({
+      select: `COUNT(DISTINCT(${Table.TRADEIN_PROGRAM}.tradein_id)) as total `,
+      where: tradeinProgramSearchFilter(search, filterCondition),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: tradeinProgramsList,
+    };
+  }
+
+  async getListFE(params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterCondition = {
+      [`${Table.TRADEIN_PROGRAM}.status`]: 'A',
+      [`${Table.TRADEIN_PROGRAM}.start_at`]: LessThanOrEqual(
+        formatStandardTimeStamp(),
+      ),
+      [`${Table.TRADEIN_PROGRAM}.end_at`]: MoreThanOrEqual(
+        formatStandardTimeStamp(),
+      ),
+    };
+
+    let tradeinProgramsList = await this.tradeinProgramRepo.find({
+      select: '*',
+      where: tradeinProgramSearchFilter(search, filterCondition),
+      orderBy: [
+        { field: `${Table.TRADEIN_PROGRAM}.updated_at`, sortBy: SortBy.DESC },
+      ],
+      skip,
+      limit,
+    });
+
+    if (tradeinProgramsList) {
+      for (let tradeinProgram of tradeinProgramsList) {
+        let aplliedProducts = await this.tradeinProgramDetailRepo.find({
+          select: '*',
+          join: tradeinDetailLeftJoiner,
+          where: {
+            [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
+              tradeinProgram.tradein_id,
+          },
+        });
+        tradeinProgram['appliedProducts'] = aplliedProducts;
+      }
+    }
 
     let count = await this.tradeinProgramRepo.find({
       select: `COUNT(DISTINCT(${Table.TRADEIN_PROGRAM}.tradein_id)) as total `,

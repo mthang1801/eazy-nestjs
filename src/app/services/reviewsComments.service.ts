@@ -81,12 +81,12 @@ export class ReviewsCommentService {
       filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.is_replied`] = is_replied;
     }
 
-    // if (!search) {
-    //   filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
-    //     IsNull();
-    // }
-
     let joinSqlConditions = '';
+    if (search) {
+      joinSqlConditions += joinSqlConditions
+        ? `AND ddv_review_comment_items.comment LIKE '%${search}%'`
+        : `ddv_review_comment_items.comment LIKE '%${search}%'`;
+    }
     if (point) {
       joinSqlConditions += joinSqlConditions
         ? `AND type = 1 AND point = ${point} `
@@ -105,87 +105,79 @@ export class ReviewsCommentService {
     }
 
     let sql = '';
-    if (search) {
-      sql = joinSqlConditions
-        ? `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
-        : `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL ) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' ) ) AS root_item_id  order by updated_at DESC LIMIT 10 OFFSET 0;`;
-    } else {
-      sql = joinSqlConditions
-        ? `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
-        : `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`;
-    }
+    let countSql = '';
+
+    sql = joinSqlConditions
+      ? `select distinct(result.item_id), result.*
+        from (( SELECT *
+        from ddv_review_comment_items
+        where item_id in ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL AND ${joinSqlConditions}) )
+        union all 
+        (SELECT * FROM ddv_review_comment_items WHERE parent_item_id is null AND ${joinSqlConditions})
+        ) as result 
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+        OFFSET ${skip};`
+      : `select distinct(item_id), result.*
+        from ((select *
+        from ddv_review_comment_items
+        where item_id in ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL) )
+        union all 
+        (SELECT * FROM ddv_review_comment_items WHERE parent_item_id is null)
+        ) as result 
+        ORDER BY updated_at DESC
+        LIMIT ${limit}
+        OFFSET ${skip};`;
+    countSql = joinSqlConditions
+      ? `SELECT COUNT(DISTINCT(item_id)) as total
+        FROM ((SELECT item_id, parent_item_id, updated_at
+        FROM ddv_review_comment_items
+        WHERE item_id IN ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL AND ${joinSqlConditions}   ) )
+        UNION ALL 
+        (SELECT item_id, parent_item_id, updated_at FROM ddv_review_comment_items WHERE parent_item_id IS NULL AND ${joinSqlConditions} )
+        ) AS result;`
+      : `SELECT COUNT(DISTINCT(item_id)) as total 
+        FROM ((SELECT item_id, parent_item_id, updated_at
+        FROM ddv_review_comment_items
+        WHERE item_id IN ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL ) )
+        UNION ALL 
+        (SELECT item_id, parent_item_id, updated_at FROM ddv_review_comment_items WHERE parent_item_id IS NULL )
+        ) AS result `;
 
     let sqlResponse = await this.db.executeQueryReadPool(sql);
-    let parentReviewCommentIds = sqlResponse[0][0].length
-      ? sqlResponse[0][0].map(({ item_id }) => item_id)
-      : [];
-    console.log(sqlResponse[0][0]);
+    let countSqlResponse = await this.db.executeQueryReadPool(countSql);
 
-    const reviewCommentItems = await this.reviewCommentItemRepo.find({
-      select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status, ${Table.PRODUCTS}.slug as productSlug`,
-      join: reviewCommentProductJoiner,
-      where: reviewCommentItemsSearchFilter(search, filterConditions),
-      skip,
-      limit,
-    });
+    let parentReviewCommentItems = sqlResponse[0].map((item) => item);
+    let total = countSqlResponse[0][0]?.total || 0;
 
     let reviewCommentResults = [];
-    for (let reviewCommentItem of reviewCommentItems) {
-      if (
-        reviewCommentItem['parent_item_id'] &&
-        reviewCommentItem['parent_item_id'] != 0
-      ) {
-        if (
-          reviewCommentResults.length &&
-          reviewCommentResults.some(
-            ({ item_id }) => item_id == reviewCommentItem['parent_item_id'],
-          )
-        ) {
-          reviewCommentResults = reviewCommentResults.map((item) => {
-            if (item.item_id == reviewCommentItem['parent_item_id']) {
-              item['children'] = item['children']
-                ? [...item['children'], reviewCommentItem]
-                : [reviewCommentItem];
-            }
-            return item;
-          });
-        } else {
-          let temp = { ...reviewCommentItem };
-          reviewCommentItem = await this.reviewCommentItemRepo.findOne({
-            item_id: reviewCommentItem['parent_item_id'],
-          });
+    for (let parentReviewCommentItem of parentReviewCommentItems) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
+        parentReviewCommentItem.item_id;
+      let childrenReviewCommentItems = await this.reviewCommentItemRepo.find({
+        select: '*',
+        where: reviewCommentItemsSearchFilter(search, filterConditions),
+      });
+      parentReviewCommentItem['children'] = childrenReviewCommentItems;
 
-          reviewCommentItem['children'] = [temp];
-
-          reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
-        }
-        continue;
-      }
-
-      if (reviewCommentItem.type === 1) {
-        reviewCommentItem['review'] = {};
+      if (parentReviewCommentItem.type === 1) {
+        parentReviewCommentItem['review'] = {};
         let review = await this.reviewRepo.findOne({
-          product_id: reviewCommentItem.product_id,
+          product_id: parentReviewCommentItem.product_id,
         });
         if (review) {
-          reviewCommentItem['review'] = review;
+          parentReviewCommentItem['review'] = review;
         }
       }
 
-      reviewCommentItem['children'] = [];
-      reviewCommentResults = [...reviewCommentResults, reviewCommentItem];
+      reviewCommentResults = [...reviewCommentResults, parentReviewCommentItem];
     }
-
-    let count = await this.reviewCommentItemRepo.find({
-      select: `COUNT(product_id) as total`,
-      where: reviewCommentItemsSearchFilter(search, filterConditions),
-    });
 
     return {
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count[0].total,
+        total,
       },
       items: reviewCommentResults,
     };

@@ -22,6 +22,15 @@ export class ReviewsCommentsController extends BaseController {
     super();
   }
 
+  @Post('/restricted-keywords')
+  async createRestrictedCommentsKeywords(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    await this.service.createRestrictedCommentsKeywords(data);
+    return this.responseSuccess(res);
+  }
+
   @Post(':product_id')
   @UseGuards(AuthGuard)
   async createComment(
@@ -36,15 +45,6 @@ export class ReviewsCommentsController extends BaseController {
       req.user,
     );
     return this.responseSuccess(res, result);
-  }
-
-  @Post('/restricted-keywords')
-  async createRestrictedCommentsKeywords(
-    @Res() res: Response,
-    @Body() data,
-  ): Promise<IResponse> {
-    await this.service.createRestrictedCommentsKeywords(data);
-    return this.responseSuccess(res);
   }
 
   @Get('/restricted-keywords')
