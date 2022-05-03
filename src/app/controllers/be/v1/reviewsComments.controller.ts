@@ -31,7 +31,7 @@ export class ReviewsCommentsController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Post(':product_id')
+  @Post('/response/:product_id')
   @UseGuards(AuthGuard)
   async createComment(
     @Param('product_id') product_id: number,
