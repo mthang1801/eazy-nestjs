@@ -1313,10 +1313,6 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    return this.getProductListByCategory(category, params);
-  }
-
-  async getProductListByCategory(category, params) {
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
       categoryId,
@@ -1324,6 +1320,7 @@ export class ProductService {
 
     let filterCondition = {
       [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
+      [`${Table.PRODUCTS}.status`]: 'A',
     };
 
     categoriesListByLevel = _.orderBy(
@@ -1337,11 +1334,9 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
-    let { page, limit, search } = params;
+    let { search } = params;
 
-    page = +page || 1;
-    limit = +limit || 10;
-    let skip = (page - 1) * limit;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterOrder = [
       {
@@ -1395,6 +1390,10 @@ export class ProductService {
 
       //find product Stickers
       productItem['stickers'] = await this.getProductStickers(productItem);
+
+      productItem['ratings'] = await this.reviewRepo.findOne({
+        product_id: productItem['product_id'],
+      });
     }
 
     return {

@@ -24,6 +24,7 @@ import { ProductsEntity } from '../entities/products.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
 import { CreateCommentCMSDto } from '../dto/reviewComment/create-comment.cms.dto';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class ReviewsCommentService {
@@ -34,6 +35,7 @@ export class ReviewsCommentService {
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private db: DatabaseService,
   ) {}
   async createRestrictedCommentsKeywords(data) {
     const currentResitrictedComments = await this.restrictedCommentRepo.find();
@@ -79,10 +81,45 @@ export class ReviewsCommentService {
       filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.is_replied`] = is_replied;
     }
 
-    if (!search) {
-      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
-        IsNull();
+    // if (!search) {
+    //   filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
+    //     IsNull();
+    // }
+
+    let joinSqlConditions = '';
+    if (point) {
+      joinSqlConditions += joinSqlConditions
+        ? `AND type = 1 AND point = ${point} `
+        : `type = 1 AND point = ${point} `;
     }
+    let filterConditionsWithoutPoint: object = { ...filterConditions };
+
+    delete filterConditionsWithoutPoint[`${Table.REVIEW_COMMENT_ITEMS}.point`];
+
+    if (Object.entries(filterConditionsWithoutPoint).length) {
+      for (let [key, val] of Object.entries(filterConditionsWithoutPoint)) {
+        joinSqlConditions += joinSqlConditions
+          ? `AND ${key} = '${val}' `
+          : `${key} = '${val}' `;
+      }
+    }
+
+    let sql = '';
+    if (search) {
+      sql = joinSqlConditions
+        ? `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
+        : `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL ) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' ) ) AS root_item_id  order by updated_at DESC LIMIT 10 OFFSET 0;`;
+    } else {
+      sql = joinSqlConditions
+        ? `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
+        : `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`;
+    }
+
+    let sqlResponse = await this.db.executeQueryReadPool(sql);
+    let parentReviewCommentIds = sqlResponse[0][0].length
+      ? sqlResponse[0][0].map(({ item_id }) => item_id)
+      : [];
+    console.log(parentReviewCommentIds);
 
     const reviewCommentItems = await this.reviewCommentItemRepo.find({
       select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status, ${Table.PRODUCTS}.slug as productSlug`,

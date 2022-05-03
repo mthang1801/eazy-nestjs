@@ -81,6 +81,7 @@ export class ShippingFeeService {
         return result;
       }
     }
+    return this.get(shipping_fee_id);
   }
 
   async updateShippingFeeLocation(
