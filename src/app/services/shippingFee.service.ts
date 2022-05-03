@@ -78,8 +78,6 @@ export class ShippingFeeService {
           { shipping_fee_id },
           { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
         );
-
-        return result;
       }
     }
     return this.get(shipping_fee_id);
