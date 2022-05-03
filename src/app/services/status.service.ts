@@ -124,7 +124,7 @@ export class StatusService {
     const statusDesc = await this.statusDescRepo.findOne({ status_id: id });
     if (statusDesc) {
       const statusDescData = this.statusDescRepo.setData(data);
-      if (Object.entries(status).length) {
+      if (Object.entries(statusDescData).length) {
         await this.statusDescRepo.update({ status_id: id }, statusDescData);
       }
     } else {

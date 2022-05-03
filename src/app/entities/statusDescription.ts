@@ -5,4 +5,5 @@ export class StatusDescriptionEntity {
   email_header: string = '';
   lang_code: string = 'vi';
   auto_increment_id: number = 0;
+  color_value: string = '';
 }
