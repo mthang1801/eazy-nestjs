@@ -107,19 +107,19 @@ export class ReviewsCommentService {
     let sql = '';
     if (search) {
       sql = joinSqlConditions
-        ? `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
-        : `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL ) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' ) ) AS root_item_id  order by updated_at DESC LIMIT 10 OFFSET 0;`;
+        ? `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
+        : `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' AND parent_item_id IS NOT NULL ) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ddv_review_comment_items.comment LIKE '%${search}%' ) ) AS root_item_id  order by updated_at DESC LIMIT 10 OFFSET 0;`;
     } else {
       sql = joinSqlConditions
-        ? `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
-        : `SELECT DISTINCT(item_id) FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`;
+        ? `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL AND ${joinSqlConditions}) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items WHERE ${joinSqlConditions}) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`
+        : `SELECT DISTINCT(item_id), updated_at FROM  ( (SELECT DISTINCT(parent_item_id) AS item_id, updated_at FROM ddv_review_comment_items WHERE  parent_item_id IS NOT NULL) UNION ALL (SELECT item_id AS item_id, updated_at FROM ddv_review_comment_items) ) AS root_item_id  order by updated_at DESC  LIMIT 10 OFFSET 0;`;
     }
 
     let sqlResponse = await this.db.executeQueryReadPool(sql);
     let parentReviewCommentIds = sqlResponse[0][0].length
       ? sqlResponse[0][0].map(({ item_id }) => item_id)
       : [];
-    console.log(parentReviewCommentIds);
+    console.log(sqlResponse[0][0]);
 
     const reviewCommentItems = await this.reviewCommentItemRepo.find({
       select: `*, ${Table.REVIEW_COMMENT_ITEMS}.status, ${Table.PRODUCTS}.slug as productSlug`,

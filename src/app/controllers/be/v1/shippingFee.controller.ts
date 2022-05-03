@@ -66,16 +66,16 @@ export class ShippingFeesController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put('/:shipping_fee_id/locations/')
+  @Put('/locations/:shipping_fee_location_id')
   @UseGuards(AuthGuard)
   async updateShippingFeeLocation(
-    @Body() data: CreateShippingFeeLocationDto,
-    @Param('shipping_fee_id') shipping_fee_id: number,
+    @Body() data: UpdateShippingFeeLocationDto,
+    @Param('shipping_fee_location_id') shipping_fee_location_id: number,
     @Res() res: Response,
     @Req() req,
   ): Promise<IResponse> {
     const result = await this.service.updateShippingFeeLocation(
-      shipping_fee_id,
+      shipping_fee_location_id,
       data,
       req.user,
     );

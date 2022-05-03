@@ -84,14 +84,25 @@ export class ShippingFeeService {
   }
 
   async updateShippingFeeLocation(
-    shipping_fee_id,
-    data: CreateShippingFeeLocationDto,
+    shipping_fee_location_id,
+    data: UpdateShippingFeeLocationDto,
     user,
   ) {
-    if (data.shippingFees && data.shippingFees.length) {
-      await this.createShippingFeeByLocation(data, shipping_fee_id, user);
+    const shippingFeeLocationData = {
+      ...this.shippingFeeLocationRepo.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
+    const shippingFeeLocation = await this.shippingFeeLocationRepo.update(
+      { shipping_fee_location_id },
+      shippingFeeLocationData,
+    );
+    if (shippingFeeLocation) {
+      await this.shippingFeeRepo.update(
+        { shipping_fee_id: shippingFeeLocation.shipping_fee_id },
+        { updated_at: formatStandardTimeStamp(), updated_by: user.user_id },
+      );
     }
-    return this.get(shipping_fee_id);
+    return shippingFeeLocation;
   }
 
   async getList(params) {
