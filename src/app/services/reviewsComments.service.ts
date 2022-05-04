@@ -124,12 +124,33 @@ export class ReviewsCommentService {
         ? `AND type = 1 AND point = ${point} `
         : `type = 1 AND point = ${point} `;
     }
+
     let filterConditionsWithoutPoint: object = { ...filterConditions };
+
+    if (created_at_start && created_at_end) {
+      filterConditionsWithoutPoint[
+        `${Table.REVIEW_COMMENT_ITEMS}.created_at`
+      ] = `BETWEEN '${created_at_start}' AND '${created_at_end}' `;
+    } else if (created_at_start) {
+      filterConditionsWithoutPoint[
+        `${Table.REVIEW_COMMENT_ITEMS}.created_at`
+      ] = `>= '${created_at_start}' `;
+    } else if (created_at_end) {
+      filterConditionsWithoutPoint[
+        `${Table.REVIEW_COMMENT_ITEMS}.created_at`
+      ] = `<= '${created_at_end}' `;
+    }
 
     delete filterConditionsWithoutPoint[`${Table.REVIEW_COMMENT_ITEMS}.point`];
 
     if (Object.entries(filterConditionsWithoutPoint).length) {
       for (let [key, val] of Object.entries(filterConditionsWithoutPoint)) {
+        if (key === `${Table.REVIEW_COMMENT_ITEMS}.created_at`) {
+          joinSqlConditions += joinSqlConditions
+            ? `AND ${key} ${val} `
+            : `${key} ${val} `;
+          continue;
+        }
         joinSqlConditions += joinSqlConditions
           ? `AND ${key} = '${val}' `
           : `${key} = '${val}' `;
@@ -220,6 +241,8 @@ export class ReviewsCommentService {
               childReviewCommentItem['images'].push(image);
             }
           }
+          childReviewCommentItem['parentUserFullName'] =
+            parentReviewCommentItem.fullname;
         }
       }
       parentReviewCommentItem['children'] = childrenReviewCommentItems;

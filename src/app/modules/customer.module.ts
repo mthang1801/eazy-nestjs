@@ -15,6 +15,6 @@ import { CustomerControllers } from '../controllers/sync/v1/customers.controller
   ],
   providers: [CustomerService],
   exports: [CustomerService],
-  imports: [MailModule, OrdersModule, UsersModule],
+  imports: [MailModule, UsersModule, OrdersModule],
 })
 export class CustomerModule {}

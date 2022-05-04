@@ -16,11 +16,11 @@ import { CustomerModule } from './customer.module';
 
 @Module({
   imports: [
+    CustomerModule,
     UsersModule,
     UserGroupsModule,
     ImageModule,
     MailModule,
-    CustomerModule,
     UserGroupLinksModule,
     UserGroupPrivilegeModule,
     JwtModule.registerAsync({

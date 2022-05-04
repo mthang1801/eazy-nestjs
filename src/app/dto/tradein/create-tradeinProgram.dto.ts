@@ -48,6 +48,9 @@ class TradeinProduct {
 
   @IsOptional()
   detail_status: string;
+
+  @IsOptional()
+  position: number;
 }
 
 class TradeinCriteria {
@@ -58,7 +61,10 @@ class TradeinCriteria {
   criteria_name: string;
 
   @IsOptional()
-  criteria_style: string;
+  criteria_status: string;
+
+  @IsOptional()
+  criteria_style: number;
 
   @IsOptional()
   @ValidateNested()
@@ -81,4 +87,7 @@ class TradeinCriteriaDetail {
 
   @IsNotEmpty()
   value: number;
+
+  @IsOptional()
+  criteria_type: number;
 }

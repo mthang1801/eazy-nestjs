@@ -4,8 +4,9 @@ export class TradeinProgramCriteriaEntity {
   tradein_id: number = 0;
   criteria_name: string = '';
   position: number = null;
-  criteria_style: number = null;
-  criteria_value: string = '';
+  criteria_status: string = 'A';
+  criteria_style: number = 1;
+  criteria_value: number = 0;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
 }

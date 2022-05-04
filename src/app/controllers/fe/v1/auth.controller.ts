@@ -75,13 +75,11 @@ export class AuthController extends BaseController {
    */
   @Post('/google/login')
   async loginWithGoolge(
-    @Body() AuthLoginProviderDto: AuthLoginProviderDto,
+    @Body() data: AuthLoginProviderDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.service.loginWithGoogle(
-      AuthLoginProviderDto,
-    );
-    return this.responseSuccess(res, userResponse);
+    const result = await this.service.loginWithGoogle(data);
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -92,13 +90,11 @@ export class AuthController extends BaseController {
    */
   @Post('facebook/login')
   async loginWithFacebook(
-    @Body() AuthLoginProviderDto: AuthLoginProviderDto,
+    @Body() data: AuthLoginProviderDto,
     @Res() res,
   ): Promise<IResponse> {
-    const userResponse = await this.service.loginWithFacebook(
-      AuthLoginProviderDto,
-    );
-    return this.responseSuccess(res, userResponse);
+    const result = await this.service.loginWithFacebook(data);
+    return this.responseSuccess(res, result);
   }
 
   /**

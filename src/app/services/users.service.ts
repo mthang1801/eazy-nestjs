@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -20,7 +21,7 @@ import {
 import { PrimaryKeys } from '../../database/enums/autoIncrementKeys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
 
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, forwardRef } from '@nestjs/common';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateUserProfileDto } from '../dto/user/update-userProfile.dto';
 import { ImagesRepository } from '../repositories/image.repository';
@@ -126,45 +127,72 @@ export class UsersService {
     data: UpdateUserProfileDto,
   ): Promise<void> {
     let user = await this.userRepository.findOne({ user_id });
-
     if (!user) {
-      throw new HttpException('Không tìm thấy thông tin người dùng', 404);
+      throw new HttpException(
+        'Không tìm thấy người dùng hoặc người dùng đã bị vô hiệu hoá.',
+        404,
+      );
     }
 
-    if (data.email && user['email']) {
-      throw new HttpException('Tài khoản đã có email, không thể thay đổi', 401);
+    if (user.status === 'D') {
+      throw new HttpException('Người dùng đã bị vô hiệu hoá.', 403);
     }
 
-    const userData = {
+    let userData = {
       ...this.userRepository.setData(data),
       updated_at: formatStandardTimeStamp(),
     };
-    await this.userRepository.update({ user_id }, userData);
 
-    const userProfile = await this.userProfileRepository.findOne({ user_id });
-    if (userProfile) {
-      const userProfileData = this.userProfileRepository.setData(data);
-      if (!Object.entries(userProfileData).length) {
-        return;
+    if (data.b_phone) {
+      if (!user.phone) {
+        const checkPhoneExist = await this.userRepository.findOne({
+          phone: data.b_phone,
+        });
+        if (checkPhoneExist) {
+          throw new HttpException('Số điện thoại đã được sử dụng', 409);
+        }
+        userData['phone'] = data.b_phone;
+      } else {
+        throw new HttpException('Không thể thay đổi số điện thoại.', 400);
       }
-      await await this.userProfileRepository.update(
-        { user_id },
-        userProfileData,
-      );
+    }
+
+    if (data.email) {
+      if (user.email) {
+        const checkEmailExist = await this.userRepository.findOne({
+          email: data.email,
+        });
+        if (checkEmailExist) {
+          throw new HttpException('Email đã được sử dụng', 409);
+        }
+        userData['email'] = data.email;
+      } else {
+        throw new HttpException('Không thể thay đổi email.', 400);
+      }
+    }
+
+    const updatedUser = await this.userRepository.update({ user_id }, userData);
+
+    let result = { ...updatedUser };
+    let userProfile = await this.userProfileRepository.findOne({ user_id });
+    if (userProfile) {
+      let userProfileData = this.userProfileRepository.setData(data);
+      if (Object.entries(userProfileData).length) {
+        userProfile = await this.userProfileRepository.update(
+          { user_id },
+          userProfileData,
+        );
+      }
     } else {
-      const newUserProfileData = {
+      let newUserProfileData = {
         ...new UserProfileEntity(),
         ...this.userProfileRepository.setData(data),
         user_id,
       };
-      await this.userProfileRepository.createSync(newUserProfileData);
+      userProfile = await this.userProfileRepository.create(newUserProfileData);
     }
 
-    user = await this.userRepository.findOne({
-      select: '*',
-      join: userJoiner,
-      where: { [`${Table.USERS}.user_id`]: user_id },
-    });
+    result = { ...updatedUser, ...userProfile };
 
     const userDataToAppcore = itgCustomerToAppcore(user);
 

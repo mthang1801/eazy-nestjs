@@ -51,7 +51,6 @@ export class UsersController extends BaseController {
     await this.service.updateProfile(user_id, data);
     return this.responseSuccess(res);
   }
-  abstract;
 
   @Get(':user_id/loyal-histories')
   async getLoyalHistories(

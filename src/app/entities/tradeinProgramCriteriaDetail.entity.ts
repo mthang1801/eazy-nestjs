@@ -7,4 +7,5 @@ export class TradeinProgramCriteriaDetailEntity {
   criteria_detail_description: string = '';
   operator_type: string = 'A';
   value: number = 0;
+  criteria_type: number = 1;
 }

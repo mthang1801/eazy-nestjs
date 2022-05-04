@@ -5,6 +5,9 @@ export class UpdateUserProfileDto {
   profile_type: string;
 
   @IsOptional()
+  avatar: string;
+
+  @IsOptional()
   b_firstname: string;
 
   @IsOptional()

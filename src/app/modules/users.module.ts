@@ -15,7 +15,6 @@ import { UserDataRepository } from '../repositories/userData.repository';
 import { UserMailingListRepository } from '../repositories/userMailingLists.repository';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
-import { OrdersModule } from './orders.module';
 
 @Module({
   imports: [MailModule, UserGroupsModule],
