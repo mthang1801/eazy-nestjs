@@ -140,23 +140,23 @@ export class ReviewsCommentService {
     let countSql = '';
 
     sql = joinSqlConditions
-      ? `select distinct(result.item_id), result.*
+      ? `select distinct(result.item_id), result.*, ${Table.PRODUCT_DESCRIPTION}.*
         from (( SELECT *
         from ddv_review_comment_items
         where item_id in ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL AND ${joinSqlConditions}) )
         union all 
         (SELECT * FROM ddv_review_comment_items WHERE parent_item_id is null AND ${joinSqlConditions})
-        ) as result 
+        ) as result LEFT JOIN ${Table.PRODUCT_DESCRIPTION} ON ${Table.PRODUCT_DESCRIPTION}.product_id = result.product_id 
         ORDER BY updated_at DESC
         LIMIT ${limit}
         OFFSET ${skip};`
-      : `select distinct(item_id), result.*
+      : `select distinct(item_id), result.*,  ${Table.PRODUCT_DESCRIPTION}.*
         from ((select *
         from ddv_review_comment_items
         where item_id in ( SELECT  parent_item_id FROM ddv_review_comment_items WHERE ddv_review_comment_items.parent_item_id IS NOT NULL) )
         union all 
         (SELECT * FROM ddv_review_comment_items WHERE parent_item_id is null)
-        ) as result 
+        ) as result LEFT JOIN ${Table.PRODUCT_DESCRIPTION} ON ${Table.PRODUCT_DESCRIPTION}.product_id = result.product_id 
         ORDER BY updated_at DESC
         LIMIT ${limit}
         OFFSET ${skip};`;
@@ -180,16 +180,48 @@ export class ReviewsCommentService {
     let countSqlResponse = await this.db.executeQueryReadPool(countSql);
 
     let parentReviewCommentItems = sqlResponse[0].map((item) => item);
+
     let total = countSqlResponse[0][0]?.total || 0;
 
     let reviewCommentResults = [];
     for (let parentReviewCommentItem of parentReviewCommentItems) {
+      let imageLinks = await this.imageLinkRepo.find({
+        object_type: ImageObjectType.COMMENT_REVIEWS,
+        object_id: parentReviewCommentItem.item_id,
+      });
+      parentReviewCommentItem['images'] = [];
+      if (imageLinks.length) {
+        for (let imageLink of imageLinks) {
+          let image = await this.imageRepo.findOne({
+            image_id: imageLink.image_id,
+          });
+          parentReviewCommentItem['images'].push(image);
+        }
+      }
+
       filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.parent_item_id`] =
         parentReviewCommentItem.item_id;
       let childrenReviewCommentItems = await this.reviewCommentItemRepo.find({
         select: '*',
         where: reviewCommentItemsSearchFilter(search, filterConditions),
       });
+      if (childrenReviewCommentItems.length) {
+        for (let childReviewCommentItem of childrenReviewCommentItems) {
+          let imageLinks = await this.imageLinkRepo.find({
+            object_type: ImageObjectType.COMMENT_REVIEWS,
+            object_id: childReviewCommentItem.item_id,
+          });
+          childReviewCommentItem['images'] = [];
+          if (imageLinks.length) {
+            for (let imageLink of imageLinks) {
+              let image = await this.imageRepo.findOne({
+                image_id: imageLink.image_id,
+              });
+              childReviewCommentItem['images'].push(image);
+            }
+          }
+        }
+      }
       parentReviewCommentItem['children'] = childrenReviewCommentItems;
 
       if (parentReviewCommentItem.type === 1) {
