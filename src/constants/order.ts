@@ -123,29 +123,61 @@ export const convertDataToIntegrate = (data) => {
     itgData['saleNote'] = data['internal_note']; //Ghi chú chăm sóc khách hàng
   }
 
-  itgData['customerMobile'] = data['b_phone']; // Số điện thoại khách hàng
+  if (data['b_phone']) {
+    itgData['customerMobile'] = data['b_phone']; // Số điện thoại khách hàng
+  }
 
-  itgData['customerName'] = data['b_firstname'] + ` ` + data['b_lastname']; //Tên khách hàng
+  if (data['b_firstname'] || data['b_lastname']) {
+    itgData['customerName'] = data['b_firstname']
+      ? data['b_firstname'] + ' '
+      : '' + data['b_lastname']
+      ? data['b_lastname']
+      : ''; //Tên khách hàng
+  }
 
-  itgData['customerAddress'] = data['b_address']; //Địa chỉ khách hàng
+  if (data['b_address']) {
+    itgData['customerAddress'] = data['b_address']; //Địa chỉ khách hàng
+  }
 
-  itgData['customerCityName'] = data['b_city']; //Lấy id thành phố
+  if (data['b_city']) {
+    itgData['customerCityName'] = data['b_city']; //Lấy id thành phố
+  }
 
-  itgData['customerDistrictName'] = data['b_district']; //Lấy id quận
+  if (data['b_district']) {
+    itgData['customerDistrictName'] = data['b_district']; //Lấy id quận
+  }
 
-  itgData['customerWardName'] = data['b_ward']; //Lấy id huyện
+  if (data['b_ward']) {
+    itgData['customerWardName'] = data['b_ward']; //Lấy id huyện
+  }
 
-  itgData['receivingFullName'] = data['s_firstname'] + ` ` + data['s_lastname']; // tên người nhận
+  if (data['s_firstname'] || data['s_lastname']) {
+    itgData['receivingFullName'] = data['s_firstname']
+      ? data['s_firstname'] + ' '
+      : '' + data['s_lastname']
+      ? data['s_lastname']
+      : ''; // tên người nhận
+  }
 
-  itgData['receivingPhone'] = data['s_phone']; // sdt người nhận
+  if (data['s_phone']) {
+    itgData['receivingPhone'] = data['s_phone']; // sdt người nhận
+  }
 
-  itgData['receivingCity'] = +data['s_city']; // thành phố nhận
+  if (data['s_city']) {
+    itgData['receivingCity'] = +data['s_city']; // thành phố nhận
+  }
 
-  itgData['receivingDistrict'] = +data['s_district']; // quận nhận
+  if (data['s_district']) {
+    itgData['receivingDistrict'] = +data['s_district']; // quận nhận
+  }
 
-  itgData['receivingWard'] = +data['s_ward']; // phường nhận
+  if (data['s_ward']) {
+    itgData['receivingWard'] = +data['s_ward']; // phường nhận
+  }
 
-  itgData['receivingAddress'] = data['s_address']; // địa chỉ nhận hàng
+  if (data['s_address']) {
+    itgData['receivingAddress'] = data['s_address']; // địa chỉ nhận hàng
+  }
 
   if (data['note']) {
     itgData['customerNote'] = data['note']; // Ghi chú khách hàng

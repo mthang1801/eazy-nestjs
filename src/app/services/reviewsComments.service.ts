@@ -7,7 +7,13 @@ import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { reviewCommentProductJoiner } from '../../database/sqlQuery/join/product.join';
 import { reviewCommentItemsSearchFilter } from '../../utils/tableConditioner';
-import { IsNull, In, Between } from '../../database/operators/operators';
+import {
+  IsNull,
+  In,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from '../../database/operators/operators';
 import { Table } from 'src/database/enums';
 import {
   getPageSkipLimit,
@@ -60,7 +66,16 @@ export class ReviewsCommentService {
   }
 
   async getList(params) {
-    let { search, product_id, point, suitable_level, is_replied } = params;
+    let {
+      search,
+      product_id,
+      point,
+      suitable_level,
+      is_replied,
+      status,
+      created_at_start,
+      created_at_end,
+    } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterConditions = {};
@@ -79,6 +94,23 @@ export class ReviewsCommentService {
 
     if (is_replied) {
       filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.is_replied`] = is_replied;
+    }
+
+    if (status) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.status`] = status;
+    }
+
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    } else if (created_at_end) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.created_at`] =
+        LessThanOrEqual(created_at_start);
     }
 
     let joinSqlConditions = '';
@@ -288,11 +320,11 @@ export class ReviewsCommentService {
     };
 
     if (type == 1 && data.point) {
-      if (data.point < 3) {
-        suitableLevel = 3;
-      }
       if (data.point < 5) {
         suitableLevel = 2;
+      }
+      if (data.point < 3) {
+        suitableLevel = 3;
       }
     }
 

@@ -3374,6 +3374,26 @@ export class ProductService {
       created_at: formatStandardTimeStamp(),
       updated_at: formatStandardTimeStamp(),
     });
+
+    const productsInStocks = await this.productStoreRepo.find({
+      product_id: product.product_id,
+    });
+    if (productsInStocks.length) {
+      let currentProduct = await this.productRepo.findOne({
+        product_id: product.product_id,
+      });
+      if (!currentProduct) {
+        return;
+      }
+      let totalAmount = 0;
+      for (let productStockItem of productsInStocks) {
+        totalAmount += productStockItem.amount;
+      }
+      await this.productRepo.update(
+        { product_id: product.product_id },
+        { amount: totalAmount },
+      );
+    }
   }
 
   async clearStore() {
@@ -3733,15 +3753,6 @@ export class ProductService {
                   ];
                 }
               }
-
-              // result['relevantProducts'] = [
-              //   result['relevantProducts'].find(
-              //     (product) => product['product_id'] === result['product_id'],
-              //   ),
-              //   ...result['relevantProducts'].filter(
-              //     (product) => product['product_id'] !== result['product_id'],
-              //   ),
-              // ];
             }
           }
         }
@@ -3881,6 +3892,44 @@ export class ProductService {
   }
 
   async getProductsStores(id: string) {
+    const productsStores = await this.productStoreRepo.find({
+      select: '*',
+      orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
+      where: { product_id: id, amount: MoreThan(0) },
+    });
+    let result = [];
+    if (productsStores.length) {
+      for (let productStoreItem of productsStores) {
+        const store = await this.storeRepo.findOne({
+          select: '*',
+          join: {
+            [JoinTable.leftJoin]: {
+              [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                fieldJoin: 'store_location_id',
+                rootJoin: 'store_location_id',
+              },
+            },
+          },
+          where: {
+            [`${Table.STORE_LOCATIONS}.store_location_id`]:
+              productStoreItem['store_location_id'],
+          },
+        });
+        let storeObj = {
+          productId: id,
+          storeId: store['store_location_id'],
+          storeName: store['store_name'],
+          storeAddress: store['pickup_address'],
+          storeLatitude: store['latitude'],
+          storeLongitude: store['longitude'],
+        };
+        result = [...result, { ...productStoreItem, ...storeObj }];
+      }
+    }
+    return result;
+  }
+
+  async checkProductsStores(id: string) {
     const product = await this.productRepo.findOne({ product_id: id });
     if (!product) {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);

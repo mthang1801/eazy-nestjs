@@ -585,6 +585,14 @@ export class OrdersService {
       await this.orderHistoryRepo.create(updatedOrder);
     } catch (error) {
       console.log(error);
+      const updatedOrder = await this.orderRepo.update(
+        { order_id },
+        {
+          status: OrderStatus.invalid,
+          reason_fail: error?.response?.data?.message,
+        },
+      );
+      await this.orderHistoryRepo.create(updatedOrder);
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
           error?.response?.data?.message || error.message
@@ -1357,17 +1365,29 @@ export class OrdersService {
           status: Not(Equal(OrderStatus.invalid)),
         },
       });
+      let logs = [];
       if (ordersSync.length) {
         for (let orderItem of ordersSync) {
           try {
             await this.pushOrderToAppcore(orderItem.order_id);
           } catch (error) {
-            await this.orderRepo.update(
+            logs.push(orderItem.order_id);
+            const updatedOrder = await this.orderRepo.update(
               { order_id: orderItem.order_id },
-              { status: OrderStatus.invalid },
+              {
+                status: OrderStatus.invalid,
+                reason_fail: error.response,
+              },
             );
+            await this.orderHistoryRepo.create(updatedOrder);
           }
         }
+      }
+      if (logs.length) {
+        throw new HttpException(
+          `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
+          422,
+        );
       }
       await this.orderRepo.update(
         { order_code: Not(IsNull()) },

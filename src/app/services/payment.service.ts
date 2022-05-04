@@ -66,6 +66,7 @@ import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment
 import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
 import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
 import { PaymentStatus } from '../../utils/services/payment.helper';
+import { CreatePaymentSelfTransportDto } from '../dto/orders/create-paymentSelfTransport.dto';
 import {
   calculateInstallmentInterestRateHDSaiGon,
   calculateInstallmentInterestRateHomeCredit,
@@ -310,6 +311,10 @@ export class PaymentService {
     return this.payooPayment(data, 'paynow');
   }
 
+  async payooPaymentSelftransport(data: CreatePaymentSelfTransportDto) {
+    return this.payooPayment(data, 'selfTransport');
+  }
+
   async payooPaymentInstallment(data: CreatePayooInstallmentDto) {
     return this.payooPayment(data, 'installment');
   }
@@ -333,10 +338,10 @@ export class PaymentService {
 
       if (data.coupon_code) {
         let checkCouponData = {
-          store_id: 67107,
+          store_id: method === 'selfTransport' ? data['store_id'] : 67107,
           coupon_code: data['coupon_code'],
           coupon_programing_id: 'HELLO_123',
-          phone: data['s_phone'],
+          phone: method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
           products: cartItems.map(({ product_id, amount }) => ({
             product_id,
             amount,
@@ -362,14 +367,20 @@ export class PaymentService {
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
-          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+          where: {
+            [`${Table.USERS}.phone`]:
+              method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
+          },
         });
         if (!user) {
           await this.customerService.createCustomerFromWebPayment(data);
           user = await this.userRepo.findOne({
             select: `*, ${Table.USERS}.user_appcore_id`,
             join: userJoiner,
-            where: { phone: data['s_phone'] },
+            where: {
+              phone:
+                method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
+            },
           });
         }
       }
@@ -382,6 +393,10 @@ export class PaymentService {
         transfer_amount: totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
       };
+
+      if (method === 'selfTransport') {
+        sendData['store_id'] = data.store_id;
+      }
 
       await this.orderService.createOrder(user, sendData);
 
@@ -401,6 +416,15 @@ export class PaymentService {
       switch (method) {
         case 'paynow':
           dataRequest = this.payooPaymentData(
+            data,
+            ref_order_id,
+            paymentDate,
+            totalPrice,
+          );
+          urlRequest = payooPaynowURL;
+          break;
+        case 'selfTransport':
+          dataRequest = this.payooPaymentSelfTransportData(
             data,
             ref_order_id,
             paymentDate,
@@ -487,6 +511,17 @@ export class PaymentService {
   payooPaymentData(userWebInfo, ref_order_id, paymentDate, orderTotalPrice) {
     const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
     let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>${validTime}</validity_time><payment_group>bank-account,cc,payoo-account</payment_group><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
+    return bodyData;
+  }
+
+  payooPaymentSelfTransportData(
+    userWebInfo,
+    ref_order_id,
+    paymentDate,
+    orderTotalPrice,
+  ) {
+    const { b_lastname, b_phone, callback_url } = userWebInfo;
+    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>${validTime}</validity_time><payment_group>bank-account,cc,payoo-account</payment_group><customer><name>${b_lastname}</name><phone>${b_phone}</phone><address>...</address></customer></shop></shops>`;
     return bodyData;
   }
 

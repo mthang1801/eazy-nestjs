@@ -95,6 +95,7 @@ export class OrderHistoryEntity {
   user_appcore_id: number = 0;
   is_sync: string = 'N';
   payment_date: string = null;
+  reason_fail: string = '';
   ref_order_id: string = generateRandomString();
   created_date: string = formatStandardTimeStamp();
   updated_date: string = formatStandardTimeStamp();

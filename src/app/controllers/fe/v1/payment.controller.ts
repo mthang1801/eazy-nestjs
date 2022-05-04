@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { CreatePayooInstallmentDto } from '../../../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../../../dto/payment/create-installment.dto';
+import { CreatePaymentSelfTransportDto } from '../../../dto/orders/create-paymentSelfTransport.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
@@ -18,6 +19,15 @@ export class PaymentControllerFE extends BaseController {
     @Body() data: CreatePaynowDto,
   ): Promise<IResponse> {
     const result = await this.service.payooPaymentPaynow(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('payoo/self-transport')
+  async payooPaymentSelfTransport(
+    @Res() res: Response,
+    @Body() data: CreatePaymentSelfTransportDto,
+  ): Promise<IResponse> {
+    const result = await this.service.payooPaymentSelftransport(data);
     return this.responseSuccess(res, result);
   }
 

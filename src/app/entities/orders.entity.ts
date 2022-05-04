@@ -101,6 +101,7 @@ export class OrderEntity {
   installment_interest_rate: string = '';
   installment_interest_rate_code: string = '';
   installment_tenor_code: string = '';
+  reason_fail: string = '';
   ref_order_id: string = generateRandomString();
   created_date: string = formatStandardTimeStamp();
   updated_date: string = formatStandardTimeStamp();

@@ -12,7 +12,11 @@ import { formatStandardTimeStamp, getPageSkipLimit } from '../../utils/helper';
 import { UpdateShippingFeeLocationDto } from '../dto/shippingFee/update-shippingFeeLocation.dto';
 import { Table } from 'src/database/enums';
 import { Like } from '../../database/operators/operators';
-import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
+import { shippingFeeLocationsJoiner, userJoiner } from '../../utils/joinTable';
+import { JoinTable } from '../../database/enums/joinTable.enum';
+import { SortBy } from '../../database/enums/sortBy.enum';
+import { UserRepository } from '../repositories/user.repository';
+import { UserEntity } from '../entities/user.entity';
 
 @Injectable()
 export class ShippingFeeService {
@@ -20,6 +24,7 @@ export class ShippingFeeService {
     private shippingFeeRepo: ShippingFeeRepository<ShippingFeeEntity>,
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private cityService: CityService,
+    private userRepo: UserRepository<UserEntity>,
   ) {}
   async createShippingFee(data: CreateShippingFeeDto, user) {
     const shippingFeeData = {
@@ -180,6 +185,15 @@ export class ShippingFeeService {
       throw new HttpException('Không tìm thấy phí vận chuyển', 404);
     }
 
+    if (shippingFee.updated_by) {
+      let updater = await this.userRepo.findOne({
+        select: '*',
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: shippingFee.updated_by },
+      });
+      shippingFee['handler'] = updater;
+    }
+
     let shippingFeeLocations = await this.shippingFeeLocationRepo.find({
       select: '*',
       where: {
@@ -189,5 +203,34 @@ export class ShippingFeeService {
 
     shippingFee['locationFees'] = shippingFeeLocations;
     return shippingFee;
+  }
+
+  async calcShippingFee(dest_city_id: number) {
+    let shippingFeeByCity = await this.shippingFeeLocationRepo.findOne({
+      select: '*',
+      join: {
+        [JoinTable.leftJoin]: {
+          [Table.SHIPPING_FEE]: {
+            fieldJoin: `${Table.SHIPPING_FEE}.shipping_fee_id`,
+            rootJoin: `${Table.SHIPPING_FEE_LOCATION}.shipping_fee_id`,
+          },
+        },
+      },
+      where: {
+        [`${Table.SHIPPING_FEE_LOCATION}.city_id`]: dest_city_id,
+        [`${Table.SHIPPING_FEE_LOCATION}.fee_location_status`]: 'A',
+        [`${Table.SHIPPING_FEE}.status`]: 'A',
+      },
+      orderBy: [
+        { field: `${Table.SHIPPING_FEE}.updated_at`, sortBy: SortBy.DESC },
+      ],
+    });
+    if (shippingFeeByCity) {
+      return shippingFeeByCity;
+    }
+    throw new HttpException(
+      'Thành phố hiện tại chưa áp dụng phí vận chuyển hoặc không còn hiệu lực.',
+      409,
+    );
   }
 }
