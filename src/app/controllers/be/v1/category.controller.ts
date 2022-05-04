@@ -21,7 +21,6 @@ import { IResponse } from '../../../interfaces/response.interface';
 import { Response } from 'express';
 import { UpdateCategoryDto } from '../../../dto/category/update-category.dto';
 import { ProductService } from 'src/app/services/products.service';
-import { CreateCategoryV2Dto } from 'src/app/dto/category/create-category.v2.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { UpdateProductsInCategory } from 'src/app/dto/product/update-productInCategory';
@@ -64,6 +63,12 @@ export class CategoryController extends BaseController {
   @Get('catalog')
   async getCatalog(@Res() res: Response, @Query() params) {
     const result = await this.service.getCatalog(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('accessories')
+  async getAccessories(@Res() res: Response, @Query() params) {
+    const result = await this.service.getAccessories(params);
     return this.responseSuccess(res, result);
   }
 

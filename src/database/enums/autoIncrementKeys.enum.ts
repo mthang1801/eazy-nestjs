@@ -46,6 +46,7 @@ export enum PrimaryKeys {
   ddv_category_vendor_product_count = 'category_id',
   ddv_catalog_categories = 'catalog_id',
   ddv_catalog_category_descriptions = 'id',
+  ddv_accessory_categories = 'accessory_category_id',
 
   //============== Payment ==============
   ddv_payment_descriptions = 'payment_id',
@@ -120,4 +121,5 @@ export enum PrimaryKeys {
   ddv_tradein_programs = 'tradein_id',
   ddv_tradein_program_details = 'detail_id',
   ddv_tradein_program_criteria = 'criteria_id',
+  ddv_tradein_program_criteria_details = 'criteria_detail_id',
 }

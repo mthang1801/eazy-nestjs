@@ -417,3 +417,17 @@ export const tradeinProgramDetailSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const accessoryCategorySearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.PRODUCT_DESCRIPTION}.name`]: Like(search) }];
+    arraySearch = [{ [`${Table.PRODUCTS}.code`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

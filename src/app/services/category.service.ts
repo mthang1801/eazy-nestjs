@@ -46,7 +46,11 @@ import { CatalogCategoryDescriptionEntity } from '../entities/catalogCategoryDes
 import { sqlGetCatalogCategoryUrlPath } from '../../database/sqlQuery/others/scriptSyncFromMagentor/catalogCategoy';
 import axios from 'axios';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { UPLOAD_IMAGE_API } from '../../constants/api.appcore';
+import {
+  UPLOAD_IMAGE_API,
+  IMPORT_ACCESSORY_CATEGORIES_API,
+  APPCORE_TOKEN,
+} from '../../constants/api.appcore';
 import * as fsExtra from 'fs-extra';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
@@ -61,6 +65,10 @@ import {
   productListInCategoryJoiner,
 } from '../../utils/joinTable';
 import { productListsInCategorySearchFilter } from '../../database/sqlQuery/where/product.where';
+import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.repository';
+import { AccessoryCategoryEntity } from '../entities/accessoryCategory.entity';
+import { accessoryCategorySearchFilter } from '../../utils/tableConditioner';
+import { IMPORT_CATEGORIES_APPCORE } from '../../constants/api.appcore';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -73,6 +81,7 @@ export class CategoryService {
     private databaseService: DatabaseService,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
     private catalogCategoryDescRepo: CatalogCategoryDescriptionRepository<CatalogCategoryDescriptionEntity>,
+    private accessoryCategoryRepo: AccessoryCategoryRepository<AccessoryCategoryEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
@@ -1220,10 +1229,36 @@ export class CategoryService {
     };
   }
 
+  async getAccessories(params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterConditions = {};
+    const accessoryCategories = await this.accessoryCategoryRepo.find({
+      select: '*',
+      where: accessoryCategorySearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    const count = await this.accessoryCategoryRepo.find({
+      select: `COUNT(DISTINCT(${Table.ACCESSORY_CATEGORY}.accessory_category_id)) as total`,
+      where: accessoryCategorySearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      accessoryCategories,
+    };
+  }
+
   async syncImports() {
     await this.clearAll();
     const response = await axios({
-      url: 'http://mb.viendidong.com/web-tester/v1/api/category',
+      url: IMPORT_CATEGORIES_APPCORE,
       headers: {
         Authorization:
           'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7Il9pZCI6MzAwMDA3OCwidXNlcm5hbWUiOiJuaGF0dGluX3ZpZXciLCJpc0FjdGl2ZSI6dHJ1ZSwibGlzdEZlYXR1cmUiOlsiUE9JTlRfVklFVyIsIk9SREVSX1ZJRVciLCJQUk9EVUNUX0FUVEFDSF9WSUVXIiwiVFJBREVfSU5fVklFVyIsIlBST0RVQ1RfUFJPTU9USU9OX1ZJRVciLCJESVNDT1VOVF9WSUVXIiwiVFJBREVfSU5fUFJPR1JBTV9WSUVXIiwiQ09VUE9OX1ZJRVciLCJWSVJUVUFMX1NUT0NLX1ZJRVciLCJPUkRFUl9JTlNFUlQiLCJUUkFERV9JTl9JTlNFUlQiLCJESVNDT1VOVF9JTlNFUlQiLCJDT1VQT05fSU5TRVJUIiwiUFJPRFVDVF9QUk9NT1RJT05fSU5TRVJUIiwiVFJBREVfSU5fUFJPR1JBTV9JTlNFUlQiLCJQUk9EVUNUX0FUVEFDSF9JTlNFUlQiLCJBUkVBX1ZJRVciLCJSRUdJT05fVklFVyIsIkNVU1RPTUVSX0NBUkVfVklFVyIsIkNVU1RPTUVSX0NBUkVfSU5TRVJUIiwiUE9JTlRfSU5TRVJUIiwiT1JERVJfVVBEQVRFIiwiVFJBREVfSU5fVVBEQVRFIiwiSU5TVEFMTE1FTlRfVklFVyIsIklOU1RBTExNRU5UX0lOU0VSVCIsIlZJUlRVQUxfU1RPQ0tfSU5TRVJUIiwiV0FSUkFOVFlfSU5TRVJUIiwiV0FSUkFOVFlfVklFVyIsIlNUT1JFX1ZJRVciLCJDVVNUT01FUl9WSUVXIiwiQ0FURV9WSUVXIiwiQ0FURV9JTlNFUlQiLCJCUkFORF9WSUVXIiwiQlJBTkRfSU5TRVJUIiwiUFJPVklERVJfVklFVyIsIlBST1ZJREVSX0lOU0VSVCIsIlBST1BFUlRZX1ZJRVciLCJQUk9EVUNUX1ZJRVciLCJQUk9QRVJUWV9JTlNFUlQiLCJCSUxMX1ZJRVciLCJQUk9EVUNUX0lOU0VSVCIsIkJJTExfSU5TRVJUIiwiQklMTF9VUERBVEUiXSwiZW1wbG95ZWVJZCI6MzAwMDE3NSwiam9iVGl0bGVJZCI6bnVsbH0sImlhdCI6MTY0ODMxMzExOSwiZXhwIjoxNjQ4OTE3OTE5fQ.j0oPSscd79UJfJYpnDqoShBUzAJcY2X3m3iM1RI0fsE',
@@ -1451,5 +1486,49 @@ export class CategoryService {
     }
 
     return categoriesList;
+  }
+
+  async syncAccessoryCategories() {
+    try {
+      const response = await axios({
+        url: IMPORT_ACCESSORY_CATEGORIES_API,
+        headers: {
+          Authorization: APPCORE_TOKEN,
+        },
+      });
+      if (!response?.data?.data) {
+        throw new HttpException('Không tìm thấy dữ liệu', 404);
+      }
+
+      for (let dataItem of response.data.data.list_caterogy) {
+        let cmsData = {
+          appcore_id: dataItem.id,
+          name: dataItem.name,
+          code: dataItem.code,
+          level: dataItem.level,
+          parent_appcore_id: dataItem.parentId,
+        };
+
+        const newCmsCategory = await this.accessoryCategoryRepo.create(cmsData);
+
+        if (dataItem.parentId) {
+          const parentAccessory = await this.accessoryCategoryRepo.findOne({
+            appcore_id: dataItem.parentId,
+          });
+
+          if (parentAccessory) {
+            await this.accessoryCategoryRepo.update(
+              { accessory_category_id: newCmsCategory.accessory_category_id },
+              {
+                parent_accessory_category_id:
+                  parentAccessory.accessory_category_id,
+              },
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

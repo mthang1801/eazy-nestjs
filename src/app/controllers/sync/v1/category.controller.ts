@@ -40,4 +40,10 @@ export class CategorySyncController extends BaseController {
     await this.service.syncImportCatalogs();
     return this.responseSuccess(res, null, 'Hoàn tất.');
   }
+
+  @Get('accessories')
+  async syncAccessoryCategories(@Res() res: Response): Promise<IResponse> {
+    await this.service.syncAccessoryCategories();
+    return this.responseSuccess(res);
+  }
 }

@@ -15,6 +15,8 @@ import { BaseController } from '../../../../base/base.controllers';
 import { TradeinProgramService } from '../../../services/tradeinProgram.service';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { Response } from 'express';
+import { CreateTradeinProgramDto } from '../../../dto/tradein/create-tradeinProgram.dto';
+import { UpdateTradeinProgramDto } from '../../../dto/tradein/update-tradeinProgram.dto';
 @Controller('/be/v1/tradein-programs')
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
@@ -25,21 +27,10 @@ export class TradeinProgramController extends BaseController {
   @UseGuards(AuthGuard)
   async cmsCreate(
     @Res() res: Response,
-    @Body() data,
+    @Body() data: CreateTradeinProgramDto,
     @Req() req,
   ): Promise<IResponse> {
     const result = await this.service.cmsCreate(data, req.user);
-    return this.responseSuccess(res, result);
-  }
-
-  @Post('criteria')
-  @UseGuards(AuthGuard)
-  async cmsCreateCriteria(
-    @Res() res: Response,
-    @Body() data,
-    @Req() req,
-  ): Promise<IResponse> {
-    const result = await this.service.cmsCreateCriteria(data, req.user);
     return this.responseSuccess(res, result);
   }
 
@@ -64,7 +55,7 @@ export class TradeinProgramController extends BaseController {
   async update(
     @Res() res: Response,
     @Param('tradein_id') tradein_id: number,
-    @Body() data,
+    @Body() data: UpdateTradeinProgramDto,
     @Req() req,
   ): Promise<IResponse> {
     const result = await this.service.update(tradein_id, data, req.user);

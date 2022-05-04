@@ -11,6 +11,7 @@ import { CategorySyncController } from '../controllers/sync/v1/category.controll
 import { CatalogCategoryRepository } from '../repositories/catalogCategory.repository';
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
 import { ReviewsCommentsModule } from './reviewsComment.module';
+import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.repository';
 
 @Module({
   imports: [forwardRef(() => ProductsModule), ReviewsCommentsModule],
@@ -21,6 +22,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     ProductService,
     CatalogCategoryRepository,
     CatalogCategoryDescriptionRepository,
+    AccessoryCategoryRepository,
   ],
   exports: [
     CategoryService,
@@ -28,6 +30,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     CategoryRepository,
     CatalogCategoryRepository,
     CatalogCategoryDescriptionRepository,
+    AccessoryCategoryRepository,
   ],
   controllers: [
     CategoryControllerBE,

@@ -18,6 +18,10 @@ import {
   tradeinProgramDetailSearchFilter,
 } from '../../utils/tableConditioner';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { CreateTradeinProgramDto } from '../dto/tradein/create-tradeinProgram.dto';
+import { TradeinProgramCriteriaDetailRepository } from '../repositories/tradeinProgramCriteriaDetail.repository';
+import { TradeinProgramCriteriaDetailEntity } from '../entities/tradeinProgramCriteriaDetail.entity';
+import { UpdateTradeinProgramDto } from '../dto/tradein/update-tradeinProgram.dto';
 import {
   LessThanOrEqual,
   MoreThanOrEqual,
@@ -28,9 +32,10 @@ export class TradeinProgramService {
     private tradeinProgramRepo: TradeinProgramRepository<TradeinProgramEntity>,
     private tradeinProgramDetailRepo: TradeinProgramDetailRepository<TradeinProgramDetailEntity>,
     private tradeinProgramCriteriaRepo: TradeinProgramCriteriaRepository<TradeinProgramCriteriaEntity>,
+    private tradeinProgramCriteriaDetailRepo: TradeinProgramCriteriaDetailRepository<TradeinProgramCriteriaDetailEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
-  async cmsCreate(data, user) {
+  async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
       ...new TradeinProgramEntity(),
       ...this.tradeinProgramRepo.setData(data),
@@ -41,11 +46,11 @@ export class TradeinProgramService {
       tradeinProgramData,
     );
 
-    if (data.tradein_details && data.tradein_details.length) {
+    if (data.applied_products && data.applied_products.length) {
       await this.tradeinProgramDetailRepo.delete({
         tradein_id: newTradeinProgram.tradein_id,
       });
-      for (let tradeinDetail of data.tradein_details) {
+      for (let tradeinDetail of data.applied_products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
@@ -63,10 +68,41 @@ export class TradeinProgramService {
         await this.tradeinProgramDetailRepo.create(tradeinDetailData);
       }
     }
+
+    if (data.applied_criteria && data.applied_criteria.length) {
+      for (let appliedCriteriaItem of data.applied_criteria) {
+        const newCriteriaData = {
+          ...new TradeinProgramCriteriaDetailEntity(),
+          ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
+          tradein_id: newTradeinProgram.tradein_id,
+        };
+        const newCriteria = await this.tradeinProgramCriteriaRepo.create(
+          newCriteriaData,
+        );
+
+        if (
+          appliedCriteriaItem.applied_criteria_detail &&
+          appliedCriteriaItem.applied_criteria_detail.length
+        ) {
+          for (let criteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            let newCriteriaDetailData = {
+              ...new TradeinProgramCriteriaDetailEntity(),
+              ...this.tradeinProgramCriteriaDetailRepo.setData(
+                criteriaDetailItem,
+              ),
+              criteria_id: newCriteria.criteria_id,
+            };
+
+            await this.tradeinProgramCriteriaDetailRepo.create(
+              newCriteriaDetailData,
+            );
+          }
+        }
+      }
+    }
+
     return this.get(newTradeinProgram.tradein_id);
   }
-
-  async cmsCreateCriteria(data, user) {}
 
   async getList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
@@ -179,6 +215,24 @@ export class TradeinProgramService {
       where: tradeinProgramDetailSearchFilter(search, filterCondition),
     });
 
+    let tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+      tradein_id,
+    });
+
+    if (tradeinCriteriaList.length) {
+      for (let tradeinCriteriaItem of tradeinCriteriaList) {
+        const tradeinCriteriaDetails =
+          await this.tradeinProgramCriteriaDetailRepo.find({
+            select: '*',
+            where: {
+              [`${Table.TRADEIN_PROGRAM_CRITERIA_DETAIL}.criteria_id`]:
+                tradeinCriteriaItem.criteria_id,
+            },
+          });
+        tradeinCriteriaItem['criteriaDetails'] = tradeinCriteriaDetails;
+      }
+    }
+
     let detailResult = {
       paging: {
         currentPage: page,
@@ -189,10 +243,11 @@ export class TradeinProgramService {
     };
 
     tradein['tradein_details'] = detailResult;
+    tradein['criteria'] = tradeinCriteriaList;
     return tradein;
   }
 
-  async update(tradein_id, data, user) {
+  async update(tradein_id: number, data: UpdateTradeinProgramDto, user) {
     const currentTradein = await this.tradeinProgramRepo.findOne({
       tradein_id,
     });
@@ -207,36 +262,6 @@ export class TradeinProgramService {
     };
     await this.tradeinProgramRepo.update({ tradein_id }, updateTradeinData);
 
-    if (data.inserted_products && data.inserted_products.length) {
-      for (let insertedProductId of data.inserted_products) {
-        let checkExist = await this.tradeinProgramDetailRepo.findOne({
-          product_id: insertedProductId,
-          tradein_id,
-        });
-        if (checkExist) {
-          continue;
-        }
-
-        const product = await this.productRepo.findOne({
-          select: '*',
-          join: productLeftJoiner,
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: insertedProductId,
-          },
-        });
-        if (!product) {
-          continue;
-        }
-        const tradeinDetailData = {
-          ...new TradeinProgramDetailEntity(),
-          product_id: insertedProductId,
-          product_appcore_id: product.product_appcore_id,
-          tradein_id,
-        };
-        await this.tradeinProgramDetailRepo.create(tradeinDetailData);
-      }
-    }
-
     if (data.removed_products && data.removed_products.length) {
       for (let removedProductId of data.removed_products) {
         await this.tradeinProgramDetailRepo.delete({
@@ -245,6 +270,125 @@ export class TradeinProgramService {
         });
       }
     }
+
+    if (data.applied_products && data.applied_products.length) {
+      for (let appliedProductItem of data.applied_products) {
+        let checkProductExist = await this.tradeinProgramDetailRepo.findOne({
+          tradein_id,
+          product_id: appliedProductItem.product_id,
+        });
+        if (checkProductExist) {
+          const updateTradeinProductData = {
+            ...this.tradeinProgramDetailRepo.setData(appliedProductItem),
+            updated_at: formatStandardTimeStamp(),
+          };
+          if (Object.entries(updateTradeinProductData).length) {
+            await this.tradeinProgramDetailRepo.update(
+              { tradein_id, product_id: appliedProductItem.product_id },
+              updateTradeinProductData,
+            );
+          }
+        } else {
+          const newTradeinProductData = {
+            ...new TradeinProgramDetailEntity(),
+            ...this.tradeinProgramDetailRepo.setData(appliedProductItem),
+            tradein_id,
+          };
+          await this.tradeinProgramDetailRepo.create(newTradeinProductData);
+        }
+      }
+    }
+
+    if (data.removed_criteria && data.removed_criteria.length) {
+      for (let removedCriteriaId of data.removed_criteria) {
+        await this.tradeinProgramCriteriaRepo.delete({
+          criteria_id: removedCriteriaId,
+        });
+        await this.tradeinProgramCriteriaDetailRepo.delete({
+          criteria_id: removedCriteriaId,
+        });
+      }
+    }
+
+    if (data.applied_criteria && data.applied_criteria.length) {
+      for (let appliedCriteriaItem of data.applied_criteria) {
+        let checkCriteriaExist = await this.tradeinProgramCriteriaRepo.findOne({
+          tradein_id,
+          criteria_id: appliedCriteriaItem.criteria_id,
+        });
+        if (checkCriteriaExist) {
+          const updateCriteriaData = {
+            ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
+            updated_at: formatStandardTimeStamp(),
+          };
+          await this.tradeinProgramCriteriaRepo.update(
+            { tradein_id, criteria_id: appliedCriteriaItem.criteria_id },
+            updateCriteriaData,
+          );
+        } else {
+          const newCriteriaData = {
+            ...new TradeinProgramCriteriaEntity(),
+            ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
+            tradein_id,
+          };
+          await this.tradeinProgramCriteriaRepo.create(newCriteriaData);
+        }
+
+        if (
+          appliedCriteriaItem.removed_criteria_detail &&
+          appliedCriteriaItem.removed_criteria_detail.length
+        ) {
+          for (let removedCriteriaDetailId of appliedCriteriaItem.removed_criteria_detail) {
+            await this.tradeinProgramCriteriaDetailRepo.delete({
+              criteria_detail_id: removedCriteriaDetailId,
+            });
+          }
+        }
+
+        if (
+          appliedCriteriaItem.applied_criteria_detail &&
+          appliedCriteriaItem.applied_criteria_detail.length &&
+          appliedCriteriaItem.criteria_id
+        ) {
+          for (let appliedCriteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            let checkCriteriaDetailExist =
+              await this.tradeinProgramCriteriaDetailRepo.findOne({
+                criteria_id: appliedCriteriaItem.criteria_id,
+                criteria_detail_id:
+                  appliedCriteriaDetailItem.criteria_detail_id,
+              });
+            if (checkCriteriaDetailExist) {
+              let updateCriteriaDetailData =
+                this.tradeinProgramCriteriaDetailRepo.setData(
+                  appliedCriteriaDetailItem,
+                );
+              if (Object.entries(updateCriteriaDetailData).length) {
+                await this.tradeinProgramCriteriaDetailRepo.update(
+                  {
+                    criteria_id: appliedCriteriaItem.criteria_id,
+                    criteria_detail_id:
+                      appliedCriteriaDetailItem.criteria_detail_id,
+                  },
+                  updateCriteriaDetailData,
+                );
+              }
+            } else {
+              let newCriteriaDetailData = {
+                ...new TradeinProgramCriteriaDetailEntity(),
+                ...this.tradeinProgramCriteriaDetailRepo.setData(
+                  appliedCriteriaDetailItem,
+                ),
+                criteria_id: appliedCriteriaItem.criteria_id,
+              };
+              await this.tradeinProgramCriteriaDetailRepo.create(
+                newCriteriaDetailData,
+              );
+            }
+          }
+        }
+      }
+    }
+
     return this.get(tradein_id);
   }
 }

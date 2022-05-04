@@ -21,6 +21,7 @@ export enum Table {
   CATEGORY_VENDOR_PRODUCT_COUNT = 'ddv_category_vendor_product_count',
   CATALOG_CATEGORIES = 'ddv_catalog_categories',
   CATALOG_CATEGORY_DESCRIPTIONS = 'ddv_catalog_category_descriptions',
+  ACCESSORY_CATEGORY = 'ddv_accessory_categories',
 
   //============== Banner ==============
   BANNER = 'ddv_banners',
@@ -124,4 +125,5 @@ export enum Table {
   TRADEIN_PROGRAM = 'ddv_tradein_programs',
   TRADEIN_PROGRAM_DETAIL = 'ddv_tradein_program_details',
   TRADEIN_PROGRAM_CRITERIA = 'ddv_tradein_program_criteria',
+  TRADEIN_PROGRAM_CRITERIA_DETAIL = 'ddv_tradein_program_criteria_details',
 }
