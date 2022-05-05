@@ -433,6 +433,12 @@ export class PaymentService {
 
       let sendData = {
         ...user,
+        s_phone: data.s_phone || user.s_phone || user.b_phone,
+        s_lastname: data.s_lastname || user.s_lastname || user.b_lastname,
+        s_city: data.s_city || user.s_city || user.b_city,
+        s_district: data.s_district || user.s_district || user.b_district,
+        s_ward: data.s_ward || user.s_district || user.b_district,
+        s_address: data.s_address || user.s_address || user.b_address,
         order_items: cartItems,
         ref_order_id,
         transfer_amount: totalPrice,

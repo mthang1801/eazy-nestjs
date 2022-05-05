@@ -395,6 +395,9 @@ export class TradeinProgramService {
 
     if (data.applied_criteria && data.applied_criteria.length) {
       for (let appliedCriteriaItem of data.applied_criteria) {
+        if (isNaN(+appliedCriteriaItem.criteria_id)) {
+          appliedCriteriaItem.criteria_id = 0;
+        }
         let currentCriteria = await this.tradeinProgramCriteriaRepo.findOne({
           tradein_id,
           criteria_id: appliedCriteriaItem.criteria_id,
@@ -437,6 +440,9 @@ export class TradeinProgramService {
           appliedCriteriaItem.criteria_id
         ) {
           for (let appliedCriteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            if (isNaN(+appliedCriteriaDetailItem.criteria_detail_id)) {
+              appliedCriteriaDetailItem.criteria_detail_id = 0;
+            }
             let checkCriteriaDetailExist =
               await this.tradeinProgramCriteriaDetailRepo.findOne({
                 criteria_id: appliedCriteriaItem.criteria_id,
