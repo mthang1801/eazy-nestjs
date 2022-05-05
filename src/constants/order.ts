@@ -184,11 +184,11 @@ export const convertDataToIntegrate = (data) => {
   }
 
   if (data['shipping_fee']) {
-    itgData['shipFee'] = data['shipping_fee']; //Phí ship của hãng vận chuyển
+    itgData['shipFee'] = +data['shipping_fee']; //Phí ship của hãng vận chuyển
   }
 
   if (data['shipping_cost']) {
-    itgData['customerShipFee'] = data['shipping_cost']; // Phí trả khách hàng phải trả
+    itgData['customerShipFee'] = +data['shipping_cost']; // Phí trả khách hàng phải trả
   }
 
   if (data['disposit_amount']) {

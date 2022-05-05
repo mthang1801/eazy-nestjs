@@ -13,6 +13,7 @@ import { PaymentControllerFE } from '../controllers/fe/v1/payment.controller';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
 import { ProductsModule } from './products.module';
+import { ShippingFeeModule } from './shippingFee.module';
 @Module({
   controllers: [PaymentController, PaymentControllerFE],
   providers: [
@@ -35,6 +36,7 @@ import { ProductsModule } from './products.module';
     CartModule,
     PromotionModule,
     ProductsModule,
+    ShippingFeeModule,
   ],
 })
 export class PaymentModule {}

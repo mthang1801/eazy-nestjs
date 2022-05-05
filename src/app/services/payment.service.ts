@@ -67,6 +67,7 @@ import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
 import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
 import { PaymentStatus } from '../../utils/services/payment.helper';
 import { CreatePaymentSelfTransportDto } from '../dto/orders/create-paymentSelfTransport.dto';
+import { ShippingFeeService } from './shippingFee.service';
 import {
   calculateInstallmentInterestRateHDSaiGon,
   calculateInstallmentInterestRateHomeCredit,
@@ -87,6 +88,7 @@ export class PaymentService {
     private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
     private dbService: DatabaseService,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private shippingFeeService: ShippingFeeService,
   ) {}
 
   async getList(params) {
@@ -237,32 +239,39 @@ export class PaymentService {
         });
       }
 
-      const totalPrice = product['price'];
+      let totalPrice = product['price'];
       let cartItems = [{ ...product, amount: 1 }];
 
-      const {
-        paymentPerMonth,
-        totalInterest,
-        interestPerMonth,
-        prepaidAmount,
-      } = calculateInstallmentInterestRateHDSaiGon(
-        totalPrice,
-        data.prepaid_percentage,
-        data.tenor,
-      );
+      let responseData;
 
       let installed_money_account_id = 20574861;
       switch (+data.company_id) {
         case 1:
           installed_money_account_id = 20574861;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            totalPrice,
+            data.prepaid_percentage,
+            data.tenor,
+          );
           break; //HD Saigon
         case 2:
           installed_money_account_id = 20574874;
+          responseData = calculateInstallmentInterestRateHomeCredit(
+            totalPrice,
+            data.prepaid_percentage,
+            data.tenor,
+          );
+
           break; // Home Credit
       }
+
+      let paymentPerMonth = responseData.paymentPerMonth;
+      let totalInterest = responseData.totalInterest;
+      let interestPerMonth = responseData.interestPerMonth;
+      let prepaidAmount = responseData.prepaidAmount;
       //20574874 Home credit
       //20630206 payoo
-
+      console.log(272, totalPrice);
       let refOrderId = generateRandomString();
       let sendData = {
         ...user,
@@ -289,6 +298,15 @@ export class PaymentService {
       delete sendData['updated_at'];
 
       const result = await this.orderService.createOrder(user, sendData);
+
+      if (data['s_city']) {
+        const shippingFee = await this.shippingFeeService.calcShippingFee(
+          +data['s_city'],
+        );
+        if (shippingFee) {
+          totalPrice = +totalPrice + +shippingFee.value_fee;
+        }
+      }
 
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,

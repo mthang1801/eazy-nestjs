@@ -393,7 +393,7 @@ export class OrdersService {
       if (shippingFee) {
         orderData['shipping_id'] = shippingFee.shipping_fee_id;
         orderData['shipping_cost'] = shippingFee.value_fee;
-        orderData['total'] += shippingFee.value_fee;
+        orderData['total'] = +orderData['total'] + +shippingFee.value_fee;
       }
     }
 
