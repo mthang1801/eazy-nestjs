@@ -2,7 +2,7 @@ import { IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreatePayooInstallmentDto {
   @IsNotEmpty()
-  user_id: string;
+  product_id: number;
 
   @IsOptional()
   coupon_code: string;

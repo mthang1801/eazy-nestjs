@@ -339,15 +339,30 @@ export class PaymentService {
 
   async payooPayment(data, method) {
     try {
-      const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
-      if (!cart) {
-        throw new HttpException('Không tìm thấy giỏ hàng', 404);
+      let cartItems = [];
+      if (method === 'installment') {
+        let product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
+        });
+        if (!product) {
+          throw new HttpException('Không tìm thấy SP', 404);
+        }
+        cartItems = [
+          { product_id: product.product_id, amount: 1, price: product.price },
+        ];
+      } else {
+        const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+        if (!cart) {
+          throw new HttpException('Không tìm thấy giỏ hàng', 404);
+        }
+        cartItems = await this.cartItemRepo.find({
+          select: `*, ${Table.CART_ITEMS}.amount`,
+          join: cartPaymentJoiner,
+          where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+        });
       }
-      let cartItems = await this.cartItemRepo.find({
-        select: `*, ${Table.CART_ITEMS}.amount`,
-        join: cartPaymentJoiner,
-        where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-      });
 
       let totalPrice = cartItems.reduce(
         (acc, ele) => acc + ele.price * ele.amount,

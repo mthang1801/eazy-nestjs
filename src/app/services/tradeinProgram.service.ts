@@ -472,4 +472,74 @@ export class TradeinProgramService {
 
     return this.get(tradein_id);
   }
+
+  async itgCreate(data) {
+    const tradeinProgramData = {
+      ...new TradeinProgramEntity(),
+      ...this.tradeinProgramRepo.setData(data),
+    };
+
+    const newTradeinProgram = await this.tradeinProgramRepo.create(
+      tradeinProgramData,
+    );
+    if (data.applied_products && data.applied_products.length) {
+      await this.tradeinProgramDetailRepo.delete({
+        tradein_id: newTradeinProgram.tradein_id,
+      });
+      for (let tradeinDetail of data.applied_products) {
+        const product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_appcore_id`]:
+              tradeinDetail.product_appcore_id,
+          },
+        });
+        if (!product) {
+          continue;
+        }
+        const tradeinDetailData = {
+          ...new TradeinProgramDetailEntity(),
+          ...this.tradeinProgramDetailRepo.setData(tradeinDetail),
+          product_id: product.product_id,
+          tradein_id: newTradeinProgram.tradein_id,
+        };
+        await this.tradeinProgramDetailRepo.create(tradeinDetailData);
+      }
+    }
+
+    if (data.applied_criteria && data.applied_criteria.length) {
+      for (let appliedCriteriaItem of data.applied_criteria) {
+        const newCriteriaData = {
+          ...new TradeinProgramCriteriaEntity(),
+          ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
+          tradein_id: newTradeinProgram.tradein_id,
+        };
+
+        const newCriteria = await this.tradeinProgramCriteriaRepo.create(
+          newCriteriaData,
+        );
+
+        if (
+          appliedCriteriaItem.applied_criteria_detail &&
+          appliedCriteriaItem.applied_criteria_detail.length
+        ) {
+          for (let criteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            let newCriteriaDetailData = {
+              ...new TradeinProgramCriteriaDetailEntity(),
+              ...this.tradeinProgramCriteriaDetailRepo.setData(
+                criteriaDetailItem,
+              ),
+              criteria_id: newCriteria.criteria_id,
+            };
+
+            await this.tradeinProgramCriteriaDetailRepo.create(
+              newCriteriaDetailData,
+            );
+          }
+        }
+      }
+    }
+    return this.get(newTradeinProgram.tradein_id);
+  }
 }

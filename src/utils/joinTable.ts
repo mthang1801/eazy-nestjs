@@ -104,6 +104,10 @@ export const productSearchJoiner = {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,
     },
+    [Table.PRODUCT_PRICES]: {
+      fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
+    },
     [Table.PRODUCTS_CATEGORIES]: {
       fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,

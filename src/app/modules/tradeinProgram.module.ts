@@ -10,6 +10,7 @@ import { ProductsModule } from './products.module';
 import { ValuationBillRepository } from '../repositories/valuationBill.repository';
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 import { UsersModule } from './users.module';
+import { TradeinProgramControllerItg } from '../controllers/integration/v1/tradeinProgram.controller';
 
 @Module({
   imports: [ProductsModule, UsersModule],
@@ -31,6 +32,10 @@ import { UsersModule } from './users.module';
     ValuationBillRepository,
     ValuationBillCriteriaDetailRepository,
   ],
-  controllers: [TradeinProgramControllerBE, TradeinProgramControllerFE],
+  controllers: [
+    TradeinProgramControllerBE,
+    TradeinProgramControllerFE,
+    TradeinProgramControllerItg,
+  ],
 })
 export class TradeinProgramModule {}
