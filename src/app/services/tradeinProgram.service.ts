@@ -11,7 +11,7 @@ import {
   tradeinDetailLeftJoiner,
 } from '../../utils/joinTable';
 import { Table } from 'src/database/enums';
-import { HttpException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { getPageSkipLimit, formatStandardTimeStamp } from '../../utils/helper';
 import {
   tradeinProgramSearchFilter,
@@ -30,7 +30,7 @@ import { ValuationBillRepository } from '../repositories/valuationBill.repositor
 import { ValuationBillEntity } from '../entities/valuationBill.entity';
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
-
+@Injectable()
 export class TradeinProgramService {
   constructor(
     private tradeinProgramRepo: TradeinProgramRepository<TradeinProgramEntity>,
@@ -48,10 +48,10 @@ export class TradeinProgramService {
       created_by: user.user_id,
       updated_by: user.user_id,
     };
+
     const newTradeinProgram = await this.tradeinProgramRepo.create(
       tradeinProgramData,
     );
-
     if (data.applied_products && data.applied_products.length) {
       await this.tradeinProgramDetailRepo.delete({
         tradein_id: newTradeinProgram.tradein_id,
@@ -78,14 +78,15 @@ export class TradeinProgramService {
     if (data.applied_criteria && data.applied_criteria.length) {
       for (let appliedCriteriaItem of data.applied_criteria) {
         const newCriteriaData = {
-          ...new TradeinProgramCriteriaDetailEntity(),
+          ...new TradeinProgramCriteriaEntity(),
           ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
           tradein_id: newTradeinProgram.tradein_id,
         };
+        console.log(newCriteriaData);
         const newCriteria = await this.tradeinProgramCriteriaRepo.create(
           newCriteriaData,
         );
-
+        console.log(newCriteria);
         if (
           appliedCriteriaItem.applied_criteria_detail &&
           appliedCriteriaItem.applied_criteria_detail.length
@@ -106,7 +107,6 @@ export class TradeinProgramService {
         }
       }
     }
-
     return this.get(newTradeinProgram.tradein_id);
   }
 

@@ -7,5 +7,5 @@ export class TradeinProgramDetailEntity {
   product_appcore_id: number = 0;
   detail_status: string = 'A';
   created_at: string = formatStandardTimeStamp();
-  update_at: string = formatStandardTimeStamp();
+  updated_at: string = formatStandardTimeStamp();
 }

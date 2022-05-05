@@ -3,7 +3,6 @@ import { DatabaseService } from '../../database/database.service';
 import { BaseRepositorty } from '../../base/base.repository';
 
 import { Table } from '../../database/enums/index';
-import { StoreLocationDescriptionEntity } from '../entities/storeLocationDescription.entity';
 import { TradeinProgramEntity } from '../entities/tradeinProgram.entity';
 
 @Injectable()

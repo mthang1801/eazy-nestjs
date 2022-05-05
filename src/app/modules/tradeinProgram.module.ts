@@ -5,19 +5,30 @@ import { TradeinProgramDetailRepository } from '../repositories/tradeinProgramDe
 import { TradeinProgramCriteriaRepository } from '../repositories/tradeinProgramCriteria.repository';
 import { TradeinProgramController as TradeinProgramControllerBE } from '../controllers/be/v1/tradeinProgram.controller';
 import { TradeinProgramController as TradeinProgramControllerFE } from '../controllers/fe/v1/tradeinProgram.controller';
+import { TradeinProgramCriteriaDetailRepository } from '../repositories/tradeinProgramCriteriaDetail.repository';
+import { ProductsModule } from './products.module';
+import { ValuationBillRepository } from '../repositories/valuationBill.repository';
+import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 
 @Module({
+  imports: [ProductsModule],
   providers: [
     TradeinProgramService,
     TradeinProgramRepository,
     TradeinProgramDetailRepository,
     TradeinProgramCriteriaRepository,
+    TradeinProgramCriteriaDetailRepository,
+    ValuationBillRepository,
+    ValuationBillCriteriaDetailRepository,
   ],
   exports: [
     TradeinProgramService,
     TradeinProgramRepository,
     TradeinProgramDetailRepository,
     TradeinProgramCriteriaRepository,
+    TradeinProgramCriteriaDetailRepository,
+    ValuationBillRepository,
+    ValuationBillCriteriaDetailRepository,
   ],
   controllers: [TradeinProgramControllerBE, TradeinProgramControllerFE],
 })

@@ -1,9 +1,9 @@
 import { formatStandardTimeStamp } from '../../utils/helper';
 export class TradeinProgramEntity {
   tradein_id: number = 0;
-  tradein_appcore_id: number = 0;
+  tradein_appcore_id: number = null;
   name: string = '';
-  desc: string = '';
+  description: string = '';
   status: string = 'A';
   discount_rate: number = 0;
   start_at: string = null;
