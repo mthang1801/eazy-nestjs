@@ -42,12 +42,14 @@ export class UsersController extends BaseController {
     return this.responseSuccess(res, { userData: user });
   }
 
-  @Put(':user_id/profile')
+  @Put('/profile')
+  @UseGuards(AuthGuard)
   async updateProfile(
-    @Param('user_id') user_id: number,
+    @Req() req,
     @Body() data: UpdateUserProfileDto,
     @Res() res: Response,
   ): Promise<IResponse> {
+    let { user_id } = req.user;
     await this.service.updateProfile(user_id, data);
     return this.responseSuccess(res);
   }

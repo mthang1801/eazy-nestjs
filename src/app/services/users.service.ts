@@ -144,6 +144,14 @@ export class UsersService {
       updated_at: formatStandardTimeStamp(),
     };
 
+    if (data.b_firstname) {
+      userData['firstname'] = data.b_firstname;
+    }
+
+    if (data.b_lastname) {
+      userData['lastname'] = data.b_lastname;
+    }
+
     if (data.b_phone) {
       if (!user.phone) {
         const checkPhoneExist = await this.userRepository.findOne({
@@ -153,13 +161,11 @@ export class UsersService {
           throw new HttpException('Số điện thoại đã được sử dụng', 409);
         }
         userData['phone'] = data.b_phone;
-      } else {
-        throw new HttpException('Không thể thay đổi số điện thoại.', 400);
       }
     }
 
     if (data.email) {
-      if (user.email) {
+      if (!user.email) {
         const checkEmailExist = await this.userRepository.findOne({
           email: data.email,
         });

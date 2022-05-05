@@ -43,6 +43,9 @@ export class CreateTradeinProgramDto {
 }
 
 class TradeinProduct {
+  @IsOptional()
+  id: number;
+
   @IsNotEmpty()
   product_id: number;
 
@@ -54,6 +57,9 @@ class TradeinProduct {
 }
 
 class TradeinCriteria {
+  @IsOptional()
+  id: number;
+
   @IsOptional()
   position: number;
 
@@ -73,6 +79,9 @@ class TradeinCriteria {
 }
 
 class TradeinCriteriaDetail {
+  @IsOptional()
+  id: number;
+
   @IsNotEmpty()
   criteria_detail_name: string;
 
