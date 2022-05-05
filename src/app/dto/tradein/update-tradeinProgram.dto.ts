@@ -37,7 +37,7 @@ export class UpdateTradeinProgramDto {
   applied_products: TradeinProduct[];
 
   @IsOptional()
-  removed_products: number[];
+  removed_products: string[];
 
   @IsOptional()
   @ValidateNested()
@@ -45,7 +45,7 @@ export class UpdateTradeinProgramDto {
   applied_criteria: TradeinCriteria[];
 
   @IsOptional()
-  removed_criteria: number[];
+  removed_criteria: string[];
 }
 
 class TradeinProduct {
@@ -61,7 +61,7 @@ class TradeinProduct {
 
 class TradeinCriteria {
   @IsOptional()
-  criteria_id: number = 0;
+  criteria_id: string;
 
   @IsOptional()
   position: number;
@@ -81,12 +81,12 @@ class TradeinCriteria {
   applied_criteria_detail: TradeinCriteriaDetail[];
 
   @IsOptional()
-  removed_criteria_detail: number[];
+  removed_criteria_detail: string[];
 }
 
 class TradeinCriteriaDetail {
   @IsOptional()
-  criteria_detail_id: number = 0;
+  criteria_detail_id: string;
 
   @IsOptional()
   criteria_detail_name: string;

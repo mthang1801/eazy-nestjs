@@ -34,6 +34,8 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { userJoiner } from '../../utils/joinTable';
 import { userSelector } from '../../utils/tableSelector';
+import { ProductPricesRepository } from '../repositories/productPrices.repository';
+import { ProductPricesEntity } from '../entities/productPrices.entity';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -42,6 +44,7 @@ export class TradeinProgramService {
     private tradeinProgramCriteriaRepo: TradeinProgramCriteriaRepository<TradeinProgramCriteriaEntity>,
     private tradeinProgramCriteriaDetailRepo: TradeinProgramCriteriaDetailRepository<TradeinProgramCriteriaDetailEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private valuationBillRepo: ValuationBillRepository<ValuationBillEntity>,
     private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
     private userRepo: UserRepository<UserEntity>,
@@ -345,6 +348,9 @@ export class TradeinProgramService {
 
     if (data.removed_products && data.removed_products.length) {
       for (let removedProductId of data.removed_products) {
+        if (isNaN(+removedProductId)) {
+          continue;
+        }
         await this.tradeinProgramDetailRepo.delete({
           tradein_id,
           product_id: removedProductId,
@@ -384,6 +390,9 @@ export class TradeinProgramService {
 
     if (data.removed_criteria && data.removed_criteria.length) {
       for (let removedCriteriaId of data.removed_criteria) {
+        if (isNaN(+removedCriteriaId)) {
+          continue;
+        }
         await this.tradeinProgramCriteriaRepo.delete({
           criteria_id: removedCriteriaId,
         });
@@ -396,7 +405,7 @@ export class TradeinProgramService {
     if (data.applied_criteria && data.applied_criteria.length) {
       for (let appliedCriteriaItem of data.applied_criteria) {
         if (isNaN(+appliedCriteriaItem.criteria_id)) {
-          appliedCriteriaItem.criteria_id = 0;
+          appliedCriteriaItem.criteria_id = '0';
         }
         let currentCriteria = await this.tradeinProgramCriteriaRepo.findOne({
           tradein_id,
@@ -428,6 +437,9 @@ export class TradeinProgramService {
           appliedCriteriaItem.removed_criteria_detail.length
         ) {
           for (let removedCriteriaDetailId of appliedCriteriaItem.removed_criteria_detail) {
+            if (isNaN(+removedCriteriaDetailId)) {
+              continue;
+            }
             await this.tradeinProgramCriteriaDetailRepo.delete({
               criteria_detail_id: removedCriteriaDetailId,
             });
@@ -441,7 +453,7 @@ export class TradeinProgramService {
         ) {
           for (let appliedCriteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
             if (isNaN(+appliedCriteriaDetailItem.criteria_detail_id)) {
-              appliedCriteriaDetailItem.criteria_detail_id = 0;
+              appliedCriteriaDetailItem.criteria_detail_id = '0';
             }
             let checkCriteriaDetailExist =
               await this.tradeinProgramCriteriaDetailRepo.findOne({
@@ -509,6 +521,22 @@ export class TradeinProgramService {
         if (!product) {
           continue;
         }
+
+        let productPrice = await this.productRepo.findOne({
+          product_id: product.product_id,
+        });
+        if (productPrice) {
+          await this.productPriceRepo.update(
+            { product_id: product.product_id },
+            { collect_price: tradeinDetail.collect_price },
+          );
+        } else {
+          await this.productPriceRepo.create({
+            product_id: product.product_id,
+            collect_price: tradeinDetail.collect_price,
+          });
+        }
+
         const tradeinDetailData = {
           ...new TradeinProgramDetailEntity(),
           ...this.tradeinProgramDetailRepo.setData(tradeinDetail),
@@ -536,8 +564,6 @@ export class TradeinProgramService {
           appliedCriteriaItem.applied_criteria_detail.length
         ) {
           for (let criteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
-            if (criteriaDetailItem.accessory_appcore_id) {
-            }
             let newCriteriaDetailData = {
               ...new TradeinProgramCriteriaDetailEntity(),
               ...this.tradeinProgramCriteriaDetailRepo.setData(
