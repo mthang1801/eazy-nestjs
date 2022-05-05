@@ -161,6 +161,14 @@ export class UsersService {
           throw new HttpException('Số điện thoại đã được sử dụng', 409);
         }
         userData['phone'] = data.b_phone;
+      } else {
+        const checkCurrentPhone = await this.userRepository.findOne({
+          phone: data.b_phone,
+          user_id,
+        });
+        if (!checkCurrentPhone) {
+          throw new HttpException('Điện thoại không thể thay đổi.', 401);
+        }
       }
     }
 
@@ -174,7 +182,13 @@ export class UsersService {
         }
         userData['email'] = data.email;
       } else {
-        throw new HttpException('Không thể thay đổi email.', 400);
+        const checkCurrentEmail = await this.userRepository.findOne({
+          email: data.email,
+          user_id,
+        });
+        if (!checkCurrentEmail) {
+          throw new HttpException('Email không thể thay đổi.', 401);
+        }
       }
     }
 
