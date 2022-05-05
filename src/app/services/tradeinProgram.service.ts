@@ -30,6 +30,10 @@ import { ValuationBillRepository } from '../repositories/valuationBill.repositor
 import { ValuationBillEntity } from '../entities/valuationBill.entity';
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
+import { UserRepository } from '../repositories/user.repository';
+import { UserEntity } from '../entities/user.entity';
+import { userJoiner } from '../../utils/joinTable';
+import { userSelector } from '../../utils/tableSelector';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -40,6 +44,7 @@ export class TradeinProgramService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private valuationBillRepo: ValuationBillRepository<ValuationBillEntity>,
     private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
+    private userRepo: UserRepository<UserEntity>,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -82,11 +87,11 @@ export class TradeinProgramService {
           ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
           tradein_id: newTradeinProgram.tradein_id,
         };
-        console.log(newCriteriaData);
+
         const newCriteria = await this.tradeinProgramCriteriaRepo.create(
           newCriteriaData,
         );
-        console.log(newCriteria);
+
         if (
           appliedCriteriaItem.applied_criteria_detail &&
           appliedCriteriaItem.applied_criteria_detail.length
@@ -124,6 +129,19 @@ export class TradeinProgramService {
       skip,
       limit,
     });
+
+    if (tradeinProgramsList.length) {
+      for (let tradeinProgram of tradeinProgramsList) {
+        tradeinProgram['last_updater'] = null;
+        if (tradeinProgram.updated_by) {
+          let user = await this.userRepo.findOne({
+            select: userSelector,
+            user_id: tradeinProgram.updated_by,
+          });
+          tradeinProgram['last_updater'] = user;
+        }
+      }
+    }
 
     let count = await this.tradeinProgramRepo.find({
       select: `COUNT(DISTINCT(${Table.TRADEIN_PROGRAM}.tradein_id)) as total `,

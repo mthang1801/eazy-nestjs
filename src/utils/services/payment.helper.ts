@@ -61,7 +61,7 @@ export const calculateInstallmentInterestRateHomeCredit = (
   let prepaidAmount = (amount * prepaidPercentage) / 100;
 
   let restAmount = amount - prepaidAmount;
-  console.log(restAmount);
+
   let interestRate = 3.75;
   let paymentPerMonthBeforeOtherFees = PMT(
     interestRate / 100,
@@ -86,8 +86,10 @@ export const calculateInstallmentInterestRateHomeCredit = (
     paymentPerMonth: paymentPerMonthAfterOtherFees,
     restAmount,
     warrantyFeePerMonth,
-    totalPriceAfterInstallment:
-      paymentPerMonthAfterOtherFees * tenor - restAmount + amount,
+    totalPriceAfterInstallment: +(
+      paymentPerMonthAfterOtherFees * tenor +
+      prepaidAmount
+    ),
   };
 };
 

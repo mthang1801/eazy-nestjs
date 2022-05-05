@@ -103,3 +103,12 @@ export const productDetailSelector = [
   `${Table.PRODUCT_DESCRIPTION}.*`,
   `${Table.CATEGORIES}.slug as categorySlug`,
 ];
+
+export const userSelector = [
+  'firstname',
+  'lastname',
+  'phone',
+  'user_id',
+  'email',
+  'avatar',
+];

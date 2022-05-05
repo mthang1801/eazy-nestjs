@@ -9,9 +9,10 @@ import { TradeinProgramCriteriaDetailRepository } from '../repositories/tradeinP
 import { ProductsModule } from './products.module';
 import { ValuationBillRepository } from '../repositories/valuationBill.repository';
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
+import { UsersModule } from './users.module';
 
 @Module({
-  imports: [ProductsModule],
+  imports: [ProductsModule, UsersModule],
   providers: [
     TradeinProgramService,
     TradeinProgramRepository,
