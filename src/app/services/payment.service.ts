@@ -395,7 +395,7 @@ export class PaymentService {
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
-          where: { [`${Table.USERS}.user_id`]: user.user_id },
+          where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
         });
       } else {
         user = await this.userRepo.findOne({
