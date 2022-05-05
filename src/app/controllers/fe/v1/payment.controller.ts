@@ -35,8 +35,9 @@ export class PaymentControllerFE extends BaseController {
   async payooPaymentInstallment(
     @Res() res: Response,
     @Body() data: CreatePayooInstallmentDto,
+    @Req() req,
   ) {
-    const result = await this.service.payooPaymentInstallment(data);
+    const result = await this.service.payooPaymentInstallment(data, req.user);
     return this.responseSuccess(res, result);
   }
 

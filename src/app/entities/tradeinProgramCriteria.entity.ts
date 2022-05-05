@@ -1,9 +1,7 @@
 import { formatStandardTimeStamp } from '../../utils/helper';
 export class TradeinProgramCriteriaEntity {
   criteria_id: number = 0;
-  criteria_appcore_id: number = null;
   tradein_id: number = 0;
-  tradein_appcore_id: number = null;
   criteria_name: string = '';
   position: number = null;
   criteria_status: string = 'A';

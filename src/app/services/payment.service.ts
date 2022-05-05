@@ -333,11 +333,11 @@ export class PaymentService {
     return this.payooPayment(data, 'selfTransport');
   }
 
-  async payooPaymentInstallment(data: CreatePayooInstallmentDto) {
-    return this.payooPayment(data, 'installment');
+  async payooPaymentInstallment(data: CreatePayooInstallmentDto, user) {
+    return this.payooPayment(data, 'installment', user);
   }
 
-  async payooPayment(data, method) {
+  async payooPayment(data, method, userAuth = null) {
     try {
       let cartItems = [];
       if (method === 'installment') {
@@ -390,33 +390,45 @@ export class PaymentService {
         }
       }
 
-      let user = await this.userRepo.findOne({
-        select: `*, ${Table.USERS}.user_appcore_id`,
-        join: userJoiner,
-        where: { [`${Table.USERS}.user_id`]: data.user_id },
-      });
-
-      if (!user) {
+      let user;
+      if (userAuth) {
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
-          where: {
-            [`${Table.USERS}.phone`]:
-              method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
-          },
+          where: { [`${Table.USERS}.user_id`]: user.user_id },
         });
+      } else {
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.user_id`]: data.user_id },
+        });
+
         if (!user) {
-          await this.customerService.createCustomerFromWebPayment(data);
           user = await this.userRepo.findOne({
             select: `*, ${Table.USERS}.user_appcore_id`,
             join: userJoiner,
             where: {
-              phone:
+              [`${Table.USERS}.phone`]:
                 method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
             },
           });
+          if (!user) {
+            await this.customerService.createCustomerFromWebPayment(data);
+            user = await this.userRepo.findOne({
+              select: `*, ${Table.USERS}.user_appcore_id`,
+              join: userJoiner,
+              where: {
+                phone:
+                  method === 'selfTransport'
+                    ? data['b_phone']
+                    : data['s_phone'],
+              },
+            });
+          }
         }
       }
+
       let ref_order_id = generateRandomString();
 
       let sendData = {

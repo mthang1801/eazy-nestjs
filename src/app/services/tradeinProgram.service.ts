@@ -530,6 +530,8 @@ export class TradeinProgramService {
           appliedCriteriaItem.applied_criteria_detail.length
         ) {
           for (let criteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            if (criteriaDetailItem.accessory_appcore_id) {
+            }
             let newCriteriaDetailData = {
               ...new TradeinProgramCriteriaDetailEntity(),
               ...this.tradeinProgramCriteriaDetailRepo.setData(

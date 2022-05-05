@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { PaymentController } from '../controllers/be/v1/payment.controller';
 import { PaymentService } from '../services/payment.service';
 import { PaymentRepository } from '../repositories/payment.repository';
@@ -39,4 +44,13 @@ import { ShippingFeeModule } from './shippingFee.module';
     ShippingFeeModule,
   ],
 })
-export class PaymentModule {}
+export class PaymentModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(getUserFromToken)
+      .forRoutes({
+        path: 'fe/v1/payment/payoo/installment',
+        method: RequestMethod.POST,
+      });
+  }
+}
