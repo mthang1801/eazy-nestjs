@@ -171,7 +171,7 @@ export class TradeinProgramService {
       ),
     };
 
-    let tradeinProgramsList = await this.tradeinProgramRepo.findOne({
+    let tradeinProgram = await this.tradeinProgramRepo.findOne({
       select: '*',
       where: tradeinProgramSearchFilter(search, filterCondition),
       orderBy: [
@@ -181,48 +181,61 @@ export class TradeinProgramService {
       limit,
     });
 
-    if (tradeinProgramsList) {
-      for (let tradeinProgram of tradeinProgramsList) {
-        let aplliedProducts = await this.tradeinProgramDetailRepo.find({
-          select: '*',
-          join: tradeinDetailLeftJoiner,
-          where: {
-            [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
-              tradeinProgram.tradein_id,
-            [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
-          },
-        });
-        tradeinProgram['appliedProducts'] = aplliedProducts;
+    let appliedProducts = [];
+    let appliedCriteriaList = [];
+    let count = 0;
+    if (tradeinProgram) {
+      appliedProducts = await this.tradeinProgramDetailRepo.find({
+        select: '*',
+        join: tradeinDetailLeftJoiner,
+        where: {
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
+            tradeinProgram.tradein_id,
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
+        },
+        skip,
+        limit,
+      });
 
-        let appliedCriteriaList = await this.tradeinProgramCriteriaRepo.find({
-          tradein_id: tradeinProgram.tradein_id,
-          criteria_status: 'A',
-        });
-        if (appliedCriteriaList.length) {
-          for (let appliedCriteriaItem of appliedCriteriaList) {
-            const appliedCriteriaDetails =
-              await this.tradeinProgramCriteriaDetailRepo.find({
-                criteria_id: appliedCriteriaItem.criteria_id,
-              });
-            appliedCriteriaItem['criteriaDetails'] = appliedCriteriaDetails;
-          }
+      let _count = await this.tradeinProgramDetailRepo.find({
+        select: `COUNT(${Table.TRADEIN_PROGRAM_DETAIL}.product_id) as total`,
+        join: tradeinDetailLeftJoiner,
+        where: {
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
+            tradeinProgram.tradein_id,
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
+        },
+      });
+
+      if (_count[0].total) {
+        count = _count[0].total;
+      }
+
+      appliedCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+        tradein_id: tradeinProgram.tradein_id,
+        criteria_status: 'A',
+      });
+
+      if (appliedCriteriaList.length) {
+        for (let appliedCriteriaItem of appliedCriteriaList) {
+          const appliedCriteriaDetails =
+            await this.tradeinProgramCriteriaDetailRepo.find({
+              criteria_id: appliedCriteriaItem.criteria_id,
+            });
+          appliedCriteriaItem['criteriaDetails'] = appliedCriteriaDetails;
         }
-        tradeinProgram['appliedCriteria'] = appliedCriteriaList;
       }
     }
 
-    let count = await this.tradeinProgramRepo.find({
-      select: `COUNT(DISTINCT(${Table.TRADEIN_PROGRAM}.tradein_id)) as total `,
-      where: tradeinProgramSearchFilter(search, filterCondition),
-    });
-
     return {
-      paging: {
+      productsPaging: {
         currentPage: page,
         pageSize: limit,
-        total: count[0].total,
+        total: count,
       },
-      data: tradeinProgramsList,
+      tradeinProgram,
+      appliedProducts,
+      appliedCriteriaList,
     };
   }
 

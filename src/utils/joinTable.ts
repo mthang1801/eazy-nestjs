@@ -331,15 +331,15 @@ export const tradeinDetailLeftJoiner = {
     },
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.product_id`,
     },
     [Table.PRODUCT_PRICES]: {
       fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.product_id`,
     },
     [Table.PRODUCTS_CATEGORIES]: {
       fieldJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.product_id`,
     },
     [Table.CATEGORIES]: {
       fieldJoin: `${Table.CATEGORIES}.category_id`,

@@ -83,6 +83,7 @@ export class OrdersController extends BaseController {
   }
 
   @Put('/:order_code/cancel')
+  @UseGuards(AuthGuard)
   async cancelOrder(
     @Param('order_code') order_code: number,
     @Res() res,
