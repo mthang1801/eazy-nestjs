@@ -271,7 +271,16 @@ export class PaymentService {
       let prepaidAmount = responseData.prepaidAmount;
       //20574874 Home credit
       //20630206 payoo
-      console.log(272, totalPrice);
+
+      if (data['s_city']) {
+        const shippingFee = await this.shippingFeeService.calcShippingFee(
+          +data['s_city'],
+        );
+        if (shippingFee) {
+          totalPrice = +totalPrice + +shippingFee.value_fee;
+        }
+      }
+
       let refOrderId = generateRandomString();
       let sendData = {
         ...user,
@@ -298,15 +307,6 @@ export class PaymentService {
       delete sendData['updated_at'];
 
       const result = await this.orderService.createOrder(user, sendData);
-
-      if (data['s_city']) {
-        const shippingFee = await this.shippingFeeService.calcShippingFee(
-          +data['s_city'],
-        );
-        if (shippingFee) {
-          totalPrice = +totalPrice + +shippingFee.value_fee;
-        }
-      }
 
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,
@@ -340,6 +340,7 @@ export class PaymentService {
   async payooPayment(data, method, userAuth = null) {
     try {
       let cartItems = [];
+      let cart;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
           select: '*',
@@ -353,7 +354,7 @@ export class PaymentService {
           { product_id: product.product_id, amount: 1, price: product.price },
         ];
       } else {
-        const cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+        cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
         if (!cart) {
           throw new HttpException('Không tìm thấy giỏ hàng', 404);
         }
@@ -546,8 +547,10 @@ export class PaymentService {
         orderPaymentData,
       );
 
-      // await this.cartRepo.delete({ cart_id: cart.cart_id });
-      // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+      if (cart) {
+        await this.cartRepo.delete({ cart_id: cart.cart_id });
+        await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+      }
 
       return response.data;
     } catch (error) {

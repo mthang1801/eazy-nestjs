@@ -1332,6 +1332,7 @@ export class OrdersService {
   }
 
   async updateOrderStatus(order_code, order_status) {
+    console.log(1335, order_code, order_status);
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException(
