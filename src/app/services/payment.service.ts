@@ -473,6 +473,7 @@ export class PaymentService {
           sendData['shipping_cost'] = shippingFeeLocation.value_fee;
           sendData['transfer_amount'] =
             +totalPrice + +shippingFeeLocation.value_fee;
+          totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
         }
       }
 
@@ -628,7 +629,7 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
     let notifyData = data.NotifyData;
-    console.log(data);
+
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
     let endIndex = notifyData.indexOf('</Data>');
     let _notifyData = notifyData.substring(startIndex, endIndex);
@@ -644,7 +645,7 @@ export class PaymentService {
       decodedData.indexOf('<order_cash_amount>') + '<order_cash_amount>'.length;
     let endAmountIndex = decodedData.indexOf('</order_cash_amount>');
     let amount = decodedData.substring(startAmountIndex, endAmountIndex);
-
+    console.log('payoo notify', orderNo, amount);
     try {
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
 
