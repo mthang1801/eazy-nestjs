@@ -76,6 +76,7 @@ export class BaseRepositorty<T> {
       );
     }
     let results;
+
     if (
       Object.keys(options).some(
         (val) =>

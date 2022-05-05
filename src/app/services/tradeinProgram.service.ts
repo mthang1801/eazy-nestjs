@@ -358,11 +358,13 @@ export class TradeinProgramService {
           tradein_id,
           product_id: appliedProductItem.product_id,
         });
+
         if (checkProductExist) {
           const updateTradeinProductData = {
             ...this.tradeinProgramDetailRepo.setData(appliedProductItem),
             updated_at: formatStandardTimeStamp(),
           };
+
           if (Object.entries(updateTradeinProductData).length) {
             await this.tradeinProgramDetailRepo.update(
               { tradein_id, product_id: appliedProductItem.product_id },
@@ -393,16 +395,17 @@ export class TradeinProgramService {
 
     if (data.applied_criteria && data.applied_criteria.length) {
       for (let appliedCriteriaItem of data.applied_criteria) {
-        let checkCriteriaExist = await this.tradeinProgramCriteriaRepo.findOne({
+        let currentCriteria = await this.tradeinProgramCriteriaRepo.findOne({
           tradein_id,
           criteria_id: appliedCriteriaItem.criteria_id,
         });
-        if (checkCriteriaExist) {
+
+        if (currentCriteria) {
           const updateCriteriaData = {
             ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
             updated_at: formatStandardTimeStamp(),
           };
-          await this.tradeinProgramCriteriaRepo.update(
+          currentCriteria = await this.tradeinProgramCriteriaRepo.update(
             { tradein_id, criteria_id: appliedCriteriaItem.criteria_id },
             updateCriteriaData,
           );
@@ -412,7 +415,9 @@ export class TradeinProgramService {
             ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
             tradein_id,
           };
-          await this.tradeinProgramCriteriaRepo.create(newCriteriaData);
+          currentCriteria = await this.tradeinProgramCriteriaRepo.create(
+            newCriteriaData,
+          );
         }
 
         if (

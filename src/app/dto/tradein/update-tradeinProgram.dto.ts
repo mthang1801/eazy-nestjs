@@ -61,7 +61,7 @@ class TradeinProduct {
 
 class TradeinCriteria {
   @IsOptional()
-  criteria_id: number = null;
+  criteria_id: number = 0;
 
   @IsOptional()
   position: number;
@@ -86,7 +86,7 @@ class TradeinCriteria {
 
 class TradeinCriteriaDetail {
   @IsOptional()
-  criteria_detail_id: number = null;
+  criteria_detail_id: number = 0;
 
   @IsOptional()
   criteria_detail_name: string;
