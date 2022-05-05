@@ -295,7 +295,7 @@ export class TradeinProgramService {
             },
           });
 
-        tradeinCriteriaItem['criteriaDetails'] = tradeinCriteriaDetails;
+        tradeinCriteriaItem['applied_criteria_detail'] = tradeinCriteriaDetails;
       }
     }
 
