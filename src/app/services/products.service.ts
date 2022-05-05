@@ -3421,7 +3421,7 @@ export class ProductService {
     }
 
     const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug`,
+      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCT_PRICES}.*`,
       join: productSearchJoiner,
       where: productSearch(q, filterConditions),
       skip,
