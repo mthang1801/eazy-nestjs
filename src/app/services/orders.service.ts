@@ -121,7 +121,7 @@ import {
   Between,
   MoreThan,
 } from '../../database/operators/operators';
-import { OrderStatus } from '../../constants/order';
+import { OrderStatus, OrderType } from '../../constants/order';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import {
@@ -234,6 +234,7 @@ export class OrdersService {
         order_items: cartItems,
         store_id: data.store_id,
         pay_credit_type: 1,
+        order_type: data.order_type || OrderType.buyAtStore,
       };
       let result = await this.createOrder(user, sendData);
     } catch (error) {
@@ -386,7 +387,7 @@ export class OrdersService {
       }
     }
 
-    if (data['s_city']) {
+    if (data['s_city'] && !data.shipping_cost) {
       const shippingFee = await this.shippingFeeService.calcShippingFee(
         data['s_city'],
       );

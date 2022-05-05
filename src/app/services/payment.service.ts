@@ -54,7 +54,7 @@ import {
   payooPaynowURL,
   payooInstallmentURL,
 } from '../../constants/payment';
-import { OrderStatus } from '../../constants/order';
+import { OrderStatus, OrderType } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
@@ -444,10 +444,23 @@ export class PaymentService {
         ref_order_id,
         transfer_amount: totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
+        order_type: OrderType.online,
       };
+
+      if (data['s_city']) {
+        const shippingFee = await this.shippingFeeService.calcShippingFee(
+          data['s_city'],
+        );
+        if (shippingFee) {
+          sendData['shipping_id'] = shippingFee.shipping_fee_id;
+          sendData['shipping_cost'] = shippingFee.value_fee;
+          sendData['transfer_amount'] = +totalPrice + +shippingFee.value_fee;
+        }
+      }
 
       if (method === 'selfTransport') {
         sendData['store_id'] = data.store_id;
+        sendData['order_type'] = 3;
       }
 
       await this.orderService.createOrder(user, sendData);

@@ -331,3 +331,9 @@ export const OrderStatus = {
   dont_pickup_phone: 10,
   invalid: 11,
 };
+
+export const OrderType = {
+  buyAtStore: 1,
+  preOrder: 2,
+  online: 3,
+};
