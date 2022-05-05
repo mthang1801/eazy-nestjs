@@ -1052,8 +1052,10 @@ export class OrdersService {
 
   async getByPhoneAndId(phone: string, order_code: number) {
     const order = await this.orderRepo.findOne({
-      order_code,
-      s_phone: phone,
+      where: [
+        { order_code, s_phone: phone },
+        { order_code, b_phone: phone },
+      ],
     });
 
     if (!order) {
