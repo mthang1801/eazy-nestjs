@@ -259,7 +259,9 @@ export class TradeinProgramService {
       throw new HttpException('Không tìm thấy chương trình.', 404);
     }
 
-    let filterCondition = {};
+    let filterCondition = {
+      [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]: tradein_id,
+    };
     const tradeinDetails = await this.tradeinProgramDetailRepo.find({
       select: '*',
       join: tradeinDetailLeftJoiner,
