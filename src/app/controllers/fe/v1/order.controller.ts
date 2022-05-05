@@ -13,7 +13,7 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { Response } from 'express';
 import { CreateOrderDto } from 'src/app/dto/orders/create-order.dto';
-import { Body } from '@nestjs/common';
+import { Body, Put } from '@nestjs/common';
 import { AuthGuard } from 'src/middlewares/fe.auth';
 import { CreateOrderFEDto } from 'src/app/dto/orders/create-order.frontend.dto';
 import { CreateOrderSelfTransportDto } from '../../../dto/orders/create-orderSelfTransport.dto';
@@ -80,5 +80,14 @@ export class OrdersController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.getByOrderCode(order_code);
     return this.responseSuccess(res, result);
+  }
+
+  @Put('/:order_code/cancel')
+  async cancelOrder(
+    @Param('order_code') order_code: number,
+    @Res() res,
+  ): Promise<IResponse> {
+    await this.service.cancelOrder(order_code);
+    return this.responseSuccess(res);
   }
 }
