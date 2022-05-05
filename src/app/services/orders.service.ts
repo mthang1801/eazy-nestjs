@@ -131,6 +131,7 @@ import {
 import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTransport.dto';
 import { Equal } from '../../database/operators/operators';
 import { PaymentStatus } from '../../utils/services/payment.helper';
+import { ShippingFeeService } from './shippingFee.service';
 
 @Injectable()
 export class OrdersService {
@@ -161,6 +162,7 @@ export class OrdersService {
     private dbService: DatabaseService,
     private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
+    private shippingFeeService: ShippingFeeService,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -171,6 +173,9 @@ export class OrdersService {
       if (!user) {
         user = await this.createCustomer(data);
       }
+    }
+    if (!user.phone) {
+      throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
     }
 
     await this.createOrder(user, data);
@@ -185,6 +190,9 @@ export class OrdersService {
         user = await this.userRepo.findOne({
           user_id: authUser.user_id,
         });
+        if (!user.phone) {
+          throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
+        }
         cart = await this.cartRepo.findOne({ user_id: user.user_id });
       } else {
         user = await this.userRepo.findOne({ phone: data.b_phone });
@@ -236,6 +244,9 @@ export class OrdersService {
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
     let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+    if (!user.phone) {
+      throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
+    }
 
     if (!user['user_appcore_id']) {
       await this.customerService.createCustomerToAppcore(user);
@@ -313,7 +324,7 @@ export class OrdersService {
     };
 
     if (!user['user_appcore_id']) {
-      throw new HttpException('User_appcore_id không được nhận diện.', 400);
+      throw new HttpException('Mã KH tại Appcore không tồn tại.', 400);
     }
 
     orderData['user_appcore_id'] = user['user_appcore_id'];
@@ -372,6 +383,17 @@ export class OrdersService {
 
       if (checkResult['isValid']) {
         // orderData['total'] -= checkResult['discountMoney'];
+      }
+    }
+
+    if (data['s_city']) {
+      const shippingFee = await this.shippingFeeService.calcShippingFee(
+        data['s_city'],
+      );
+      if (shippingFee) {
+        orderData['shipping_id'] = shippingFee.shipping_fee_id;
+        orderData['shipping_cost'] = shippingFee.value_fee;
+        orderData['total'] += shippingFee.value_fee;
       }
     }
 

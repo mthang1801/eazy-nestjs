@@ -122,4 +122,6 @@ export enum PrimaryKeys {
   ddv_tradein_program_details = 'detail_id',
   ddv_tradein_program_criteria = 'criteria_id',
   ddv_tradein_program_criteria_details = 'criteria_detail_id',
+  ddv_valuation_bills = 'valuation_bill_id',
+  ddv_valuation_bill_criteria_details = 'valuation_bill_detail_id',
 }

@@ -3,14 +3,14 @@ import { DatabaseService } from '../../database/database.service';
 import { BaseRepositorty } from '../../base/base.repository';
 
 import { Table } from '../../database/enums/index';
-import { UserProfileEntity } from '../entities/userProfile.entity';
+import { ValuationBillEntity } from '../entities/valuationBill.entity';
 @Injectable()
-export class UserProfileRepository<
-  UserProfileEntity,
-> extends BaseRepositorty<UserProfileEntity> {
+export class ValuationBillRepository<
+  ValuationBillEntity,
+> extends BaseRepositorty<ValuationBillEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USER_PROFILES;
-    this.tableProps = Object.getOwnPropertyNames(new UserProfileEntity());
+    this.table = Table.VALUATION_BILL;
+    this.tableProps = Object.getOwnPropertyNames(new ValuationBillEntity());
   }
 }

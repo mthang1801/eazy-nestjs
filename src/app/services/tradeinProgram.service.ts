@@ -26,6 +26,10 @@ import {
   LessThanOrEqual,
   MoreThanOrEqual,
 } from '../../database/operators/operators';
+import { ValuationBillRepository } from '../repositories/valuationBill.repository';
+import { ValuationBillEntity } from '../entities/valuationBill.entity';
+import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
+import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
 
 export class TradeinProgramService {
   constructor(
@@ -34,6 +38,8 @@ export class TradeinProgramService {
     private tradeinProgramCriteriaRepo: TradeinProgramCriteriaRepository<TradeinProgramCriteriaEntity>,
     private tradeinProgramCriteriaDetailRepo: TradeinProgramCriteriaDetailRepository<TradeinProgramCriteriaDetailEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private valuationBillRepo: ValuationBillRepository<ValuationBillEntity>,
+    private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -147,7 +153,7 @@ export class TradeinProgramService {
       ),
     };
 
-    let tradeinProgramsList = await this.tradeinProgramRepo.find({
+    let tradeinProgramsList = await this.tradeinProgramRepo.findOne({
       select: '*',
       where: tradeinProgramSearchFilter(search, filterCondition),
       orderBy: [
@@ -165,9 +171,25 @@ export class TradeinProgramService {
           where: {
             [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
               tradeinProgram.tradein_id,
+            [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
           },
         });
         tradeinProgram['appliedProducts'] = aplliedProducts;
+
+        let appliedCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+          tradein_id: tradeinProgram.tradein_id,
+          criteria_status: 'A',
+        });
+        if (appliedCriteriaList.length) {
+          for (let appliedCriteriaItem of appliedCriteriaList) {
+            const appliedCriteriaDetails =
+              await this.tradeinProgramCriteriaDetailRepo.find({
+                criteria_id: appliedCriteriaItem.criteria_id,
+              });
+            appliedCriteriaItem['criteriaDetails'] = appliedCriteriaDetails;
+          }
+        }
+        tradeinProgram['appliedCriteria'] = appliedCriteriaList;
       }
     }
 
@@ -184,6 +206,31 @@ export class TradeinProgramService {
       },
       data: tradeinProgramsList,
     };
+  }
+
+  async createValuationBill(data) {
+    let valuationBillData = {
+      ...new ValuationBillCriteriaDetailEntity(),
+      ...this.valuationBillRepo.setData(data),
+    };
+
+    const newValuationBill = await this.valuationBillRepo.create(
+      valuationBillData,
+    );
+
+    if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
+      for (let criteriaId of data.valuation_criteria_list) {
+        const valuationBillCriteriaDetailData = {
+          ...new ValuationBillCriteriaDetailEntity(),
+          ...this.valuationBillCriteriaDetailRepo.setData(data),
+          valuation_bill_id: newValuationBill.valuation_bill_id,
+          criteria_detail_id: criteriaId,
+        };
+        await this.valuationBillCriteriaDetailRepo.create(
+          valuationBillCriteriaDetailData,
+        );
+      }
+    }
   }
 
   async get(tradein_id: number, params: any = {}) {
@@ -229,6 +276,7 @@ export class TradeinProgramService {
                 tradeinCriteriaItem.criteria_id,
             },
           });
+
         tradeinCriteriaItem['criteriaDetails'] = tradeinCriteriaDetails;
       }
     }

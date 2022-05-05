@@ -27,6 +27,8 @@ import { PromotionModule } from './promotion.module';
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
 import { ProductsModule } from './products.module';
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
+import { ShippingFeeService } from '../services/shippingFee.service';
+import { ShippingFeeModule } from './shippingFee.module';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -66,6 +68,7 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
     CartModule,
     PromotionModule,
     ProductsModule,
+    ShippingFeeModule,
   ],
 })
 export class OrdersModule implements NestModule {

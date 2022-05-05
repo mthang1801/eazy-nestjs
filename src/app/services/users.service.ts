@@ -55,6 +55,7 @@ export class UsersService {
     private imagesRepository: ImagesRepository<ImagesEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserProfileEntity>,
     private userLoyaltyHistoryRepo: UserLoyaltyHistoryRepository<UserLoyaltyHistoryEntity>,
+    private userRepo: UserRepository<UserEntity>,
   ) {}
 
   async createUser(registerData): Promise<UserEntity> {
@@ -194,13 +195,63 @@ export class UsersService {
 
     result = { ...updatedUser, ...userProfile };
 
-    const userDataToAppcore = itgCustomerToAppcore(user);
+    if (result.user_appcore_id) {
+      await this.updateUserToAppcore(result);
+    } else {
+      await this.createUserToAppcore(result);
+    }
+  }
 
-    await axios({
-      url: `${CREATE_CUSTOMER_API}/${user.user_appcore_id}`,
-      method: 'PUT',
-      data: userDataToAppcore,
-    });
+  async createUserToAppcore(user) {
+    try {
+      const customerAppcoreData = itgCustomerToAppcore(user);
+
+      const response = await axios({
+        url: CREATE_CUSTOMER_API,
+        method: 'POST',
+        data: customerAppcoreData,
+      });
+
+      if (!response?.data) {
+        console.log(response);
+        return;
+      }
+
+      const data = response.data;
+
+      const user_appcore_id = data.data;
+      const updatedUser = await this.userRepo.update(
+        { user_id: user.user_id },
+        {
+          user_appcore_id,
+          updated_at: formatStandardTimeStamp(),
+          is_sync: 'N',
+        },
+      );
+
+      return updatedUser;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error?.response?.data?.message || error.response,
+        error?.response?.status || error.status,
+      );
+    }
+  }
+
+  async updateUserToAppcore(user) {
+    try {
+      const userDataToAppcore = itgCustomerToAppcore(user);
+
+      await axios({
+        url: `${CREATE_CUSTOMER_API}/${user.user_appcore_id}`,
+        method: 'PUT',
+        data: userDataToAppcore,
+      });
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Cập nhật tới Appcore không thành công', 400);
+    }
   }
 
   async update(user_id: number, dataObj: any): Promise<UserEntity> {
