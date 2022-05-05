@@ -36,4 +36,7 @@ export class CreatePayooInstallmentDto {
 
   @IsOptional()
   bank: string;
+
+  @IsOptional()
+  shipping_fee_location_id: number;
 }

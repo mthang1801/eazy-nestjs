@@ -24,7 +24,6 @@ export class OrdersController extends BaseController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
   async create(
     @Res() res,
     @Body() data: CreateOrderFEDto,

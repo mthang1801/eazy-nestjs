@@ -57,4 +57,7 @@ export class CreateOrderFEDto {
 
   @IsOptional()
   utm_source: string = '';
+
+  @IsOptional()
+  shipping_fee_location_id: number;
 }

@@ -38,4 +38,7 @@ export class CreateInstallmentDto {
 
   @IsOptional()
   company_id: number;
+
+  @IsOptional()
+  shipping_fee_location_id: number;
 }

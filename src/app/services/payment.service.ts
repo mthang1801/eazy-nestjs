@@ -68,10 +68,12 @@ import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
 import { PaymentStatus } from '../../utils/services/payment.helper';
 import { CreatePaymentSelfTransportDto } from '../dto/orders/create-paymentSelfTransport.dto';
 import { ShippingFeeService } from './shippingFee.service';
+import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
 import {
   calculateInstallmentInterestRateHDSaiGon,
   calculateInstallmentInterestRateHomeCredit,
 } from '../../utils/services/payment.helper';
+import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
 
 @Injectable()
 export class PaymentService {
@@ -89,6 +91,7 @@ export class PaymentService {
     private dbService: DatabaseService,
     private productRepo: ProductsRepository<ProductsEntity>,
     private shippingFeeService: ShippingFeeService,
+    private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
   ) {}
 
   async getList(params) {
@@ -303,6 +306,19 @@ export class PaymentService {
         payment_status: PaymentStatus.success,
       };
 
+      if (data.shipping_fee_location_id) {
+        let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+          shipping_fee_location_id: data.shipping_fee_location_id,
+        });
+
+        if (shippingFeeLocation) {
+          sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+          sendData['shipping_cost'] = shippingFeeLocation.value_fee;
+          sendData['transfer_amount'] =
+            +totalPrice + +shippingFeeLocation.value_fee;
+        }
+      }
+
       delete sendData['created_at'];
       delete sendData['updated_at'];
 
@@ -442,19 +458,21 @@ export class PaymentService {
         s_address: data.s_address || user.s_address || user.b_address,
         order_items: cartItems,
         ref_order_id,
-        transfer_amount: totalPrice,
+        transfer_amount: +totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_type: OrderType.online,
       };
 
-      if (data['s_city']) {
-        const shippingFee = await this.shippingFeeService.calcShippingFee(
-          data['s_city'],
-        );
-        if (shippingFee) {
-          sendData['shipping_id'] = shippingFee.shipping_fee_id;
-          sendData['shipping_cost'] = shippingFee.value_fee;
-          sendData['transfer_amount'] = +totalPrice + +shippingFee.value_fee;
+      if (data.shipping_fee_location_id) {
+        let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+          shipping_fee_location_id: data.shipping_fee_location_id,
+        });
+
+        if (shippingFeeLocation) {
+          sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+          sendData['shipping_cost'] = shippingFeeLocation.value_fee;
+          sendData['transfer_amount'] =
+            +totalPrice + +shippingFeeLocation.value_fee;
         }
       }
 
@@ -462,6 +480,8 @@ export class PaymentService {
         sendData['store_id'] = data.store_id;
         sendData['order_type'] = 3;
       }
+
+      console.log(484, sendData);
 
       await this.orderService.createOrder(user, sendData);
 

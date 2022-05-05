@@ -132,6 +132,8 @@ import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTrans
 import { Equal } from '../../database/operators/operators';
 import { PaymentStatus } from '../../utils/services/payment.helper';
 import { ShippingFeeService } from './shippingFee.service';
+import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
+import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
 
 @Injectable()
 export class OrdersService {
@@ -163,6 +165,7 @@ export class OrdersService {
     private orderPaymentRepo: OrderPaymentRepository<OrderPaymentEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private shippingFeeService: ShippingFeeService,
+    private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
   ) {}
 
   async CMScreate(data: CreateOrderDto) {
@@ -244,6 +247,9 @@ export class OrdersService {
   }
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
+    if (!userAuth) {
+      throw new HttpException('Vui lòng đăng nhập để tạo đơn hàng', 401);
+    }
     let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
     if (!user.phone) {
       throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
@@ -296,6 +302,17 @@ export class OrdersService {
     }
 
     const sendData = { ...userProfile, order_items: cartItems };
+
+    if (data.shipping_fee_location_id) {
+      let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+        shipping_fee_location_id: data.shipping_fee_location_id,
+      });
+
+      if (shippingFeeLocation) {
+        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+        sendData['shipping_cost'] = shippingFeeLocation.value_fee;
+      }
+    }
 
     await this.createOrder(user, sendData);
 
@@ -387,15 +404,8 @@ export class OrdersService {
       }
     }
 
-    if (data['s_city'] && !data.shipping_cost) {
-      const shippingFee = await this.shippingFeeService.calcShippingFee(
-        data['s_city'],
-      );
-      if (shippingFee) {
-        orderData['shipping_id'] = shippingFee.shipping_fee_id;
-        orderData['shipping_cost'] = shippingFee.value_fee;
-        orderData['total'] = +orderData['total'] + +shippingFee.value_fee;
-      }
+    if (data.shipping_cost) {
+      orderData['total'] = +orderData['total'] + +data.shipping_cost;
     }
 
     let result = await this.orderRepo.create(orderData);
@@ -541,6 +551,8 @@ export class OrdersService {
         url: UPDATE_ORDER_PAYMENT(order.order_code),
         data: paymentAppcoreData,
       });
+
+      console.log(555, 'update order', response);
 
       await this.orderRepo.update(
         { order_id },
@@ -1147,6 +1159,8 @@ export class OrdersService {
       skip,
       limit,
     });
+
+    console.log(ordersList);
 
     // lấy địa chỉ
     for (let orderItem of ordersList) {

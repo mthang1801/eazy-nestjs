@@ -78,6 +78,5 @@ export class UpdateUserProfileDto {
   birthday: Date;
 
   @IsOptional()
-  @IsEmail()
   email: string;
 }
