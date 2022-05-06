@@ -511,6 +511,9 @@ export class PaymentService {
         order_type: OrderType.online,
       };
 
+      delete data.s_firstname;
+      delete data.b_firstname;
+
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
           select: '*',
