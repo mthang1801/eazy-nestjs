@@ -45,8 +45,9 @@ export class PaymentControllerFE extends BaseController {
   async paymentInstallment(
     @Res() res: Response,
     @Body() data: CreateInstallmentDto,
+    @Req() req,
   ) {
-    await this.service.paymentInstallment(data);
+    await this.service.paymentInstallment(data, req.user);
     return this.responseSuccess(res);
   }
 

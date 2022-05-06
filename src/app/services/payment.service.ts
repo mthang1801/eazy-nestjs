@@ -211,7 +211,7 @@ export class PaymentService {
     return { ..._payment, ..._paymentDes };
   }
 
-  async paymentInstallment(data: CreateInstallmentDto) {
+  async paymentInstallment(data: CreateInstallmentDto, userAuth) {
     try {
       let product = await this.productRepo.findOne({
         select: '*',
@@ -228,19 +228,37 @@ export class PaymentService {
           404,
         );
       }
-
-      let user = await this.userRepo.findOne({
-        select: `*, ${Table.USERS}.user_appcore_id`,
-        join: userJoiner,
-        where: { [`${Table.USERS}.phone`]: data['s_phone'] },
-      });
-      if (!user) {
-        await this.customerService.createCustomerFromWebPayment(data);
+      let user;
+      if (userAuth) {
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,
           join: userJoiner,
-          where: { phone: data['s_phone'] },
+          where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
         });
+
+        if (!user) {
+          throw new HttpException(
+            'Người dùng hiện tại không thể tạo đơn.',
+            401,
+          );
+        }
+      } else {
+        user = await this.userRepo.findOne({
+          select: `*, ${Table.USERS}.user_appcore_id`,
+          join: userJoiner,
+          where: { [`${Table.USERS}.phone`]: data['s_phone'] },
+        });
+        if (!user) {
+          await this.customerService.createCustomerFromWebPayment(data);
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { phone: data['s_phone'] },
+          });
+        }
+        if (!user['user_appcore_id']) {
+          throw new HttpException('Tạo đơn thất bại', 401);
+        }
       }
 
       let totalPrice = product['price'];
@@ -334,7 +352,7 @@ export class PaymentService {
         data: paymentAppcoreData,
       });
     } catch (error) {
-      console.log(error);
+      throw new HttpException(error.message, error.status);
     }
   }
 

@@ -46,11 +46,12 @@ import { ShippingFeeModule } from './shippingFee.module';
 })
 export class PaymentModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(getUserFromToken)
-      .forRoutes({
+    consumer.apply(getUserFromToken).forRoutes(
+      {
         path: 'fe/v1/payment/payoo/installment',
         method: RequestMethod.POST,
-      });
+      },
+      { path: 'fe/v1/payment/installment', method: RequestMethod.POST },
+    );
   }
 }

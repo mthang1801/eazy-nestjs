@@ -73,6 +73,7 @@ export class TradeinProgramService {
         if (!product) {
           continue;
         }
+        console.log(tradeinDetail);
         const tradeinDetailData = {
           ...new TradeinProgramDetailEntity(),
           ...this.tradeinProgramDetailRepo.setData(tradeinDetail),
