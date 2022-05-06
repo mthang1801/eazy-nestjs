@@ -1160,7 +1160,7 @@ export class OrdersService {
 
     const ordersList = await this.orderRepo.find({
       select: [
-        `DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*, ${Table.ORDERS}.gateway_name`,
+        `DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDER_PAYMENTS}.*,${Table.ORDERS}.*`,
       ],
       join: orderJoiner,
       orderBy: [{ field: `${Table.ORDERS}.updated_date`, sortBy: SortBy.DESC }],
