@@ -73,14 +73,15 @@ export class TradeinProgramService {
         if (!product) {
           continue;
         }
-        console.log(tradeinDetail);
+
         const tradeinDetailData = {
           ...new TradeinProgramDetailEntity(),
           ...this.tradeinProgramDetailRepo.setData(tradeinDetail),
           product_appcore_id: product.product_appcore_id,
           tradein_id: newTradeinProgram.tradein_id,
         };
-        await this.tradeinProgramDetailRepo.create(tradeinDetailData);
+
+        await this.tradeinProgramDetailRepo.createSync(tradeinDetailData);
       }
     }
 
@@ -109,7 +110,7 @@ export class TradeinProgramService {
               criteria_id: newCriteria.criteria_id,
             };
 
-            await this.tradeinProgramCriteriaDetailRepo.create(
+            await this.tradeinProgramCriteriaDetailRepo.createSync(
               newCriteriaDetailData,
             );
           }
@@ -280,7 +281,7 @@ export class TradeinProgramService {
       [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]: tradein_id,
     };
     const tradeinDetails = await this.tradeinProgramDetailRepo.find({
-      select: '*',
+      select: `*, ${Table.TRADEIN_PROGRAM_DETAIL}.position`,
       join: tradeinDetailLeftJoiner,
       where: tradeinProgramDetailSearchFilter(search, filterCondition),
       orderBy: [
