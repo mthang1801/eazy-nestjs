@@ -529,7 +529,7 @@ export class PaymentService {
           +totalPrice < +shippingFeeLocation.max_value
         ) {
           sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
-          sendData['shipping_cost'] = shippingFeeLocation.value_fee;
+          sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
           sendData['transfer_amount'] =
             +totalPrice + +shippingFeeLocation.value_fee;
           totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
