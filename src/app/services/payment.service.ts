@@ -363,6 +363,11 @@ export class PaymentService {
         url: UPDATE_ORDER_PAYMENT(result.order_code),
         data: paymentAppcoreData,
       });
+
+      await this.orderRepo.update(
+        { order_id: result['order_id'] },
+        { status: OrderStatus.purchased },
+      );
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

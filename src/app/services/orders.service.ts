@@ -558,8 +558,6 @@ export class OrdersService {
         data: paymentAppcoreData,
       });
 
-      console.log(555, 'update order', response);
-
       await this.orderRepo.update(
         { order_id },
         {
@@ -973,7 +971,10 @@ export class OrdersService {
       }
     }
 
-    const orderData = await this.orderRepo.setData({ ...convertedData });
+    const orderData = await this.orderRepo.setData({
+      ...convertedData,
+      updated_date: formatStandardTimeStamp(),
+    });
 
     if (convertedData.user_appcore_id) {
       const user = await this.userRepo.findOne({
