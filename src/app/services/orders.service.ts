@@ -867,10 +867,7 @@ export class OrdersService {
     });
 
     if (order) {
-      throw new HttpException(
-        'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
-        409,
-      );
+      return this.itgUpdate(data.order_code, { ...data });
     }
 
     if (convertedData.status) {
