@@ -57,4 +57,7 @@ export class UpdateCustomerAppcoreDto {
 
   @IsOptional()
   address: string;
+
+  @IsOptional()
+  user_appcore_id: number;
 }

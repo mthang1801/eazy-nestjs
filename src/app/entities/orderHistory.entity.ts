@@ -4,7 +4,7 @@ import {
 } from 'src/utils/helper';
 
 export class OrderHistoryEntity {
-  order_id: number = null;
+  order_id: number = 0;
   order_code: number = null;
   is_parent_order: string = 'N';
   parent_order_id: number = 0;

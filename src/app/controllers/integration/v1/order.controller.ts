@@ -43,10 +43,7 @@ export class OrderIntegrationController extends BaseController {
   }
 
   @Post()
-  async create(
-    @Res() res,
-    @Body() data: CreateOrderAppcoreDto,
-  ): Promise<IResponse> {
+  async create(@Res() res, @Body() data): Promise<IResponse> {
     const result = await this.service.itgCreate(data);
     return this.responseSuccess(res, result, 'Tạo đơn hàng thành công');
   }
@@ -71,7 +68,7 @@ export class OrderIntegrationController extends BaseController {
   async update(
     @Res() res: Response,
     @Param('order_code') order_code: string,
-    @Body() data: UpdateOrderAppcoreDto,
+    @Body() data,
   ): Promise<IResponse> {
     await this.service.itgUpdate(order_code, data);
     return this.responseSuccess(res, '', 'Cập nhật thành công');

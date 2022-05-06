@@ -74,6 +74,7 @@ import {
   calculateInstallmentInterestRateHomeCredit,
 } from '../../utils/services/payment.helper';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
+import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class PaymentService {
@@ -275,12 +276,21 @@ export class PaymentService {
       //20574874 Home credit
       //20630206 payoo
 
-      if (data['s_city']) {
-        const shippingFee = await this.shippingFeeService.calcShippingFee(
-          +data['s_city'],
-        );
-        if (shippingFee) {
-          totalPrice = +totalPrice + +shippingFee.value_fee;
+      if (data.shipping_fee_location_id) {
+        let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+          select: '*',
+          join: shippingFeeLocationsJoiner,
+          where: {
+            [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
+              data.shipping_fee_location_id,
+          },
+        });
+
+        if (
+          shippingFeeLocation &&
+          +totalPrice < +shippingFeeLocation.max_value
+        ) {
+          totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
         }
       }
 
@@ -295,7 +305,7 @@ export class PaymentService {
         s_address: data.s_address,
         order_items: cartItems,
         transfer_amount: totalPrice,
-        pay_credit_type: 3,
+        pay_credit_type: 4,
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
         installment_interest_rate_code: totalInterest,
@@ -305,19 +315,6 @@ export class PaymentService {
         installmentCode: refOrderId,
         payment_status: PaymentStatus.success,
       };
-
-      if (data.shipping_fee_location_id) {
-        let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
-          shipping_fee_location_id: data.shipping_fee_location_id,
-        });
-
-        if (shippingFeeLocation) {
-          sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
-          sendData['shipping_cost'] = shippingFeeLocation.value_fee;
-          sendData['transfer_amount'] =
-            +totalPrice + +shippingFeeLocation.value_fee;
-        }
-      }
 
       delete sendData['created_at'];
       delete sendData['updated_at'];
@@ -447,6 +444,18 @@ export class PaymentService {
       }
 
       let ref_order_id = generateRandomString();
+      let payCreditType = 1;
+      switch (method) {
+        case 'paynow':
+          payCreditType = 2;
+          break;
+        case 'selfTransport':
+          payCreditType = 1;
+          break;
+        case 'installment':
+          payCreditType = 4;
+          break;
+      }
 
       let sendData = {
         ...user,
@@ -458,6 +467,7 @@ export class PaymentService {
         s_address: data.s_address || user.s_address || user.b_address,
         order_items: cartItems,
         ref_order_id,
+        pay_credit_type: payCreditType,
         transfer_amount: +totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_type: OrderType.online,
@@ -465,10 +475,18 @@ export class PaymentService {
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
-          shipping_fee_location_id: data.shipping_fee_location_id,
+          select: '*',
+          join: shippingFeeLocationsJoiner,
+          where: {
+            [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
+              data.shipping_fee_location_id,
+          },
         });
 
-        if (shippingFeeLocation) {
+        if (
+          shippingFeeLocation &&
+          +totalPrice < +shippingFeeLocation.max_value
+        ) {
           sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
           sendData['shipping_cost'] = shippingFeeLocation.value_fee;
           sendData['transfer_amount'] =
@@ -481,8 +499,6 @@ export class PaymentService {
         sendData['store_id'] = data.store_id;
         sendData['order_type'] = 3;
       }
-
-      console.log(484, sendData);
 
       await this.orderService.createOrder(user, sendData);
 

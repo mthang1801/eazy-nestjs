@@ -272,10 +272,16 @@ export class OrdersService {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
 
-    const cartItems = await this.cartItemRepo.find({
-      select: 'product_id, amount',
-      where: { cart_id: cart.cart_id },
+    let cartItems = await this.cartItemRepo.find({
+      select: `*, ${Table.CART_ITEMS}.amount`,
+      join: cartPaymentJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     });
+
+    let totalPrice = cartItems.reduce(
+      (acc, ele) => acc + ele.price * ele.amount,
+      0,
+    );
 
     if (!cartItems.length) {
       throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
@@ -308,7 +314,7 @@ export class OrdersService {
         shipping_fee_location_id: data.shipping_fee_location_id,
       });
 
-      if (shippingFeeLocation) {
+      if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
         sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
         sendData['shipping_cost'] = shippingFeeLocation.value_fee;
       }
@@ -853,7 +859,7 @@ export class OrdersService {
     return order;
   }
 
-  async itgCreate(data: CreateOrderAppcoreDto) {
+  async itgCreate(data) {
     console.log('create');
 
     const convertedData = convertOrderDataFromAppcore(data);
@@ -861,6 +867,7 @@ export class OrdersService {
     const order = await this.orderRepo.findOne({
       order_code: convertedData.order_code,
     });
+
     if (order) {
       throw new HttpException(
         'Mã đơn hàng từ Appcore đã tồn tại trong hệ thống',
@@ -913,10 +920,9 @@ export class OrdersService {
     }
 
     let result = await this.orderRepo.create(orderData);
-
     // create order histories
-    const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
-    await this.orderHistoryRepo.create(orderHistoryData);
+
+    await this.orderHistoryRepo.createSync({ ...result });
 
     if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData['order_items']) {
@@ -929,9 +935,10 @@ export class OrdersService {
           ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
           product_appcore_id: orderItem['product_id'],
           product_id: product ? product.product_id : null,
+          order_id: result.order_id,
         };
 
-        const newOrderDetail = await this.orderDetailRepo.create(
+        const newOrderDetail = await this.orderDetailRepo.createSync(
           orderDetailData,
         );
 
@@ -943,14 +950,14 @@ export class OrdersService {
     return result;
   }
 
-  async itgUpdate(order_code: string, data: UpdateOrderAppcoreDto) {
+  async itgUpdate(order_code: string, data) {
     console.log('update');
 
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
-      throw new HttpException('Không tìm thấy đơn hàng', 404);
+      return this.itgCreate({ order_code: +order_code, ...data });
     }
 
     let result = { ...order };
@@ -986,7 +993,7 @@ export class OrdersService {
 
       // create order histories
       const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
-      await this.orderHistoryRepo.create(orderHistoryData);
+      await this.orderHistoryRepo.createSync(orderHistoryData);
     }
 
     const orderItemsList = await this.orderDetailRepo.find({
@@ -1387,7 +1394,7 @@ export class OrdersService {
           updated_date: formatStandardTimeStamp(),
         },
       );
-      await this.orderHistoryRepo.create(updatedOrder);
+      await this.orderHistoryRepo.createSync(updatedOrder);
     } catch (error) {
       console.log(error.response.data);
       throw new HttpException(
@@ -1419,7 +1426,7 @@ export class OrdersService {
                 reason_fail: error.response,
               },
             );
-            await this.orderHistoryRepo.create(updatedOrder);
+            await this.orderHistoryRepo.createSync(updatedOrder);
           }
         }
       }
