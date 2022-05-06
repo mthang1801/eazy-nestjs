@@ -1086,7 +1086,7 @@ export class OrdersService {
   }
 
   async getByCustomerId(customer_id: number, params) {
-    const customer = await this.userRepo.findOne({});
+    const customer = await this.userRepo.findOne({ user_id: customer_id });
     if (!customer) {
       throw new HttpException('Không tìm thấy khách hàng.', 404);
     }
@@ -1166,8 +1166,6 @@ export class OrdersService {
       skip,
       limit,
     });
-
-    console.log(ordersList);
 
     // lấy địa chỉ
     for (let orderItem of ordersList) {

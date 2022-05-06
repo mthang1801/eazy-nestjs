@@ -339,6 +339,18 @@ export class PaymentService {
 
       const result = await this.orderService.createOrder(user, sendData);
 
+      await this.orderPaymentRepo.create({
+        order_id: result['order_id'],
+        order_no: refOrderId,
+        gateway_nane:
+          data.company_id == 1
+            ? 'HD Saigon'
+            : data.company_id == 2
+            ? 'Home Credit'
+            : '',
+        amount: totalPrice,
+      });
+
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,
         installmentCode: refOrderId,
@@ -606,6 +618,7 @@ export class PaymentService {
       const currentOrder = await this.orderRepo.findOne({ ref_order_id });
       let orderPaymentData = {
         ...orderDataResponse,
+        gateway_name: 'Payoo',
         order_gateway_id: orderDataResponse?.order_id || null,
         checksum: response.data.checksum,
         expiry_date: orderDataResponse?.expire_date
