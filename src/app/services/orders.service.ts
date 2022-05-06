@@ -1159,7 +1159,9 @@ export class OrdersService {
     }
 
     const ordersList = await this.orderRepo.find({
-      select: [`DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*`],
+      select: [
+        `DISTINCT(${Table.ORDERS}.order_id), ${Table.ORDERS}.*, ${Table.ORDERS}.gateway_name`,
+      ],
       join: orderJoiner,
       orderBy: [{ field: `${Table.ORDERS}.updated_date`, sortBy: SortBy.DESC }],
       where: orderSearchFilter(search, filterConditions),
