@@ -342,7 +342,7 @@ export class PaymentService {
       await this.orderPaymentRepo.create({
         order_id: result['order_id'],
         order_no: refOrderId,
-        gateway_nane:
+        gateway_name:
           data.company_id == 1
             ? 'HD Saigon'
             : data.company_id == 2
