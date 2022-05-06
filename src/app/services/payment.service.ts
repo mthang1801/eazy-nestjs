@@ -429,6 +429,9 @@ export class PaymentService {
           join: userJoiner,
           where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
         });
+        if (!user) {
+          throw new HttpException('Không tìm thấy người dùng', 404);
+        }
       } else {
         user = await this.userRepo.findOne({
           select: `*, ${Table.USERS}.user_appcore_id`,

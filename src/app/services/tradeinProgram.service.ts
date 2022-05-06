@@ -286,6 +286,10 @@ export class TradeinProgramService {
       where: tradeinProgramDetailSearchFilter(search, filterCondition),
       orderBy: [
         {
+          field: `${Table.TRADEIN_PROGRAM_DETAIL}.position`,
+          sortBy: SortBy.DESC,
+        },
+        {
           field: `${Table.TRADEIN_PROGRAM_DETAIL}.updated_at`,
           sortBy: SortBy.DESC,
         },
@@ -301,7 +305,16 @@ export class TradeinProgramService {
     });
 
     let tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
-      tradein_id,
+      select: '*',
+      where: {
+        tradein_id,
+      },
+      orderBy: [
+        {
+          field: `${Table.TRADEIN_PROGRAM_CRITERIA}.position`,
+          sortBy: SortBy.ASC,
+        },
+      ],
     });
 
     if (tradeinCriteriaList.length) {

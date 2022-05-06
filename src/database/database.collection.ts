@@ -130,8 +130,8 @@ export class DatabaseCollection {
     tableJoinedName: string,
     joinedField: string,
   ) {
-    const splitRootJoinedField = rootJoinedField.split('.');
-    const splitJoinedField = joinedField.split('.');
+    const splitRootJoinedField = rootJoinedField?.split('.');
+    const splitJoinedField = joinedField?.split('.');
     let newJoinedField = joinedField;
     let newRootJoinedField = rootJoinedField;
     if (splitRootJoinedField.length < 2) {
