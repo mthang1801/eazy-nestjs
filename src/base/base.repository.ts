@@ -67,7 +67,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async findOne(options: any): Promise<any> {
-    this.logger.log('=============== FIND ONE ================');
+    this.logger.log('=============== [MYSQL] FIND ONE ================');
 
     if (typeof options !== 'object') {
       throw new HttpException(
@@ -83,9 +83,9 @@ export class BaseRepositorty<T> {
           val.toLowerCase() === 'where' || /(select|from|join)/gi.test(val),
       )
     ) {
-      results = await this.find({ ...options, limit: 1 });
+      results = await this.find({ ...options, limit: 1 }, false);
     } else {
-      results = await this.find({ where: options, limit: 1 });
+      results = await this.find({ where: options, limit: 1 }, false);
     }
 
     return preprocessDatabaseBeforeResponse(results[0]);
@@ -96,8 +96,11 @@ export class BaseRepositorty<T> {
    * @param options
    * @returns array
    */
-  async find(options: any = {}): Promise<any[]> {
-    this.logger.log('=============== FIND ================');
+  async find(options: any = {}, showLog = true) {
+    if (showLog) {
+      this.logger.log('=============== [MYSQL] FIND ================');
+    }
+
     const optionKeys = Object.keys(options);
     const collection = new DatabaseCollection(this.table);
 
@@ -135,8 +138,11 @@ export class BaseRepositorty<T> {
     return results;
   }
 
-  async count(params): Promise<any> {
-    this.logger.log('=============== COUNT ================');
+  async count(params, showLog: boolean = true): Promise<any> {
+    if (showLog) {
+      this.logger.log('=============== [MYSQL] COUNT ================');
+    }
+
     if (
       typeof params !== 'object' ||
       Object.keys(params).some(
@@ -176,8 +182,14 @@ export class BaseRepositorty<T> {
    * @param params
    * @returns
    */
-  async create(params: any): Promise<any> {
-    this.logger.log('=============== create ================');
+  async create(
+    params: any,
+    returnable: boolean = true,
+    showLog: boolean = true,
+  ): Promise<any> {
+    if (showLog) {
+      this.logger.log('=============== [MYSQL] CREATE ================');
+    }
 
     if (Array.isArray(params) || typeof params !== 'object') {
       throw new HttpException(
@@ -205,19 +217,22 @@ export class BaseRepositorty<T> {
     });
 
     let response = await this.databaseService.executeQueryWritePool(sql);
+    console.log(response);
 
-    let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
+    if (returnable) {
+      let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
 
-    if (!lastInsertId) {
-      throw new HttpException(
-        'Không tìm thấy auto_increment_id của entity vừa tạo',
-        404,
-      );
+      if (!lastInsertId) {
+        throw new HttpException(
+          'Không tìm thấy auto_increment_id của entity vừa tạo',
+          404,
+        );
+      }
+
+      return this.findOne({
+        [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
+      });
     }
-
-    return this.findOne({
-      [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
-    });
   }
   /**
    * Create new record
@@ -225,7 +240,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async createSync(params: any): Promise<any> {
-    this.logger.log('=============== create ================');
+    this.logger.log('=============== [MYSQL] CREATE ================');
 
     if (Array.isArray(params) || typeof params !== 'object') {
       throw new HttpException(
@@ -248,43 +263,13 @@ export class BaseRepositorty<T> {
     await this.databaseService.executeQueryWritePool(sql, fmtParams);
   }
 
-  async createTransaction(params: any): Promise<any> {
-    this.logger.log('=============== create ================');
-
-    if (Array.isArray(params) || typeof params !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào phải là một Object',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    let fmtParams: any = {};
-    for (let [key, val] of Object.entries(params)) {
-      if (typeof val == 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `INSERT INTO ${this.table} SET ? `;
-
-    const result = await this.databaseService.executeQueryWritePool(
-      sql,
-      fmtParams,
-    );
-    const { insertId } = JSON.parse(JSON.stringify(result[0]));
-
-    return { user_id: insertId, ...fmtParams };
-  }
-
   /**
    * Show one record by primary key id
    * @param id
    * @returns
    */
   async findById(id: number | any): Promise<T> {
-    this.logger.log('=============== Find By Id ================');
+    this.logger.log('=============== [MYSQL] FIND BY ID ================');
 
     const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
 
@@ -308,19 +293,26 @@ export class BaseRepositorty<T> {
    * @param params object<any> with
    * @returns
    */
-  async update(id: number | any, params: any): Promise<T> {
-    this.logger.log('=============== UPDATE ================');
+  async update(
+    options: number | any,
+    data: object,
+    returnable: boolean = false,
+    showLog = true,
+  ) {
+    if (showLog) {
+      this.logger.log('=============== [MYSQL] UPDATE ================');
+    }
 
-    if (typeof params !== 'object') {
+    if (typeof data !== 'object') {
       throw new HttpException(
         'Tham số truyền vào không hợp lệ.',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    let fmtParams: any = { ...params };
+    let fmtParams: any = { ...data };
 
-    for (let [key, val] of Object.entries(params)) {
+    for (let [key, val] of Object.entries(data)) {
       if (typeof val == 'number') {
         fmtParams[key] = preprocessAddTextDataToMysql(+val);
       } else {
@@ -339,8 +331,8 @@ export class BaseRepositorty<T> {
 
     sql += ' WHERE ';
 
-    if (typeof id === 'object') {
-      Object.entries(id).forEach(([key, val], i) => {
+    if (typeof options === 'object') {
+      Object.entries(options).forEach(([key, val], i) => {
         if (i === 0) {
           sql += formatTypeValueToInSertSQL(key, val);
         } else {
@@ -348,66 +340,32 @@ export class BaseRepositorty<T> {
         }
       });
     } else {
-      sql += ` ${PrimaryKeys[this.table]} = '${id}'`;
+      sql += ` ${PrimaryKeys[this.table]} = '${options}'`;
     }
 
     await this.databaseService.executeQueryWritePool(sql);
 
-    const updatedUser =
-      typeof id === 'object' ? await this.findOne(id) : await this.findById(id);
+    if (returnable) {
+      const updatedData =
+        typeof options === 'object'
+          ? await this.findOne(options)
+          : await this.findById(options);
 
-    return updatedUser;
+      return updatedData;
+    }
   }
 
-  async updateTransaction(id: number | any, params: any): Promise<void> {
-    this.logger.log('=============== UPDATE ================');
-
-    if (typeof params !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào không hợp lệ.',
-        HttpStatus.BAD_REQUEST,
-      );
+  async delete(
+    option: number | any,
+    returnable: boolean = false,
+    showLog: boolean = true,
+  ) {
+    if (showLog) {
+      this.logger.log('=============== [MYSQL] DELETE ================');
     }
-
-    let fmtParams: any = { ...params };
-
-    for (let [key, val] of Object.entries(params)) {
-      if (typeof val == 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `UPDATE ${this.table} SET `;
-    Object.entries(fmtParams).forEach(([key, val], i) => {
-      if (i === 0) {
-        sql += formatTypeValueToInSertSQL(key, val);
-      } else {
-        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
-      }
-    });
-    sql += ' WHERE ';
-
-    if (typeof id === 'object') {
-      Object.entries(id).forEach(([key, val], i) => {
-        if (i === 0) {
-          sql += formatTypeValueToInSertSQL(key, val);
-        } else {
-          sql += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
-        }
-      });
-    } else {
-      sql += ` ${PrimaryKeys[this.table]} = '${id}'`;
-    }
-
-    await this.databaseService.executeQueryWritePool(sql);
-  }
-
-  async delete(option: number | any): Promise<boolean> {
-    this.logger.log('=============== DELETE BY option ================');
 
     let queryString = `DELETE FROM ${this.table} WHERE `;
+
     let res;
     if (typeof option === 'object') {
       if (Array.isArray(option)) {
@@ -448,6 +406,16 @@ export class BaseRepositorty<T> {
     if (res[0].affectedRows === 0) {
       return false;
     }
+
+    if (returnable) {
+      const deletedData =
+        typeof option === 'object'
+          ? await this.findOne(option)
+          : await this.findById(option);
+
+      return deletedData;
+    }
+
     return true;
   }
 

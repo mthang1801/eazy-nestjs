@@ -14,9 +14,12 @@ export class DatabaseService {
   async executeQueryWritePool(
     queryText: string,
     values: any[] = [],
+    showLog: boolean = true,
   ): Promise<void> {
     let sqlQuery = formatQueryString(queryText);
-    this.logger.verbose(`Executing mutation: ${sqlQuery}`);
+    if (showLog) {
+      this.logger.verbose(`Executing mutation: ${sqlQuery}`);
+    }
     return new Promise(async (resolve, reject) => {
       this.writePool
         .query(sqlQuery, values)
@@ -29,9 +32,13 @@ export class DatabaseService {
   async executeQueryReadPool(
     queryText: string,
     values: any[] = [],
+    showLog: boolean = true,
   ): Promise<void> {
     let sqlQuery = formatQueryString(queryText);
-    this.logger.debug(`Executing query: ${sqlQuery}`);
+    if (showLog) {
+      this.logger.debug(`Executing query: ${sqlQuery}`);
+    }
+
     return new Promise(async (resolve, reject) => {
       this.readPool
         .query(sqlQuery, values)
@@ -45,9 +52,13 @@ export class DatabaseService {
   async executeMagentoPool(
     queryText: string,
     values: any[] = [],
+    showLog: boolean = true,
   ): Promise<void> {
     let sqlQuery = formatQueryString(queryText);
-    this.logger.verbose(`Executing mutation: ${sqlQuery}`);
+    if (showLog) {
+      this.logger.verbose(`Executing mutation: ${sqlQuery}`);
+    }
+
     return new Promise(async (resolve, reject) => {
       this.magentoPool
         .query(sqlQuery, values)

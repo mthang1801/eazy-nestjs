@@ -63,7 +63,7 @@ export const generateRandomPassword = (length = 10) => {
   return password;
 };
 
-export const convertToSlug = (text, genTailRandomString = true) => {
+export const convertToSlug = (text, genTailRandomString = false) => {
   let slug = removeVietnameseTones(text);
 
   if (genTailRandomString) {

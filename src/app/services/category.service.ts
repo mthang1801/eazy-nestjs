@@ -196,7 +196,7 @@ export class CategoryService {
       ...this.categoryDescriptionRepo.setData(convertedData),
       category_id: newCategory['category_id'],
     };
-    await this.categoryDescriptionRepo.createSync(categoryDescData);
+    await this.categoryDescriptionRepo.create(categoryDescData, false);
     await this.convertAppcoreToCMSId();
   }
 
@@ -317,7 +317,7 @@ export class CategoryService {
     if (Object.entries(updatedCategoryData).length) {
       for (let [key, val] of Object.entries(updatedCategoryData)) {
         if (key === 'slug') {
-          updatedCategoryData['slug'] = convertToSlug(val);
+          updatedCategoryData['slug'] = convertToSlug(val, false);
           continue;
         }
         updatedCategoryData[key] = val;
@@ -540,7 +540,7 @@ export class CategoryService {
         ...new CategoryDescriptionEntity(),
         category_id,
       };
-      await this.categoryDescriptionRepo.createSync(newCateoryDescData);
+      await this.categoryDescriptionRepo.create(newCateoryDescData, false);
     }
 
     try {
@@ -1123,7 +1123,7 @@ export class CategoryService {
         ...this.categoryDescriptionRepo.setData(convertedData),
         category_id: newCategory.category_id,
       };
-      await this.categoryDescriptionRepo.createSync(categoryDescriptionData);
+      await this.categoryDescriptionRepo.create(categoryDescriptionData, false);
     }
     const CMSCategoriesList = await this.categoryRepository.find();
     await this.findAndUpdateFromMagento(CMSCategoriesList);
@@ -1294,7 +1294,7 @@ export class CategoryService {
         category_id: newCategory['category_id'],
       };
 
-      await this.categoryDescriptionRepo.createSync(categoryDescData);
+      await this.categoryDescriptionRepo.create(categoryDescData, false);
     }
 
     const categoriesList = await this.categoryRepository.find();
