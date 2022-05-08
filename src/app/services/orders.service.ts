@@ -1002,7 +1002,6 @@ export class OrdersService {
 
   async itgUpdate(order_code: string, data) {
     console.log('update');
-    console.log(1005, data);
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
@@ -1025,7 +1024,6 @@ export class OrdersService {
 
     const orderData = await this.orderRepo.setData({
       ...convertedData,
-      updated_date: formatStandardTimeStamp(),
     });
 
     if (convertedData.user_appcore_id) {
@@ -1040,13 +1038,13 @@ export class OrdersService {
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
         { order_code },
-        orderData,
+        { ...orderData, updated_date: formatStandardTimeStamp() },
       );
       result = { ...result, ...updatedOrder };
 
       // create order histories
       const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
-      await this.orderHistoryRepo.createSync(orderHistoryData);
+      await this.orderHistoryRepo.create(orderHistoryData, false);
     }
 
     const orderItemsList = await this.orderDetailRepo.find({
@@ -1102,7 +1100,7 @@ export class OrdersService {
           product_appcore_id: orderItem['product_id'],
           order_id: order.order_id,
         };
-        await this.orderDetailRepo.create(orderItemData);
+        await this.orderDetailRepo.create(orderItemData, false);
       }
 
       const updatedOrderItems = await this.orderDetailRepo.find({
