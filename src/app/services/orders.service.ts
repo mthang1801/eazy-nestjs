@@ -1024,6 +1024,7 @@ export class OrdersService {
 
     const orderData = await this.orderRepo.setData({
       ...convertedData,
+      updated_date: formatStandardTimeStamp(new Date(Date.now() + 300 * 1000)),
     });
 
     if (convertedData.user_appcore_id) {
@@ -1038,7 +1039,7 @@ export class OrdersService {
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
         { order_code },
-        { ...orderData, updated_date: formatStandardTimeStamp() },
+        orderData,
       );
       result = { ...result, ...updatedOrder };
 
