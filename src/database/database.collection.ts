@@ -384,12 +384,67 @@ export class DatabaseCollection {
 
     // Array is considered as OR operator, so we will connect with orAndWhere each other
     if (Array.isArray(objFields)) {
-      this.orCondition(objFields);
-      return;
+      if (
+        objFields.some(
+          (objItem) =>
+            objItem.hasOwnProperty('$or') || objItem.hasOwnProperty('$and'),
+        )
+      ) {
+        return this.setCondition(objFields);
+      }
+      return this.orCondition(objFields);
     }
 
     // Object us considered as AND operator, so we will connect with andOrWhere each other
     this.andCondition(objFields);
+  }
+
+  setCondition(objFields) {
+    let sqlQuery = '';
+    for (let objFieldItem of objFields) {
+      sqlQuery += this.handleReursiveCondition(objFieldItem, sqlQuery);
+    }
+    console.log(sqlQuery);
+  }
+
+  handleReursiveCondition(objFieldItem, sqlQuery = '') {
+    if (typeof objFieldItem === 'object' && Array.isArray(objFieldItem)) {
+      for (let _objFieldItem of objFieldItem) {
+        sqlQuery += this.handleReursiveCondition(_objFieldItem, sqlQuery);
+      }
+    }
+    if (
+      !objFieldItem ||
+      (objFieldItem && !Object.entries(objFieldItem).length)
+    ) {
+      return sqlQuery;
+    }
+    if (objFieldItem.hasOwnProperty('$or')) {
+      for (let objValue of Object.values(objFieldItem)) {
+        if (Array.isArray(objValue)) {
+          for (let objValueItem of objValue) {
+            if (
+              (typeof objValueItem === 'object' &&
+                objValueItem.hasOwnProperty('$or')) ||
+              objValueItem.hasOwnProperty('$and')
+            ) {
+              sqlQuery += this.handleReursiveCondition(objValueItem, sqlQuery);
+              continue;
+            }
+            for (let [i, [key, val]] of Object.entries(
+              objValueItem,
+            ).entries()) {
+              sqlQuery += ` ${key} ${val['operator'] ? val['operator'] : '='} ${
+                val['value'] != undefined ? `'${val['value']}'` : `'${val}'`
+              } `;
+            }
+          }
+        }
+      }
+    }
+    if (objFieldItem.hasOwnProperty('$and')) {
+    }
+    return sqlQuery;
   }
 
   having(objFields: any): void {

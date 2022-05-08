@@ -360,7 +360,7 @@ export class PaymentService {
 
       const response = await axios({
         method: 'PUT',
-        url: UPDATE_ORDER_PAYMENT(result.order_code),
+        url: UPDATE_ORDER_PAYMENT(result['order_code']),
         data: paymentAppcoreData,
       });
 

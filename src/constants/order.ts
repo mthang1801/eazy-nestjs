@@ -127,12 +127,8 @@ export const convertDataToIntegrate = (data) => {
     itgData['customerMobile'] = data['b_phone']; // Số điện thoại khách hàng
   }
 
-  if (data['b_firstname'] || data['b_lastname']) {
-    itgData['customerName'] = data['b_firstname']
-      ? data['b_firstname'] + ' '
-      : '' + data['b_lastname']
-      ? data['b_lastname']
-      : ''; //Tên khách hàng
+  if (data['b_lastname']) {
+    itgData['customerName'] = data['b_lastname']; //Tên khách hàng
   }
 
   if (data['b_address']) {
@@ -151,12 +147,8 @@ export const convertDataToIntegrate = (data) => {
     itgData['customerWardName'] = data['b_ward']; //Lấy id huyện
   }
 
-  if (data['s_firstname'] || data['s_lastname']) {
-    itgData['receivingFullName'] = data['s_firstname']
-      ? data['s_firstname'] + ' '
-      : '' + data['s_lastname']
-      ? data['s_lastname']
-      : ''; // tên người nhận
+  if (data['s_lastname']) {
+    itgData['receivingFullName'] = data['s_lastname']; // tên người nhận
   }
 
   if (data['s_phone']) {
@@ -314,7 +306,7 @@ export const convertDataToIntegrate = (data) => {
       ? [...itgData['orderItems'], cvOrderItem]
       : [cvOrderItem];
   }
-  console.log(281, itgData);
+
   return JSON.stringify(itgData);
 };
 

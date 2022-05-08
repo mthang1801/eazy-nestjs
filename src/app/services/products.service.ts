@@ -4177,7 +4177,38 @@ export class ProductService {
 
   async testSql() {
     const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
-    console.log(slug);
+    await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: [
+        {
+          $or: [
+            { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
+            { [`${Table.PRODUCT_PRICES}.barcode`]: 'JKJLS782136HK' },
+            { [`${Table.PRODUCTS}.amount`]: MoreThan(0) },
+            {
+              [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
+                1, 2, 3, 4, 5, 6, 7,
+              ]),
+            },
+          ],
+        },
+        // {
+        //   $and: [
+        //     {
+        //       $or: {
+        //         [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+        //         [`${Table.PRODUCTS}.amount`]: MoreThan(0),
+        //       },
+        //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
+        //         1, 2, 3, 4, 5, 6, 7,
+        //       ]),
+        //     },
+        //     { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
+        //   ],
+        // },
+      ],
+    });
   }
 
   async autoFillPriceIntoConfigurableProducts() {

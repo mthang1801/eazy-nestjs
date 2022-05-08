@@ -217,7 +217,6 @@ export class BaseRepositorty<T> {
     });
 
     let response = await this.databaseService.executeQueryWritePool(sql);
-    console.log(response);
 
     if (returnable) {
       let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];

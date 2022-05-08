@@ -130,13 +130,16 @@ export class UsersService {
     let user = await this.userRepository.findOne({ user_id });
     if (!user) {
       throw new HttpException(
-        'Không tìm thấy người dùng hoặc người dùng đã bị vô hiệu hoá.',
+        'Không tìm thấy người dùng hoặc người dùng.',
         404,
       );
     }
 
     if (user.status === 'D') {
-      throw new HttpException('Người dùng đã bị vô hiệu hoá.', 403);
+      throw new HttpException(
+        'Người dùng đã bị vô hiệu hoá, không thể cập nhật.',
+        403,
+      );
     }
 
     let userData = {
@@ -158,7 +161,7 @@ export class UsersService {
           phone: data.b_phone,
         });
         if (checkPhoneExist) {
-          throw new HttpException('Số điện thoại đã được sử dụng', 409);
+          throw new HttpException('Số điện thoại đã được sử dụng.', 409);
         }
         userData['phone'] = data.b_phone;
       } else {
@@ -167,7 +170,7 @@ export class UsersService {
           user_id,
         });
         if (!checkCurrentPhone) {
-          throw new HttpException('Điện thoại không thể thay đổi.', 401);
+          throw new HttpException('Số điện thoại không thể thay đổi.', 401);
         }
       }
     }
@@ -213,12 +216,16 @@ export class UsersService {
       userProfile = await this.userProfileRepository.create(newUserProfileData);
     }
 
-    result = { ...updatedUser, ...userProfile };
+    const userResult = await this.userRepo.findOne({
+      select: '*',
+      join: userJoiner,
+      where: { [`${Table.USERS}.user_id`]: user_id },
+    });
 
     if (result.user_appcore_id) {
-      await this.updateUserToAppcore(result);
+      await this.updateUserToAppcore(userResult);
     } else {
-      await this.createUserToAppcore(result);
+      await this.createUserToAppcore(userResult);
     }
   }
 

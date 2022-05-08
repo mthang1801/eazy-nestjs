@@ -423,41 +423,40 @@ export const mappingStatusOrder = (coreStatus) => {
 };
 
 export const convertOrderDataFromAppcore = (coreData) => {
-  let mappingData = new Map([
-    ['b_firstname', 'b_firstname'],
-    ['b_lasttname', 'b_lasttname'],
-    ['b_phone', 'b_phone'],
-    ['b_city', 'b_city'],
-    ['b_district', 'b_district'],
-    ['b_ward', 'b_ward'],
-    ['b_address', 'b_address'],
-  ]);
-  let cmsData = { ...coreData };
-  for (let [core, cms] of mappingData) {
-    if (core === 'b_firstname' && coreData[core] && !cmsData['s_firstname']) {
-      cmsData['s_firstname'] = coreData[core];
-    }
-    if (core === 'b_lastname' && coreData[core] && !cmsData['s_lastname']) {
-      cmsData['s_lastname'] = coreData[core];
-    }
-    if (core === 'b_phone' && coreData[core] && !cmsData['s_phone']) {
-      cmsData['s_phone'] = coreData[core];
-    }
-    if (core === 'b_city' && coreData[core] && !cmsData['s_city']) {
-      cmsData['s_city'] = coreData[core];
-    }
-    if (core === 'b_district' && coreData[core] && !cmsData['s_district']) {
-      cmsData['s_district'] = coreData[core];
-    }
-    if (core === 'b_ward' && coreData[core] && !cmsData['s_ward']) {
-      cmsData['s_ward'] = coreData[core];
-    }
-    if (core === 'b_address' && coreData[core] && !cmsData['s_address']) {
-      cmsData['s_address'] = coreData[core];
-    }
-  }
+  // let mappingData = new Map([
+  //   ['b_lastname', 'b_lastname'],
+  //   ['b_phone', 'b_phone'],
+  //   ['b_city', 'b_city'],
+  //   ['b_district', 'b_district'],
+  //   ['b_ward', 'b_ward'],
+  //   ['b_address', 'b_address'],
+  // ]);
+  // let cmsData = { ...coreData };
+  // for (let [core, cms] of mappingData) {
+  //   if (core === 'b_firstname' && coreData[core] && !cmsData['s_firstname']) {
+  //     cmsData['s_firstname'] = coreData[core];
+  //   }
+  //   if (core === 'b_lastname' && coreData[core] && !cmsData['s_lastname']) {
+  //     cmsData['s_lastname'] = coreData[core];
+  //   }
+  //   if (core === 'b_phone' && coreData[core] && !cmsData['s_phone']) {
+  //     cmsData['s_phone'] = coreData[core];
+  //   }
+  //   if (core === 'b_city' && coreData[core] && !cmsData['s_city']) {
+  //     cmsData['s_city'] = coreData[core];
+  //   }
+  //   if (core === 'b_district' && coreData[core] && !cmsData['s_district']) {
+  //     cmsData['s_district'] = coreData[core];
+  //   }
+  //   if (core === 'b_ward' && coreData[core] && !cmsData['s_ward']) {
+  //     cmsData['s_ward'] = coreData[core];
+  //   }
+  //   if (core === 'b_address' && coreData[core] && !cmsData['s_address']) {
+  //     cmsData['s_address'] = coreData[core];
+  //   }
+  // }
 
-  return cmsData;
+  return coreData;
 };
 
 export const importCustomersFromAppcore = (coreData) => {

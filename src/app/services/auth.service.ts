@@ -118,12 +118,12 @@ export class AuthService {
       let userProfile = await this.userProfileRepository.findOne({
         user_id: checkPhoneExist.user_id,
       });
+
       if (!userProfile) {
         const newUserProfile = {
           ...new UserProfileEntity(),
           b_phone: phone,
-          b_firstname: firstname,
-          b_lastname: lastname,
+          b_lastname: firstname + ' ' + lastname,
           user_id: checkPhoneExist.user_id,
         };
         await this.userProfileRepository.create(newUserProfile);
@@ -163,8 +163,7 @@ export class AuthService {
     //create a new record at ddv_user_profiles
     const newUserProfile = await this.userService.createUserProfile({
       user_id: user['user_id'],
-      b_firstname: firstname,
-      b_lastname: lastname,
+      b_lastname: firstname + ' ' + lastname,
       b_phone: phone,
       profile_name: `${firstname} ${lastname}`,
     });
@@ -287,11 +286,11 @@ export class AuthService {
         };
         userExists = await this.userRepository.create(userData);
 
+        let fullName = userExists.firstname + ' ' + userExists.lastname;
         // Create a new record at ddv_user_profiles
         const userProfile = await this.userProfileRepository.create({
           user_id: userExists.user_id,
-          b_firstname: userExists.firstname,
-          b_lastname: userExists.lastname,
+          b_lastname: fullName.trim(),
         });
 
         // Create a new record at ddv_user_data

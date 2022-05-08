@@ -134,6 +134,8 @@ import { PaymentStatus } from '../../utils/services/payment.helper';
 import { ShippingFeeService } from './shippingFee.service';
 import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
+import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
+import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 
 @Injectable()
 export class OrdersService {
@@ -247,24 +249,69 @@ export class OrdersService {
   }
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
-    if (!userAuth) {
-      throw new HttpException('Vui lòng đăng nhập để tạo đơn hàng', 401);
-    }
-    let user = await this.userRepo.findOne({ user_id: userAuth.user_id });
-    if (!user.phone) {
-      throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
-    }
-
-    if (!user['user_appcore_id']) {
-      await this.customerService.createCustomerToAppcore(user);
+    let user: any;
+    if (userAuth) {
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
-    }
+      if (!user.phone) {
+        throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
+      }
+      if (!user['user_appcore_id']) {
+        await this.customerService.createCustomerToAppcore(user);
+        user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+      }
+      if (!user) {
+        throw new HttpException(
+          'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
+          400,
+        );
+      }
+    } else {
+      let { passwordHash, salt } = saltHashPassword(defaultPassword);
+      let fullname = data.s_firstname + ' ' + data.s_lastname;
+      let userData = {
+        ...new UserEntity(),
+        lastname: fullname.trim(),
+        password: passwordHash,
+        phone: data.s_phone,
+        salt,
+        user_type: UserTypeEnum.Customer,
+      };
+      let newUser = await this.userRepo.create(userData);
 
-    if (!user) {
-      throw new HttpException(
-        'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
-        400,
-      );
+      let userProfileData = {
+        ...new UserProfileEntity(),
+        b_lastname: fullname,
+        s_lastname: fullname,
+        b_phone: data.s_phone,
+        s_phone: data.s_phone,
+        b_city: data.s_city,
+        s_city: data.s_city,
+        b_district: data.s_district,
+        s_district: data.s_district,
+        b_ward: data.s_ward,
+        s_ward: data.s_ward,
+        b_address: data.s_address,
+        s_address: data.s_address,
+        user_id: newUser.user_id,
+      };
+      await this.userProfileRepo.create(userProfileData, false);
+
+      await this.userLoyaltyRepo.create({
+        ...new UserLoyaltyEntity(),
+        user_id: newUser.user_id,
+      });
+      await this.userDataRepo.create({
+        ...new UserDataEntity(),
+        user_id: newUser.user_id,
+      });
+
+      let user = await this.userRepo.findOne({
+        select: '*',
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: newUser.user_id },
+      });
+
+      await this.customerService.createCustomerToAppcore(user);
     }
 
     const cart = await this.cartRepo.findOne({ user_id: user.user_id });
@@ -293,6 +340,7 @@ export class OrdersService {
 
     // await this.createOrder(user, sendData);
     userProfile['s_firstname'] = '';
+    userProfile['b_firstname'] = '';
     userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
     userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
     userProfile['s_city'] = data.s_city || userProfile['s_city'];
@@ -304,6 +352,7 @@ export class OrdersService {
       userProfile = await this.userProfileRepo.update(
         { user_id: user.user_id },
         userProfile,
+        true,
       );
     }
 
@@ -311,19 +360,21 @@ export class OrdersService {
 
     if (data.shipping_fee_location_id) {
       let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
-        shipping_fee_location_id: data.shipping_fee_location_id,
+        select: '*',
+        join: shippingFeeLocationsJoiner,
+        where: { shipping_fee_location_id: data.shipping_fee_location_id },
       });
-
       if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
         sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
         sendData['shipping_cost'] = shippingFeeLocation.value_fee;
       }
     }
 
-    await this.createOrder(user, sendData);
+    const result = await this.createOrder(user, sendData);
 
-    await this.cartRepo.delete({ cart_id: cart.cart_id });
-    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    // await this.cartRepo.delete({ cart_id: cart.cart_id });
+    // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    return result;
   }
 
   async createOrder(user, data, sendToAppcore = true) {
@@ -343,6 +394,8 @@ export class OrdersService {
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(data),
+      created_date: formatStandardTimeStamp(),
+      updated_date: formatStandardTimeStamp(),
       is_sync: 'Y',
       status: OrderStatus.new,
     };
@@ -411,7 +464,7 @@ export class OrdersService {
     }
 
     if (data.shipping_cost) {
-      orderData['total'] = +orderData['total'] + +data.shipping_cost;
+      orderData['subtotal'] = +orderData['total'] + +data.shipping_cost;
     }
 
     let result = await this.orderRepo.create(orderData);
@@ -422,7 +475,7 @@ export class OrdersService {
       ...result,
       is_sync: 'Y',
     };
-    await this.orderHistoryRepo.createSync(orderHistoryData);
+    await this.orderHistoryRepo.create(orderHistoryData, false);
 
     //order payment
     if (data['orderPayment']) {
@@ -431,7 +484,7 @@ export class OrdersService {
         ...this.orderPaymentRepo.setData(data['orderPayment']),
         order_id: result['order_id'],
       };
-      await this.orderPaymentRepo.createSync(orderPaymentData);
+      await this.orderPaymentRepo.create(orderPaymentData, false);
     }
 
     for (let orderItem of data['order_items']) {
@@ -494,7 +547,9 @@ export class OrdersService {
           is_sync: 'N',
           updated_date: formatStandardTimeStamp(),
         },
+        true,
       );
+
       for (let orderItem of orderAppcoreResponse['orderItemIds']) {
         await this.orderDetailRepo.update(
           {
@@ -505,8 +560,8 @@ export class OrdersService {
         );
       }
       // update order history
-      await this.orderHistoryRepo.create(updatedOrder);
-      return updatedOrder;
+      await this.orderHistoryRepo.create(updatedOrder, false);
+      return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
       console.log(error);
       throw new HttpException(
@@ -947,7 +1002,7 @@ export class OrdersService {
 
   async itgUpdate(order_code: string, data) {
     console.log('update');
-
+    console.log(1005, data);
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
