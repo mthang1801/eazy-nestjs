@@ -14,13 +14,9 @@ export class TradeinProgramControllerItg extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(':tradein_appcore_id')
-  async update(
-    @Param('tradein_appcore_id') tradein_appcore_id: number,
-    @Res() res: Response,
-    @Body() data,
-  ): Promise<IResponse> {
-    const result = await this.service.itgUpdate(tradein_appcore_id, data);
+  @Put()
+  async update(@Res() res: Response, @Body() data): Promise<IResponse> {
+    const result = await this.service.itgUpdate(data);
     return this.responseSuccess(res, result);
   }
 }

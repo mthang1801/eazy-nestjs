@@ -526,7 +526,7 @@ export class TradeinProgramService {
       tradein_appcore_id: cvtData.tradein_appcore_id,
     });
     if (checkTradeinExist) {
-      return this.itgUpdate(cvtData.tradein_appcore_id, cvtData);
+      throw new HttpException('Chương trình đã được áp dụng với id này.', 409);
     }
 
     const tradeinProgramData = {
@@ -632,19 +632,18 @@ export class TradeinProgramService {
     }
   }
 
-  async itgUpdate(tradein_appcore_id: number, data) {
+  async itgUpdate(data) {
     const currentTradeinProgram = await this.tradeinProgramRepo.findOne({
-      tradein_appcore_id,
+      tradein_appcore_id: data.id,
     });
     if (!currentTradeinProgram) {
-      throw new HttpException('Chương trình đã được áp dụng với id này.', 409);
+      return this.itgCreate(data);
     }
 
     const cvtData: any = convertTradeinProgramFromAppcore(data);
 
     const tradeinProgramData = {
       ...this.tradeinProgramRepo.setData(cvtData),
-      tradein_appcore_id,
       updated_at: formatStandardTimeStamp(),
     };
 
