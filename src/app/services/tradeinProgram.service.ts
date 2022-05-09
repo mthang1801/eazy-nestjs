@@ -543,7 +543,7 @@ export class TradeinProgramService {
       });
       for (let tradeinDetail of cvtData.applied_products) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             [`${Table.PRODUCTS}.product_appcore_id`]:
@@ -567,8 +567,8 @@ export class TradeinProgramService {
           await this.productDescRepo.create(productDescData, false);
         }
 
-        let productPrice = await this.productRepo.findOne({
-          product_id: product.product_id,
+        let productPrice = await this.productPriceRepo.findOne({
+          product_id: product['product_id'],
         });
 
         if (productPrice) {
@@ -660,13 +660,14 @@ export class TradeinProgramService {
       });
       for (let tradeinDetail of cvtData.applied_products) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             [`${Table.PRODUCTS}.product_appcore_id`]:
               tradeinDetail.product_appcore_id,
           },
         });
+
         if (!product) {
           const newProductData = {
             ...new ProductsEntity(),
