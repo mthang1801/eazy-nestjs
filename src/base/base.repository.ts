@@ -68,7 +68,7 @@ export class BaseRepositorty<T> {
    */
   async findOne(options: any): Promise<any> {
     this.logger.log('=============== [MYSQL] FIND ONE ================');
-    console.log(71, options);
+
     if (typeof options !== 'object') {
       throw new HttpException(
         'Tham số đưa vào phải là Object',

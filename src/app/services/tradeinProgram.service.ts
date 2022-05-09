@@ -637,7 +637,7 @@ export class TradeinProgramService {
       tradein_appcore_id,
     });
     if (!currentTradeinProgram) {
-      return this.itgCreate({ id: tradein_appcore_id, ...data });
+      throw new HttpException('Chương trình đã được áp dụng với id này.', 409);
     }
 
     const cvtData: any = convertTradeinProgramFromAppcore(data);

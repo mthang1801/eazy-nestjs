@@ -4024,7 +4024,7 @@ export class ProductService {
     let condition: any = {
       [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
     };
-    if (source === 1) {
+    if (source == 1) {
       condition = {
         ...condition,
         [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
