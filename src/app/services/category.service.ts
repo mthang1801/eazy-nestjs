@@ -656,7 +656,13 @@ export class CategoryService {
       const categories = await this.categoryRepository.find({
         select: '*',
         join: categoryJoiner,
-        orderBy: [{ field: 'updated_at', sortBy: SortBy.DESC }],
+        orderBy: [
+          {
+            field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position ASC`,
+          },
+          { field: 'updated_at', sortBy: SortBy.DESC },
+        ],
         where: categoriesSearchFilter(search, filterCondition),
         skip,
         limit,

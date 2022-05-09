@@ -813,8 +813,13 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
   cmsData['name'] = coreData['name'];
   cmsData['description'] = coreData['description'];
   cmsData['status'] = coreData['isActive'] ? 'A' : 'D';
-  cmsData['start_at'] = formatStandardTimeStamp(coreData['startDate']);
-  cmsData['end_at'] = formatStandardTimeStamp(coreData['endDate']);
+  if (coreData['startDate']) {
+    cmsData['start_at'] = formatStandardTimeStamp(coreData['startDate']);
+  }
+
+  if (coreData['endDate']) {
+    cmsData['end_at'] = formatStandardTimeStamp(coreData['endDate']);
+  }
   cmsData['discount_rate'] = coreData['amortizationExpense'];
   cmsData['applied_products'] = [];
   if (coreData['listProduct'] && coreData['listProduct'].length) {
