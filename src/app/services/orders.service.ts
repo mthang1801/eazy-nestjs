@@ -266,52 +266,60 @@ export class OrdersService {
         );
       }
     } else {
-      let { passwordHash, salt } = saltHashPassword(defaultPassword);
-      let fullname = data.s_firstname + ' ' + data.s_lastname;
-      let userData = {
-        ...new UserEntity(),
-        lastname: fullname.trim(),
-        password: passwordHash,
-        phone: data.s_phone,
-        salt,
-        user_type: UserTypeEnum.Customer,
-      };
-      let newUser = await this.userRepo.create(userData);
-
-      let userProfileData = {
-        ...new UserProfileEntity(),
-        b_lastname: fullname,
-        s_lastname: fullname,
-        b_phone: data.s_phone,
-        s_phone: data.s_phone,
-        b_city: data.s_city,
-        s_city: data.s_city,
-        b_district: data.s_district,
-        s_district: data.s_district,
-        b_ward: data.s_ward,
-        s_ward: data.s_ward,
-        b_address: data.s_address,
-        s_address: data.s_address,
-        user_id: newUser.user_id,
-      };
-      await this.userProfileRepo.create(userProfileData, false);
-
-      await this.userLoyaltyRepo.create({
-        ...new UserLoyaltyEntity(),
-        user_id: newUser.user_id,
-      });
-      await this.userDataRepo.create({
-        ...new UserDataEntity(),
-        user_id: newUser.user_id,
-      });
-
-      let user = await this.userRepo.findOne({
+      user = await this.userRepo.findOne({
         select: '*',
         join: userJoiner,
-        where: { [`${Table.USERS}.user_id`]: newUser.user_id },
+        where: { phone: data.s_phone },
       });
 
-      await this.customerService.createCustomerToAppcore(user);
+      if (!user) {
+        let { passwordHash, salt } = saltHashPassword(defaultPassword);
+        let fullname = data.s_firstname + ' ' + data.s_lastname;
+        let userData = {
+          ...new UserEntity(),
+          lastname: fullname.trim(),
+          password: passwordHash,
+          phone: data.s_phone,
+          salt,
+          user_type: UserTypeEnum.Customer,
+        };
+        let newUser = await this.userRepo.create(userData);
+
+        let userProfileData = {
+          ...new UserProfileEntity(),
+          b_lastname: fullname,
+          s_lastname: fullname,
+          b_phone: data.s_phone,
+          s_phone: data.s_phone,
+          b_city: data.s_city,
+          s_city: data.s_city,
+          b_district: data.s_district,
+          s_district: data.s_district,
+          b_ward: data.s_ward,
+          s_ward: data.s_ward,
+          b_address: data.s_address,
+          s_address: data.s_address,
+          user_id: newUser.user_id,
+        };
+        await this.userProfileRepo.create(userProfileData, false);
+
+        await this.userLoyaltyRepo.create({
+          ...new UserLoyaltyEntity(),
+          user_id: newUser.user_id,
+        });
+        await this.userDataRepo.create({
+          ...new UserDataEntity(),
+          user_id: newUser.user_id,
+        });
+
+        user = await this.userRepo.findOne({
+          select: '*',
+          join: userJoiner,
+          where: { [`${Table.USERS}.user_id`]: newUser.user_id },
+        });
+
+        await this.customerService.createCustomerToAppcore(user);
+      }
     }
 
     const cart = await this.cartRepo.findOne({ user_id: user.user_id });

@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+import { formatStandardTimeStamp } from '../utils/helper';
 const orderSampleData = {
   b_firstname: 'Mai Van',
   b_lastname: 'Thang',
@@ -243,10 +245,6 @@ export const convertDataToIntegrate = (data) => {
     itgData['parnerPaymentStatus'] = data['payment_status']; //Trạng thái thanh toán
   }
 
-  if (data['payment_date']) {
-    itgData['paymentDate'] = data['payment_date']; //Trạng thái thanh toán
-  }
-
   if (data['email']) {
     itgData['customerEmail'] = data['email']; //Địa chỉ email khách hàng
   }
@@ -267,6 +265,10 @@ export const convertDataToIntegrate = (data) => {
 
   if (data['discount']) {
     itgData['discountAmount'] = data['discount']; //Số tiền chiết khấu hoặc phần trăm
+  }
+
+  if (data['payment_date']) {
+    itgData['paymentDate'] = formatStandardTimeStamp(data['payment_date']);
   }
 
   itgData['isSentToCustomerAddress'] =

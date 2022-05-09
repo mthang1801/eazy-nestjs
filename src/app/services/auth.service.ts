@@ -224,14 +224,15 @@ export class AuthService {
     }
 
     const { passwordHash, salt } = saltHashPassword(password);
-    await this.userService.update(user.user_id, {
-      user_login: AuthProviderEnum.SYSTEM,
-      last_login: formatStandardTimeStamp(),
-      password: passwordHash,
-      salt,
-    });
-
-    user['image'] = await this.getUserImage(user.user_id);
+    await this.userRepository.update(
+      { user_id: user.user_id },
+      {
+        user_login: AuthProviderEnum.SYSTEM,
+        last_login: formatStandardTimeStamp(),
+        password: passwordHash,
+        salt,
+      },
+    );
 
     // get menu at ddv_usergroup_privileges
     // const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
