@@ -3,8 +3,13 @@ import { formatStandardTimeStamp } from 'src/utils/helper';
 export class BannerItemEntity {
   banner_item_id: number = 0;
   banner_id: number = 0;
-  location_id: number = 0;
-  page_type: number = 1;
-  page_url: string = '';
-  page_description: string = '';
+  status: string = 'A';
+  title: string;
+  image_url: string;
+  position: number = null;
+  link_target_url: string = null;
+  start_at: string = null;
+  end_at: string = null;
+  created_at: string = null;
+  updated_at: string = null;
 }

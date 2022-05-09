@@ -3,6 +3,8 @@ import {
   IsNotEmpty,
   ArrayNotEmpty,
   ValidateNested,
+  IsDate,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -14,10 +16,16 @@ export class UpdateBannerDTO {
   banner_title: string;
 
   @IsOptional()
-  status: string;
+  page_target_id: number;
 
   @IsOptional()
-  device_type: string;
+  page_location_id: number;
+
+  @IsOptional()
+  status: string = 'A';
+
+  @IsOptional()
+  device_type: string = 'D';
 
   @IsOptional()
   image_path: string;
@@ -32,6 +40,14 @@ export class UpdateBannerDTO {
   url_media: string;
 
   @IsOptional()
+  @IsDateString()
+  start_at: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_at: string;
+
+  @ArrayNotEmpty()
   @ValidateNested()
   @Type(() => BannerItem)
   banner_items: BannerItem[];
@@ -39,14 +55,20 @@ export class UpdateBannerDTO {
 
 class BannerItem {
   @IsOptional()
-  banner_item_id: number;
+  title: number;
 
   @IsOptional()
-  location_id: number;
+  position: number;
 
   @IsOptional()
-  page_type: number;
+  start_at: string;
 
   @IsOptional()
-  page_url: string;
+  end_at: string;
+
+  @IsOptional()
+  link_target_url: string;
+
+  @IsOptional()
+  image_url: string;
 }

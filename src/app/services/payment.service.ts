@@ -483,6 +483,18 @@ export class PaymentService {
 
       let ref_order_id = generateRandomString();
       let payCreditType = 1;
+
+      let sendData = {
+        user_id: user.user_id,
+        user_appcore_id: user.user_appcore_id,
+        order_items: cartItems,
+        ref_order_id,
+        pay_credit_type: payCreditType,
+        transfer_amount: +totalPrice,
+        coupon_code: data.coupon_code ? data.coupon_code : null,
+        order_type: OrderType.online,
+      };
+
       switch (method) {
         case 'paynow':
           payCreditType = 2;
@@ -494,25 +506,21 @@ export class PaymentService {
           payCreditType = 4;
           break;
       }
+      sendData['pay_credit_type'] = payCreditType;
 
-      let sendData = {
-        ...user,
-        s_phone: data.s_phone || user.s_phone || user.b_phone,
-        s_lastname: data.s_lastname || user.s_lastname || user.b_lastname,
-        s_city: data.s_city || user.s_city || user.b_city,
-        s_district: data.s_district || user.s_district || user.b_district,
-        s_ward: data.s_ward || user.s_district || user.b_district,
-        s_address: data.s_address || user.s_address || user.b_address,
-        order_items: cartItems,
-        ref_order_id,
-        pay_credit_type: payCreditType,
-        transfer_amount: +totalPrice,
-        coupon_code: data.coupon_code ? data.coupon_code : null,
-        order_type: OrderType.online,
-      };
+      if (['paynow', 'installment'].includes(method)) {
+        sendData['s_phone'] = data.s_phone;
+        sendData['s_lastname'] = data.s_lastname;
+        sendData['s_city'] = data.s_city;
+        sendData['s_district'] = data.s_district;
+        sendData['s_ward'] = data.s_ward;
+        sendData['s_address'] = data.s_address;
+      }
 
-      delete data.s_firstname;
-      delete data.b_firstname;
+      if (method === 'selfTransport') {
+        sendData['b_phone'] = data.b_phone;
+        sendData['b_lastname'] = data.b_lastname;
+      }
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
@@ -703,7 +711,7 @@ export class PaymentService {
       decodedData.indexOf('<order_cash_amount>') + '<order_cash_amount>'.length;
     let endAmountIndex = decodedData.indexOf('</order_cash_amount>');
     let amount = decodedData.substring(startAmountIndex, endAmountIndex);
-    console.log('payoo notify', orderNo, amount);
+
     try {
       const order = await this.orderRepo.findOne({ ref_order_id: orderNo });
 

@@ -134,7 +134,7 @@ export class TradeinProgramService {
     let filterCondition = {};
 
     let tradeinProgramsList = await this.tradeinProgramRepo.find({
-      select: '*',
+      select: `*`,
       where: tradeinProgramSearchFilter(search, filterCondition),
       orderBy: [
         { field: `${Table.TRADEIN_PROGRAM}.updated_at`, sortBy: SortBy.DESC },
@@ -289,7 +289,7 @@ export class TradeinProgramService {
       [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]: tradein_id,
     };
     const tradeinDetails = await this.tradeinProgramDetailRepo.find({
-      select: `*, ${Table.TRADEIN_PROGRAM_DETAIL}.position`,
+      select: `*, ${Table.TRADEIN_PROGRAM_DETAIL}.position, ${Table.TRADEIN_PROGRAM_DETAIL}.product_id`,
       join: tradeinDetailLeftJoiner,
       where: tradeinProgramDetailSearchFilter(search, filterCondition),
       orderBy: [

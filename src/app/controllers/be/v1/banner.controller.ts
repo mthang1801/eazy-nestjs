@@ -17,7 +17,6 @@ import { bannerService } from '../../../services/banner.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { IResponse } from '../../../interfaces/response.interface';
 
-import {} from '../../../interfaces/response.interface';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 
 import { CreateBannerDto } from 'src/app/dto/banner/create-banner.dto';
@@ -55,8 +54,8 @@ export class bannerController extends BaseController {
     @Res() res: Response,
     @Body() body: CreateBannerDto,
   ): Promise<IResponse> {
-    const banner = await this.service.create(body);
-    return this.responseSuccess(res, banner);
+    const result = await this.service.create(body);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/:id')

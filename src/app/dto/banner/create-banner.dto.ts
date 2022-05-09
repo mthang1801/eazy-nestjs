@@ -3,8 +3,10 @@ import {
   IsNotEmpty,
   ArrayNotEmpty,
   ValidateNested,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsDateString } from 'class-validator';
 
 export class CreateBannerDto {
   @IsNotEmpty()
@@ -12,6 +14,12 @@ export class CreateBannerDto {
 
   @IsNotEmpty()
   banner_title: string;
+
+  @IsOptional()
+  page_target_id: number;
+
+  @IsOptional()
+  page_location_id: number;
 
   @IsOptional()
   status: string = 'A';
@@ -25,11 +33,19 @@ export class CreateBannerDto {
   @IsOptional()
   description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   url: string;
 
   @IsOptional()
   url_media: string;
+
+  @IsOptional()
+  @IsDateString()
+  start_at: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_at: string;
 
   @ArrayNotEmpty()
   @ValidateNested()
@@ -39,11 +55,20 @@ export class CreateBannerDto {
 
 class BannerItem {
   @IsNotEmpty()
-  location_id: number;
+  title: number;
 
   @IsOptional()
-  page_type: number;
+  position: number;
 
   @IsOptional()
-  page_url: string;
+  start_at: string;
+
+  @IsOptional()
+  end_at: string;
+
+  @IsOptional()
+  link_target_url: string;
+
+  @IsOptional()
+  image_url: string;
 }

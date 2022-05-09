@@ -807,7 +807,6 @@ export class CustomerService {
         { user_id: result.user_id },
         { ...userData, updated_at: formatStandardTimeStamp() },
       );
-      result = { ...updatedUser };
     }
 
     let userProfile = await this.userProfileRepo.findOne({
@@ -816,11 +815,10 @@ export class CustomerService {
     if (userProfile) {
       const userProfileData = this.userProfileRepo.setData(convertedData);
       if (Object.entries(userProfileData).length) {
-        const updatedUserProfile = await this.userProfileRepo.update(
+        await this.userProfileRepo.update(
           { user_id: result.user_id },
           userProfileData,
         );
-        result = { ...result, ...updatedUserProfile };
       }
     } else {
       const newUserProfileData = {
@@ -828,7 +826,7 @@ export class CustomerService {
         ...this.userProfileRepo.setData(convertedData),
         user_id: result.user_id,
       };
-      await this.userProfileRepo.create(newUserProfileData);
+      await this.userProfileRepo.create(newUserProfileData, false);
     }
 
     let _userData = await this.userDataRepo.findOne({
@@ -838,11 +836,10 @@ export class CustomerService {
       const userDataData = this.userDataRepo.setData(convertedData);
 
       if (Object.entries(userDataData).length) {
-        const updatedUserData = await this.userDataRepo.update(
+        await this.userDataRepo.update(
           { user_id: result.user_id },
           userDataData,
         );
-        result = { ...result, ...updatedUserData };
       }
     } else {
       const newUserDataData = {
@@ -850,7 +847,7 @@ export class CustomerService {
         ...this.userDataRepo.setData(convertedData),
         user_id: result.user_id,
       };
-      await this.userDataRepo.create(newUserDataData);
+      await this.userDataRepo.create(newUserDataData, false);
     }
 
     const userLoyalty = await this.userLoyalRepo.findOne({
@@ -860,11 +857,10 @@ export class CustomerService {
       const userLoyaltyData = this.userLoyalRepo.setData(convertedData);
 
       if (Object.entries(userLoyaltyData).length) {
-        const updatedUserLoyalty = await this.userLoyalRepo.update(
+        await this.userLoyalRepo.update(
           { user_id: result.user_id },
           userLoyaltyData,
         );
-        result = { ...result, ...updatedUserLoyalty };
       }
     } else {
       const newUserLoyaltyData = {
@@ -872,10 +868,8 @@ export class CustomerService {
         ...this.userLoyalRepo.setData(convertedData),
         user_id: result.user_id,
       };
-      await this.userLoyalRepo.create(newUserLoyaltyData);
+      await this.userLoyalRepo.create(newUserLoyaltyData, false);
     }
-
-    return result;
   }
 
   async itgUpdateLoyalty(user_appcore_id: number, data: UpdateCustomerLoyalty) {

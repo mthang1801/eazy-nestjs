@@ -31,6 +31,13 @@ import { BannerPageDescriptionEntity } from '../entities/bannerPageDescription.e
 import * as moment from 'moment';
 import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
+import { LessThan } from '../../database/operators/operators';
+import {
+  MoreThan,
+  Between,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from '../../database/operators/operators';
 @Injectable()
 export class bannerService {
   constructor(
@@ -44,58 +51,64 @@ export class bannerService {
     private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
   ) {}
   async getList(params) {
-    let { page, limit, search, created_at, updated_at, status, device_type } =
-      params;
+    let {
+      page,
+      limit,
+      search,
+      created_at,
+      status,
+      device_type,
+      page_location_id,
+      page_target_id,
+      created_at_start,
+      created_at_end,
+    } = params;
     page = +page || 1;
     limit = +limit || 20;
     let skip = (page - 1) * limit;
 
-    let filterCondition = {};
+    let filterConditions = {};
     if (status) {
-      filterCondition['status'] = status;
+      filterConditions['status'] = status;
     }
-    if (created_at) {
-      filterCondition['created_at'] = Like(
-        moment(created_at).format('YYYY-MM-DD'),
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.BANNER}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
       );
+    } else if (created_at_start) {
+      filterConditions[`${Table.BANNER}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    } else if (created_at_end) {
+      filterConditions[`${Table.BANNER}.created_at`] =
+        LessThanOrEqual(created_at_start);
     }
-    if (updated_at) {
-      filterCondition['updated_at'] = Like(
-        moment(updated_at).format('YYYY-MM-DD'),
-      );
+
+    if (page_location_id) {
+      filterConditions['page_location_id'] = page_location_id;
+    }
+
+    if (page_target_id) {
+      filterConditions['page_target_id'] = page_target_id;
     }
 
     if (device_type) {
-      filterCondition['device_type'] = device_type;
+      filterConditions['device_type'] = device_type;
     }
 
     const banners = await this.bannerRepo.find({
       select: `*, ${Table.BANNER}.*`,
       join: bannerJoiner,
       orderBy: [{ field: 'updated_at', sortBy: SortBy.DESC }],
-      where: bannerSearchFilter(search, filterCondition),
+      where: bannerSearchFilter(search, filterConditions),
       skip,
       limit,
     });
 
     const count = await this.bannerRepo.find({
       select: `COUNT(DISTINCT(${Table.BANNER}.banner_id)) as total`,
-      join: bannerJoiner,
-      where: bannerSearchFilter(search, filterCondition),
+      where: bannerSearchFilter(search, filterConditions),
     });
-
-    for (let bannerItem of banners) {
-      let bannerImage = await this.imageLinkRepo.findOne({
-        object_id: bannerItem.banner_id,
-        object_type: ImageObjectType.BANNER,
-      });
-
-      if (bannerImage) {
-        const image = await this.imageRepo.findById(bannerImage.image_id);
-
-        bannerItem['image'] = { ...bannerImage, ...image };
-      }
-    }
 
     return {
       paging: {
@@ -105,6 +118,58 @@ export class bannerService {
       },
       banners,
     };
+  }
+
+  async getListFE(params) {
+    let { page_location_name, page_target_name, device_type } = params;
+    device_type = device_type || 'D';
+    let pageLocation = await this.bannerLocationsDescRepo.findOne({
+      location_description: page_location_name,
+    });
+    if (!pageLocation) {
+      throw new HttpException('Không tìm vị trí hiển thị', 404);
+    }
+    let pageTarget = await this.bannerTargetDescRepo.findOne({
+      target_description: page_target_name,
+    });
+    if (!pageTarget) {
+      throw new HttpException('Không tìm thấy trang hiển thị', 404);
+    }
+    let banner = await this.bannerRepo.findOne({
+      select: '*',
+      where: {
+        [`${Table.BANNER}.page_location_id`]: pageLocation.location_id,
+        [`${Table.BANNER}.page_target_id`]: pageTarget.target_id,
+        [`${Table.BANNER}.status`]: 'A',
+        [`${Table.BANNER}.device_type`]: device_type,
+        [`${Table.BANNER}.start_at`]: LessThanOrEqual(
+          formatStandardTimeStamp(),
+        ),
+        [`${Table.BANNER}.end_at`]: MoreThanOrEqual(formatStandardTimeStamp()),
+      },
+    });
+    if (banner) {
+      const bannerItems = await this.bannerItemRepo.find({
+        select: '*',
+        where: {
+          [`${Table.BANNER_ITEM}.status`]: 'A',
+          [`${Table.BANNER_ITEM}.start_at`]: LessThanOrEqual(
+            formatStandardTimeStamp(),
+          ),
+          [`${Table.BANNER_ITEM}.end_at`]: MoreThanOrEqual(
+            formatStandardTimeStamp(),
+          ),
+        },
+        orderBy: [
+          {
+            field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
+            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.BANNER_ITEM}.position ASC`,
+          },
+        ],
+      });
+      banner['banner_items'] = bannerItems;
+    }
+    return banner;
   }
 
   async getLocationsList() {
@@ -117,30 +182,22 @@ export class bannerService {
 
   async getById(id: number) {
     const banner = await this.bannerRepo.findOne({
-      select: `*, ${Table.BANNER}.*`,
-      join: bannerJoiner,
+      select: `*`,
       where: { [`${Table.BANNER}.banner_id`]: id },
     });
 
-    const bannerImageLink = await this.imageLinkRepo.findOne({
-      object_id: id,
-      object_type: ImageObjectType.BANNER,
-    });
-
-    if (bannerImageLink) {
-      const bannerImage = await this.imageRepo.findById({
-        image_id: bannerImageLink.image_id,
+    if (banner) {
+      const bannerItems = await this.bannerItemRepo.find({
+        banner_id: id,
+        orderBy: [
+          {
+            field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
+            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.BANNER_ITEM}.position ASC`,
+          },
+        ],
       });
-      banner['image'] = bannerImage;
+      banner['banner_items'] = bannerItems;
     }
-
-    const bannerItems = await this.bannerItemRepo.find({
-      select: '*',
-      join: bannerItemsJoiner,
-      where: { [`${Table.BANNER_ITEM}.banner_id`]: banner.banner_id },
-    });
-
-    banner['banner_items'] = bannerItems;
     return banner;
   }
 
@@ -151,35 +208,18 @@ export class bannerService {
     };
     const newBanner = await this.bannerRepo.create(bannerData);
 
-    const bannerDescData = {
-      ...new BannerDescriptionsEntity(),
-      ...this.bannerDescriptionRepo.setData(data),
-      banner_id: newBanner.banner_id,
-    };
-
-    await this.bannerDescriptionRepo.create(bannerDescData);
-
-    if (data.banner_items.length) {
+    if (data.banner_items) {
       for (let bannerItem of data.banner_items) {
         const newBannerItemData = {
           ...new BannerItemEntity(),
           ...this.bannerItemRepo.setData(bannerItem),
           banner_id: newBanner.banner_id,
         };
-        const newBannerItem = await this.bannerItemRepo.create(
-          newBannerItemData,
-        );
+        await this.bannerItemRepo.create(newBannerItemData, false);
       }
     }
 
-    const newImageBanner = await this.imageRepo.create({
-      image_path: data.image_path,
-    });
-    await this.imageLinkRepo.create({
-      object_id: newBanner.banner_id,
-      object_type: ImageObjectType.BANNER,
-      image_id: newImageBanner.image_id,
-    });
+    return this.getById(newBanner.banner_id);
   }
 
   async update(id: number, data: UpdateBannerDTO): Promise<any> {
@@ -195,25 +235,7 @@ export class bannerService {
       await this.bannerRepo.update({ banner_id: id }, bannerData);
     }
 
-    const bannerDescData = await this.bannerDescriptionRepo.findOne({
-      banner_id: id,
-    });
-    if (bannerDescData) {
-      const bannerDescData = this.bannerDescriptionRepo.setData(data);
-      if (Object.entries(bannerDescData).length) {
-        await this.bannerDescriptionRepo.update(
-          { banner_id: id },
-          bannerDescData,
-        );
-      }
-    } else {
-      const bannerDescData = {
-        ...new BannerDescriptionsEntity(),
-        ...this.bannerDescriptionRepo.setData(data),
-      };
-      await this.bannerLocationsDescRepo.create(bannerDescData);
-    }
-    if (data?.banner_items?.length) {
+    if (data.banner_items && data.banner_items.length) {
       await this.bannerItemRepo.delete({
         banner_id: id,
       });
@@ -227,28 +249,7 @@ export class bannerService {
       }
     }
 
-    if (data.image_path) {
-      const oldImageLink = await this.imageLinkRepo.findOne({
-        object_type: ImageObjectType.BANNER,
-        object_id: id,
-      });
-      if (oldImageLink) {
-        await this.imageLinkRepo.delete({
-          object_type: ImageObjectType.BANNER,
-          object_id: id,
-        });
-        await this.imageRepo.delete({ image_id: oldImageLink.image_id });
-      }
-
-      const newImageBanner = await this.imageRepo.create({
-        image_path: data.image_path,
-      });
-      await this.imageLinkRepo.create({
-        object_id: id,
-        object_type: ImageObjectType.BANNER,
-        image_id: newImageBanner.image_id,
-      });
-    }
+    return this.getById(id);
   }
 
   async delete(banner_id: number) {
