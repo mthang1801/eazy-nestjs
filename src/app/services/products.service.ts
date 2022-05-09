@@ -4193,20 +4193,20 @@ export class ProductService {
             },
           ],
         },
-        // {
-        //   $and: [
-        //     {
-        //       $or: {
-        //         [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-        //         [`${Table.PRODUCTS}.amount`]: MoreThan(0),
-        //       },
-        //       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
-        //         1, 2, 3, 4, 5, 6, 7,
-        //       ]),
-        //     },
-        //     { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
-        //   ],
-        // },
+        {
+          $and: [
+            {
+              $or: {
+                [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+                [`${Table.PRODUCTS}.amount`]: MoreThan(0),
+              },
+              [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
+                1, 2, 3, 4, 5, 6, 7,
+              ]),
+            },
+            { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
+          ],
+        },
       ],
     });
   }

@@ -10,7 +10,7 @@ export class TradeinProgramControllerItg extends BaseController {
   }
   @Post()
   async create(@Res() res: Response, @Body() data): Promise<IResponse> {
-    await this.service.itgCreate(data);
-    return this.responseSuccess(res);
+    const result = await this.service.itgCreate(data);
+    return this.responseSuccess(res, result);
   }
 }
