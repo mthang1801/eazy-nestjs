@@ -1,3 +1,4 @@
+import { AuthGuard } from './../../../../middlewares/fe.auth';
 import {
   Body,
   Controller,
@@ -9,6 +10,7 @@ import {
   ValidationPipe,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../../../services/auth.service';
 import { AuthCredentialsDto } from '../../../dto/auth/auth-credential.dto';
@@ -19,6 +21,7 @@ import { LoginDto } from '../../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../../base/base.controllers';
 import { Response } from 'express';
 import { AuthRestoreDto } from '../../../dto/auth/auth-restore.dto';
+import { ChangePasswordDto } from '../../../dto/auth/auth-changePassword.dto';
 /**
  * Authentication controller
  * @Describe Using 3 authenticate types : Local, Google, Facebook
@@ -49,6 +52,14 @@ export class AuthController extends BaseController {
       'Đăng ký tài khoản thành công, vui lòng truy cập vào email để kích hoạt tài khoản',
     );
   }
+
+  @Put("change-password")
+  @UseGuards(AuthGuard)
+  async changePassword(@Body() data: ChangePasswordDto, @Res() res: Response, @Req() req) {
+    const result = await this.service.changePassword(data, req.user);
+    return this.responseSuccess(res, result);
+  }
+
 
   /**
    * Login account with email or phone and password from FE
