@@ -223,7 +223,6 @@ export class AuthService {
       );
     }
 
-    
     await this.userRepository.update(
       { user_id: user.user_id },
       {

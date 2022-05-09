@@ -806,3 +806,69 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
   }
   return cmsData;
 };
+
+export const convertTradeinProgramFromAppcore = (coreData) => {
+  let cmsData = {};
+  cmsData['tradein_appcore_id'] = coreData['id'];
+  cmsData['name'] = coreData['name'];
+  cmsData['description'] = coreData['description'];
+  (cmsData['status'] = coreData['isActive'] ? 'A' : 'D'),
+    (cmsData['start_at'] = coreData['startDate']);
+  cmsData['end_at'] = coreData['endDate'];
+  cmsData['discount_rate'] = coreData['amortizationExpense'];
+  cmsData['applied_products'] = [];
+  if (coreData['listProduct'] && coreData['listProduct'].length) {
+    for (let productItem of coreData['listProduct']) {
+      let appliedProductItem = {};
+      appliedProductItem['detail_appcore_id'] = productItem['id'];
+      appliedProductItem['product_appcore_id'] = productItem['productId'];
+      appliedProductItem['product_name'] = productItem['productName'];
+      appliedProductItem['product_code'] = productItem['productCode'];
+      appliedProductItem['collect_price'] = productItem['buyingPrice'];
+      appliedProductItem['price'] = productItem['sellingPrice'];
+      appliedProductItem['product_type'] = productItem['type'];
+    }
+  }
+  cmsData['applied_criteria'] = [];
+  if (coreData['listCreteriaGroup'] && coreData['listCreteriaGroup'].length) {
+    for (let criteriaItem of coreData['listCreteriaGroup']) {
+      let appliedCriteriaItem = {};
+      appliedCriteriaItem['criteria_appcore_id'] = criteriaItem['id'];
+      appliedCriteriaItem['position'] = criteriaItem['priority'];
+      appliedCriteriaItem['position'] = criteriaItem['priority'];
+      appliedCriteriaItem['criteria_name'] = criteriaItem['criterialName'];
+      appliedCriteriaItem['criteria_style'] = criteriaItem['type'];
+      appliedCriteriaItem['criteria_status'] = criteriaItem['isDisplayOnWeb']
+        ? 'A'
+        : 'D';
+      appliedCriteriaItem['applied_criteria_details'] = [];
+      if (criteriaItem['listItem'] && criteriaItem['listItem'].length) {
+        for (let criteriaDetailItem of criteriaItem['listItem']) {
+          let appliedCriteriaDetailItem = {};
+          appliedCriteriaDetailItem['criteria_detail_name'] =
+            criteriaDetailItem['name'];
+          appliedCriteriaDetailItem['operator_type'] =
+            criteriaDetailItem['operatorType'] == 1 ? 'A' : 'S';
+          appliedCriteriaDetailItem['amount_type'] =
+            criteriaDetailItem['amountType'];
+          appliedCriteriaDetailItem['value'] = criteriaDetailItem['amount'];
+          appliedCriteriaDetailItem['criteria_detail_description'] =
+            criteriaDetailItem['description'];
+          appliedCriteriaDetailItem['accessory_category_appcore_id'] =
+            criteriaDetailItem['productComponentCategoryId'];
+          appliedCriteriaDetailItem['accessory_category_appcore_name'] =
+            criteriaDetailItem['cateName'];
+
+          appliedCriteriaItem['applied_criteria_details'].push(
+            appliedCriteriaDetailItem,
+          );
+        }
+      }
+      cmsData['applied_criteria'].push(
+        appliedCriteriaItem['applied_criteria_details'],
+      );
+    }
+  }
+
+  return cmsData;
+};
