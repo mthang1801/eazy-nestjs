@@ -812,9 +812,9 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
   cmsData['tradein_appcore_id'] = coreData['id'];
   cmsData['name'] = coreData['name'];
   cmsData['description'] = coreData['description'];
-  (cmsData['status'] = coreData['isActive'] ? 'A' : 'D'),
-    (cmsData['start_at'] = coreData['startDate']);
-  cmsData['end_at'] = coreData['endDate'];
+  cmsData['status'] = coreData['isActive'] ? 'A' : 'D';
+  cmsData['start_at'] = formatStandardTimeStamp(coreData['startDate']);
+  cmsData['end_at'] = formatStandardTimeStamp(coreData['endDate']);
   cmsData['discount_rate'] = coreData['amortizationExpense'];
   cmsData['applied_products'] = [];
   if (coreData['listProduct'] && coreData['listProduct'].length) {
@@ -822,7 +822,7 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
       let appliedProductItem = {};
       appliedProductItem['detail_appcore_id'] = productItem['id'];
       appliedProductItem['product_appcore_id'] = productItem['productId'];
-      appliedProductItem['product_name'] = productItem['productName'];
+      appliedProductItem['product'] = productItem['productName'];
       appliedProductItem['product_code'] = productItem['productCode'];
       appliedProductItem['collect_price'] = productItem['buyingPrice'];
       appliedProductItem['price'] = productItem['sellingPrice'];
@@ -835,7 +835,6 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
     for (let criteriaItem of coreData['listCreteriaGroup']) {
       let appliedCriteriaItem = {};
       appliedCriteriaItem['criteria_appcore_id'] = criteriaItem['id'];
-      appliedCriteriaItem['position'] = criteriaItem['priority'];
       appliedCriteriaItem['position'] = criteriaItem['priority'];
       appliedCriteriaItem['criteria_name'] = criteriaItem['criterialName'];
       appliedCriteriaItem['criteria_style'] = criteriaItem['type'];

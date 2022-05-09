@@ -3771,6 +3771,7 @@ export class ProductService {
     );
 
     // Get accessory
+    result['promotion_accessory_products'] = [];
     if (result['promotion_accessory_id']) {
       result['promotion_accessory_products'] =
         await this.getAccessoriesByProductId(
@@ -3778,12 +3779,16 @@ export class ProductService {
           1,
         );
     }
+
+    result['free_accessory_products'] = [];
     if (result['free_accessory_id']) {
       result['free_accessory_products'] = await this.getAccessoriesByProductId(
         result['free_accessory_id'],
         1,
       );
     }
+
+    result['warranty_package_products'] = [];
     if (result['warranty_package_id']) {
       result['warranty_package_products'] =
         await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
@@ -3837,6 +3842,7 @@ export class ProductService {
           childProduct.product_id,
         );
         // Get accessory
+        childProduct['promotion_accessory_products'];
         if (childProduct['promotion_accessory_id']) {
           childProduct['promotion_accessory_products'] =
             await this.getAccessoriesByProductId(
@@ -3844,6 +3850,8 @@ export class ProductService {
               role,
             );
         }
+
+        childProduct['free_accessory_products'] = [];
         if (childProduct['free_accessory_id']) {
           childProduct['free_accessory_products'] =
             await this.getAccessoriesByProductId(
@@ -3851,6 +3859,8 @@ export class ProductService {
               role,
             );
         }
+
+        childProduct['warranty_package_products'] = [];
         if (childProduct['warranty_package_id']) {
           childProduct['warranty_package_products'] =
             await this.getAccessoriesByProductId(

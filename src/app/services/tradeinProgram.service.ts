@@ -12,7 +12,11 @@ import {
 } from '../../utils/joinTable';
 import { Table } from 'src/database/enums';
 import { HttpException, Injectable } from '@nestjs/common';
-import { getPageSkipLimit, formatStandardTimeStamp } from '../../utils/helper';
+import {
+  getPageSkipLimit,
+  formatStandardTimeStamp,
+  convertToSlug,
+} from '../../utils/helper';
 import {
   tradeinProgramSearchFilter,
   tradeinProgramDetailSearchFilter,
@@ -37,6 +41,8 @@ import { userSelector } from '../../utils/tableSelector';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { convertTradeinProgramFromAppcore } from '../../utils/integrateFunctions';
+import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
+import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -48,6 +54,7 @@ export class TradeinProgramService {
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private valuationBillRepo: ValuationBillRepository<ValuationBillEntity>,
     private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
+    private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
     private userRepo: UserRepository<UserEntity>,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
@@ -515,6 +522,13 @@ export class TradeinProgramService {
   async itgCreate(data) {
     const cvtData: any = convertTradeinProgramFromAppcore(data);
 
+    const checkTradeinExist = await this.tradeinProgramRepo.findOne({
+      tradein_appcore_id: cvtData.tradein_appcore_id,
+    });
+    if (checkTradeinExist) {
+      return this.itgUpdate(cvtData.tradein_appcore_id, cvtData);
+    }
+
     const tradeinProgramData = {
       ...new TradeinProgramEntity(),
       ...this.tradeinProgramRepo.setData(cvtData),
@@ -528,7 +542,7 @@ export class TradeinProgramService {
         tradein_id: newTradeinProgram.tradein_id,
       });
       for (let tradeinDetail of cvtData.applied_products) {
-        const product = await this.productRepo.findOne({
+        let product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
           where: {
@@ -536,22 +550,40 @@ export class TradeinProgramService {
               tradeinDetail.product_appcore_id,
           },
         });
+
         if (!product) {
-          continue;
+          const newProductData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(tradeinDetail),
+            slug: convertToSlug(tradeinDetail.product),
+          };
+          product = await this.productPriceRepo.create(newProductData);
+
+          let productDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(tradeinDetail),
+            product_id: product.product_id,
+          };
+          await this.productDescRepo.create(productDescData, false);
         }
 
         let productPrice = await this.productRepo.findOne({
           product_id: product.product_id,
         });
+
         if (productPrice) {
           await this.productPriceRepo.update(
             { product_id: product.product_id },
-            { collect_price: tradeinDetail.collect_price },
+            {
+              collect_price: tradeinDetail.collect_price,
+              price: tradeinDetail.price,
+            },
           );
         } else {
           await this.productPriceRepo.create({
             product_id: product.product_id,
             collect_price: tradeinDetail.collect_price,
+            price: tradeinDetail.price,
           });
         }
 
@@ -596,7 +628,109 @@ export class TradeinProgramService {
           }
         }
       }
+      return this.get(newTradeinProgram.tradein_id);
     }
-    return this.get(newTradeinProgram.tradein_id);
+  }
+
+  async itgUpdate(tradein_appcore_id: number, data) {
+    const currentTradeinProgram = await this.tradeinProgramRepo.findOne({
+      tradein_appcore_id,
+    });
+    if (!currentTradeinProgram) {
+      return this.itgCreate({ id: tradein_appcore_id, ...data });
+    }
+
+    const cvtData: any = convertTradeinProgramFromAppcore(data);
+
+    const tradeinProgramData = {
+      ...this.tradeinProgramRepo.setData(cvtData),
+      tradein_appcore_id,
+      updated_at: formatStandardTimeStamp(),
+    };
+
+    const updatedTradeinProgram = await this.tradeinProgramRepo.update(
+      { tradein_id: currentTradeinProgram.tradein_id },
+      tradeinProgramData,
+      true,
+    );
+
+    if (cvtData.applied_products && cvtData.applied_products.length) {
+      await this.tradeinProgramDetailRepo.delete({
+        tradein_id: updatedTradeinProgram.tradein_id,
+      });
+      for (let tradeinDetail of cvtData.applied_products) {
+        const product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_appcore_id`]:
+              tradeinDetail.product_appcore_id,
+          },
+        });
+        if (!product) {
+          continue;
+        }
+
+        let productPrice = await this.productRepo.findOne({
+          product_id: product.product_id,
+        });
+        if (productPrice) {
+          await this.productPriceRepo.update(
+            { product_id: product.product_id },
+            { collect_price: tradeinDetail.collect_price },
+          );
+        } else {
+          await this.productPriceRepo.create({
+            product_id: product.product_id,
+            collect_price: tradeinDetail.collect_price,
+          });
+        }
+
+        const tradeinDetailData = {
+          ...new TradeinProgramDetailEntity(),
+          ...this.tradeinProgramDetailRepo.setData(tradeinDetail),
+          product_id: product.product_id,
+          tradein_id: updatedTradeinProgram.tradein_id,
+        };
+        await this.tradeinProgramDetailRepo.create(tradeinDetailData, false);
+      }
+    }
+
+    if (cvtData.applied_criteria && cvtData.applied_criteria.length) {
+      await this.tradeinProgramCriteriaRepo.delete({
+        tradein_id: updatedTradeinProgram.tradein_id,
+      });
+      for (let appliedCriteriaItem of cvtData.applied_criteria) {
+        const newCriteriaData = {
+          ...new TradeinProgramCriteriaEntity(),
+          ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
+          tradein_id: updatedTradeinProgram.tradein_id,
+        };
+
+        const newCriteria = await this.tradeinProgramCriteriaRepo.create(
+          newCriteriaData,
+        );
+
+        if (
+          appliedCriteriaItem.applied_criteria_detail &&
+          appliedCriteriaItem.applied_criteria_detail.length
+        ) {
+          for (let criteriaDetailItem of appliedCriteriaItem.applied_criteria_detail) {
+            let newCriteriaDetailData = {
+              ...new TradeinProgramCriteriaDetailEntity(),
+              ...this.tradeinProgramCriteriaDetailRepo.setData(
+                criteriaDetailItem,
+              ),
+              criteria_id: newCriteria.criteria_id,
+            };
+
+            await this.tradeinProgramCriteriaDetailRepo.create(
+              newCriteriaDetailData,
+            );
+          }
+        }
+      }
+    }
+    return this.get(updatedTradeinProgram.tradein_id);
   }
 }
