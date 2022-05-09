@@ -636,6 +636,7 @@ export class TradeinProgramService {
     const currentTradeinProgram = await this.tradeinProgramRepo.findOne({
       tradein_appcore_id: data.id,
     });
+
     if (!currentTradeinProgram) {
       return this.itgCreate(data);
     }
