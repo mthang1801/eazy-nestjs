@@ -9,6 +9,7 @@ import {
   ValidationPipe,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../../../services/auth.service';
 import { AuthCredentialsDto } from '../../../dto/auth/auth-credential.dto';
@@ -17,8 +18,9 @@ import { IResponse } from '../../../interfaces/response.interface';
 import { AuthLoginProviderDto } from '../../../dto/auth/auth-loginProvider.dto';
 import { LoginDto } from '../../../dto/auth/auth-login.dto';
 import { BaseController } from '../../../../base/base.controllers';
-import { Response } from 'express';
 import { AuthRestoreDto } from '../../../dto/auth/auth-restore.dto';
+import { Response } from 'express';
+
 /**
  * Authentication controller
  * @Describe Using 3 authenticate types : Local, Google, Facebook

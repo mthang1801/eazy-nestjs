@@ -223,14 +223,11 @@ export class AuthService {
       );
     }
 
-    const { passwordHash, salt } = saltHashPassword(password);
     await this.userRepository.update(
       { user_id: user.user_id },
       {
         user_login: AuthProviderEnum.SYSTEM,
         last_login: formatStandardTimeStamp(),
-        password: passwordHash,
-        salt,
       },
     );
 
