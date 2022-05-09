@@ -557,7 +557,7 @@ export class TradeinProgramService {
             ...this.productRepo.setData(tradeinDetail),
             slug: convertToSlug(tradeinDetail.product),
           };
-          product = await this.productPriceRepo.create(newProductData);
+          product = await this.productRepo.create(newProductData);
 
           let productDescData = {
             ...new ProductDescriptionsEntity(),
@@ -659,7 +659,7 @@ export class TradeinProgramService {
         tradein_id: updatedTradeinProgram.tradein_id,
       });
       for (let tradeinDetail of cvtData.applied_products) {
-        const product = await this.productRepo.findOne({
+        let product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
           where: {
@@ -668,7 +668,19 @@ export class TradeinProgramService {
           },
         });
         if (!product) {
-          continue;
+          const newProductData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(tradeinDetail),
+            slug: convertToSlug(tradeinDetail.product),
+          };
+          product = await this.productRepo.create(newProductData);
+
+          let productDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(tradeinDetail),
+            product_id: product.product_id,
+          };
+          await this.productDescRepo.create(productDescData, false);
         }
 
         let productPrice = await this.productRepo.findOne({
