@@ -561,4 +561,21 @@ export class AuthService {
       UserMailingListsTypeEnum.ActivateSignUpAccount,
     );
   }
+
+  async changePassword(data, user) {
+    console.log(data);
+    console.log(user.salt);
+    const tempUser = await this.userRepository.findOne({user_id: user.user_id});
+    console.log("next");
+    console.log(tempUser.salt);
+    // if (desaltHashPassword(password, user.salt) !== user.password) {
+    //   throw new HttpException(
+    //     phone
+    //       ? 'Số điện thoại hoặc mật khẩu không đúng.'
+    //       : 'Địa chỉ email hoặc mật khẩu không đúng',
+    //     HttpStatus.UNAUTHORIZED,
+    //   );
+    // }
+    console.log(user.salt)
+  }
 }
