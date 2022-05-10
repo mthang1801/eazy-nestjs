@@ -852,6 +852,8 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
           let appliedCriteriaDetailItem = {};
           appliedCriteriaDetailItem['criteria_detail_name'] =
             criteriaDetailItem['name'];
+          appliedCriteriaDetailItem['criteria_detail_appcore_id'] =
+            criteriaDetailItem['id'];
           appliedCriteriaDetailItem['operator_type'] =
             criteriaDetailItem['operatorType'] == 1 ? 'A' : 'S';
           appliedCriteriaDetailItem['amount_type'] =
@@ -872,6 +874,8 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
       cmsData['applied_criteria'].push(appliedCriteriaItem);
     }
   }
+
+  console.log(cmsData);
 
   return cmsData;
 };

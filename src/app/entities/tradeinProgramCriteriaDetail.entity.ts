@@ -3,6 +3,7 @@ export class TradeinProgramCriteriaDetailEntity {
   criteria_id: number = 0;
   criteria_detail_id: number = 0;
   criteria_detail_name: string = '';
+  criteria_detail_appcore_id: number = null;
   accessory_category_appcore_id: number = null;
   accessory_category_id: number = 0;
   criteria_detail_description: string = '';

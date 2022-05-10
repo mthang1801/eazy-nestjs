@@ -3336,6 +3336,8 @@ export class ProductService {
   }
 
   async itgCreateProductStores(data: CreateProductStoreDto) {
+    console.log('stocks');
+    console.log(data);
     const { product_id, store_location_id, amount } = data;
     let product = await this.productRepo.findOne({
       product_appcore_id: product_id,
