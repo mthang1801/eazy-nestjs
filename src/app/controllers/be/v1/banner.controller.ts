@@ -90,7 +90,7 @@ export class bannerController extends BaseController {
   //@UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
-    @Body() data: UpdateBannerDTO,
+    @Body() data,
     @Param('id') id: number,
   ): Promise<IResponse> {
     await this.service.update(id, data);
