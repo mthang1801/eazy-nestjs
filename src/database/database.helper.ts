@@ -5,6 +5,7 @@ export const formatStringCondition = (position, existsItem) => {
       : ` ${existsItem['connect']} ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `;
 
   formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
+
   return formatStringCond;
 };
 
@@ -15,5 +16,6 @@ export const formatHavingCondition = (position, existsItem) => {
       : ` ${existsItem['connect']} ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `;
 
   formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
+
   return formatStringCond;
 };

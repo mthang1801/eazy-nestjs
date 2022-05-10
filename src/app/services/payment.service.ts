@@ -266,6 +266,7 @@ export class PaymentService {
 
       let responseData;
 
+      let gatewayName = '';
       let installed_money_account_id = 20574861;
       switch (+data.company_id) {
         case 1:
@@ -275,6 +276,7 @@ export class PaymentService {
             data.prepaid_percentage,
             data.tenor,
           );
+          gatewayName = 'HD Saigon';
           break; //HD Saigon
         case 2:
           installed_money_account_id = 20574874;
@@ -283,8 +285,17 @@ export class PaymentService {
             data.prepaid_percentage,
             data.tenor,
           );
-
+          gatewayName = 'Home Credit';
           break; // Home Credit
+        case 3:
+          installed_money_account_id = 100000011;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            totalPrice,
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = 'Shinhan';
+          break; //Shinhan
       }
 
       let paymentPerMonth = responseData.paymentPerMonth;
@@ -293,6 +304,7 @@ export class PaymentService {
       let prepaidAmount = responseData.prepaidAmount;
       //20574874 Home credit
       //20630206 payoo
+      //100000011 Shinhan
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
@@ -342,12 +354,7 @@ export class PaymentService {
       await this.orderPaymentRepo.create({
         order_id: result['order_id'],
         order_no: refOrderId,
-        gateway_name:
-          data.company_id == 1
-            ? 'HD Saigon'
-            : data.company_id == 2
-            ? 'Home Credit'
-            : '',
+        gateway_name: gatewayName,
         amount: totalPrice,
       });
 
@@ -782,6 +789,19 @@ export class PaymentService {
         let tenors = [6, 9, 12];
         for (let tenor of tenors) {
           let result = calculateInstallmentInterestRateHomeCredit(
+            totalPrice,
+            prepaid_percentage,
+            tenor,
+          );
+          results.push(result);
+        }
+        return results;
+      }
+      case 3: {
+        // Shinhan
+        let tenors = [6, 9, 12];
+        for (let tenor of tenors) {
+          let result = calculateInstallmentInterestRateHDSaiGon(
             totalPrice,
             prepaid_percentage,
             tenor,

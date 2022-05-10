@@ -2720,6 +2720,7 @@ export class ProductService {
   }
 
   async getProductDetails(product, showListCategories = false) {
+    console.log(27, product);
     try {
       let status = product['status'];
 
@@ -3100,19 +3101,24 @@ export class ProductService {
         await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
     }
 
+    result['currentCategories'] = [];
+    result['relative_prouducts'] = [];
     // Get Current category info
-    result['currentCategories'] = await this.productCategoryRepo.find({
-      select: '*',
-      join: productCategoryJoiner,
-      where: {
-        [`${Table.PRODUCTS_CATEGORIES}.product_id`]: result['product_id'],
-      },
-    });
+    if (result['category_id']) {
+      result['currentCategories'] = await this.productCategoryRepo.find({
+        select: '*',
+        join: productCategoryJoiner,
+        where: {
+          [`${Table.PRODUCTS_CATEGORIES}.product_id`]: result['product_id'],
+        },
+      });
 
-    // Get relative products
-    result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-      result,
-    );
+      // Get relative products
+      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+        result,
+      );
+    }
+
     return result;
   }
 
@@ -3800,20 +3806,22 @@ export class ProductService {
     });
 
     // Get Current category info
-    result['currentCategory'] = await this.categoryRepo.findOne({
-      select: '*',
-      join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.category_id`]: result['category_id'] },
-    });
+    if (result['category_id']) {
+      result['currentCategory'] = await this.categoryRepo.findOne({
+        select: '*',
+        join: categoryJoiner,
+        where: { [`${Table.CATEGORIES}.category_id`]: result['category_id'] },
+      });
 
-    // Get parent categories info
-    result['parentCategories'] = await this.categoryService.parentCategories(
-      result['currentCategory'],
-    );
+      // Get parent categories info
+      result['parentCategories'] = await this.categoryService.parentCategories(
+        result['currentCategory'],
+      );
 
-    result['parentCategories'] = _.sortBy(result['parentCategories'], [
-      (o) => o.level,
-    ]);
+      result['parentCategories'] = _.sortBy(result['parentCategories'], [
+        (o) => o.level,
+      ]);
+    }
 
     // Get relative products
     result['relative_prouducts'] = await this.getRelativeProductsByCategory(
