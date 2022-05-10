@@ -117,6 +117,7 @@ export enum PrimaryKeys {
   ddv_reviews = 'review_id',
   ddv_review_comment_items = 'item_id',
   ddv_restricted_comments = 'id',
+  ddv_review_comment_user_ips = 'id',
 
   //============= Trade in ==============
   ddv_tradein_programs = 'tradein_id',

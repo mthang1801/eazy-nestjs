@@ -11,6 +11,7 @@ import { join } from 'path';
 import * as hbs from 'hbs';
 import { ConfigService } from '@nestjs/config';
 import { ValidationConfig } from './config/validation.config';
+import * as requestIp from 'request-ip';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -28,6 +29,7 @@ async function bootstrap() {
   hbs.registerPartials(join(__dirname, '..', '/views/partials'));
 
   app.enableShutdownHooks();
+  app.use(requestIp.mw());
 
   const PORT = configService.get<number>('port');
 

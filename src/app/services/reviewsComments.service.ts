@@ -31,6 +31,8 @@ import { SortBy } from '../../database/enums/sortBy.enum';
 import { CreateCommentReviewCMSDto } from '../dto/reviewComment/create-commentReview.cms.dto';
 import { CreateCommentCMSDto } from '../dto/reviewComment/create-comment.cms.dto';
 import { DatabaseService } from '../../database/database.service';
+import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
+import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
 
 @Injectable()
 export class ReviewsCommentService {
@@ -42,6 +44,7 @@ export class ReviewsCommentService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
     private db: DatabaseService,
+    private reviewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
   ) {}
   async createRestrictedCommentsKeywords(data) {
     const currentResitrictedComments = await this.restrictedCommentRepo.find();
@@ -299,7 +302,24 @@ export class ReviewsCommentService {
     return responseReviews;
   }
 
-  async createReviewComment(data, product_id: number, type) {
+  async createReviewComment(data, product_id: number, type, userIp) {
+    const checkUserIp = await this.reviewCommentUserIPRepo.findOne({
+      user_ip: userIp,
+    });
+    if (checkUserIp && checkUserIp['last_comment']) {
+      let now = Date.now();
+      let lastComment = new Date(checkUserIp['last_comment']).getTime();
+      let restrictedTime = 3 * 60 * 1000;
+      if (now < lastComment + restrictedTime) {
+        throw new HttpException(
+          `Vui lòng chờ trong ${
+            (lastComment + restrictedTime - now) / 1000
+          }s để bình luận tiếp theo`,
+          400,
+        );
+      }
+    }
+
     let email = data?.email || null;
     let phone = data?.phone;
     let fullname = data.fullname;
@@ -407,6 +427,18 @@ export class ReviewsCommentService {
           });
         }
       }
+    }
+
+    if (checkUserIp) {
+      await this.reviewCommentUserIPRepo.update(
+        { user_ip: userIp },
+        { last_comment: formatStandardTimeStamp() },
+      );
+    } else {
+      await this.reviewCommentUserIPRepo.create({
+        user_ip: userIp,
+        last_comment: formatStandardTimeStamp(),
+      });
     }
 
     if (type !== 1 || !data.point) return;

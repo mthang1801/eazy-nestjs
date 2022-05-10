@@ -5,6 +5,7 @@ import { ReviewsCommentService } from '../services/reviewsComments.service';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { ProductsRepository } from '../repositories/products.repository';
+import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
 
 @Module({
   controllers: [ReviewsCommentsController],
@@ -14,6 +15,7 @@ import { ProductsRepository } from '../repositories/products.repository';
     ReviewRepository,
     ReviewCommentItemRepository,
     ProductsRepository,
+    ReviewCommentUserIPRepository,
   ],
   exports: [
     ReviewsCommentService,
@@ -21,6 +23,7 @@ import { ProductsRepository } from '../repositories/products.repository';
     ReviewRepository,
     ReviewCommentItemRepository,
     ProductsRepository,
+    ReviewCommentUserIPRepository,
   ],
   imports: [],
 })

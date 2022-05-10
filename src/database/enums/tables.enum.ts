@@ -121,6 +121,7 @@ export enum Table {
   REVIEW_COMMENT_ITEMS = 'ddv_review_comment_items',
   REVIEWS = 'ddv_reviews',
   RESTRICTED_COMMENTS = 'ddv_restricted_comments',
+  REVIEW_COMMENT_USER_IP = 'ddv_review_comment_user_ips',
 
   //============= Trade in ================
   TRADEIN_PROGRAM = 'ddv_tradein_programs',

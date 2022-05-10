@@ -206,6 +206,8 @@ import {
   productGroupJoiner,
   productVariationGroupJoiner,
 } from '../../utils/joinTable';
+import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
+import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
 
 @Injectable()
 export class ProductService {
@@ -248,6 +250,7 @@ export class ProductService {
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private reviewCommentItemsRepo: ReviewCommentItemRepository<ReviewCommentItemsEntity>,
     private reviewCommentService: ReviewsCommentService,
+    private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -4197,40 +4200,71 @@ export class ProductService {
     return this.testGetProductDetails(product_id);
   }
 
-  async testSql() {
-    const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
-    await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: [
-        {
-          $or: [
-            { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
-            { [`${Table.PRODUCT_PRICES}.barcode`]: 'JKJLS782136HK' },
-            { [`${Table.PRODUCTS}.amount`]: MoreThan(0) },
-            {
-              [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
-                1, 2, 3, 4, 5, 6, 7,
-              ]),
-            },
-          ],
-        },
-        {
-          $and: [
-            {
-              $or: {
-                [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-                [`${Table.PRODUCTS}.amount`]: MoreThan(0),
-              },
-              [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
-                1, 2, 3, 4, 5, 6, 7,
-              ]),
-            },
-            { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
-          ],
-        },
-      ],
+  async testSql(userIp) {
+    const checkUserIp = await this.revisewCommentUserIPRepo.findOne({
+      user_ip: userIp,
     });
+    console.log(checkUserIp);
+    if (checkUserIp && checkUserIp['last_comment']) {
+      let now = Date.now();
+      let lastComment = new Date(checkUserIp['last_comment']).getTime();
+      let restrictedTime = 3 * 60 * 1000;
+
+      console.log(now, lastComment + restrictedTime);
+      if (now < lastComment + restrictedTime) {
+        throw new HttpException(
+          `Vui lòng chờ trong ${Math.ceil(
+            (lastComment + restrictedTime - now) / 1000,
+          )}s để bình luận tiếp theo`,
+          400,
+        );
+      }
+    }
+
+    if (checkUserIp) {
+      await this.revisewCommentUserIPRepo.update(
+        { user_ip: userIp },
+        { last_comment: formatStandardTimeStamp() },
+      );
+    } else {
+      await this.revisewCommentUserIPRepo.create({
+        user_ip: userIp,
+        last_comment: formatStandardTimeStamp(),
+      });
+    }
+    // const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
+    // await this.productRepo.findOne({
+    //   select: '*',
+    //   join: productLeftJoiner,
+    //   where: [
+    //     {
+    //       $or: [
+    //         { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
+    //         { [`${Table.PRODUCT_PRICES}.barcode`]: 'JKJLS782136HK' },
+    //         { [`${Table.PRODUCTS}.amount`]: MoreThan(0) },
+    //         {
+    //           [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
+    //             1, 2, 3, 4, 5, 6, 7,
+    //           ]),
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       $and: [
+    //         {
+    //           $or: {
+    //             [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+    //             [`${Table.PRODUCTS}.amount`]: MoreThan(0),
+    //           },
+    //           [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
+    //             1, 2, 3, 4, 5, 6, 7,
+    //           ]),
+    //         },
+    //         { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
+    //       ],
+    //     },
+    //   ],
+    // });
   }
 
   async autoFillPriceIntoConfigurableProducts() {
@@ -4286,11 +4320,12 @@ export class ProductService {
     }
   }
 
-  async createReviewComment(data, product_id: number, type) {
+  async createReviewComment(data, product_id: number, type, userIp) {
     return this.reviewCommentService.createReviewComment(
       data,
       product_id,
       type,
+      userIp,
     );
   }
 

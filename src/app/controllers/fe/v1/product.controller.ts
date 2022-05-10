@@ -56,8 +56,9 @@ export class ProductsController extends BaseController {
     @Param('product_id') product_id: number,
     @Res() res: Response,
     @Body() data: CreateReviewDto,
+    @Req() req,
   ): Promise<IResponse> {
-    await this.service.createReviewComment(data, product_id, 1);
+    await this.service.createReviewComment(data, product_id, 1, req.clientIp);
     return this.responseSuccess(res);
   }
 
@@ -66,8 +67,9 @@ export class ProductsController extends BaseController {
     @Param('product_id') product_id: number,
     @Res() res: Response,
     @Body() data: CreateCommentDto,
+    @Req() req,
   ): Promise<IResponse> {
-    await this.service.createReviewComment(data, product_id, 2);
+    await this.service.createReviewComment(data, product_id, 2, req.clientIp);
     return this.responseSuccess(res);
   }
 
