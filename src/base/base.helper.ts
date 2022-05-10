@@ -11,6 +11,7 @@ export const datetimeFieldsList = [
   'start_at',
   'end_at',
   'birthday',
+  'imported_at',
 ];
 
 const quotation = `"`;

@@ -1,6 +1,6 @@
 export class TradeinOldReceiptEntity {
   old_receipt_id: number = 0;
-  old_receipt_appcore_id: number = 0;
+  old_receipt_appcore_id: string = '';
   code: string = '';
   store_id: number = null;
   user_id: number = null;

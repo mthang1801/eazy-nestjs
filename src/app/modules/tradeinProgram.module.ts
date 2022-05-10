@@ -11,6 +11,8 @@ import { ValuationBillRepository } from '../repositories/valuationBill.repositor
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 import { UsersModule } from './users.module';
 import { TradeinProgramControllerItg } from '../controllers/integration/v1/tradeinProgram.controller';
+import { TradeinOldReceiptRepository } from '../repositories/tradeinOldReceipt.repository';
+import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldReceiptDetail.repository';
 
 @Module({
   imports: [ProductsModule, UsersModule],
@@ -22,6 +24,8 @@ import { TradeinProgramControllerItg } from '../controllers/integration/v1/trade
     TradeinProgramCriteriaDetailRepository,
     ValuationBillRepository,
     ValuationBillCriteriaDetailRepository,
+    TradeinOldReceiptRepository,
+    TradeinOldReceiptDetailRepository,
   ],
   exports: [
     TradeinProgramService,
@@ -31,6 +35,8 @@ import { TradeinProgramControllerItg } from '../controllers/integration/v1/trade
     TradeinProgramCriteriaDetailRepository,
     ValuationBillRepository,
     ValuationBillCriteriaDetailRepository,
+    TradeinOldReceiptRepository,
+    TradeinOldReceiptDetailRepository,
   ],
   controllers: [
     TradeinProgramControllerBE,

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, Put, Param } from '@nestjs/common';
+import { Body, Controller, Post, Res, Put, Param, Get } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { BaseController } from '../../../../base/base.controllers';
 import { TradeinProgramService } from '../../../services/tradeinProgram.service';
@@ -25,7 +25,25 @@ export class TradeinProgramControllerItg extends BaseController {
     @Res() res: Response,
     @Body() data,
   ): Promise<IResponse> {
-    await this.service.itgCreateOldReceipt(data);
-    return this.responseSuccess(res);
+    const result = await this.service.itgCreateOldReceipt(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Put('/old-receipt')
+  async updateOldReceipt(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    const result = await this.service.itgUpdateOldReceipt(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/old-receipt/:old_receipt_id')
+  async getOldReceiptById(
+    @Res() res: Response,
+    @Param('old_receipt_id') old_receipt_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getOldReceiptById(old_receipt_id);
+    return this.responseSuccess(res, result);
   }
 }

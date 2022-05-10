@@ -879,3 +879,66 @@ export const convertTradeinProgramFromAppcore = (coreData) => {
 
   return cmsData;
 };
+
+export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
+  let cmsData = {};
+  cmsData['old_receipt_appcore_id'] = coreData['id'];
+  cmsData['code'] = coreData['code'];
+  cmsData['store_id'] = coreData['storeId'];
+  cmsData['user_appcore_id'] = coreData['providerId'];
+  cmsData['user_name'] = coreData['providerName'];
+  cmsData['description'] = coreData['description'];
+  cmsData['status'] = coreData['status'];
+  cmsData['amount'] = coreData['totalAmount'];
+  cmsData['description'] = coreData['description'];
+  cmsData['created_by'] = coreData['createdBy'];
+  if (coreData['createdAt']) {
+    cmsData['created_at'] = formatStandardTimeStamp(coreData['createdAt']);
+  }
+  cmsData['cash_amount'] = coreData['cashAmount'];
+  cmsData['cash_account_code'] = coreData['cashAccountCode'];
+  cmsData['cash_account_name'] = coreData['cashAccName'];
+  cmsData['transfer_account_code'] = coreData['transferAccountCode'];
+  cmsData['transfer_account_name'] = coreData['transferAccName'];
+  if (coreData['payDate']) {
+    cmsData['paid_at'] = formatStandardTimeStamp(coreData['payDate']);
+  }
+
+  if (coreData['importDate']) {
+    cmsData['imported_at'] = formatStandardTimeStamp(coreData['importDate']);
+  }
+
+  cmsData['ref_id'] = coreData['idNhanh'];
+  cmsData['type'] = coreData['type'];
+  cmsData['phone'] = coreData['customerPhone'];
+  cmsData['address'] = coreData['address'];
+  cmsData['vat_amount'] = coreData['vatAmount'];
+  cmsData['vat_type'] = coreData['vatType'];
+  cmsData['vat_code'] = coreData['vatCode'];
+  cmsData['vat_at'] = coreData['vatDate'];
+  cmsData['discount_type'] = coreData['discountType'];
+  cmsData['is_auto'] = coreData['isAuto'];
+  cmsData['related_store_code'] = coreData['relatedStockCode'];
+  cmsData['order_code'] = coreData['purchaseOrderCode'];
+
+  cmsData['detail_items'] = [];
+  if (coreData['listDetail'] && coreData['listDetail'].length) {
+    for (let detailItem of coreData['listDetail']) {
+      let detailItemData = {};
+      detailItemData['detail_appcore_id'] = detailItem['id'];
+      detailItemData['product_appcore_id'] = detailItem['productId'];
+      detailItemData['product_imei'] = detailItem['productImei'];
+      detailItemData['product'] = detailItem['productName'];
+      detailItemData['price'] = detailItem['unitPrice'];
+      detailItemData['quantity'] = detailItem['quantity'];
+      detailItemData['total'] = detailItem['totalAmount'];
+      detailItemData['product_type'] = detailItem['productType'];
+      detailItemData['stock_quantity'] = detailItem['totalQuantityInStock'];
+      detailItemData['discount'] = detailItem['discount'];
+      detailItemData['product_code'] = detailItem['productCode'];
+      detailItemData['barcode'] = detailItem['barCode'];
+      cmsData['detail_items'].push(detailItemData);
+    }
+  }
+  return cmsData;
+};

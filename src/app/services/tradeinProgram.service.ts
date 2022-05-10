@@ -40,9 +40,18 @@ import { userJoiner } from '../../utils/joinTable';
 import { userSelector } from '../../utils/tableSelector';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
-import { convertTradeinProgramFromAppcore } from '../../utils/integrateFunctions';
+import {
+  convertTradeinProgramFromAppcore,
+  convertTradeinProgramOldReceiptFromAppcore,
+} from '../../utils/integrateFunctions';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
+import { TradeinOldReceiptRepository } from '../repositories/tradeinOldReceipt.repository';
+import { TradeinOldReceiptEntity } from '../entities/tradeinOldReceipt.entity';
+import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldReceiptDetail.repository';
+import { TradeinOldReceiptDetailEntity } from '../entities/tradeinOldReceiptDetail.entity';
+import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -56,6 +65,9 @@ export class TradeinProgramService {
     private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
     private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
     private userRepo: UserRepository<UserEntity>,
+    private tradeinOldReceiptRepo: TradeinOldReceiptRepository<TradeinOldReceiptEntity>,
+    private tradeinOldReceiptDetailRepo: TradeinOldReceiptDetailRepository<TradeinOldReceiptDetailEntity>,
+    private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -747,5 +759,159 @@ export class TradeinProgramService {
     return this.get(updatedTradeinProgram.tradein_id);
   }
 
-  async itgCreateOldReceipt(data) {}
+  async itgCreateOldReceipt(data) {
+    const cvtData = convertTradeinProgramOldReceiptFromAppcore(data);
+    const checkExist = await this.tradeinOldReceiptRepo.findOne({
+      old_receipt_appcore_id: cvtData['old_receipt_appcore_id'],
+    });
+    if (checkExist) {
+      throw new HttpException('Phiếu thu cũ đã tồn tại.', 409);
+    }
+    const oldReceiptData = {
+      ...new TradeinOldReceiptEntity(),
+      ...this.tradeinOldReceiptRepo.setData(cvtData),
+    };
+    const newOldReceipt = await this.tradeinOldReceiptRepo.create(
+      oldReceiptData,
+    );
+    if (cvtData['detail_items'] && cvtData['detail_items'].length) {
+      for (let detailItem of cvtData['detail_items']) {
+        let product = await this.productRepo.findOne({
+          product_appcore_id: detailItem['product_appcore_id'],
+        });
+        if (!product) {
+          let newProductData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(detailItem),
+          };
+          product = await this.productRepo.create(newProductData);
+
+          let newProductDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(detailItem),
+            product_id: product['product_id'],
+          };
+          await this.productDescRepo.create(newProductDescData, false);
+
+          let newProductPriceData = {
+            ...new ProductPricesEntity(),
+            ...this.productPriceRepo.setData(detailItem),
+            product_id: product['product_id'],
+          };
+          await this.productPriceRepo.create(newProductPriceData, false);
+
+          let newProductCategoryData = {
+            ...new ProductsCategoriesEntity(),
+            ...this.productCategoryRepo.setData(detailItem),
+            category_id: 1,
+            product_id: product['product_id'],
+          };
+          await this.productCategoryRepo.create(newProductCategoryData, false);
+        }
+        const oldReceiptDetailData = {
+          ...new TradeinOldReceiptDetailEntity(),
+          ...this.tradeinOldReceiptDetailRepo.setData(detailItem),
+          old_receipt_id: newOldReceipt.old_receipt_id,
+          product_id: product['product_id'],
+        };
+        await this.tradeinOldReceiptDetailRepo.create(
+          oldReceiptDetailData,
+          false,
+        );
+      }
+    }
+    return this.getOldReceiptById(newOldReceipt['old_receipt_id']);
+  }
+
+  async itgUpdateOldReceipt(data) {
+    const cvtData = convertTradeinProgramOldReceiptFromAppcore(data);
+    const currentOldReipt = await this.tradeinOldReceiptRepo.findOne({
+      old_receipt_appcore_id: cvtData['old_receipt_appcore_id'],
+    });
+    if (!currentOldReipt) {
+      return this.itgCreateOldReceipt(data);
+    }
+    const oldReceiptData = this.tradeinOldReceiptRepo.setData(cvtData);
+    const updatedOldReceipt = await this.tradeinOldReceiptRepo.update(
+      { old_receipt_id: currentOldReipt['old_receipt_id'] },
+      oldReceiptData,
+      false,
+    );
+    if (cvtData['detail_items'] && cvtData['detail_items'].length) {
+      await this.tradeinOldReceiptDetailRepo.delete({
+        old_receipt_id: currentOldReipt['old_receipt_id'],
+      });
+      for (let detailItem of cvtData['detail_items']) {
+        let product = await this.productRepo.findOne({
+          product_appcore_id: detailItem['product_appcore_id'],
+        });
+        if (!product) {
+          let newProductData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(detailItem),
+          };
+          product = await this.productRepo.create(newProductData);
+
+          let newProductDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(detailItem),
+            product_id: product['product_id'],
+          };
+          await this.productDescRepo.create(newProductDescData, false);
+
+          let newProductPriceData = {
+            ...new ProductPricesEntity(),
+            ...this.productPriceRepo.setData(detailItem),
+            product_id: product['product_id'],
+          };
+          await this.productPriceRepo.create(newProductPriceData, false);
+
+          let newProductCategoryData = {
+            ...new ProductsCategoriesEntity(),
+            ...this.productCategoryRepo.setData(detailItem),
+            category_id: 1,
+            product_id: product['product_id'],
+          };
+          await this.productCategoryRepo.create(newProductCategoryData, false);
+        }
+        const oldReceiptDetailData = {
+          ...new TradeinOldReceiptDetailEntity(),
+          ...this.tradeinOldReceiptDetailRepo.setData(detailItem),
+          old_receipt_id: currentOldReipt.old_receipt_id,
+          product_id: product['product_id'],
+        };
+        await this.tradeinOldReceiptDetailRepo.create(
+          oldReceiptDetailData,
+          false,
+        );
+      }
+    }
+    return this.getOldReceiptById(currentOldReipt['old_receipt_id']);
+  }
+
+  async getOldReceiptById(old_receipt_id) {
+    let oldReceipt = await this.tradeinOldReceiptRepo.findOne({
+      old_receipt_id,
+    });
+    if (!oldReceipt) {
+      throw new HttpException('Không tìm thấy phiếu thu cũ', 404);
+    }
+
+    oldReceipt['detail_items'] = [];
+    let oldReceiptDetailItems = await this.tradeinOldReceiptDetailRepo.find({
+      old_receipt_id,
+    });
+    if (oldReceiptDetailItems.length) {
+      for (let oldReceiptDetailItem of oldReceiptDetailItems) {
+        const _oldReceiptDetailItem =
+          await this.tradeinOldReceiptDetailRepo.findOne({
+            detail_id: oldReceiptDetailItem['detail_id'],
+          });
+        if (_oldReceiptDetailItem) {
+          oldReceipt['detail_items'].push(_oldReceiptDetailItem);
+        }
+      }
+    }
+    return oldReceipt;
+  }
 }
