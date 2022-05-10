@@ -31,9 +31,9 @@ import { BannerPageDescriptionEntity } from '../entities/bannerPageDescription.e
 import * as moment from 'moment';
 import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
-import { LessThan } from '../../database/operators/operators';
+import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
+import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 import {
-  MoreThan,
   Between,
   MoreThanOrEqual,
   LessThanOrEqual,
@@ -305,5 +305,20 @@ export class bannerService {
     }
 
     return result;
+  }
+
+  async getAllBannerTarget() {
+    return this.bannerTargetDescRepo.find({
+      select: ['*'],
+    });
+  }
+
+  async BannerTargetDescriptioncreate(data: CreateBannerTargetDescriptionDto) {
+    const bannerTargetData = {
+      ...new BannerTargetDescriptionEntity(),
+      ...this.bannerTargetDescRepo.setData(data),
+    };
+
+    await this.bannerTargetDescRepo.create(bannerTargetData);
   }
 }

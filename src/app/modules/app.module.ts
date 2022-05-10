@@ -49,8 +49,7 @@ import { DashboardModule } from './dashboard.module';
 import { ShippingFeeModule } from './shippingFee.module';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { TradeinProgramModule } from './tradeinProgram.module';
-import { HomepageConfigModule } from './homepageConfig.module';
-import { LogsModule } from './logs.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -104,8 +103,6 @@ import { LogsModule } from './logs.module';
     WardModule,
     ReviewsCommentsModule,
     TradeinProgramModule,
-    HomepageConfigModule,
-    LogsModule,
   ],
   providers: [
     {

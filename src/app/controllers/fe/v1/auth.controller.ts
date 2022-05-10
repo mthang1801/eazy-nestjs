@@ -58,7 +58,7 @@ export class AuthController extends BaseController {
   @UseGuards(AuthGuard)
   async changePassword(@Body() data: ChangePasswordDto, @Res() res: Response, @Req() req) {
     const result = await this.service.changePassword(data, req.user);
-    return this.responseSuccess(res, result);
+    return this.responseSuccess(res, result, 'Mật khẩu được thay đổi thành công');
   }
 
 
