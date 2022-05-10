@@ -33,6 +33,7 @@ import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
+import { MoreThan } from '../../database/operators/operators';
 import {
   Between,
   MoreThanOrEqual,
@@ -62,6 +63,8 @@ export class bannerService {
       page_target_id,
       created_at_start,
       created_at_end,
+      start_at,
+      end_at,
     } = params;
     page = +page || 1;
     limit = +limit || 20;
@@ -82,6 +85,13 @@ export class bannerService {
     } else if (created_at_end) {
       filterConditions[`${Table.BANNER}.created_at`] =
         LessThanOrEqual(created_at_start);
+    }
+
+    if (start_at) {
+      filterConditions[`${Table.BANNER}.start_at`] = MoreThan(start_at);
+    }
+    if (end_at) {
+      filterConditions[`${Table.BANNER}.end_at`] = LessThanOrEqual(end_at);
     }
 
     if (page_location_id) {

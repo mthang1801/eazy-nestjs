@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import {
   IsString,
   IsEmail,
@@ -7,8 +8,8 @@ import {
 } from 'class-validator';
 
 export class AuthCredentialsDto {
-  @IsNotEmpty()
-  firstname: string;
+  @IsOptional()
+  firstname: string = '';
 
   @IsNotEmpty()
   lastname: string;

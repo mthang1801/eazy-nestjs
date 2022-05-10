@@ -1,11 +1,11 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsIn } from 'class-validator';
 
-export class CreateBannerTargetDescriptionDto{
-    @IsString()
-    @IsNotEmpty()
-    target_description: string;
+export class CreateBannerTargetDescriptionDto {
+  @IsString()
+  @IsNotEmpty()
+  target_description: string;
 
-    @IsString()
-    @IsNotEmpty()
-    url: string;
+  @IsString()
+  @IsNotEmpty()
+  url: string;
 }

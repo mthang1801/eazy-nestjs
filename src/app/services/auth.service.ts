@@ -564,11 +564,17 @@ export class AuthService {
 
   async changePassword(data, user) {
     console.log(data);
-    const tempUser = await this.userRepository.findOne({user_id: user.user_id});
+    const tempUser = await this.userRepository.findOne({
+      user_id: user.user_id,
+    });
     console.log(tempUser.salt);
     console.log(tempUser.password);
-    console.log("----------------------------------------ABCDEF--------------------------------------------");
-    if (desaltHashPassword(data.oldPassword, tempUser.salt) !== tempUser.password) {
+    console.log(
+      '----------------------------------------ABCDEF--------------------------------------------',
+    );
+    if (
+      desaltHashPassword(data.oldPassword, tempUser.salt) !== tempUser.password
+    ) {
       throw new HttpException(
         tempUser.phone
           ? 'Số điện thoại hoặc mật khẩu không đúng.'
@@ -577,16 +583,25 @@ export class AuthService {
       );
     }
 
-    if(desaltHashPassword(data.newPassword, tempUser.salt) === tempUser.password){
-      throw new HttpException('Mật khẩu mới không được trùng với mật khẩu hiện tại', HttpStatus.BAD_REQUEST)
+    if (
+      desaltHashPassword(data.newPassword, tempUser.salt) === tempUser.password
+    ) {
+      throw new HttpException(
+        'Mật khẩu mới không được trùng với mật khẩu hiện tại',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const { passwordHash, salt } = saltHashPassword(data.newPassword);
 
-    const updatedUser = await this.userRepository.update({user_id: tempUser.user_id}, {
-      password: passwordHash,
-      salt,
-      updated_at: formatStandardTimeStamp(),
-    }, true);
+    const updatedUser = await this.userRepository.update(
+      { user_id: tempUser.user_id },
+      {
+        password: passwordHash,
+        salt,
+        updated_at: formatStandardTimeStamp(),
+      },
+      true,
+    );
   }
 }
