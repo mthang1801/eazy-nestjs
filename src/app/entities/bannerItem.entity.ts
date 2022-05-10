@@ -4,8 +4,8 @@ export class BannerItemEntity {
   banner_item_id: number = 0;
   banner_id: number = 0;
   status: string = 'A';
-  title: string;
-  image_url: string;
+  title: string = '';
+  image_url: string = '';
   position: number = null;
   link_target_url: string = null;
   start_at: string = null;

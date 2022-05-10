@@ -188,13 +188,14 @@ export class bannerService {
 
     if (banner) {
       const bannerItems = await this.bannerItemRepo.find({
-        banner_id: id,
+        select: '*',
         orderBy: [
           {
             field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
             sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.BANNER_ITEM}.position ASC`,
           },
         ],
+        where: { [`${Table.BANNER_ITEM}.banner_id`]: id },
       });
       banner['banner_items'] = bannerItems;
     }
