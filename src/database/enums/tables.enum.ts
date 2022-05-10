@@ -135,4 +135,6 @@ export enum Table {
 
   //============ Logs ===============
   LOG = 'ddv_logs',
+  LOG_MODULE = 'ddv_log_modules',
+  LOG_SOURCE = 'ddv_log_sources',
 }

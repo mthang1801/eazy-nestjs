@@ -69,6 +69,7 @@ import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.r
 import { AccessoryCategoryEntity } from '../entities/accessoryCategory.entity';
 import { accessoryCategorySearchFilter } from '../../utils/tableConditioner';
 import { IMPORT_CATEGORIES_APPCORE } from '../../constants/api.appcore';
+import { UpDateCategoriesListDto } from '../dto/category/update-categoriesList.dto';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -1088,6 +1089,14 @@ export class CategoryService {
     return getCategoryListId
       ? { currentCategory, categoriesIdList }
       : currentCategory;
+  }
+
+  async updateList(data: UpDateCategoriesListDto) {
+    if (data.categories && data.categories.length) {
+      for (let { category_id, position } of data.categories) {
+        await this.categoryRepository.update({ category_id }, { position });
+      }
+    }
   }
 
   async delete(id: number): Promise<boolean> {

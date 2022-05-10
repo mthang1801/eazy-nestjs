@@ -870,3 +870,16 @@ export const shippingFeeLocationsJoiner = {
     },
   },
 };
+
+export const logJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.LOG_MODULE]: {
+      fieldJoin: `${Table.LOG_MODULE}.module_id`,
+      rootJoin: `${Table.LOG}.module_id`,
+    },
+    [Table.LOG_SOURCE]: {
+      fieldJoin: `${Table.LOG_SOURCE}.source_id`,
+      rootJoin: `${Table.LOG}.source_id`,
+    },
+  },
+};

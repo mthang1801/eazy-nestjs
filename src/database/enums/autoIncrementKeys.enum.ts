@@ -131,4 +131,6 @@ export enum PrimaryKeys {
 
   //============ LOG =============
   ddv_logs = 'log_id',
+  ddv_log_modules = 'module_id',
+  ddv_log_sources = 'source_id',
 }

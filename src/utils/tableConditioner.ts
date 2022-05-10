@@ -431,3 +431,14 @@ export const accessoryCategorySearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const logSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.LOG}.ref_id`]: Like(search) }];
+    arraySearch = [{ [`${Table.LOG}.error_detail`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

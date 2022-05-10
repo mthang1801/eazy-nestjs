@@ -24,6 +24,7 @@ import { ProductService } from 'src/app/services/products.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { UpdateProductsInCategory } from 'src/app/dto/product/update-productInCategory';
+import { UpDateCategoriesListDto } from '../../../dto/category/update-categoriesList.dto';
 
 /**
  * Controller for Category
@@ -115,6 +116,15 @@ export class CategoryController extends BaseController {
   ): Promise<IResponse> {
     const categoryRes = await this.service.get(id, params);
     return this.responseSuccess(res, categoryRes);
+  }
+
+  @Put()
+  async updateList(
+    @Body() data: UpDateCategoriesListDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.updateList(data);
+    return this.responseSuccess(res);
   }
 
   /**
