@@ -71,4 +71,7 @@ class BannerItem {
 
   @IsOptional()
   image_url: string;
+
+  @IsOptional()
+  status: string;
 }

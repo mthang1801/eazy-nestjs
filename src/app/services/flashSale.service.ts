@@ -26,6 +26,8 @@ import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
 import { formatStandardTimeStamp } from '../../utils/helper';
+import { ReviewRepository } from '../repositories/review.repository';
+import { ReviewEntity } from '../entities/review.entity';
 
 @Injectable()
 export class FlashSalesService {
@@ -35,6 +37,7 @@ export class FlashSalesService {
     private flashSaleProductRepo: FlashSaleProductRepository<FlashSaleProductEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
+    private reviewRepo: ReviewRepository<ReviewEntity>,
   ) {}
 
   async CMScreate(data: CreateFlashSaleDto, user) {
@@ -144,6 +147,11 @@ export class FlashSalesService {
               },
             );
             flashSaleProductItem['stickers'] = flashSaleProductStickers;
+
+            const flashSaleReview = await this.reviewRepo.findOne({
+              product_id: flashSaleProductItem['product_id'],
+            });
+            flashSaleProductItem['ratings'] = flashSaleReview;
           }
         }
         flashSaleDetailItem['flash_sale_products'] = flashSaleProducts;
