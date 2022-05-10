@@ -211,6 +211,14 @@ export class bannerService {
       ...new BannerEntity(),
       ...this.bannerRepo.setData(data),
     };
+
+    const checkDuplicatePosition = await this.bannerRepo.findOne({
+      page_target_id: data.page_target_id,
+      page_location_id: data.page_location_id,
+    });
+    if (checkDuplicatePosition) {
+      throw new HttpException('Vị trí bị trùng trên trang', 400);
+    }
     const newBanner = await this.bannerRepo.create(bannerData);
 
     if (data.banner_items) {
