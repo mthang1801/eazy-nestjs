@@ -653,11 +653,11 @@ export const orderJoiner = {
 export const bannerJoiner = {
   [JoinTable.leftJoin]: {
     [Table.BANNER_LOCATION_DESCRIPTION]: {
-      fieldJoin: `${Table.BANNER_LOCATION_DESCRIPTION}.page_location_id`,
+      fieldJoin: `${Table.BANNER_LOCATION_DESCRIPTION}.location_id`,
       rootJoin: `${Table.BANNER}.page_location_id`,
     },
     [Table.BANNER_TARGET_DESCRIPTION]: {
-      fieldJoin: `${Table.BANNER_TARGET_DESCRIPTION}.page_target_id`,
+      fieldJoin: `${Table.BANNER_TARGET_DESCRIPTION}.target_id`,
       rootJoin: `${Table.BANNER}.page_target_id`,
     },
   },
