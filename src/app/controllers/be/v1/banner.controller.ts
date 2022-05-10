@@ -53,9 +53,16 @@ export class bannerController extends BaseController {
   }
 
   @Post('/page-target')
-  async createBannerTargetDescription(@Res() res: Response, @Body() data: CreateBannerTargetDescriptionDto,){
-    await this.service.BannerTargetDescriptioncreate(data);
-    return this.responseSuccess(res, null, 'Tạo thành công banner target mới.');
+  async createBannerTargetDescription(
+    @Res() res: Response,
+    @Body() data: CreateBannerTargetDescriptionDto,
+  ) {
+    const result = await this.service.BannerTargetDescriptioncreate(data);
+    return this.responseSuccess(
+      res,
+      result,
+      'Tạo thành công banner target mới.',
+    );
   }
 
   @Post()
@@ -99,6 +106,4 @@ export class bannerController extends BaseController {
     await this.service.delete(banner_id);
     return this.responseSuccess(res, '', 'Xoá thành công.');
   }
-
-
 }

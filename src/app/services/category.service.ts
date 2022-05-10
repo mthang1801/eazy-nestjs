@@ -695,8 +695,8 @@ export class CategoryService {
       where: { [`${Table.CATEGORIES}.level`]: 0 },
       orderBy: [
         {
-          field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
-          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position ASC`,
+          field: `CASE WHEN ${Table.CATEGORIES}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.CATEGORIES}.position ASC`,
         },
         { field: 'updated_at', sortBy: SortBy.DESC },
       ],

@@ -55,7 +55,7 @@ export class CreateBannerDto {
 
 class BannerItem {
   @IsNotEmpty()
-  title: number;
+  title: string;
 
   @IsOptional()
   position: number;

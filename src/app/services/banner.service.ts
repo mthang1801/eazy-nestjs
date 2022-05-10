@@ -320,5 +320,6 @@ export class bannerService {
     };
 
     await this.bannerTargetDescRepo.create(bannerTargetData);
+    return this.getAllBannerTarget();
   }
 }
