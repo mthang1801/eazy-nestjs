@@ -31,6 +31,8 @@ import { BannerPageDescriptionEntity } from '../entities/bannerPageDescription.e
 import * as moment from 'moment';
 import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
+import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
+import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 @Injectable()
 export class bannerService {
   constructor(
@@ -304,5 +306,22 @@ export class bannerService {
     }
 
     return result;
+  }
+
+  async getAllBannerTarget() {
+    return this.bannerTargetDescRepo.find({
+      select: ['*'],
+    });
+  }
+
+  async BannerTargetDescriptioncreate(data: CreateBannerTargetDescriptionDto){
+    const bannerTargetData = {
+        ...new BannerTargetDescriptionEntity(),
+        ...this.bannerTargetDescRepo.setData(data),
+    };
+
+    await this.bannerTargetDescRepo.create(
+        bannerTargetData,
+    );
   }
 }

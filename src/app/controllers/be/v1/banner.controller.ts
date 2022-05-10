@@ -26,6 +26,9 @@ import * as multer from 'multer';
 import { UpdateBannerDTO } from '../../../dto/banner/update-banner.dto';
 import { Query } from '@nestjs/common';
 import { Response } from 'express';
+import { CreateBannerTargetDescriptionDto } from '../../../dto/banner/create-bannerTargetDescription.dto';
+import { createPool } from 'mysql2/promise';
+import { UpdateBannerTargetDescriptionDto } from '../../../dto/banner/update-bannerTargetDescription.dto';
 @Controller('/be/v1/banners')
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
@@ -50,6 +53,12 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Post('/page-target')
+  async createBannerTargetDescription(@Res() res: Response, @Body() data: CreateBannerTargetDescriptionDto,){
+    await this.service.BannerTargetDescriptioncreate(data);
+    return this.responseSuccess(res, null, 'Tạo thành công banner target mới.');
+  }
+
   @Post()
   async create(
     @Res() res: Response,
@@ -57,6 +66,12 @@ export class bannerController extends BaseController {
   ): Promise<IResponse> {
     const banner = await this.service.create(body);
     return this.responseSuccess(res, banner);
+  }
+
+  @Get('/page-target')
+  async getAllBannerTarget(@Res() res: Response) {
+    const result = await this.service.getAllBannerTarget();
+    return this.responseSuccess(res, result);
   }
 
   @Get('/:id')
@@ -85,4 +100,6 @@ export class bannerController extends BaseController {
     await this.service.delete(banner_id);
     return this.responseSuccess(res, '', 'Xoá thành công.');
   }
+
+
 }
