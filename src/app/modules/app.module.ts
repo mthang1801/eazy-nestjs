@@ -50,6 +50,7 @@ import { ShippingFeeModule } from './shippingFee.module';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { TradeinProgramModule } from './tradeinProgram.module';
 import { HomepageConfigModule } from './homepageConfig.module';
+import { LogsModule } from './logs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -104,6 +105,7 @@ import { HomepageConfigModule } from './homepageConfig.module';
     ReviewsCommentsModule,
     TradeinProgramModule,
     HomepageConfigModule,
+    LogsModule,
   ],
   providers: [
     {

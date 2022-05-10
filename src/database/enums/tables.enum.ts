@@ -132,4 +132,7 @@ export enum Table {
   //============ Homepage COnfig ===============
   HOMEPAGE_MODULE = 'ddv_homepage_modules',
   HOMEPAGE_MODULE_ITEM = 'ddv_homepage_modules_items',
+
+  //============ Logs ===============
+  LOG = 'ddv_logs',
 }

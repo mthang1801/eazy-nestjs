@@ -128,4 +128,7 @@ export enum PrimaryKeys {
   //============ Homepage COnfig ===============
   ddv_homepage_modules = 'module_id',
   ddv_homepage_modules_items = 'item_id',
+
+  //============ LOG =============
+  ddv_logs = 'log_id',
 }

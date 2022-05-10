@@ -3386,6 +3386,7 @@ export class ProductService {
     const productsInStocks = await this.productStoreRepo.find({
       product_id: product.product_id,
     });
+
     if (productsInStocks.length) {
       let currentProduct = await this.productRepo.findOne({
         product_id: product.product_id,
