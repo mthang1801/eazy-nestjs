@@ -49,6 +49,7 @@ import { DashboardModule } from './dashboard.module';
 import { ShippingFeeModule } from './shippingFee.module';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { TradeinProgramModule } from './tradeinProgram.module';
+import { HomepageConfigModule } from './homepageConfig.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { TradeinProgramModule } from './tradeinProgram.module';
     WardModule,
     ReviewsCommentsModule,
     TradeinProgramModule,
+    HomepageConfigModule,
   ],
   providers: [
     {
