@@ -182,8 +182,6 @@ export class AuthService {
     //create a new record at ddv_user_loyalty
     const newUserLoyalty = await this.userLoyaltyRepo.create({
       user_id: result['user_id'],
-      created_at: formatStandardTimeStamp(),
-      updated_at: formatStandardTimeStamp(),
     });
 
     result = { ...result, ...newUserLoyalty };
