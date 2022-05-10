@@ -128,4 +128,6 @@ export enum Table {
   TRADEIN_PROGRAM_CRITERIA_DETAIL = 'ddv_tradein_program_criteria_details',
   VALUATION_BILL = 'ddv_valuation_bills',
   VALUATION_BILL_CRITERIA_DETAIL = 'ddv_valuation_bill_criteria_details',
+
+  TEST = 'ddv_test',
 }
