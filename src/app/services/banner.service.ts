@@ -99,7 +99,11 @@ export class bannerService {
     const banners = await this.bannerRepo.find({
       select: `*, ${Table.BANNER}.*`,
       join: bannerJoiner,
-      orderBy: [{ field: 'updated_at', sortBy: SortBy.DESC }],
+      orderBy: [
+        { field: 'page_target_id', sortBy: SortBy.DESC },
+        { field: 'page_location_id', sortBy: SortBy.DESC },
+        { field: 'updated_at', sortBy: SortBy.DESC },
+      ],
       where: bannerSearchFilter(search, filterConditions),
       skip,
       limit,
