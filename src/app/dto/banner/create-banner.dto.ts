@@ -12,7 +12,7 @@ export class CreateBannerDto {
   @IsNotEmpty()
   banner: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   banner_title: string;
 
   @IsOptional()
@@ -27,7 +27,7 @@ export class CreateBannerDto {
   @IsOptional()
   device_type: string = 'D';
 
-  @IsNotEmpty()
+  @IsOptional()
   image_path: string;
 
   @IsOptional()

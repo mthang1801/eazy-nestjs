@@ -26,6 +26,7 @@ export class LogsService {
       join: logJoiner,
       where: { [`${Table.LOG}.log_id`]: log_id },
     });
+
     if (result) {
       throw new HttpException('Không tìm thấy log', 404);
     }

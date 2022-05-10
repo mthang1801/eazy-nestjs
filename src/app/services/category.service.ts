@@ -693,6 +693,13 @@ export class CategoryService {
       select: `*`,
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
+      orderBy: [
+        {
+          field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position ASC`,
+        },
+        { field: 'updated_at', sortBy: SortBy.DESC },
+      ],
       skip,
       limit,
     });
