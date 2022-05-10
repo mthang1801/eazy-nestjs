@@ -1,4 +1,5 @@
 export class HomepageConfigModuleEntity {
+  module_id: number = 0;
   name: string = '';
   icon: string = '';
   router: string = '';

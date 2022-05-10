@@ -12,42 +12,50 @@ export class HomepageConfigService {
     private homepageModuleItemRepo: HomepageConfigModuleItemRepository<HomepageConfigModuleItemEntity>,
   ) {}
   async create(data) {
-    let homepageModule;
-    if (data['module_id']) {
-      homepageModule = await this.homepageModuleRepo.findOne({
-        module_id: data['module_id'],
-      });
-    }
-    if (homepageModule) {
-      const updatedHomepageModuleData = this.homepageModuleRepo.setData(data);
-      if (data['data']) {
-        updatedHomepageModuleData['data'] = JSON.stringify(data['data']);
-      }
-      if (Object.entries(updatedHomepageModuleData).length) {
-        homepageModule = await this.homepageModuleRepo.update(
-          {
-            module_id: homepageModule.module_id,
-          },
-          updatedHomepageModuleData,
-          true,
-        );
-      }
-    } else {
-      let newHomepageModuleData = {
-        ...new HomepageConfigModuleEntity(),
-        ...this.homepageModuleRepo.setData(data),
-      };
+    if (data.modules && data.modules.length) {
+      for (let moduleItem of data.modules) {
+        let homepageModule;
+        if (moduleItem['module_id']) {
+          homepageModule = await this.homepageModuleRepo.findOne({
+            module_id: moduleItem['module_id'],
+          });
+        }
+        if (homepageModule) {
+          const updatedHomepageModuleData =
+            this.homepageModuleRepo.setData(moduleItem);
+          if (moduleItem['data']) {
+            updatedHomepageModuleData['data'] = JSON.stringify(
+              moduleItem['data'],
+            );
+          }
+          if (Object.entries(updatedHomepageModuleData).length) {
+            homepageModule = await this.homepageModuleRepo.update(
+              {
+                module_id: homepageModule.module_id,
+              },
+              updatedHomepageModuleData,
+              true,
+            );
+          }
+        } else {
+          let newHomepageModuleData = {
+            ...new HomepageConfigModuleEntity(),
+            ...this.homepageModuleRepo.setData(moduleItem),
+          };
 
-      if (data['data']) {
-        newHomepageModuleData['data'] = JSON.stringify(data['data']);
+          if (moduleItem['data']) {
+            newHomepageModuleData['data'] = JSON.stringify(moduleItem['data']);
+          }
+          homepageModule = await this.homepageModuleRepo.create(
+            newHomepageModuleData,
+          );
+        }
       }
-      homepageModule = await this.homepageModuleRepo.create(
-        newHomepageModuleData,
-      );
     }
+    return this.getList();
   }
 
-  async getList(params) {
+  async getList(params: any = {}) {
     let { device_type } = params;
 
     const listData = await this.homepageModuleRepo.find({
