@@ -215,7 +215,9 @@ export class bannerService {
     const checkDuplicatePosition = await this.bannerRepo.findOne({
       page_target_id: data.page_target_id,
       page_location_id: data.page_location_id,
+      device_type: data.device_type,
     });
+
     if (checkDuplicatePosition) {
       throw new HttpException('Vị trí bị trùng trên trang', 400);
     }

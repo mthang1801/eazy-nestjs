@@ -195,11 +195,14 @@ export const bannerSearchFilter = (search = '', filterConditions = {}) => {
   let arraySearch = [];
   if (search) {
     arraySearch = [
-      { [`${Table.BANNER_DESCRIPTIONS}.url`]: Like(search) },
-      { [`${Table.BANNER_DESCRIPTIONS}.url_media`]: Like(search) },
-      { [`${Table.BANNER_DESCRIPTIONS}.banner_title`]: Like(search) },
-      { [`${Table.BANNER_DESCRIPTIONS}.banner`]: Like(search) },
-      { [`${Table.BANNER_DESCRIPTIONS}.description`]: Like(search) },
+      { [`${Table.BANNER}.banner`]: Like(search) },
+      {
+        [`${Table.BANNER_LOCATION_DESCRIPTION}.location_description`]:
+          Like(search),
+      },
+      {
+        [`${Table.BANNER_TARGET_DESCRIPTION}.target_description`]: Like(search),
+      },
     ];
   }
   return searchFilterTemplate(filterConditions, arraySearch);
