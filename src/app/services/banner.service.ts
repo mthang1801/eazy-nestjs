@@ -111,6 +111,7 @@ export class bannerService {
 
     const count = await this.bannerRepo.find({
       select: `COUNT(DISTINCT(${Table.BANNER}.banner_id)) as total`,
+      join: bannerJoiner,
       where: bannerSearchFilter(search, filterConditions),
     });
 
