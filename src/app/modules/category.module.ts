@@ -12,6 +12,7 @@ import { CatalogCategoryRepository } from '../repositories/catalogCategory.repos
 import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCategoryDescription.repository';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.repository';
+import { CatalogCategoryItemRepository } from '../repositories/catalogCategoryItem.repository';
 
 @Module({
   imports: [forwardRef(() => ProductsModule), ReviewsCommentsModule],
@@ -23,6 +24,7 @@ import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.r
     CatalogCategoryRepository,
     CatalogCategoryDescriptionRepository,
     AccessoryCategoryRepository,
+    CatalogCategoryItemRepository,
   ],
   exports: [
     CategoryService,
@@ -31,6 +33,7 @@ import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.r
     CatalogCategoryRepository,
     CatalogCategoryDescriptionRepository,
     AccessoryCategoryRepository,
+    CatalogCategoryItemRepository,
   ],
   controllers: [
     CategoryControllerBE,

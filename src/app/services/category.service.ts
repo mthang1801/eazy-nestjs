@@ -1,3 +1,5 @@
+import { UpdateCatalogCategoryItemDto } from './../dto/category/update-catalogCategoryItem.dto';
+import { CatalogCategoryItemRepository } from './../repositories/catalogCategoryItem.repository';
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
@@ -70,6 +72,8 @@ import { AccessoryCategoryEntity } from '../entities/accessoryCategory.entity';
 import { accessoryCategorySearchFilter } from '../../utils/tableConditioner';
 import { IMPORT_CATEGORIES_APPCORE } from '../../constants/api.appcore';
 import { UpDateCategoriesListDto } from '../dto/category/update-categoriesList.dto';
+import { CreateCatalogCategoryItemDto } from '../dto/category/create-catalogCategoryItem.dto';
+import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entity';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -83,6 +87,7 @@ export class CategoryService {
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
     private catalogCategoryDescRepo: CatalogCategoryDescriptionRepository<CatalogCategoryDescriptionEntity>,
     private accessoryCategoryRepo: AccessoryCategoryRepository<AccessoryCategoryEntity>,
+    private catalogCategoryItemRepo: CatalogCategoryItemRepository<CatalogCategoryItemEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
@@ -1551,6 +1556,48 @@ export class CategoryService {
       }
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async getAllCatalogCategoryItem() {
+    return this.catalogCategoryItemRepo.find({
+      select: ['*'],
+    });
+  }
+
+  async getCatalogCategoryItemById(id: number) {
+    return this.catalogCategoryItemRepo.findOne({
+      select: '*',
+      where: {
+        [`${Table.CATALOG_CATEGORY_ITEMS}.item_id`]: id,
+      },
+    });
+  }
+
+  async createCatalogCategoryItem(data: CreateCatalogCategoryItemDto) {
+    const itemData = {
+      ...new CatalogCategoryItemEntity(),
+      ...this.catalogCategoryItemRepo.setData(data),
+    };
+
+    await this.catalogCategoryItemRepo.create(itemData);
+  }
+
+  async updateCatalogCategoryItem(
+    id: number,
+    data: UpdateCatalogCategoryItemDto,
+  ) {
+    const store = await this.catalogCategoryItemRepo.findOne({ item_id: id });
+    if (!store) {
+      throw new HttpException('Không tìm thấy item.', 404);
+    } else {
+      let newItemData = {
+        ...new CatalogCategoryItemEntity(),
+        ...this.catalogCategoryItemRepo.setData(data),
+        item_id: id,
+      };
+      console.log(newItemData);
+      await this.catalogCategoryItemRepo.update({ item_id: id }, newItemData);
     }
   }
 }

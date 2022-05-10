@@ -1,3 +1,4 @@
+import { UpdateCatalogCategoryItemDto } from './../../../dto/category/update-catalogCategoryItem.dto';
 import {
   Body,
   Controller,
@@ -24,6 +25,7 @@ import { ProductService } from 'src/app/services/products.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { UpdateProductsInCategory } from 'src/app/dto/product/update-productInCategory';
+import { CreateCatalogCategoryItemDto } from '../../../dto/category/create-catalogCategoryItem.dto';
 import { UpDateCategoriesListDto } from '../../../dto/category/update-categoriesList.dto';
 
 /**
@@ -64,6 +66,44 @@ export class CategoryController extends BaseController {
   @Get('catalog')
   async getCatalog(@Res() res: Response, @Query() params) {
     const result = await this.service.getCatalog(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/catalog/item')
+  async createCatalogCategoryItem(
+    @Res() res: Response,
+    @Body() data: CreateCatalogCategoryItemDto,
+  ) {
+    await this.service.createCatalogCategoryItem(data);
+    return this.responseSuccess(
+      res,
+      null,
+      'Tạo catalog category item thành công.',
+    );
+  }
+
+  @Put('/catalog/item/:id')
+  async updateCatalogCategoryItem(
+    @Param('id') id: number,
+    @Res() res: Response,
+    @Body() data: UpdateCatalogCategoryItemDto,
+  ): Promise<IResponse> {
+    await this.service.updateCatalogCategoryItem(id, data);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Get('catalog/item')
+  async getAllCatalogCategoryItem(@Res() res: Response) {
+    const result = await this.service.getAllCatalogCategoryItem();
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('catalog/item/:id')
+  async getCatalogCategoryItemById(
+    @Res() res: Response,
+    @Param('id') id: number,
+  ) {
+    const result = await this.service.getCatalogCategoryItemById(id);
     return this.responseSuccess(res, result);
   }
 

@@ -22,6 +22,7 @@ export enum Table {
   CATALOG_CATEGORIES = 'ddv_catalog_categories',
   CATALOG_CATEGORY_DESCRIPTIONS = 'ddv_catalog_category_descriptions',
   ACCESSORY_CATEGORY = 'ddv_accessory_categories',
+  CATALOG_CATEGORY_ITEMS = 'ddv_catalog_category_items',
 
   //============== Banner ==============
   BANNER = 'ddv_banners',
