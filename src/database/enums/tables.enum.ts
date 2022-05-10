@@ -128,6 +128,8 @@ export enum Table {
   TRADEIN_PROGRAM_CRITERIA_DETAIL = 'ddv_tradein_program_criteria_details',
   VALUATION_BILL = 'ddv_valuation_bills',
   VALUATION_BILL_CRITERIA_DETAIL = 'ddv_valuation_bill_criteria_details',
+  TRADEIN_OLD_RECEIPT = 'ddv_tradein_program_old_receipts',
+  TRADEIN_OLD_RECEIPT_DETAIL = 'ddv_tradein_program_old_receipt_details',
 
   //============ Homepage COnfig ===============
   HOMEPAGE_MODULE = 'ddv_homepage_modules',

@@ -746,4 +746,6 @@ export class TradeinProgramService {
     }
     return this.get(updatedTradeinProgram.tradein_id);
   }
+
+  async itgCreateOldReceipt(data) {}
 }

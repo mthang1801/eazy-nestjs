@@ -119,6 +119,15 @@ export class bannerService {
       limit,
     });
 
+    if (banners.length) {
+      for (let banner of banners) {
+        const bannerItems = await this.bannerItemRepo.find({
+          banner_id: banner['banner_id'],
+        });
+        banner['banner_items'] = bannerItems;
+      }
+    }
+
     const count = await this.bannerRepo.find({
       select: `COUNT(DISTINCT(${Table.BANNER}.banner_id)) as total`,
       join: bannerJoiner,
@@ -248,18 +257,18 @@ export class bannerService {
     return this.getById(newBanner.banner_id);
   }
 
-  async update(id: number, data: UpdateBannerDTO): Promise<any> {
+  async update(id: number, data): Promise<any> {
     const banner = await this.bannerRepo.findOne({ banner_id: id });
     if (!banner) {
       throw new HttpException('Không tìm thấy banner.', 404);
     }
+
     const bannerData = this.bannerRepo.setData({
       ...data,
       updated_at: formatStandardTimeStamp(),
     });
-    if (Object.entries(bannerData).length) {
-      await this.bannerRepo.update({ banner_id: id }, bannerData);
-    }
+
+    await this.bannerRepo.update({ banner_id: id }, bannerData);
 
     if (data.banner_items && data.banner_items.length) {
       await this.bannerItemRepo.delete({

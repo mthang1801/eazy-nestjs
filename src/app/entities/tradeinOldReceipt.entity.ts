@@ -1,0 +1,35 @@
+export class TradeinOldReceiptEntity {
+  old_receipt_id: number = 0;
+  old_receipt_appcore_id: number = 0;
+  code: string = '';
+  store_id: number = null;
+  user_id: number = null;
+  user_appcore_id: number = null;
+  user_name: string = '';
+  description: string = '';
+  status: string = '';
+  amount: number = 0;
+  cash_amount: number = 0;
+  cash_account_code: string = '';
+  cash_account_name: string = '';
+  transfer_amount: number = 0;
+  transfer_account_code: string = '';
+  transfer_account_name: string = '';
+  paid_at: string = null;
+  id_ref: string = null;
+  type: number = 0;
+  phone: string = '';
+  address: string = '';
+  vat_amount: number = 0;
+  vat_type: string = '';
+  vat_code: string = '';
+  vat_at: string = null;
+  discount_amount: number = 0;
+  discount_type: number = 0;
+  is_auto: string = 'N';
+  related_store_code: string = '';
+  order_code: string = null;
+  imported_at: string = null;
+  created_at: string = null;
+  created_by: string = '';
+}

@@ -19,4 +19,13 @@ export class TradeinProgramControllerItg extends BaseController {
     const result = await this.service.itgUpdate(data);
     return this.responseSuccess(res, result);
   }
+
+  @Post('/old-receipt')
+  async createOldReceipt(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    await this.service.itgCreateOldReceipt(data);
+    return this.responseSuccess(res);
+  }
 }

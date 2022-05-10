@@ -124,6 +124,8 @@ export enum PrimaryKeys {
   ddv_tradein_program_criteria_details = 'criteria_detail_id',
   ddv_valuation_bills = 'valuation_bill_id',
   ddv_valuation_bill_criteria_details = 'valuation_bill_detail_id',
+  ddv_tradein_program_old_receipts = 'old_receipt_id',
+  ddv_tradein_program_old_receipt_details = 'detail_id',
 
   //============ Homepage COnfig ===============
   ddv_homepage_modules = 'module_id',
