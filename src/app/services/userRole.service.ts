@@ -1,5 +1,5 @@
 import { RoleFunctionRepository } from './../repositories/roleFunction.repository';
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, HttpCode } from '@nestjs/common';
 import * as _ from 'lodash';
 
 import { Table } from '../../database/enums/tables.enum';
@@ -29,6 +29,10 @@ import {
 } from '../interfaces/usergroupLink.interface';
 import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { ColdObservable } from 'rxjs/internal/testing/ColdObservable';
+import { getPageSkipLimit } from '../../utils/helper';
+import { SortBy } from '../../database/enums/sortBy.enum';
+import { userSelector } from '../../utils/tableSelector';
+import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
 
 @Injectable()
 export class UserRoleService {
@@ -155,7 +159,6 @@ export class UserRoleService {
     };
 
     const group = await this.roleRepo.create(groupData)
-    console.log(group);
 
     for (let i = 1; i <= 5; i++){
       const groupRole = {
@@ -169,9 +172,90 @@ export class UserRoleService {
     }
   }
 
-  async getGroup() {
-    return this.roleRepo.find({
-      select: ['*'],
+  async getGroupList(params) {
+    // return this.roleRepo.find({
+    //   select: ['*'],
+    // });
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterCondition = {};
+
+    let groupList = await this.roleRepo.find({
+      select: `*`,
+      //where: tradeinProgramSearchFilter(search, filterCondition),
+      orderBy: [
+        { field: `${Table.ROLE}.updated_at`, sortBy: SortBy.DESC },
+      ],
+      skip,
+      limit,
     });
+    // if(groupList.length){
+    //   for (let groupItem of groupList){
+    //     //console.log(groupItem);
+    //     const groupFuncItems = await this.roleFunctRepo.find({role_id: groupItem.role_id})
+    //     console.log(groupFuncItems);
+    //     console.log('-----------');
+    //     groupItem["role_functs"] = groupFuncItems;
+    //   }
+    // }
+    let count = await this.roleRepo.find({
+      select: `COUNT(DISTINCT(${Table.ROLE}.role_id)) as total `,
+      //where: tradeinProgramSearchFilter(search, filterCondition),
+    });
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: groupList,
+    }
+  }
+
+  async getGroupById(params, id: number) {
+    let group = await this.roleRepo.findOne({
+      select: '*',
+      where: {
+        [`${Table.ROLE}.role_id`]: id,
+      },
+    });
+    if (!group){
+      throw new HttpException("Không tìm thấy nhóm.", 404)
+    }
+    const groupFuncts = await this.roleFunctRepo.find({role_id: group.role_id})
+    group["role_functs"] = groupFuncts;
+
+    return group;
+  }
+
+  async updateGroup(
+    id: number,
+    data: UpdateGroupDto,
+  ) {
+    const store = await this.roleRepo.findOne({ role_id: id });
+    if (!store) {
+      throw new HttpException('Không tìm thấy nhóm.', 404);
+    }
+    console.log(store);
+
+    let newGroupData = {
+      ...new RoleEntity(),
+      ...this.roleRepo.setData(data),
+      role_id: id,
+    };
+    await this.roleRepo.update({ role_id: id }, newGroupData);
+
+    await this.roleFunctRepo.delete({role_id: id})
+
+    for (let i = 1; i <= 5; i++){
+      const groupRole = {
+        ...new RoleFunctionEntity(),
+        ...this.roleFunctRepo.setData(data),
+        role_id: id,
+        funct_id: data.funct_id,
+        permission: i,
+      }
+      await this.roleFunctRepo.create(groupRole);
+    }
   }
 }
