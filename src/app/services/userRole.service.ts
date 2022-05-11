@@ -1,3 +1,4 @@
+import { RoleFunctionRepository } from './../repositories/roleFunction.repository';
 import { Injectable, HttpException } from '@nestjs/common';
 import * as _ from 'lodash';
 
@@ -21,16 +22,20 @@ import { Like } from 'src/database/operators/operators';
 import { UserRoleEntity } from '../entities/userRole.entity';
 import { UpdateUserGroupLinkDto } from '../dto/usergroups/update-usergroupLink.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
+import { CreateGroupDto } from '../dto/role/create-user-role.dto';
 import {
   IUserGroupLink,
   IUserGroupLinkExtend,
 } from '../interfaces/usergroupLink.interface';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
+import { ColdObservable } from 'rxjs/internal/testing/ColdObservable';
 
 @Injectable()
 export class UserRoleService {
   constructor(
-    private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
+    private roleRepo: RoleRepository<RoleEntity>,
+    private roleFunctRepo: RoleFunctionRepository<RoleFunctionEntity>,
+    private userRoleRepo: UserRoleRepository<UserRoleEntity>,
     private userRepo: UserRepository<UserEntity>,
   ) {}
 
@@ -42,11 +47,11 @@ export class UserRoleService {
     let filterCondition = {};
     if (typeof others === 'object' && Object.entries(others).length)
       for (let [key, val] of Object.entries(others)) {
-        if (this.userGroupLinksRepo.tableProps.includes(key)) {
+        if (this.userRoleRepo.tableProps.includes(key)) {
           filterCondition[`${Table.USER_ROLES}.${key}`] = Like(val);
           continue;
         }
-        if (this.userGroupRepo.tableProps.includes(key)) {
+        if (this.roleRepo.tableProps.includes(key)) {
           filterCondition[`${Table.ROLE}.${key}`] = Like(val);
           continue;
         }
@@ -107,11 +112,11 @@ export class UserRoleService {
     user_id: number,
     data: UpdateUserGroupLinkDto,
   ): Promise<IUserGroupLink> {
-    const userGroupLink = await this.userGroupLinksRepo.findOne({ user_id });
+    const userGroupLink = await this.userRoleRepo.findOne({ user_id });
     if (!userGroupLink) {
       throw new HttpException('Người dùng không tồn tại.', 404);
     }
-    const updatedUserGroupLink = await this.userGroupLinksRepo.update(
+    const updatedUserGroupLink = await this.userRoleRepo.update(
       userGroupLink.link_id,
       data,
     );
@@ -122,7 +127,7 @@ export class UserRoleService {
     user_id: number,
     position: string = UserRoleTypeEnum.Customer,
   ): Promise<any> {
-    const userGroupForCustomer = await this.userGroupRepo.findOne({
+    const userGroupForCustomer = await this.roleRepo.findOne({
       select: ['*'],
       where: {
         status: RoleStatusEnum.Active,
@@ -131,10 +136,42 @@ export class UserRoleService {
       },
     });
     const newUserGroupLink: UserRoleEntity =
-      await this.userGroupLinksRepo.create({
+      await this.userRoleRepo.create({
         user_id: user_id,
         usergroup_id: userGroupForCustomer.usergroup_id,
       });
     return { ...userGroupForCustomer, ...newUserGroupLink };
+  }
+
+  async createGroup(data: CreateGroupDto) {
+    const checkList = await this.roleRepo.find();
+    if(checkList.some(item=>item.role_name.toLowerCase()==data.role_name.toLowerCase())){
+      throw new HttpException('Tên nhóm đã tồn tại', 409);
+    }
+
+    const groupData = {
+      ...new RoleEntity(),
+      ...this.roleRepo.setData(data),
+    };
+
+    const group = await this.roleRepo.create(groupData)
+    console.log(group);
+
+    for (let i = 1; i <= 5; i++){
+      const groupRole = {
+        ...new RoleFunctionEntity(),
+        ...this.roleFunctRepo.setData(data),
+        role_id: group.role_id,
+        funct_id: data.funct_id,
+        permission: i,
+      }
+      await this.roleFunctRepo.create(groupRole);
+    }
+  }
+
+  async getGroup() {
+    return this.roleRepo.find({
+      select: ['*'],
+    });
   }
 }

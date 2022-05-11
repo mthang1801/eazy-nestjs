@@ -1,3 +1,5 @@
+import { RoleFunctionRepository } from './../repositories/roleFunction.repository';
+import { RoleFunctionModule } from './roleFunction.module';
 import { Module } from '@nestjs/common';
 import { UserRoleController } from '../controllers/be/v1/userRole.controller';
 import { RoleRepository } from '../repositories/role.repository';
@@ -11,6 +13,7 @@ import { UserRepository } from '../repositories/user.repository';
     UserRoleService,
     RoleRepository,
     UserRepository,
+    RoleFunctionRepository,
   ],
   exports: [UserRoleRepository, UserRoleService],
 })

@@ -7,6 +7,7 @@ import {
   Param,
   Put,
   UseGuards,
+  Post,
 } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { UserRoleService } from 'src/app/services/userRole.service';
@@ -15,12 +16,28 @@ import { BaseController } from '../../../../base/base.controllers';
 import { Response } from 'express';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { UpdateUserGroupLinkDto } from 'src/app/dto/usergroups/update-usergroupLink.dto';
+import { CreateUserGroupPrivilegeDto } from '../../../dto/usergroups/create-usergroupPrivilege.dto';
+import { CreateGroupDto } from '../../../dto/role/create-user-role.dto';
 
-@Controller('be/v1/usergroup-links')
+@Controller('be/v1/user-role')
 export class UserRoleController extends BaseController {
   constructor(private readonly service: UserRoleService) {
     super();
   }
+
+
+  @Post('/group')
+  async createGroup(@Res() res: Response, @Body() data: CreateGroupDto,){
+    await this.service.createGroup(data);
+    return this.responseSuccess(res)
+  }
+
+  @Get('/group')
+  async getGroup(@Res() res: Response) {
+    const result = await this.service.getGroup();
+    return this.responseSuccess(res, result);
+  }
+
   /**
    * Get list users with optional params such as : page, limit, status...
    * @param params
