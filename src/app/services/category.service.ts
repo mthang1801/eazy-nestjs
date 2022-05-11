@@ -1373,7 +1373,7 @@ export class CategoryService {
         catalog_id: newCatalogCategory['catalog_id'],
       };
 
-      await this.catalogCategoryDescRepo.createSync(catalogCategoryDescData);
+      await this.catalogCategoryDescRepo.create(catalogCategoryDescData, false);
     }
 
     const resUrlKey = await this.databaseService.executeMagentoPool(

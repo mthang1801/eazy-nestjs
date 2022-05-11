@@ -257,14 +257,14 @@ export class CustomerService {
         ...this.userLoyalRepo.setData(customerData),
         user_id: user.user_id,
       };
-      await this.userLoyalRepo.createSync(userLoyaltyData);
+      await this.userLoyalRepo.create(userLoyaltyData, false);
 
       const userDataData = {
         ...new UserDataEntity(),
         ...this.userDataRepo.setData(customerData),
         user_id: user['user_id'],
       };
-      await this.userDataRepo.createSync(userDataData);
+      await this.userDataRepo.create(userDataData, false);
 
       await this.createCustomerToAppcore(result);
     } catch (error) {
@@ -886,7 +886,7 @@ export class CustomerService {
         loyalty_point: data.loyalty_point,
         user_id: customer.user_id,
       };
-      await this.userLoyalRepo.createSync(customerLoyaltyData);
+      await this.userLoyalRepo.create(customerLoyaltyData, false);
       return;
     }
 
@@ -1033,19 +1033,19 @@ export class CustomerService {
       ...this.userProfileRepo.setData(customer),
       user_id: newCustomer.user_id,
     };
-    await this.userProfileRepo.createSync(newCustomerProfileDesc);
+    await this.userProfileRepo.create(newCustomerProfileDesc, false);
     const newCustomerLoyaltyData = {
       ...new UserLoyaltyEntity(),
       ...this.userLoyalRepo.setData(customer),
       user_id: newCustomer.user_id,
     };
-    await this.userLoyalRepo.createSync(newCustomerLoyaltyData);
+    await this.userLoyalRepo.create(newCustomerLoyaltyData, false);
     const newCustomerDataData = {
       ...new UserDataEntity(),
       ...this.userDataRepo.setData(customer),
       user_id: newCustomer.user_id,
     };
-    await this.userDataRepo.createSync(newCustomerDataData);
+    await this.userDataRepo.create(newCustomerDataData, false);
   }
 
   async createUserSelfTransport(data) {

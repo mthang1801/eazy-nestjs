@@ -94,7 +94,7 @@ export class FlashSalesService {
           ...this.flashSaleProductRepo.setData(flashSaleProductItem),
           detail_id: newFlashSaleDetail.detail_id,
         };
-        await this.flashSaleProductRepo.createSync(newFlashSaleProductData);
+        await this.flashSaleProductRepo.create(newFlashSaleProductData, false);
       }
     }
   }
@@ -350,7 +350,10 @@ export class FlashSalesService {
             ...this.flashSaleProductRepo.setData(flashSaleProductItem),
             detail_id: newFlashSaleDetail.detail_id,
           };
-          await this.flashSaleProductRepo.createSync(newFlashSaleProductData);
+          await this.flashSaleProductRepo.create(
+            newFlashSaleProductData,
+            false,
+          );
         }
       }
     }

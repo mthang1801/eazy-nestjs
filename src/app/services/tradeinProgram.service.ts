@@ -109,7 +109,7 @@ export class TradeinProgramService {
           tradein_id: newTradeinProgram.tradein_id,
         };
 
-        await this.tradeinProgramDetailRepo.createSync(tradeinDetailData);
+        await this.tradeinProgramDetailRepo.create(tradeinDetailData, false);
       }
     }
 
@@ -138,8 +138,9 @@ export class TradeinProgramService {
               criteria_id: newCriteria.criteria_id,
             };
 
-            await this.tradeinProgramCriteriaDetailRepo.createSync(
+            await this.tradeinProgramCriteriaDetailRepo.create(
               newCriteriaDetailData,
+              false,
             );
           }
         }

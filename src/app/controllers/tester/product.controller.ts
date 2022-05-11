@@ -7,12 +7,14 @@ import {
   Put,
   Query,
   Get,
+  UseGuards,
 } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { BaseController } from '../../../base/base.controllers';
 import { ProductService } from '../../services/products.service';
 import { Response } from 'express';
 import { Req } from '@nestjs/common';
+import { AuthGuard } from '../../../middlewares/be.auth';
 
 @Controller('/web-tester/v1/products')
 export class ProductTesterController extends BaseController {
@@ -64,6 +66,7 @@ export class ProductTesterController extends BaseController {
   }
 
   @Post('test')
+  @UseGuards(AuthGuard)
   async test(@Req() req) {
     await this.service.testSql(req.clientIp);
   }

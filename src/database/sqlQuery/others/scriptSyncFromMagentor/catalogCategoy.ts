@@ -20,7 +20,7 @@ for (let categoryItem of catalogCategoriesList) {
     ...this.catalogCategoryRepo.setData(categoryItem),
     name: categoryItem['value'],
   };
-  await this.catalogCategoryRepo.createSync(categoryItemData);
+  await this.catalogCategoryRepo.create(categoryItemData, false);
 }
 
 const resUrlKey = await this.databaseService.executeMagentoPool(

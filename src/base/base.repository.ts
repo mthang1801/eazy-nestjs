@@ -183,7 +183,7 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async create(
-    params: any,
+    inputData: any,
     returnable: boolean = true,
     showLog: boolean = true,
   ): Promise<any> {
@@ -191,24 +191,24 @@ export class BaseRepositorty<T> {
       this.logger.log('=============== [MYSQL] CREATE ================');
     }
 
-    if (Array.isArray(params) || typeof params !== 'object') {
+    if (Array.isArray(inputData) || typeof inputData !== 'object') {
       throw new HttpException(
         'Tham số truyền vào phải là một Object',
         HttpStatus.BAD_REQUEST,
       );
     }
-    let fmtParams: any = {};
-    for (let [key, val] of Object.entries(params)) {
+    let fmtInputData: any = {};
+    for (let [key, val] of Object.entries(inputData)) {
       if (typeof val === 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
+        fmtInputData[key] = preprocessAddTextDataToMysql(+val);
       } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
+        fmtInputData[key] = preprocessAddTextDataToMysql(val);
       }
     }
 
     let sql = `INSERT INTO ${this.table} SET `;
 
-    Object.entries(fmtParams).forEach(([key, val], i) => {
+    Object.entries(fmtInputData).forEach(([key, val], i) => {
       if (i === 0) {
         sql += formatTypeValueToInSertSQL(key, val);
       } else {
@@ -232,34 +232,6 @@ export class BaseRepositorty<T> {
         [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
       });
     }
-  }
-  /**
-   * Create new record
-   * @param params
-   * @returns
-   */
-  async createSync(params: any): Promise<any> {
-    this.logger.log('=============== [MYSQL] CREATE ================');
-
-    if (Array.isArray(params) || typeof params !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào phải là một Object',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    let fmtParams: any = {};
-    for (let [key, val] of Object.entries(params)) {
-      if (typeof val == 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `INSERT INTO ${this.table} SET ? `;
-
-    await this.databaseService.executeQueryWritePool(sql, fmtParams);
   }
 
   /**
@@ -293,8 +265,8 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async update(
-    options: number | any,
-    data: object,
+    conditions: number | object,
+    inputData: object,
     returnable: boolean = false,
     showLog = true,
   ) {
@@ -302,16 +274,16 @@ export class BaseRepositorty<T> {
       this.logger.log('=============== [MYSQL] UPDATE ================');
     }
 
-    if (typeof data !== 'object') {
+    if (typeof inputData !== 'object') {
       throw new HttpException(
         'Tham số truyền vào không hợp lệ.',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    let fmtParams: any = { ...data };
+    let fmtParams: any = { ...inputData };
 
-    for (let [key, val] of Object.entries(data)) {
+    for (let [key, val] of Object.entries(inputData)) {
       if (typeof val == 'number') {
         fmtParams[key] = preprocessAddTextDataToMysql(+val);
       } else {
@@ -330,8 +302,8 @@ export class BaseRepositorty<T> {
 
     sql += ' WHERE ';
 
-    if (typeof options === 'object') {
-      Object.entries(options).forEach(([key, val], i) => {
+    if (typeof conditions === 'object') {
+      Object.entries(conditions).forEach(([key, val], i) => {
         if (i === 0) {
           sql += formatTypeValueToInSertSQL(key, val);
         } else {
@@ -339,23 +311,23 @@ export class BaseRepositorty<T> {
         }
       });
     } else {
-      sql += ` ${PrimaryKeys[this.table]} = '${options}'`;
+      sql += ` ${PrimaryKeys[this.table]} = '${conditions}'`;
     }
 
     await this.databaseService.executeQueryWritePool(sql);
 
     if (returnable) {
       const updatedData =
-        typeof options === 'object'
-          ? await this.findOne(options)
-          : await this.findById(options);
+        typeof conditions === 'object'
+          ? await this.findOne(conditions)
+          : await this.findById(conditions);
 
       return updatedData;
     }
   }
 
   async delete(
-    option: number | any,
+    conditions: number | object,
     returnable: boolean = false,
     showLog: boolean = true,
   ) {
@@ -366,16 +338,16 @@ export class BaseRepositorty<T> {
     let queryString = `DELETE FROM ${this.table} WHERE `;
 
     let res;
-    if (typeof option === 'object') {
-      if (Array.isArray(option)) {
-        for (let i = 0; i < option.length; i++) {
-          if (typeof option[i] !== 'object') {
+    if (typeof conditions === 'object') {
+      if (Array.isArray(conditions)) {
+        for (let i = 0; i < conditions.length; i++) {
+          if (typeof conditions[i] !== 'object') {
             throw new HttpException(
               'Sai cú pháp truy vấn',
               HttpStatus.BAD_REQUEST,
             );
           }
-          Object.entries(option).forEach(([key, val], i) => {
+          Object.entries(conditions).forEach(([key, val], i) => {
             if (i === 0) {
               queryString += `${key} = '${val}'`;
             } else {
@@ -384,7 +356,7 @@ export class BaseRepositorty<T> {
           });
         }
       } else {
-        Object.entries(option).forEach(([key, val], i) => {
+        Object.entries(conditions).forEach(([key, val], i) => {
           if (i === 0) {
             queryString += `${key} = '${val}'`;
           } else {
@@ -393,12 +365,12 @@ export class BaseRepositorty<T> {
         });
       }
       res = await this.databaseService.executeQueryWritePool(queryString, [
-        option,
+        conditions,
       ]);
     } else {
       queryString += ` ? `;
       res = await this.databaseService.executeQueryWritePool(queryString, [
-        { [PrimaryKeys[this.table]]: option },
+        { [PrimaryKeys[this.table]]: conditions },
       ]);
     }
 
@@ -408,9 +380,9 @@ export class BaseRepositorty<T> {
 
     if (returnable) {
       const deletedData =
-        typeof option === 'object'
-          ? await this.findOne(option)
-          : await this.findById(option);
+        typeof conditions === 'object'
+          ? await this.findOne(conditions)
+          : await this.findById(conditions);
 
       return deletedData;
     }

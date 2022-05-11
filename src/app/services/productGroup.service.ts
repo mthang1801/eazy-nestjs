@@ -62,12 +62,15 @@ export class ProductGroupService {
           created_at: formatStandardTimeStamp(),
           updated_at: formatStandardTimeStamp(),
         });
-        await this.groupProductRepo.createSync({
-          product_id: parentProductItem.product_id,
-          parent_product_id: parentProductItem.parent_product_id,
-          group_id: newProductGroup.group_id,
-          product_group_name: parentProductItem.shortname,
-        });
+        await this.groupProductRepo.create(
+          {
+            product_id: parentProductItem.product_id,
+            parent_product_id: parentProductItem.parent_product_id,
+            group_id: newProductGroup.group_id,
+            product_group_name: parentProductItem.shortname,
+          },
+          false,
+        );
       }
     }
 
@@ -88,11 +91,14 @@ export class ProductGroupService {
           product_id: childProduct.product_id,
         });
         if (!childProductGroupProduct) {
-          await this.groupProductRepo.createSync({
-            group_id: parentProductGroup.group_id,
-            parent_product_id: childProduct.parent_product_id,
-            product_id: childProduct.product_id,
-          });
+          await this.groupProductRepo.create(
+            {
+              group_id: parentProductGroup.group_id,
+              parent_product_id: childProduct.parent_product_id,
+              product_id: childProduct.product_id,
+            },
+            false,
+          );
         }
       }
     }
@@ -131,11 +137,14 @@ export class ProductGroupService {
             });
             // Nếu trong group features không tìm thấy thì sẽ thêm feature này vào group, ngược lại bỏ qua
             if (!featureValueInGroup) {
-              await this.groupFeatureRepo.createSync({
-                feature_id,
-                variant_id,
-                group_id,
-              });
+              await this.groupFeatureRepo.create(
+                {
+                  feature_id,
+                  variant_id,
+                  group_id,
+                },
+                false,
+              );
             }
           }
         }

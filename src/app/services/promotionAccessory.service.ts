@@ -109,7 +109,7 @@ export class PromotionAccessoryService {
           updated_by: user.user_id,
           accessory_id: newPromotionAccessory.accessory_id,
         };
-        await this.productPromoAccessoryRepo.createSync(newProductData);
+        await this.productPromoAccessoryRepo.create(newProductData, false);
       }
     }
   }
@@ -225,7 +225,7 @@ export class PromotionAccessoryService {
           updated_by: user.user_id,
           accessory_id: accessory_id,
         };
-        await this.productPromoAccessoryRepo.createSync(newProductData);
+        await this.productPromoAccessoryRepo.create(newProductData, false);
       }
     }
 
@@ -369,7 +369,10 @@ export class PromotionAccessoryService {
             product_id: product['product_id'] || 0,
             sale_price: product['price'] || 0,
           };
-          await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+          await this.productPromoAccessoryRepo.create(
+            newAccessoryItemData,
+            false,
+          );
         }
       }
     }
@@ -525,7 +528,10 @@ export class PromotionAccessoryService {
             sale_price: product['price'] || 0,
           };
 
-          await this.productPromoAccessoryRepo.createSync(newAccessoryItemData);
+          await this.productPromoAccessoryRepo.create(
+            newAccessoryItemData,
+            false,
+          );
         }
       }
     }

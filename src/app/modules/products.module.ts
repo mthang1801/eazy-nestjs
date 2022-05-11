@@ -17,7 +17,6 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductsController as ProductsControllerBE } from '../controllers/be/v1/products.controller';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
-import { ProductSalesRepository } from '../repositories/productSales.repository';
 import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
 import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
@@ -61,8 +60,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     ProductOptionDescriptionRepository,
     ProductOptionVariantsRepository,
     ProductOptionVariantDescriptionRepository,
-    ProductPricesRepository,
-    ProductSalesRepository,
+    ProductPricesRepository,    
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
     ProductVariationGroupIndexRepository,
@@ -88,8 +86,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     ProductOptionDescriptionRepository,
     ProductOptionVariantsRepository,
     ProductOptionVariantDescriptionRepository,
-    ProductPricesRepository,
-    ProductSalesRepository,
+    ProductPricesRepository,    
     ProductVariationGroupsRepository,
     ProductVariationGroupProductsRepository,
     ProductVariationGroupFeaturesRepository,

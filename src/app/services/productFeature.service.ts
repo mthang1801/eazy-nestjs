@@ -344,8 +344,9 @@ export class ProductFeatureService {
         ...this.productFeatureDescriptionRepo.setData(data),
         feature_id: checkProductFeature.feature_id,
       };
-      await this.productFeatureDescriptionRepo.createSync(
+      await this.productFeatureDescriptionRepo.create(
         newProductFeatureData,
+        false,
       );
     }
 
@@ -412,8 +413,9 @@ export class ProductFeatureService {
             variant_id: newVariant.variant_id,
           };
 
-          await this.productFeatureVariantDescriptionRepo.createSync(
+          await this.productFeatureVariantDescriptionRepo.create(
             productFeatureVariantDescData,
+            false,
           );
         }
       }

@@ -78,17 +78,23 @@ export class RoleService {
                 usergroup_id: newUserGroup.usergroup_id,
               });
             if (!parentUsergroupPrivilegeExist) {
-              await this.userGroupPrivilegeRepo.createSync({
-                privilege_id: parentPrivilege.privilege_id,
-                usergroup_id: newUserGroup.usergroup_id,
-              });
+              await this.userGroupPrivilegeRepo.create(
+                {
+                  privilege_id: parentPrivilege.privilege_id,
+                  usergroup_id: newUserGroup.usergroup_id,
+                },
+                false,
+              );
             }
           }
         }
-        await this.userGroupPrivilegeRepo.createSync({
-          privilege_id: privilegeId,
-          usergroup_id: newUserGroup.usergroup_id,
-        });
+        await this.userGroupPrivilegeRepo.create(
+          {
+            privilege_id: privilegeId,
+            usergroup_id: newUserGroup.usergroup_id,
+          },
+          false,
+        );
       }
     }
 
@@ -240,18 +246,24 @@ export class RoleService {
                 usergroup_id: currentUserGroup.usergroup_id,
               });
             if (!parentUsergroupPrivilegeExist) {
-              await this.userGroupPrivilegeRepo.createSync({
-                privilege_id: parentPrivilege.privilege_id,
-                usergroup_id: currentUserGroup.usergroup_id,
-              });
+              await this.userGroupPrivilegeRepo.create(
+                {
+                  privilege_id: parentPrivilege.privilege_id,
+                  usergroup_id: currentUserGroup.usergroup_id,
+                },
+                false,
+              );
             }
           }
         }
         if (privilege) {
-          await this.userGroupPrivilegeRepo.createSync({
-            privilege_id: privilegeId,
-            usergroup_id: currentUserGroup.usergroup_id,
-          });
+          await this.userGroupPrivilegeRepo.create(
+            {
+              privilege_id: privilegeId,
+              usergroup_id: currentUserGroup.usergroup_id,
+            },
+            false,
+          );
         }
       }
     }

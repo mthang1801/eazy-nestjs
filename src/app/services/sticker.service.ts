@@ -100,7 +100,7 @@ export class StickerService {
           product_id: productId,
         };
 
-        await this.productStickerRepo.createSync(productStickerData);
+        await this.productStickerRepo.create(productStickerData, false);
       }
     }
   }

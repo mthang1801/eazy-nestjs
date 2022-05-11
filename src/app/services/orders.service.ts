@@ -861,7 +861,7 @@ export class OrdersService {
             ...new OrderEntity(),
             ...this.orderRepo.setData(itgOrder),
           };
-          await this.orderRepo.createSync(orderData);
+          await this.orderRepo.create(orderData, false);
 
           if (order?.orderItems?.length) {
             for (let orderItem of order.orderItems) {
@@ -869,7 +869,7 @@ export class OrdersService {
                 ...new OrderDetailsEntity(),
                 ...this.orderDetailRepo.setData(orderItem),
               };
-              await this.orderDetailRepo.createSync(itgOrderItem);
+              await this.orderDetailRepo.create(itgOrderItem, false);
             }
           }
         }
@@ -980,7 +980,7 @@ export class OrdersService {
     let result = await this.orderRepo.create(orderData);
     // create order histories
 
-    await this.orderHistoryRepo.createSync({ ...result });
+    await this.orderHistoryRepo.create({ ...result }, false);
 
     if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData['order_items']) {
@@ -996,8 +996,9 @@ export class OrdersService {
           order_id: result.order_id,
         };
 
-        const newOrderDetail = await this.orderDetailRepo.createSync(
+        const newOrderDetail = await this.orderDetailRepo.create(
           orderDetailData,
+          false,
         );
 
         result['order_items'] = result['order_items']
@@ -1453,7 +1454,7 @@ export class OrdersService {
           updated_date: formatStandardTimeStamp(),
         },
       );
-      await this.orderHistoryRepo.createSync(updatedOrder);
+      await this.orderHistoryRepo.create(updatedOrder, false);
     } catch (error) {
       console.log(error.response.data);
       throw new HttpException(
@@ -1485,7 +1486,7 @@ export class OrdersService {
                 reason_fail: error.response,
               },
             );
-            await this.orderHistoryRepo.createSync(updatedOrder);
+            await this.orderHistoryRepo.create(updatedOrder, false);
           }
         }
       }

@@ -25,8 +25,6 @@ import { ProductVariationGroupFeaturesEntity } from '../entities/productVariatio
 import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
 import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
 import { ProductVariationGroupFeaturesRepository } from '../repositories/productVariationGroupFeatures.repository';
-import { ProductSalesRepository } from '../repositories/productSales.repository';
-import { ProductSalesEntity } from '../entities/productSales.entity';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { JoinTable, SortBy, Table } from 'src/database/enums';
@@ -217,7 +215,6 @@ export class ProductService {
     private productVariationGroupProductsRepo: ProductVariationGroupProductsRepository<ProductVariationGroupFeaturesEntity>,
     private productVariationGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
     private productVariationGroupFeatureRepo: ProductVariationGroupFeaturesRepository<ProductVariationGroupFeaturesEntity>,
-    private productSaleRepo: ProductSalesRepository<ProductSalesEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private productPointPriceRepo: ProductPointPriceRepository<ProductPointPriceEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
@@ -277,11 +274,14 @@ export class ProductService {
           created_at: formatStandardTimeStamp(),
           updated_at: formatStandardTimeStamp(),
         });
-        await this.productVariationGroupProductsRepo.createSync({
-          product_id: parentProductItem.product_id,
-          parent_product_id: parentProductItem.parent_product_id,
-          group_id: newProductGroup.group_id,
-        });
+        await this.productVariationGroupProductsRepo.create(
+          {
+            product_id: parentProductItem.product_id,
+            parent_product_id: parentProductItem.parent_product_id,
+            group_id: newProductGroup.group_id,
+          },
+          false,
+        );
 
         // Tìm ds các SP con, sau đó tim group chứa SP cha, kiểm tra SP con đã chứa trong đó hay chưa, nếu chưa thì thêm vào
         const childrenProductsList = await this.productRepo.find({
@@ -340,11 +340,14 @@ export class ProductService {
               });
             // Nếu trong group features không tìm thấy thì sẽ thêm feature này vào group, ngược lại bỏ qua
             if (!featureValueInGroup) {
-              await this.productVariationGroupFeatureRepo.createSync({
-                feature_id,
-                variant_id,
-                group_id,
-              });
+              await this.productVariationGroupFeatureRepo.create(
+                {
+                  feature_id,
+                  variant_id,
+                  group_id,
+                },
+                false,
+              );
             }
           }
         }
@@ -1434,11 +1437,14 @@ export class ProductService {
           product_id: productId,
           category_id: categoryId,
         });
-        await this.productCategoryRepo.createSync({
-          product_id: productId,
-          category_id: categoryId,
-          category_appcore_id: category['category_appcore_id'],
-        });
+        await this.productCategoryRepo.create(
+          {
+            product_id: productId,
+            category_id: categoryId,
+            category_appcore_id: category['category_appcore_id'],
+          },
+          false,
+        );
       }
     }
   }
@@ -1579,32 +1585,6 @@ export class ProductService {
         newProductPriceData,
       );
       result = { ...result, ...newProductPrice };
-    }
-
-    // Update product sale
-    const productSale = await this.productSaleRepo.findOne({
-      product_id: result.product_id,
-    });
-    if (productSale) {
-      const productSaleData = this.productSaleRepo.setData(data);
-
-      if (Object.entries(productSaleData).length) {
-        const updatedProductSale = await this.productSaleRepo.update(
-          { product_id: result.product_id },
-          productSaleData,
-        );
-        result = { ...result, ...updatedProductSale };
-      }
-    } else {
-      const newProductSaleData = {
-        ...new ProductSalesEntity(),
-        ...this.productSaleRepo.setData(data),
-        product_id: result.product_id,
-      };
-      const newProductSale = await this.productSaleRepo.create(
-        newProductSaleData,
-      );
-      result = { ...result, ...newProductSale };
     }
 
     // Update product category
@@ -1813,17 +1793,7 @@ export class ProductService {
 
     await this.productPriceRepo.create(productPriceData);
 
-    //sale
-    const productSaleData = {
-      ...new ProductSalesEntity(),
-      ...this.productSaleRepo.setData(convertedData),
-      product_id: result.product_id,
-    };
-
-    await this.productSaleRepo.create(productSaleData);
-
     // category
-
     if (convertedData['category_appcore_id']) {
       let category = await this.categoryRepo.findOne({
         category_appcore_id: convertedData['category_appcore_id'],
@@ -1928,8 +1898,9 @@ export class ProductService {
             product_core_name: productItem.product || '',
             product_id: productComboItem.product_id,
           };
-          await this.productDescriptionsRepo.createSync(
+          await this.productDescriptionsRepo.create(
             productComboItemDescData,
+            false,
           );
 
           // price
@@ -1938,15 +1909,7 @@ export class ProductService {
             ...this.productPriceRepo.setData(productItem),
             product_id: productComboItem.product_id,
           };
-          await this.productPriceRepo.createSync(productComboItemPriceData);
-
-          // sales
-          const productComboSaleItemData = {
-            ...new ProductSalesEntity(),
-            ...this.productSaleRepo.setData(productItem),
-            product_id: productComboItem.product_id,
-          };
-          await this.productSaleRepo.createSync(productComboSaleItemData);
+          await this.productPriceRepo.create(productComboItemPriceData, false);
 
           // category
           const productCategoryItemData = {
@@ -1957,7 +1920,7 @@ export class ProductService {
               : 0,
             product_id: productComboItem.product_id,
           };
-          await this.productCategoryRepo.createSync(productCategoryItemData);
+          await this.productCategoryRepo.create(productCategoryItemData, false);
         } else {
           const updatedProductData = this.productRepo.setData(productItem);
 
@@ -2013,11 +1976,14 @@ export class ProductService {
                 group_id: group['group_id'],
               });
             if (!checkProductInGroup) {
-              await this.productVariationGroupProductsRepo.createSync({
-                product_id: childProduct['product_id'],
-                parent_product_id: parentProduct.product_id,
-                group_id: group['group_id'],
-              });
+              await this.productVariationGroupProductsRepo.create(
+                {
+                  product_id: childProduct['product_id'],
+                  parent_product_id: parentProduct.product_id,
+                  group_id: group['group_id'],
+                },
+                false,
+              );
             }
           }
         }
@@ -2058,11 +2024,14 @@ export class ProductService {
             });
 
           if (!checkProductInGroup) {
-            await this.productVariationGroupProductsRepo.createSync({
-              product_id: childProduct['product_id'],
-              parent_product_id: currentProduct['product_id'],
-              group_id: group['group_id'],
-            });
+            await this.productVariationGroupProductsRepo.create(
+              {
+                product_id: childProduct['product_id'],
+                parent_product_id: currentProduct['product_id'],
+                group_id: group['group_id'],
+              },
+              false,
+            );
           }
         }
       }
@@ -2234,7 +2203,7 @@ export class ProductService {
         ...this.productDescriptionsRepo.setData(convertedData),
         product_id: result.product_id,
       };
-      await this.productDescriptionsRepo.createSync(newProductDescData);
+      await this.productDescriptionsRepo.create(newProductDescData, false);
     }
 
     //price
@@ -2256,30 +2225,7 @@ export class ProductService {
         ...this.productPriceRepo.setData(convertedData),
         product_id: result.product_id,
       };
-      await this.productPriceRepo.createSync(newProductPriceData);
-    }
-
-    //sale
-    const productSale = await this.productSaleRepo.findOne({
-      product_id: result.product_id,
-    });
-
-    if (productSale) {
-      const productSale = this.productSaleRepo.setData(convertedData);
-
-      if (Object.entries(productSale).length) {
-        await this.productSaleRepo.update(
-          { product_id: result.product_id },
-          productSale,
-        );
-      }
-    } else {
-      const newProductSaleData = {
-        ...new ProductSalesEntity(),
-        ...this.productSaleRepo.setData(convertedData),
-        product_id: result.product_id,
-      };
-      await this.productSaleRepo.create(newProductSaleData);
+      await this.productPriceRepo.create(newProductPriceData, false);
     }
 
     await this.productCategoryRepo.delete({ product_id: result['product_id'] });
@@ -2308,7 +2254,7 @@ export class ProductService {
         product_id: result.product_id,
         category_id: convertedData.category_id,
       };
-      await this.productCategoryRepo.createSync(newProductCategoryData);
+      await this.productCategoryRepo.create(newProductCategoryData, false);
     }
 
     if (
@@ -2424,8 +2370,9 @@ export class ProductService {
             product_core_name: productItem.product || '',
             product_id: productComboItem.product_id,
           };
-          await this.productDescriptionsRepo.createSync(
+          await this.productDescriptionsRepo.create(
             productComboItemDescData,
+            false,
           );
 
           // price
@@ -2434,15 +2381,7 @@ export class ProductService {
             ...this.productPriceRepo.setData(productItem),
             product_id: productComboItem.product_id,
           };
-          await this.productPriceRepo.createSync(productComboItemPriceData);
-
-          // sales
-          const productComboSaleItemData = {
-            ...new ProductSalesEntity(),
-            ...this.productSaleRepo.setData(productItem),
-            product_id: productComboItem.product_id,
-          };
-          await this.productSaleRepo.createSync(productComboSaleItemData);
+          await this.productPriceRepo.create(productComboItemPriceData, false);
 
           // category
           const productCategoryItemData = {
@@ -2453,7 +2392,7 @@ export class ProductService {
               : 0,
             product_id: productComboItem.product_id,
           };
-          await this.productCategoryRepo.createSync(productCategoryItemData);
+          await this.productCategoryRepo.create(productCategoryItemData, false);
         } else {
           const updatedProductData = this.productRepo.setData(productItem);
 
@@ -2485,9 +2424,6 @@ export class ProductService {
     );
     await this.productDescriptionsRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_DESCRIPTION}`,
-    );
-    await this.productSaleRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_SALES}`,
     );
     await this.productPriceRepo.writeExec(
       `TRUNCATE TABLE ${Table.PRODUCT_PRICES}`,
@@ -2595,7 +2531,7 @@ export class ProductService {
         ...new ProductDescriptionsEntity(),
         product_id,
       };
-      await this.productDescriptionsRepo.createSync(newProductDescData);
+      await this.productDescriptionsRepo.create(newProductDescData, false);
     }
 
     try {

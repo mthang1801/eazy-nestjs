@@ -195,7 +195,7 @@ export class StoreService {
       store_location_id: newStoreLocation.store_location_id,
     };
 
-    await this.storeLocationDescRepo.createSync(storeLocationDesData);
+    await this.storeLocationDescRepo.create(storeLocationDesData, false);
   }
 
   async CMSupdate(store_location_id: number, data: UpdateStoreDto) {
@@ -256,7 +256,7 @@ export class StoreService {
         ...this.storeLocationDescRepo.setData(data),
         store_location_id,
       };
-      await this.storeLocationDescRepo.createSync(newStoreLocationData);
+      await this.storeLocationDescRepo.create(newStoreLocationData, false);
     }
   }
 
@@ -312,13 +312,13 @@ export class StoreService {
     //     created_at: convertNullDatetimeData(cmsData['created_at']),
     //     updated_at: convertNullDatetimeData(cmsData['updated_at']),
     //   };
-    //   await this.storeLocationRepo.createSync(storeLocationData);
+    //   await this.storeLocationRepo.create(storeLocationData, false);
     //   const storeLocationDataDesc = {
     //     ...new StoreLocationDescriptionEntity(),
     //     ...this.storeLocationDescRepo.setData(cmsData),
     //     store_location_id: cmsData['store_location_id'],
     //   };
-    //   await this.storeLocationDescRepo.createSync(storeLocationDataDesc);
+    //   await this.storeLocationDescRepo.create(storeLocationDataDesc, false);
     // }
   }
 }

@@ -23,7 +23,7 @@ export class LocatorService {
     for (let item of data) {
       const objData = this.wardRepo.setData(item);
 
-      await this.wardRepo.createSync(objData);
+      await this.wardRepo.create(objData, false);
     }
   }
 
