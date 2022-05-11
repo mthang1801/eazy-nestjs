@@ -40,6 +40,12 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('old-receipts')
+  async getOldReceiptsList(@Res() res: Response, @Query() params) {
+    const result = await this.service.getOldReceiptsList(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':tradein_id')
   async get(
     @Res() res: Response,

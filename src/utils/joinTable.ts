@@ -870,3 +870,12 @@ export const logJoiner = {
     },
   },
 };
+
+export const tradeinOldReceiptJoiner = {
+  [JoinTable.rightJoin]: {
+    [Table.TRADEIN_OLD_RECEIPT_DETAIL]: {
+      fieldJoin: `${Table.TRADEIN_OLD_RECEIPT_DETAIL}.old_receipt_id`,
+      rootJoin: `${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id`,
+    },
+  },
+};

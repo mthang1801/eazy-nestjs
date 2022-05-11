@@ -36,7 +36,11 @@ import { ValuationBillCriteriaDetailRepository } from '../repositories/valuation
 import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
-import { userJoiner } from '../../utils/joinTable';
+import {
+  userJoiner,
+  tradeinOldReceiptJoiner,
+  storeLocationJoiner,
+} from '../../utils/joinTable';
 import { userSelector } from '../../utils/tableSelector';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
@@ -52,6 +56,9 @@ import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldRec
 import { TradeinOldReceiptDetailEntity } from '../entities/tradeinOldReceiptDetail.entity';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { tradeinOldReceiptSearchFilter } from '../../utils/tableConditioner';
+import { StoreLocationRepository } from '../repositories/storeLocation.repository';
+import { StoreLocationEntity } from '../entities/storeLocation.entity';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -68,6 +75,7 @@ export class TradeinProgramService {
     private tradeinOldReceiptRepo: TradeinOldReceiptRepository<TradeinOldReceiptEntity>,
     private tradeinOldReceiptDetailRepo: TradeinOldReceiptDetailRepository<TradeinOldReceiptDetailEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
+    private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -180,6 +188,50 @@ export class TradeinProgramService {
         total: count[0].total,
       },
       data: tradeinProgramsList,
+    };
+  }
+
+  async getOldReceiptsList(params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterConditions = {};
+    let oldReceiptsList = await this.tradeinOldReceiptRepo.find({
+      select: `DISTINCT(${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id), code, store_id, description, created_at, created_by`,
+      join: tradeinOldReceiptJoiner,
+      where: tradeinOldReceiptSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    if (oldReceiptsList.length) {
+      for (let oldReceiptItem of oldReceiptsList) {
+        if (oldReceiptItem['store_id']) {
+          let store = await this.storeLocationRepo.findOne({
+            select: '*',
+            join: storeLocationJoiner,
+            where: {
+              [`${Table.STORE_LOCATIONS}.store_location_id`]:
+                oldReceiptItem['store_id'],
+            },
+          });
+          oldReceiptItem['store'] = store;
+        }
+      }
+    }
+
+    let count = await this.tradeinOldReceiptRepo.find({
+      select: `COUNT(DISTINCT(${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id)) as total`,
+      join: tradeinOldReceiptJoiner,
+      where: tradeinOldReceiptSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: oldReceiptsList,
     };
   }
 

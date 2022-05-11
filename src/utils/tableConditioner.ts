@@ -438,3 +438,21 @@ export const logSearchFilter = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const tradeinOldReceiptSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
+      { [`${Table.TRADEIN_OLD_RECEIPT}.code`]: Like(search) },
+      { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.product_code`]: Like(search) },
+      { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.barcode`]: Like(search) },
+      { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.product`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
