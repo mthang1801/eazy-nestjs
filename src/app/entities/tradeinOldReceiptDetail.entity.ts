@@ -13,5 +13,5 @@ export class TradeinOldReceiptDetailEntity {
   discount: number = 0;
   product_code: string = '';
   barcode: string = '';
-  stock_quantity: number = 0;
+  stock_quantity: string = '';
 }
