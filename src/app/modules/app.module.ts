@@ -18,12 +18,12 @@ import { StringModule } from './string.module';
 import { ObjectModule } from './object.module';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from '../../middlewares/allExeptionsFilter';
-import { UserGroupsModule } from './usergroups.module';
+import { RoleModule } from './role.module';
 import { CategoryModule } from './category.module';
 import { ImageModule } from './image.module';
 import { ShippingModule } from './shippings.module';
-import { UserGroupLinksModule } from './usergroupLinks.module';
-import { UserGroupPrivilegeModule } from './usergroupPrivilege.module';
+import { UserRoleModule } from './userRole.module';
+import { RoleFunctionModule } from './roleFunction.module';
 import { OrdersModule } from './orders.module';
 import { ProductsModule } from './products.module';
 import { CustomerModule } from './customer.module';
@@ -75,9 +75,9 @@ import { HomepageConfigModule } from './homepageConfig.module';
     BannerModule,
     StringModule,
     ObjectModule,
-    UserGroupsModule,
-    UserGroupLinksModule,
-    UserGroupPrivilegeModule,
+    RoleModule,
+    UserRoleModule,
+    RoleFunctionModule,
     CategoryModule,
     OrderStatusModule,
     StatusModule,

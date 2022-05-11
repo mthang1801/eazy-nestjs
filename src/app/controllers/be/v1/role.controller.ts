@@ -12,7 +12,7 @@ import {
   Req,
 } from '@nestjs/common';
 
-import { UserGroupsService } from '../../../services/usergroups.service';
+import { RoleService } from '../../../services/role.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { IResponse } from '../../../interfaces/response.interface';
 import { AuthGuard } from '../../../../middlewares/be.auth';
@@ -25,8 +25,8 @@ import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dt
  * @author MvThang
  */
 @Controller('/be/v1/user-groups')
-export class UsergroupsController extends BaseController {
-  constructor(private readonly service: UserGroupsService) {
+export class RoleController extends BaseController {
+  constructor(private readonly service: RoleService) {
     super();
   }
 

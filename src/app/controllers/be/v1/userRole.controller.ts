@@ -9,7 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
-import { UserGroupLinkService } from 'src/app/services/usergroupLinks.service';
+import { UserRoleService } from 'src/app/services/userRole.service';
 import { BaseController } from '../../../../base/base.controllers';
 
 import { Response } from 'express';
@@ -17,8 +17,8 @@ import { AuthGuard } from '../../../../middlewares/be.auth';
 import { UpdateUserGroupLinkDto } from 'src/app/dto/usergroups/update-usergroupLink.dto';
 
 @Controller('be/v1/usergroup-links')
-export class UserGroupLinksController extends BaseController {
-  constructor(private readonly service: UserGroupLinkService) {
+export class UserRoleController extends BaseController {
+  constructor(private readonly service: UserRoleService) {
     super();
   }
   /**

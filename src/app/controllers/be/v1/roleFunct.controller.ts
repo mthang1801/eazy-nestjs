@@ -12,15 +12,15 @@ import {
   Req,
 } from '@nestjs/common';
 import { BaseController } from '../../../../base/base.controllers';
-import { UserGroupsPrivilegeService } from '../../../services/usergroupPrivilege.service';
+import { RoleFunctService } from '../../../services/roleFunct.service';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { Response } from 'express';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateUserGroupPrivilegeDto } from 'src/app/dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from 'src/app/dto/usergroups/update-usergroupPrivilege.dto';
 @Controller('be/v1/usergroup-privilege')
-export class UserGroupPrivilegeController extends BaseController {
-  constructor(private readonly service: UserGroupsPrivilegeService) {
+export class RoleFunctController extends BaseController {
+  constructor(private readonly service: RoleFunctService) {
     super();
   }
   /**

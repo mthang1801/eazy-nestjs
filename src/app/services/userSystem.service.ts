@@ -3,15 +3,15 @@ import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
 import { FunctEntity } from '../entities/funct.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
-import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
-import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
+import { UserRoleEntity } from '../entities/userRole.entity';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { RoleEntity } from '../entities/role.entity';
 import { UserProfileEntity } from '../entities/userProfile.entity';
-import { FunctRepository } from '../repositories/privilege.repository';
+import { FunctRepository } from '../repositories/funct.repository';
 import { UserRepository } from '../repositories/user.repository';
 
-import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
-import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
+import { UserRoleRepository } from '../repositories/userRole.repository';
+import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
 import { RoleRepository } from '../repositories/role.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
@@ -44,10 +44,10 @@ import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
 export class UserSystemService {
   constructor(
     private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
+    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
-    private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
+    private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
     private privilegeRepo: FunctRepository<FunctEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,

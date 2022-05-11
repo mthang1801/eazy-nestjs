@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 
 import { ConfigService } from '@nestjs/config';
-import { desaltHashPassword } from '../utils/cipherHelper';
+import { desaltHashPassword, decodeBase64String } from '../utils/cipherHelper';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {} //reflect roles of user
@@ -42,7 +42,9 @@ export class AuthGuard implements CanActivate {
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
       throw new HttpException('Token đã hết hạn.', 408);
     }
-    console.log(user['user_id']);
+
+    const userId = decodeBase64String(user['user_id']).split('-')[5];
+    user['user_id'] = userId;
 
     req.user = user;
 

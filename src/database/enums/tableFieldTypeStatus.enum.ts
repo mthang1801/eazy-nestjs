@@ -1,4 +1,4 @@
-export enum UserGroupIdEnum {
+export enum UserRoleIdEnum {
   'Wholesale' = 3,
   'Administrator' = 4,
   'Vendor' = 5,
@@ -9,7 +9,7 @@ export enum StatusEnum {
   'Deactive' = 'D',
 }
 
-export enum UserGroupTypeEnum {
+export enum UserRoleTypeEnum {
   'Wholesale' = 'W',
   'Vendor' = 'V',
   'Administrator' = 'A',

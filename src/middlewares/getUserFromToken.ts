@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { decodeBase64String } from '../utils/cipherHelper';
 
 export const getUserFromToken = (
   req: Request,
@@ -22,9 +23,13 @@ export const getUserFromToken = (
 
     const user = decoded?.sub;
 
-    if (!user) {
+    if (!user || !user['user_id']) {
       req['user'] = null;
     }
+
+    const userId = decodeBase64String(user['user_id']).split('-')[5];
+    user['user_id'] = userId;
+
     req['user'] = user;
     next();
   }

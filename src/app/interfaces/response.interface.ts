@@ -1,5 +1,5 @@
 import { IUser } from './users.interface';
-import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 
 export interface IResponse {
   statusCode?: number;
@@ -10,5 +10,5 @@ export interface IResponse {
 export interface IResponseUserToken {
   token: string;
   userData: IUser;
-  menu: UserGroupPrivilegeEntity[];
+  menu: RoleFunctionEntity[];
 }

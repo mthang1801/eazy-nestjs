@@ -10,15 +10,15 @@ import { UserEntity } from '../entities/user.entity';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 
 import {
-  UserGroupStatusEnum,
-  UserGroupTypeEnum,
+  RoleStatusEnum,
+  UserRoleTypeEnum,
 } from '../../database/enums/tableFieldEnum/userGroups.enum';
 import { RoleRepository } from '../repositories/role.repository';
 
-import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
+import { UserRoleRepository } from '../repositories/userRole.repository';
 
 import { Like } from 'src/database/operators/operators';
-import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
+import { UserRoleEntity } from '../entities/userRole.entity';
 import { UpdateUserGroupLinkDto } from '../dto/usergroups/update-usergroupLink.dto';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
 import {
@@ -27,10 +27,10 @@ import {
 } from '../interfaces/usergroupLink.interface';
 
 @Injectable()
-export class UserGroupLinkService {
+export class UserRoleService {
   constructor(
     private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
+    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
     private userRepo: UserRepository<UserEntity>,
   ) {}
 
@@ -120,17 +120,17 @@ export class UserGroupLinkService {
 
   async createUserGroupLinkPosition(
     user_id: number,
-    position: string = UserGroupTypeEnum.Customer,
+    position: string = UserRoleTypeEnum.Customer,
   ): Promise<any> {
     const userGroupForCustomer = await this.userGroupRepo.findOne({
       select: ['*'],
       where: {
-        status: UserGroupStatusEnum.Active,
+        status: RoleStatusEnum.Active,
         type: position,
         company_id: 0,
       },
     });
-    const newUserGroupLink: UserGroupLinkEntity =
+    const newUserGroupLink: UserRoleEntity =
       await this.userGroupLinksRepo.create({
         user_id: user_id,
         usergroup_id: userGroupForCustomer.usergroup_id,

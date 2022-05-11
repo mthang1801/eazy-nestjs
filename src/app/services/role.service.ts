@@ -8,8 +8,8 @@ import { RoleEntity } from '../entities/role.entity';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { RoleRepository } from '../repositories/role.repository';
 
-import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
-import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
+import { UserRoleRepository } from '../repositories/userRole.repository';
+import { UserRoleEntity } from '../entities/userRole.entity';
 import { Like, IsNull, Not, Equal } from '../../database/operators/operators';
 import { CreateUserGroupsDto } from '../dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
@@ -20,21 +20,21 @@ import { UserEntity } from '../entities/user.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { userGroupSearchByNameCode } from 'src/utils/tableConditioner';
-import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
-import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
+import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { FunctRepository } from '../repositories/privilege.repository';
+import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
 import { formatStandardTimeStamp } from 'src/utils/helper';
 
 @Injectable()
-export class UserGroupsService {
+export class RoleService {
   constructor(
     private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
+    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
-    private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
+    private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
     private privilegeRepo: FunctRepository<FunctEntity>,
   ) {}
 
@@ -107,15 +107,15 @@ export class UserGroupsService {
       select: ['*'],
       join: {
         [JoinTable.rightJoin]: {
-          [Table.PRIVILEGE_FUNCTS]: {
+          [Table.FUNC]: {
             fieldJoin: 'privilege_id',
             rootJoin: 'privilege_id',
           },
         },
       },
       where: {
-        [`${Table.PRIVILEGE_FUNCTS}.level`]: 0,
-        [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
+        [`${Table.FUNC}.level`]: 0,
+        [`${Table.ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
       },
     });
 
@@ -124,17 +124,16 @@ export class UserGroupsService {
         select: ['*'],
         join: {
           [JoinTable.rightJoin]: {
-            [Table.PRIVILEGE_FUNCTS]: {
+            [Table.FUNC]: {
               fieldJoin: 'privilege_id',
               rootJoin: 'privilege_id',
             },
           },
         },
         where: {
-          [`${Table.PRIVILEGE_FUNCTS}.level`]: 1,
-          [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
-          [`${Table.PRIVILEGE_FUNCTS}.parent_id`]:
-            parentPrivilegeItem.privilege_id,
+          [`${Table.FUNC}.level`]: 1,
+          [`${Table.ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
+          [`${Table.FUNC}.parent_id`]: parentPrivilegeItem.privilege_id,
         },
       });
       parentPrivilegeItem['children'] = childrenPrivilege;

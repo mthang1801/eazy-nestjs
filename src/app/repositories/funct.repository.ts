@@ -5,7 +5,7 @@ import { FunctEntity } from '../entities/funct.entity';
 export class FunctRepository<FunctEntity> extends BaseRepositorty<FunctEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.PRIVILEGE_FUNCTS;
+    this.table = Table.FUNC;
     this.tableProps = Object.getOwnPropertyNames(new FunctEntity());
   }
 }

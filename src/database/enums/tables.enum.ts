@@ -10,9 +10,9 @@ export enum Table {
 
   //============== User group ==============
   ROLE = 'ddv_roles',
-  PRIVILEGE_ROLE_FUNC = 'ddv_roles_functs',
+  ROLE_FUNC = 'ddv_roles_functs',
   USER_ROLES = 'ddv_users_roles',
-  PRIVILEGE_FUNCTS = 'ddv_functs',
+  FUNC = 'ddv_functs',
 
   //============== Category ==============
   CATEGORIES = 'ddv_categories',

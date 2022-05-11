@@ -8,7 +8,7 @@ import { UsersService } from '../services/users.service';
 import { UsersController as UsersControllerBe } from '../controllers/be/v1/users.controller';
 import { UsersController as UsersControllerFe } from '../controllers/fe/v1/users.controller';
 import { MailModule } from './mail.module';
-import { UserGroupsModule } from './usergroups.module';
+import { RoleModule } from './role.module';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserDataRepository } from '../repositories/userData.repository';
@@ -17,7 +17,7 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 
 @Module({
-  imports: [MailModule, UserGroupsModule],
+  imports: [MailModule, RoleModule],
   exports: [
     UsersService,
     UserRepository,

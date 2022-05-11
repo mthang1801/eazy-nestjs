@@ -18,13 +18,13 @@ import {
 } from '../../utils/helper';
 import { AuthLoginProviderDto } from '../dto/auth/auth-loginProvider.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { UserGroupTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
+import { UserRoleTypeEnum } from '../../database/enums/tableFieldEnum/userGroups.enum';
 import { ImagesRepository } from '../repositories/image.repository';
 import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
-import { UserGroupsService } from './usergroups.service';
+import { RoleService } from './role.service';
 import { RoleEntity } from '../entities/role.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { MailService } from './mail.service';
@@ -38,13 +38,13 @@ import { v4 as uuid } from 'uuid';
 import { UserRepository } from '../repositories/user.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { UserEntity } from '../entities/user.entity';
-import { UserGroupLinkService } from './usergroupLinks.service';
+import { UserRoleService } from './userRole.service';
 
 import {
   UserMailingListsStatusEnum,
   UserMailingListsTypeEnum,
 } from 'src/database/enums/tableFieldEnum/userMailingLists.enum';
-import { UserGroupsPrivilegeService } from './usergroupPrivilege.service';
+import { RoleFunctService } from './roleFunct.service';
 import { IImage } from '../interfaces/image.interface';
 import { AuthRestoreDto } from '../dto/auth/auth-restore.dto';
 import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
@@ -61,9 +61,9 @@ import { sha512, encodeBase64String } from '../../utils/cipherHelper';
 export class AuthService {
   constructor(
     private userService: UsersService,
-    private userGroupService: UserGroupsService,
-    private userGroupLinksService: UserGroupLinkService,
-    private userGroupsPrivilegeService: UserGroupsPrivilegeService,
+    private userGroupService: RoleService,
+    private userGroupLinksService: UserRoleService,
+    private RoleFunctService: RoleFunctService,
     private jwtService: JwtService,
     private mailService: MailService,
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
@@ -79,9 +79,9 @@ export class AuthService {
 
   generateToken(user: UserEntity): string {
     const userIdEncoded = encodeBase64String(
-      `${uuid()}-${user['user_id']}`.toString(),
+      `${uuid()}-${user['user_id']}-${uuid()}`,
     );
-    console.log(userIdEncoded);
+
     const payload = {
       sub: {
         user_id: userIdEncoded,
@@ -237,7 +237,7 @@ export class AuthService {
     );
 
     // get menu at ddv_roles_functs
-    // const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
+    // const menu = await this.RoleFunctService.getListByUserGroupId(
     //   user.usergroup_id,
     // );
 
@@ -449,7 +449,7 @@ export class AuthService {
     });
     let menu;
     if (user.usergroup_id) {
-      menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
+      menu = await this.RoleFunctService.getListByUserGroupId(
         user.usergroup_id,
       );
     }

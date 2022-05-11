@@ -1,24 +1,24 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import * as _ from 'lodash';
 
-import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
-import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
+import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { JoinTable, Table } from 'src/database/enums';
 import { Like } from '../../database/operators/operators';
 import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from '../dto/usergroups/update-usergroupPrivilege.dto';
 import { IUserGroupPrivilege } from '../interfaces/usergroupPrivilege.interface';
-import { FunctRepository } from '../repositories/privilege.repository';
+import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
-import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
-import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
+import { UserRoleRepository } from '../repositories/userRole.repository';
+import { UserRoleEntity } from '../entities/userRole.entity';
 
 @Injectable()
-export class UserGroupsPrivilegeService {
+export class RoleFunctService {
   constructor(
-    private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
+    private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
     private privilegeRepo: FunctRepository<FunctEntity>,
-    private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
+    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
   ) {}
 
   async create(data: CreateUserGroupPrivilegeDto): Promise<void> {
@@ -75,14 +75,10 @@ export class UserGroupsPrivilegeService {
     return menu;
   }
 
-  getUserGroupPrivilegeShorten(userGroupPrivilege: UserGroupPrivilegeEntity) {
+  getUserGroupPrivilegeShorten(userGroupPrivilege: RoleFunctionEntity) {
     if (!userGroupPrivilege) {
       return;
     }
-    delete userGroupPrivilege.privilege;
-    delete userGroupPrivilege.parent_id;
-    delete userGroupPrivilege.level;
-    delete userGroupPrivilege.method;
 
     return userGroupPrivilege;
   }
@@ -100,15 +96,14 @@ export class UserGroupsPrivilegeService {
       select: ['*'],
       join: {
         [JoinTable.rightJoin]: {
-          [Table.PRIVILEGE_FUNCTS]: {
+          [Table.FUNC]: {
             fieldJoin: 'privilege_id',
             rootJoin: 'privilege_id',
           },
         },
       },
       where: {
-        [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]:
-          currentUserGroup.usergroup_id,
+        [`${Table.ROLE_FUNC}.usergroup_id`]: currentUserGroup.usergroup_id,
         level: 0,
       },
     });

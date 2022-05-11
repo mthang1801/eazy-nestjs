@@ -9,6 +9,7 @@ import { Observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { decodeBase64String } from '../utils/cipherHelper';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -40,9 +41,12 @@ export class AuthGuard implements CanActivate {
     }
     const user = decoded?.sub;
 
-    if (!user) {
+    if (!user || !user['user_id']) {
       throw new HttpException('Token không hợp lệ.', HttpStatus.UNAUTHORIZED);
     }
+
+    const userId = decodeBase64String(user['user_id']).split('-')[5];
+    user['user_id'] = userId;
 
     req.user = user;
 

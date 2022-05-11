@@ -892,7 +892,7 @@ export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
   cmsData['amount'] = coreData['totalAmount'];
   cmsData['description'] = coreData['description'];
   cmsData['created_by'] = coreData['createdBy'];
-  if (coreData['createdAt']) {
+  if (coreData['createdAt'] && moment(coreData['createdAt']).isValid()) {
     cmsData['created_at'] = formatStandardTimeStamp(coreData['createdAt']);
   }
   cmsData['cash_amount'] = coreData['cashAmount'];
@@ -905,7 +905,7 @@ export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
     cmsData['paid_at'] = formatStandardTimeStamp(coreData['payDate']);
   }
 
-  if (coreData['importDate']) {
+  if (coreData['importDate'] && moment(coreData['importDate']).isValid()) {
     cmsData['imported_at'] = formatStandardTimeStamp(coreData['importDate']);
   }
 
