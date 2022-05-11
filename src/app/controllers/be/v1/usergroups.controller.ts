@@ -31,7 +31,7 @@ export class UsergroupsController extends BaseController {
   }
 
   /**
-   * Create a record in ddv_usergroups and ddv_usergroup_description
+   * Create a record in ddv_roles and ddv_usergroup_description
    * @param data type : string, usergroup : string, company_id : number, lang_code : string
    * @param res
    * @returns

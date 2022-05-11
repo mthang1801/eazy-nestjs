@@ -8,8 +8,8 @@ import { Like } from '../../database/operators/operators';
 import { CreateUserGroupPrivilegeDto } from '../dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from '../dto/usergroups/update-usergroupPrivilege.dto';
 import { IUserGroupPrivilege } from '../interfaces/usergroupPrivilege.interface';
-import { PrivilegeRepository } from '../repositories/privilege.repository';
-import { PrivilegeEntity } from '../entities/privilege.entity';
+import { FunctRepository } from '../repositories/privilege.repository';
+import { FunctEntity } from '../entities/funct.entity';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 
@@ -17,7 +17,7 @@ import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 export class UserGroupsPrivilegeService {
   constructor(
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
-    private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
+    private privilegeRepo: FunctRepository<FunctEntity>,
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
   ) {}
 
@@ -100,14 +100,14 @@ export class UserGroupsPrivilegeService {
       select: ['*'],
       join: {
         [JoinTable.rightJoin]: {
-          [Table.PRIVILEGES]: {
+          [Table.PRIVILEGE_FUNCTS]: {
             fieldJoin: 'privilege_id',
             rootJoin: 'privilege_id',
           },
         },
       },
       where: {
-        [`${Table.USER_GROUP_PRIVILEGES}.usergroup_id`]:
+        [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]:
           currentUserGroup.usergroup_id,
         level: 0,
       },

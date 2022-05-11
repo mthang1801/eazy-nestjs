@@ -10,7 +10,7 @@ export class UserGroupPrivilegesRepository<
 > extends BaseRepositorty<UserGroupPrivilegeEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USER_GROUP_PRIVILEGES;
+    this.table = Table.PRIVILEGE_ROLE_FUNC;
     this.tableProps = Object.getOwnPropertyNames(
       new UserGroupPrivilegeEntity(),
     );

@@ -3,11 +3,11 @@ import * as _ from 'lodash';
 
 import { Table } from '../../database/enums/tables.enum';
 
-import { UserGroupEntity } from '../entities/usergroups.entity';
+import { RoleEntity } from '../entities/role.entity';
 
 import { JoinTable } from '../../database/enums/joinTable.enum';
-import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
+import { RoleRepository } from '../repositories/role.repository';
+
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 import { Like, IsNull, Not, Equal } from '../../database/operators/operators';
@@ -23,27 +23,24 @@ import { userGroupSearchByNameCode } from 'src/utils/tableConditioner';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { PrivilegeRepository } from '../repositories/privilege.repository';
-import { PrivilegeEntity } from '../entities/privilege.entity';
+import { FunctRepository } from '../repositories/privilege.repository';
+import { FunctEntity } from '../entities/funct.entity';
 import { formatStandardTimeStamp } from 'src/utils/helper';
-import { userGroupJoiner } from 'src/utils/joinTable';
 
 @Injectable()
 export class UserGroupsService {
   constructor(
-    private userGroupRepo: UserGroupsRepository<UserGroupEntity>,
-    private userGroupDescriptionRepo: UserGroupDescriptionsRepository<UserGroupDescriptionEntity>,
+    private userGroupRepo: RoleRepository<RoleEntity>,
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
-    private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
+    private privilegeRepo: FunctRepository<FunctEntity>,
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
     const userGroupDB = await this.userGroupRepo.find({
       select: '*',
-      join: userGroupJoiner,
     });
 
     if (
@@ -57,24 +54,12 @@ export class UserGroupsService {
     }
 
     const userGroupData = {
-      ...new UserGroupEntity(),
+      ...new RoleEntity(),
       ...this.userGroupRepo.setData(data),
     };
 
     const newUserGroup = await this.userGroupRepo.create(userGroupData);
     let result = { ...newUserGroup };
-
-    const userGroupDescData = {
-      ...new UserGroupDescriptionEntity(),
-      ...this.userGroupDescriptionRepo.setData(data),
-      usergroup_id: result.usergroup_id,
-    };
-
-    const newUserGroupDesc = await this.userGroupDescriptionRepo.create({
-      ...userGroupDescData,
-      usergroup_id: result.usergroup_id,
-    });
-    result = { ...result, ...newUserGroupDesc };
 
     if (data.privileges.length) {
       for (let privilegeId of data.privileges) {
@@ -113,15 +98,7 @@ export class UserGroupsService {
   async getByUserGroupId(id: number): Promise<any> {
     const userGroup = await this.userGroupRepo.findOne({
       select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
-          },
-        },
-      },
-      where: { [`${Table.USER_GROUPS}.usergroup_id`]: id },
+      where: { [`${Table.ROLE}.usergroup_id`]: id },
     });
     if (!userGroup) {
       throw new HttpException('Không tìm thấy nhóm người dùng', 404);
@@ -130,15 +107,15 @@ export class UserGroupsService {
       select: ['*'],
       join: {
         [JoinTable.rightJoin]: {
-          [Table.PRIVILEGES]: {
+          [Table.PRIVILEGE_FUNCTS]: {
             fieldJoin: 'privilege_id',
             rootJoin: 'privilege_id',
           },
         },
       },
       where: {
-        [`${Table.PRIVILEGES}.level`]: 0,
-        [`${Table.USER_GROUP_PRIVILEGES}.usergroup_id`]: userGroup.usergroup_id,
+        [`${Table.PRIVILEGE_FUNCTS}.level`]: 0,
+        [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
       },
     });
 
@@ -147,17 +124,17 @@ export class UserGroupsService {
         select: ['*'],
         join: {
           [JoinTable.rightJoin]: {
-            [Table.PRIVILEGES]: {
+            [Table.PRIVILEGE_FUNCTS]: {
               fieldJoin: 'privilege_id',
               rootJoin: 'privilege_id',
             },
           },
         },
         where: {
-          [`${Table.PRIVILEGES}.level`]: 1,
-          [`${Table.USER_GROUP_PRIVILEGES}.usergroup_id`]:
-            userGroup.usergroup_id,
-          [`${Table.PRIVILEGES}.parent_id`]: parentPrivilegeItem.privilege_id,
+          [`${Table.PRIVILEGE_FUNCTS}.level`]: 1,
+          [`${Table.PRIVILEGE_ROLE_FUNC}.usergroup_id`]: userGroup.usergroup_id,
+          [`${Table.PRIVILEGE_FUNCTS}.parent_id`]:
+            parentPrivilegeItem.privilege_id,
         },
       });
       parentPrivilegeItem['children'] = childrenPrivilege;
@@ -178,31 +155,16 @@ export class UserGroupsService {
     }
 
     let count = await this.userGroupRepo.find({
-      select: [`COUNT(DISTINCT(${Table.USER_GROUPS}.usergroup_id)) as total`],
-      join: {
-        [JoinTable.innerJoin]: {
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `usergroup_id`,
-            rootJoin: `usergroup_id`,
-          },
-        },
-      },
+      select: [`COUNT(DISTINCT(${Table.ROLE}.usergroup_id)) as total`],
 
       where: userGroupSearchByNameCode(search, filterConditions),
     });
 
     let userGroupsList = await this.userGroupRepo.find({
       select: ['*'],
-      join: {
-        [JoinTable.innerJoin]: {
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `usergroup_id`,
-            rootJoin: `usergroup_id`,
-          },
-        },
-      },
+
       orderBy: [
-        { field: `${Table.USER_GROUPS}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.ROLE}.updated_at`, sortBy: SortBy.DESC },
         { field: 'created_at', sortBy: SortBy.DESC },
       ],
       where: userGroupSearchByNameCode(search, filterConditions),
@@ -229,10 +191,7 @@ export class UserGroupsService {
       throw new HttpException('Không tìm thấy usergroup', 404);
     }
 
-    const userGroupDB = await this.userGroupRepo.find({
-      select: '*',
-      join: userGroupJoiner,
-    });
+    const userGroupDB = await this.userGroupRepo.find();
 
     if (
       data.usergroup &&
@@ -259,15 +218,6 @@ export class UserGroupsService {
       );
 
       result = { ...result, ...updatedUserGroup };
-    }
-
-    const userGroupDescData = this.userGroupDescriptionRepo.setData(data);
-    if (Object.entries(userGroupData).length) {
-      const updatedUserGroupDesc = await this.userGroupDescriptionRepo.update(
-        { usergroup_id },
-        userGroupDescData,
-      );
-      result = { ...result, ...updatedUserGroupDesc };
     }
 
     if (data?.privileges?.length) {

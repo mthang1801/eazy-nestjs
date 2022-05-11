@@ -1,13 +1,11 @@
 import { BaseRepositorty } from '../../base/base.repository';
 import { DatabaseService } from '../../database/database.service';
 import { Table } from '../../database/enums/index';
-import { PrivilegeEntity } from '../entities/privilege.entity';
-export class PrivilegeRepository<
-  PrivilegeEntity,
-> extends BaseRepositorty<PrivilegeEntity> {
+import { FunctEntity } from '../entities/funct.entity';
+export class FunctRepository<FunctEntity> extends BaseRepositorty<FunctEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.PRIVILEGES;
-    this.tableProps = Object.getOwnPropertyNames(new PrivilegeEntity());
+    this.table = Table.PRIVILEGE_FUNCTS;
+    this.tableProps = Object.getOwnPropertyNames(new FunctEntity());
   }
 }

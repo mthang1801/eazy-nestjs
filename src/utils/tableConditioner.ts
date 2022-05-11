@@ -101,15 +101,8 @@ export const userGroupSearchByNameCode = (
   if (!search && Object.entries(filterCondition).length) {
     return filterCondition;
   }
-  if (search && !Object.entries(filterCondition).length) {
-    return [{ [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search) }];
-  }
-  return [
-    {
-      ...filterCondition,
-      [`${Table.USER_GROUP_DESCRIPTIONS}.usergroup`]: Like(search),
-    },
-  ];
+
+  return filterCondition;
 };
 
 export const customersListSearchFilter = (

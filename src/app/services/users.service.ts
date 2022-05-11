@@ -83,14 +83,11 @@ export class UsersService {
       select: ['*'],
       join: {
         [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          [Table.USER_ROLES]: {
+            fieldJoin: `${Table.USER_ROLES}.user_id`,
             rootJoin: `${Table.USERS}.user_id`,
           },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
+
           [Table.STORE_LOCATIONS]: {
             fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
             rootJoin: `${Table.USERS}.store_id`,
@@ -295,67 +292,18 @@ export class UsersService {
     return user;
   }
 
-  async findUserAllInfo(condition: any): Promise<any> {
-    const users = this.findOne({
-      select: [
-        `${Table.USERS}.user_id`,
-        `${Table.USERS}.status`,
-        'user_type',
-        'last_login',
-        'firstname',
-        'lastname',
-        'password',
-        'salt',
-        'email',
-        'phone',
-        'birthday',
-        'last_passwords',
-        'password_change_timestamp',
-        `${Table.USER_GROUP_LINKS}.usergroup_id`,
-        'usergroup',
-      ],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-          },
-          [Table.USER_DATA]: {
-            fieldJoin: `${Table.USER_DATA}.user_id`,
-            rootJoin: `${Table.USERS}.user_id`,
-          },
-        },
-      },
-
-      where: { ...condition },
-    });
-    return users;
-  }
-
   async findUsersAllInfo(condition: any, limit = 30): Promise<any> {
     const users = await this.userRepository.find({
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          [Table.USER_ROLES]: {
+            fieldJoin: `${Table.USER_ROLES}.user_id`,
             rootJoin: `${Table.USERS}.user_id`,
           },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
+          [Table.ROLE]: {
+            fieldJoin: `${Table.ROLE}.usergroup_id`,
+            rootJoin: `${Table.USER_ROLES}.usergroup_id`,
           },
           [Table.USER_PROFILES]: {
             fieldJoin: `${Table.USER_PROFILES}.user_id`,

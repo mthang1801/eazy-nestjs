@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import { Table } from '../../database/enums/tables.enum';
 
 import { UserRepository } from '../repositories/user.repository';
-import { UserGroupEntity } from '../entities/usergroups.entity';
+import { RoleEntity } from '../entities/role.entity';
 import { UserEntity } from '../entities/user.entity';
 
 import { JoinTable } from '../../database/enums/joinTable.enum';
@@ -13,8 +13,8 @@ import {
   UserGroupStatusEnum,
   UserGroupTypeEnum,
 } from '../../database/enums/tableFieldEnum/userGroups.enum';
-import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
+import { RoleRepository } from '../repositories/role.repository';
+
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 
 import { Like } from 'src/database/operators/operators';
@@ -29,8 +29,7 @@ import {
 @Injectable()
 export class UserGroupLinkService {
   constructor(
-    private userGroupRepo: UserGroupsRepository<UserGroupEntity>,
-    private userGroupDescriptionRepo: UserGroupDescriptionsRepository<UserGroupDescriptionEntity>,
+    private userGroupRepo: RoleRepository<RoleEntity>,
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
     private userRepo: UserRepository<UserEntity>,
   ) {}
@@ -44,16 +43,11 @@ export class UserGroupLinkService {
     if (typeof others === 'object' && Object.entries(others).length)
       for (let [key, val] of Object.entries(others)) {
         if (this.userGroupLinksRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.USER_GROUP_LINKS}.${key}`] = Like(val);
+          filterCondition[`${Table.USER_ROLES}.${key}`] = Like(val);
           continue;
         }
         if (this.userGroupRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.USER_GROUPS}.${key}`] = Like(val);
-          continue;
-        }
-        if (this.userGroupDescriptionRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] =
-            Like(val);
+          filterCondition[`${Table.ROLE}.${key}`] = Like(val);
           continue;
         }
       }
@@ -61,17 +55,13 @@ export class UserGroupLinkService {
       select: ['*', `${Table.USERS}.*`],
       join: {
         [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          [Table.USER_ROLES]: {
+            fieldJoin: `${Table.USER_ROLES}.user_id`,
             rootJoin: `${Table.USERS}.user_id`,
           },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          [Table.ROLE]: {
+            fieldJoin: `${Table.ROLE}.usergroup_id`,
+            rootJoin: `${Table.USER_ROLES}.usergroup_id`,
           },
         },
       },
@@ -93,24 +83,20 @@ export class UserGroupLinkService {
     const skip = (page - 1) * limit;
 
     const userGroupLink = await this.userRepo.find({
-      select: ['*', `${Table.USER_GROUP_LINKS}.*`],
+      select: ['*', `${Table.USER_ROLES}.*`],
       join: {
         [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_LINKS]: {
-            fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+          [Table.USER_ROLES]: {
+            fieldJoin: `${Table.USER_ROLES}.user_id`,
             rootJoin: `${Table.USERS}.user_id`,
           },
-          [Table.USER_GROUPS]: {
-            fieldJoin: `${Table.USER_GROUPS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
-          },
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
+          [Table.ROLE]: {
+            fieldJoin: `${Table.ROLE}.usergroup_id`,
+            rootJoin: `${Table.USER_ROLES}.usergroup_id`,
           },
         },
       },
-      where: { [`${Table.USER_GROUPS}.usergroup_id`]: usergroup_id },
+      where: { [`${Table.ROLE}.usergroup_id`]: usergroup_id },
       skip,
       limit,
     });
@@ -138,14 +124,6 @@ export class UserGroupLinkService {
   ): Promise<any> {
     const userGroupForCustomer = await this.userGroupRepo.findOne({
       select: ['*'],
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.USER_GROUP_DESCRIPTIONS]: {
-            fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-            rootJoin: `${Table.USER_GROUPS}.usergroup_id`,
-          },
-        },
-      },
       where: {
         status: UserGroupStatusEnum.Active,
         type: position,

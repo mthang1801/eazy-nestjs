@@ -462,15 +462,6 @@ export const productStickersJoiner = {
   },
 };
 
-export const userGroupJoiner = {
-  [JoinTable.innerJoin]: {
-    [Table.USER_GROUP_DESCRIPTIONS]: {
-      fieldJoin: 'usergroup_id',
-      rootJoin: 'usergroup_id',
-    },
-  },
-};
-
 export const productGroupProductsJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
@@ -586,13 +577,9 @@ export const userSystemStoreJoiner = {
       fieldJoin: `${Table.USER_PROFILES}.user_id`,
       rootJoin: `${Table.USERS}.user_id`,
     },
-    [Table.USER_GROUP_LINKS]: {
-      fieldJoin: `${Table.USER_GROUP_LINKS}.user_id`,
+    [Table.USER_ROLES]: {
+      fieldJoin: `${Table.USER_ROLES}.user_id`,
       rootJoin: `${Table.USERS}.user_id`,
-    },
-    [Table.USER_GROUP_DESCRIPTIONS]: {
-      fieldJoin: `${Table.USER_GROUP_DESCRIPTIONS}.usergroup_id`,
-      rootJoin: `${Table.USER_GROUP_LINKS}.usergroup_id`,
     },
     [Table.STORE_LOCATIONS]: {
       fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,

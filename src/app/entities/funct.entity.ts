@@ -1,4 +1,4 @@
-export class PrivilegeEntity {
+export class FunctEntity {
   privilege_id: number = 0;
   privilege: string = '';
   description: string = '';

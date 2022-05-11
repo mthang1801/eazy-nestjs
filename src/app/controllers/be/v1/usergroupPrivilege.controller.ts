@@ -24,7 +24,7 @@ export class UserGroupPrivilegeController extends BaseController {
     super();
   }
   /**
-   * Create a new record at ddv_usergroup_privileges
+   * Create a new record at ddv_roles_functs
    * @param data
    * @param res
    * @returns

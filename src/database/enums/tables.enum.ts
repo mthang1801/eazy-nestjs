@@ -9,11 +9,10 @@ export enum Table {
   USER_LOYALTY_HISTORY = 'ddv_user_loyalty_histories',
 
   //============== User group ==============
-  USER_GROUPS = 'ddv_usergroups',
-  USER_GROUP_PRIVILEGES = 'ddv_usergroup_privileges',
-  USER_GROUP_DESCRIPTIONS = 'ddv_usergroup_descriptions',
-  USER_GROUP_LINKS = 'ddv_usergroup_links',
-  PRIVILEGES = 'ddv_privileges',
+  ROLE = 'ddv_roles',
+  PRIVILEGE_ROLE_FUNC = 'ddv_roles_functs',
+  USER_ROLES = 'ddv_users_roles',
+  PRIVILEGE_FUNCTS = 'ddv_functs',
 
   //============== Category ==============
   CATEGORIES = 'ddv_categories',

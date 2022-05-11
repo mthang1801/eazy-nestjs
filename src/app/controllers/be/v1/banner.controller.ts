@@ -94,7 +94,7 @@ export class bannerController extends BaseController {
     @Param('id') id: number,
   ): Promise<IResponse> {
     await this.service.update(id, data);
-    return this.responseSuccess(res, null, 'Cập nhật thành công');
+    return this.responseSuccess(res);
   }
 
   @Delete('/:banner_id')
@@ -104,6 +104,6 @@ export class bannerController extends BaseController {
     @Param('banner_id') banner_id: number,
   ): Promise<IResponse> {
     await this.service.delete(banner_id);
-    return this.responseSuccess(res, '', 'Xoá thành công.');
+    return this.responseSuccess(res);
   }
 }

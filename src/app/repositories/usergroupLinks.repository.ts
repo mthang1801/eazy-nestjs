@@ -10,7 +10,7 @@ export class UserGroupLinksRepository<
 > extends BaseRepositorty<UserGroupLinkEntity> {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
-    this.table = Table.USER_GROUP_LINKS;
+    this.table = Table.USER_ROLES;
     this.tableProps = Object.getOwnPropertyNames(new UserGroupLinkEntity());
   }
 }

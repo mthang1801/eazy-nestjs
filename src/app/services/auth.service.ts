@@ -21,7 +21,7 @@ import { ImagesEntity } from '../entities/image.entity';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from '../../database/enums/tableFieldEnum/imageTypes.enum';
 import { UserGroupsService } from './usergroups.service';
-import { UserGroupEntity } from '../entities/usergroups.entity';
+import { RoleEntity } from '../entities/role.entity';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { MailService } from './mail.service';
 import {
@@ -198,8 +198,8 @@ export class AuthService {
     const password = data['password'];
 
     let user = phone
-      ? await this.userService.findUserAllInfo({ phone })
-      : await this.userService.findUserAllInfo({ email });
+      ? await this.userRepository.findOne({ phone })
+      : await this.userRepository.findOne({ email });
 
     if (!user) {
       throw new NotFoundException('Người dùng không tồn tại.');
@@ -229,7 +229,7 @@ export class AuthService {
       },
     );
 
-    // get menu at ddv_usergroup_privileges
+    // get menu at ddv_roles_functs
     // const menu = await this.userGroupsPrivilegeService.getListByUserGroupId(
     //   user.usergroup_id,
     // );
@@ -265,7 +265,7 @@ export class AuthService {
   ): Promise<any> {
     // Check if user has been existings or not
 
-    let userExists: any = await this.userService.findUserAllInfo({
+    let userExists: any = await this.userRepository.findOne({
       email: providerData.email,
     });
 
@@ -437,7 +437,7 @@ export class AuthService {
       status: UserMailingListsStatusEnum.Disabled,
     });
 
-    const user = await this.userService.findUserAllInfo({
+    const user = await this.userRepository.findOne({
       [`${Table.USERS}.user_id`]: user_id,
     });
     let menu;

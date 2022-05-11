@@ -1,12 +1,12 @@
 import { Module, forwardRef } from '@nestjs/common';
 
-import { UserGroupsRepository } from '../repositories/usergroups.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
+import { RoleRepository } from '../repositories/role.repository';
+
 import { UserRepository } from '../repositories/user.repository';
 import { UserGroupPrivilegeController } from '../controllers/be/v1/usergroupPrivilege.controller';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
 import { UserGroupsPrivilegeService } from '../services/usergroupPrivilege.service';
-import { PrivilegeRepository } from '../repositories/privilege.repository';
+import { FunctRepository } from '../repositories/privilege.repository';
 import { UserGroupsModule } from './usergroups.module';
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 @Module({
@@ -14,13 +14,13 @@ import { UserGroupLinksRepository } from '../repositories/usergroupLinks.reposit
   controllers: [UserGroupPrivilegeController],
   providers: [
     UserGroupPrivilegesRepository,
-    PrivilegeRepository,
+    FunctRepository,
     UserGroupsPrivilegeService,
     UserGroupLinksRepository,
   ],
   exports: [
     UserGroupPrivilegesRepository,
-    PrivilegeRepository,
+    FunctRepository,
     UserGroupsPrivilegeService,
   ],
 })

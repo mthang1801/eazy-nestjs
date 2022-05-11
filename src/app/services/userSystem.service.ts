@@ -1,18 +1,18 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { UpdateUserGroupsDto } from '../dto/usergroups/update-usergroups.dto';
-import { PrivilegeEntity } from '../entities/privilege.entity';
+import { FunctEntity } from '../entities/funct.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UserGroupDescriptionEntity } from '../entities/userGroupDescription.entity';
 import { UserGroupLinkEntity } from '../entities/usergroupLinks.entity';
 import { UserGroupPrivilegeEntity } from '../entities/usergroupPrivilege.entity';
-import { UserGroupEntity } from '../entities/usergroups.entity';
+import { RoleEntity } from '../entities/role.entity';
 import { UserProfileEntity } from '../entities/userProfile.entity';
-import { PrivilegeRepository } from '../repositories/privilege.repository';
+import { FunctRepository } from '../repositories/privilege.repository';
 import { UserRepository } from '../repositories/user.repository';
-import { UserGroupDescriptionsRepository } from '../repositories/usergroupDescriptions.repository';
+
 import { UserGroupLinksRepository } from '../repositories/usergroupLinks.repository';
 import { UserGroupPrivilegesRepository } from '../repositories/usergroupPrivileges.repository';
-import { UserGroupsRepository } from '../repositories/usergroups.repository';
+import { RoleRepository } from '../repositories/role.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
 import { Like, Not, Equal } from '../../database/operators/operators';
@@ -43,13 +43,12 @@ import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
 @Injectable()
 export class UserSystemService {
   constructor(
-    private userGroupRepo: UserGroupsRepository<UserGroupEntity>,
-    private userGroupDescriptionRepo: UserGroupDescriptionsRepository<UserGroupDescriptionEntity>,
+    private userGroupRepo: RoleRepository<RoleEntity>,
     private userGroupLinksRepo: UserGroupLinksRepository<UserGroupLinkEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userGroupPrivilegeRepo: UserGroupPrivilegesRepository<UserGroupPrivilegeEntity>,
-    private privilegeRepo: PrivilegeRepository<PrivilegeEntity>,
+    private privilegeRepo: FunctRepository<FunctEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private customerService: CustomerService,
@@ -72,13 +71,6 @@ export class UserSystemService {
           }
           filterCondition[`${Table.USERS}.${key}`] = Like(val);
           continue;
-        }
-
-        if (this.userGroupRepo.tableProps.includes(key)) {
-          filterCondition[`${Table.USER_GROUPS}.${key}`] = Like(val);
-        } else {
-          filterCondition[`${Table.USER_GROUP_DESCRIPTIONS}.${key}`] =
-            Like(val);
         }
       }
     }

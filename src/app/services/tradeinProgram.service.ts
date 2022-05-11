@@ -577,6 +577,14 @@ export class TradeinProgramService {
             product_id: product.product_id,
           };
           await this.productDescRepo.create(productDescData, false);
+
+          let newProductCategoryData = {
+            ...new ProductsCategoriesEntity(),
+            ...this.productCategoryRepo.setData(tradeinDetail),
+            category_id: 1,
+            product_id: product['product_id'],
+          };
+          await this.productCategoryRepo.create(newProductCategoryData, false);
         }
 
         let productPrice = await this.productPriceRepo.findOne({
@@ -694,6 +702,14 @@ export class TradeinProgramService {
             product_id: product.product_id,
           };
           await this.productDescRepo.create(productDescData, false);
+
+          let newProductCategoryData = {
+            ...new ProductsCategoriesEntity(),
+            ...this.productCategoryRepo.setData(tradeinDetail),
+            category_id: 1,
+            product_id: product['product_id'],
+          };
+          await this.productCategoryRepo.create(newProductCategoryData, false);
         }
 
         let productPrice = await this.productRepo.findOne({
