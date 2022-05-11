@@ -80,16 +80,10 @@ export class AuthService {
     private functRepo: FunctRepository<FunctEntity>,
   ) {}
 
-  generateToken(user: UserEntity): string {
-    const userIdEncoded = encodeBase64String(
-      `${uuid()}-${user['user_id']}-${uuid()}`,
-    );
-
+  generateToken(user: UserEntity, uuid): string {
     const payload = {
       sub: {
-        user_id: userIdEncoded,
-        email: user.email,
-        phone: user.phone,
+        user_id: uuid,
         lastname: user.lastname,
         firstname: user.firstname,
       },
@@ -202,7 +196,77 @@ export class AuthService {
     this.sendMailService(user, UserMailingListsTypeEnum.ActivateSignUpAccount);
   }
 
-  async login(data: any): Promise<IResponseUserToken> {
+  async login(data: any) {
+    const phone = data['phone'];
+    const email = data['email'];
+    const password = data['password'];
+
+    let user = phone
+      ? await this.userRepository.findOne({ phone })
+      : await this.userRepository.findOne({ email });
+
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại.');
+    }
+
+    if (user.status === UserStatusEnum.Deactive) {
+      throw new HttpException(
+        'Tài khoản chưa được kích hoạt, vui lòng truy cập vào email để kích hoạt tài khoản.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    if (user.user_type != UserTypeEnum.Employee) {
+      throw new HttpException('Người dùng không nằm trong hệ thống.', 401);
+    }
+
+    if (desaltHashPassword(password, user.salt) !== user.password) {
+      throw new HttpException(
+        phone
+          ? 'Số điện thoại hoặc mật khẩu không đúng.'
+          : 'Địa chỉ email hoặc mật khẩu không đúng',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.userRepository.update(
+      { user_id: user.user_id },
+      {
+        user_login: AuthProviderEnum.SYSTEM,
+        last_login: formatStandardTimeStamp(),
+      },
+    );
+
+    // get menu at ddv_roles_functs
+    const menuList = await this.functRepo.find({ level: 0 });
+    if (menuList.length) {
+      for (let menuItem of menuList) {
+        let menu = await this.functRepo.find({
+          level: 1,
+          parent_id: menuItem['funct_id'],
+        });
+        menuItem['children'] = menu;
+      }
+    }
+
+    const userIdEncoded = encodeBase64String(
+      `${uuid()}-${user['user_id']}-${uuid()}`,
+    );
+
+    const dataResult = {
+      token: this.generateToken(user, userIdEncoded),
+      userData: {
+        firstname: user['firstname'],
+        lastname: user['lastname'],
+        avatar: user['avatar'],
+      },
+      uuid: userIdEncoded,
+      menu: menuList,
+    };
+
+    return dataResult;
+  }
+  async loginFE(data: any) {
     const phone = data['phone'];
     const email = data['email'];
     const password = data['password'];
@@ -239,22 +303,20 @@ export class AuthService {
       },
     );
 
-    // get menu at ddv_roles_functs
-    const menuList = await this.functRepo.find({ level: 0 });
-    if (menuList.length) {
-      for (let menuItem of menuList) {
-        let menu = await this.functRepo.find({
-          level: 1,
-          parent_id: menuItem['funct_id'],
-        });
-        menuItem['children'] = menu;
-      }
-    }
+    const userIdEncoded = encodeBase64String(
+      `${uuid()}-${user['user_id']}-${uuid()}`,
+    );
 
     const dataResult = {
-      token: this.generateToken(user),
-      userData: preprocessUserResult(user),
-      menu: menuList,
+      token: this.generateToken(user, userIdEncoded),
+      userData: {
+        user_id: user['user_id'],
+        phone: user['phone'],
+        email: user['email'],
+        firstname: user['firstname'],
+        lastname: user['lastname'],
+        avatar: user['avatar'],
+      },
     };
 
     return dataResult;
@@ -369,13 +431,19 @@ export class AuthService {
     });
 
     userExists = { ...userExists, ...authProvider };
-    const userData = {
-      ...preprocessUserResult(userExists),
-    };
+
+    const userIdEncoded = encodeBase64String(
+      `${uuid()}-${userExists['user_id']}-${uuid()}`,
+    );
 
     return {
-      token: this.generateToken(userData),
-      userData,
+      token: this.generateToken(userExists, userIdEncoded),
+      userData: {
+        user_id: userExists['user_id'],
+        firstname: userExists['firstname'],
+        lastname: userExists['lastname'],
+        avatar: userExists['avatar'],
+      },
     };
   }
 
@@ -405,10 +473,7 @@ export class AuthService {
     await this.sendMailService(user, UserMailingListsTypeEnum.ResetPassword);
   }
 
-  async activeSignUpAccount(
-    user_id: number,
-    token: string,
-  ): Promise<IResponseUserToken> {
+  async activeSignUpAccount(user_id: number, token: string) {
     //Firstly, check user status has been active or not
     const checkUserHasBeenActive = await this.userRepository.findById(user_id);
     if (checkUserHasBeenActive.status === UserStatusEnum.Active) {
@@ -457,19 +522,23 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       [`${Table.USERS}.user_id`]: user_id,
     });
-    let menu = await this.functRepo.find({ level: 0 });
-    console.log(menu);
+
+    const userIdEncoded = encodeBase64String(
+      `${uuid()}-${user['user_id']}-${uuid()}`,
+    );
 
     return {
-      token: this.generateToken(user),
-      userData: preprocessUserResult(user),
-      menu,
+      token: this.generateToken(user, userIdEncoded),
+      userData: {
+        user_id: user['user_id'],
+        firstname: user['firstname'],
+        lastname: user['lastname'],
+        avatar: user['avatar'],
+      },
     };
   }
 
-  async restorePasswordEmail(
-    data: AuthRestoreDto,
-  ): Promise<IResponseUserToken> {
+  async restorePasswordEmailFE(data: AuthRestoreDto) {
     const { user_id, token, password } = data;
 
     const user = await this.userRepository.findById(user_id);
@@ -511,7 +580,7 @@ export class AuthService {
     });
 
     const userLogin = { email: updatedUser.email, password };
-    return this.login(userLogin);
+    return this.loginFE(userLogin);
   }
 
   async sendMailService(

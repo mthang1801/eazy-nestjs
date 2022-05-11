@@ -1304,17 +1304,17 @@ export class OrdersService {
       ? await this.districtService.get(order['b_district'], true)
       : order['b_district'];
 
-    order['s_district'] = isNumeric(order['s_district'])
-      ? await this.districtService.get(order['s_district'], true)
-      : order['s_district'];
+    // order['s_district'] = isNumeric(order['s_district'])
+    //   ? await this.districtService.get(order['s_district'], true)
+    //   : order['s_district'];
 
-    order['b_ward'] = isNumeric(order['b_ward'])
-      ? await this.wardService.get(order['b_ward'], true)
-      : order['b_ward'];
+    // order['b_ward'] = isNumeric(order['b_ward'])
+    //   ? await this.wardService.get(order['b_ward'], true)
+    //   : order['b_ward'];
 
-    order['s_ward'] = isNumeric(order['s_ward'])
-      ? await this.wardService.get(order['s_ward'], true)
-      : order['s_ward'];
+    // order['s_ward'] = isNumeric(order['s_ward'])
+    //   ? await this.wardService.get(order['s_ward'], true)
+    //   : order['s_ward'];
 
     return order;
   }
@@ -1383,15 +1383,15 @@ export class OrdersService {
       },
     });
 
-    // if (orderDetails.length) {
-    //   for (let orderDetailItem of orderDetails) {
-    //     let productCategory = await this.productCategoryRepo.findOne({
-    //       select: '*',
-    //       join: productCategoryJoiner,
-    //       where: { product_appcore_id: orderDetailItem['product_appcore_id'] },
-    //     });
-    //   }
-    // }
+    if (orderDetails.length) {
+      for (let orderDetailItem of orderDetails) {
+        let productCategory = await this.productCategoryRepo.findOne({
+          select: '*',
+          join: productCategoryJoiner,
+          where: { product_appcore_id: orderDetailItem['product_appcore_id'] },
+        });
+      }
+    }
 
     if (order['s_city']) {
       order['s_cityName'] = await this.cityService.get(order['s_city'], true);

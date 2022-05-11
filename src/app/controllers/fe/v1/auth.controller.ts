@@ -54,13 +54,20 @@ export class AuthController extends BaseController {
     );
   }
 
-  @Put("change-password")
+  @Put('change-password')
   @UseGuards(AuthGuard)
-  async changePassword(@Body() data: ChangePasswordDto, @Res() res: Response, @Req() req) {
+  async changePassword(
+    @Body() data: ChangePasswordDto,
+    @Res() res: Response,
+    @Req() req,
+  ) {
     const result = await this.service.changePassword(data, req.user);
-    return this.responseSuccess(res, result, 'Mật khẩu được thay đổi thành công');
+    return this.responseSuccess(
+      res,
+      result,
+      'Mật khẩu được thay đổi thành công',
+    );
   }
-
 
   /**
    * Login account with email or phone and password from FE
@@ -70,7 +77,7 @@ export class AuthController extends BaseController {
    */
   @Post('login')
   async login(@Body() data: LoginDto, @Res() res): Promise<IResponse> {
-    const userResponse = await this.service.login(data);
+    const userResponse = await this.service.loginFE(data);
     return this.responseSuccess(res, userResponse);
   }
 
@@ -133,7 +140,7 @@ export class AuthController extends BaseController {
     @Body() data: AuthRestoreDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.restorePasswordEmail(data);
+    const result = await this.service.restorePasswordEmailFE(data);
     return this.responseSuccess(res, result, 'Khôi phục mật khẩu thành công');
   }
 
