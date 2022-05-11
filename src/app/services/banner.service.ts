@@ -33,8 +33,9 @@ import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
-import { MoreThan } from '../../database/operators/operators';
+
 import { getPageSkipLimit } from '../../utils/helper';
+import { MoreThan } from '../../database/operators/operators';
 import {
   Between,
   MoreThanOrEqual,
@@ -146,55 +147,74 @@ export class bannerService {
   }
 
   async getListFE(params) {
-    let { page_location_name, page_target_name, device_type } = params;
+    let { slug, device_type } = params;
     device_type = device_type || 'D';
-    let pageLocation = await this.bannerLocationsDescRepo.findOne({
-      location_description: page_location_name,
-    });
-    if (!pageLocation) {
-      throw new HttpException('Không tìm vị trí hiển thị', 404);
-    }
-    let pageTarget = await this.bannerTargetDescRepo.findOne({
-      target_description: page_target_name,
-    });
-    if (!pageTarget) {
-      throw new HttpException('Không tìm thấy trang hiển thị', 404);
-    }
-    let banner = await this.bannerRepo.findOne({
+
+    let banners = await this.bannerRepo.find({
       select: '*',
+      join: bannerJoiner,
       where: {
-        [`${Table.BANNER}.page_location_id`]: pageLocation.location_id,
-        [`${Table.BANNER}.page_target_id`]: pageTarget.target_id,
         [`${Table.BANNER}.status`]: 'A',
         [`${Table.BANNER}.device_type`]: device_type,
-        [`${Table.BANNER}.start_at`]: LessThanOrEqual(
-          formatStandardTimeStamp(),
-        ),
-        [`${Table.BANNER}.end_at`]: MoreThanOrEqual(formatStandardTimeStamp()),
+        [`${Table.BANNER_TARGET_DESCRIPTION}.url`]: slug,
       },
     });
-    if (banner) {
-      const bannerItems = await this.bannerItemRepo.find({
-        select: '*',
-        where: {
-          [`${Table.BANNER_ITEM}.status`]: 'A',
-          [`${Table.BANNER_ITEM}.start_at`]: LessThanOrEqual(
-            formatStandardTimeStamp(),
-          ),
-          [`${Table.BANNER_ITEM}.end_at`]: MoreThanOrEqual(
-            formatStandardTimeStamp(),
-          ),
-        },
-        orderBy: [
-          {
-            field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
-            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.BANNER_ITEM}.position ASC`,
+
+    let _banners = [...banners];
+
+    if (banners.length) {
+      _banners = [];
+      for (let banner of banners) {
+        if (banner.end_at && new Date(banner.end_at).getTime() < Date.now()) {
+          continue;
+        }
+
+        if (
+          banner.start_at &&
+          new Date(banner.start_at).getTime() > Date.now()
+        ) {
+          continue;
+        }
+
+        const bannerItems = await this.bannerItemRepo.find({
+          select: '*',
+          where: {
+            [`${Table.BANNER_ITEM}.status`]: 'A',
+            [`${Table.BANNER_ITEM}.banner_id`]: banner.banner_id,
+            [`${Table.BANNER_ITEM}.start_at`]: LessThanOrEqual(
+              formatStandardTimeStamp(),
+            ),
           },
-        ],
-      });
-      banner['banner_items'] = bannerItems;
+          orderBy: [
+            {
+              field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
+              sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.BANNER_ITEM}.position ASC`,
+            },
+          ],
+        });
+        let bannerItemsResult = []
+        for (let bannerItem of bannerItems) {
+          if (
+            bannerItem.end_at &&
+            new Date(bannerItem.end_at).getTime() < Date.now()
+          ) {
+            continue;
+          }
+
+          if (
+            bannerItem.start_at &&
+            new Date(bannerItem.start_at).getTime() > Date.now()
+          ) {
+            continue;
+          }
+
+        }
+        banner['banner_items'] = bannerItems;
+
+        _banners = [..._banners, { ...banner }];
+      }
     }
-    return banner;
+    return _banners;
   }
 
   async getLocationsList() {

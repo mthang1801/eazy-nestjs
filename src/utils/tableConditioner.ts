@@ -393,8 +393,10 @@ export const tradeinProgramSearchFilter = (
   let arraySearch = [];
 
   if (search) {
-    arraySearch = [{ [`${Table.TRADEIN_PROGRAM}.name`]: Like(search) }];
-    arraySearch = [{ [`${Table.TRADEIN_PROGRAM}.desc`]: Like(search) }];
+    arraySearch = [
+      { [`${Table.TRADEIN_PROGRAM}.name`]: Like(search) },
+      { [`${Table.TRADEIN_PROGRAM}.desc`]: Like(search) },
+    ];
   }
 
   return searchFilterTemplate(filterConditions, arraySearch);

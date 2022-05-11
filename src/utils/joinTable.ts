@@ -622,14 +622,6 @@ export const orderDetailsJoiner = {
 
 export const orderJoiner = {
   [JoinTable.leftJoin]: {
-    [Table.STORE_LOCATIONS]: {
-      fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
-      rootJoin: `${Table.ORDERS}.store_id`,
-    },
-    [Table.STORE_LOCATION_DESCRIPTIONS]: {
-      fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
-      rootJoin: `${Table.ORDERS}.store_id`,
-    },
     [Table.ORDER_PAYMENTS]: {
       fieldJoin: `${Table.ORDER_PAYMENTS}.order_id`,
       rootJoin: `${Table.ORDERS}.order_id`,
