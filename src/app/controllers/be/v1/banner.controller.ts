@@ -47,8 +47,11 @@ export class bannerController extends BaseController {
   }
 
   @Get('/targets')
-  async getTargetsList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getTargetsList();
+  async getTargetsList(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getTargetsList(params);
     return this.responseSuccess(res, result);
   }
 

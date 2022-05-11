@@ -34,6 +34,7 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
 import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 import { MoreThan } from '../../database/operators/operators';
+import { getPageSkipLimit } from '../../utils/helper';
 import {
   Between,
   MoreThanOrEqual,
@@ -200,8 +201,36 @@ export class bannerService {
     return this.bannerLocationsDescRepo.find();
   }
 
-  async getTargetsList() {
-    return this.bannerTargetDescRepo.find();
+  async getTargetsList(params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let targetsList = await this.bannerTargetDescRepo.find({
+      select: '*',
+      where: {
+        [`${Table.BANNER_TARGET_DESCRIPTION}.target_description`]: search
+          ? Like(search)
+          : Like(''),
+      },
+      skip,
+      limit,
+    });
+    let count = await this.bannerTargetDescRepo.find({
+      select: 'count(*) as total',
+      where: {
+        [`${Table.BANNER_TARGET_DESCRIPTION}.target_description`]: search
+          ? Like(search)
+          : Like(''),
+      },
+    });
+
+    return {
+      paging: {
+        pageSize: limit,
+        currentPage: page,
+        total: count[0].total,
+      },
+      data: targetsList,
+    };
   }
 
   async getById(id: number) {

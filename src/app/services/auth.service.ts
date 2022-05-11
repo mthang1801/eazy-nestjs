@@ -2,7 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthCredentialsDto } from '../dto/auth/auth-credential.dto';
 import { UsersService } from './users.service';
 import { JwtService } from '@nestjs/jwt';
-import { saltHashPassword, desaltHashPassword } from '../../utils/cipherHelper';
+import {
+  saltHashPassword,
+  desaltHashPassword,
+  generateSHA512,
+} from '../../utils/cipherHelper';
 import { AuthProviderRepository } from '../repositories/auth.repository';
 import { AuthProviderEntity } from '../entities/authProvider.entity';
 import { Table } from '../../database/enums/tables.enum';
@@ -51,6 +55,7 @@ import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { generateRandomNumber } from '../../utils/helper';
+import { sha512 } from '../../utils/cipherHelper';
 
 @Injectable()
 export class AuthService {
@@ -73,15 +78,16 @@ export class AuthService {
   ) {}
 
   generateToken(user: UserEntity): string {
+    let { passwordHash: userId, salt } = saltHashPassword(user['user_id']);
+
     const payload = {
       sub: {
-        user_id: user['user_id'],
+        user_id: userId,
         email: user.email,
         phone: user.phone,
         lastname: user.lastname,
         firstname: user.firstname,
-        salt: user.salt,
-        permission: `UID_${user['user_id']}`,
+        salt,
       },
     };
 
