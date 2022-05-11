@@ -1,6 +1,6 @@
 import { formatStandardTimeStamp } from '../../utils/helper';
 export class RoleFunctionEntity {
-  id: number = 0;
+  role_funct_id: number = 0;
   role_id: number = 0;
   funct_id: number = 0;
   permission: number = 1;

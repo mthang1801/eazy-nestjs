@@ -1,14 +1,14 @@
+import { formatStandardTimeStamp } from '../../utils/helper';
 export class FunctEntity {
-  privilege_id: number = 0;
-  privilege: string = '';
-  description: string = '';
-  parent_id: null | number = 0;
-  level: number = 0;
-  is_default: string = 'Y';
-  section_id: string = '';
-  group_id: string = '';
-  is_view: string = 'N';
+  funct_id: number = 0;
+  parent_id: number = 0;
+  funct_code: string = '';
+  funct_name: string = '';
   route: string = '';
-  method: string = 'GET';
   icon: string = '';
+  level: number = 0;
+  created_at: string = formatStandardTimeStamp();
+  created_by: number = 0;
+  updated_at: string = formatStandardTimeStamp();
+  updated_by: number = 0;
 }

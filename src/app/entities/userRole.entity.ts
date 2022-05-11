@@ -1,6 +1,6 @@
 import { formatStandardTimeStamp } from '../../utils/helper';
 export class UserRoleEntity {
-  id: number = 0;
+  user_role_id: number = 0;
   partner_id: number = 0;
   user_id: number = 0;
   role_id: number = 0;

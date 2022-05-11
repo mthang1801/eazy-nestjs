@@ -236,12 +236,14 @@ export class bannerService {
   async getById(id: number) {
     const banner = await this.bannerRepo.findOne({
       select: `*`,
+      join: bannerJoiner,
       where: { [`${Table.BANNER}.banner_id`]: id },
     });
 
     if (banner) {
       const bannerItems = await this.bannerItemRepo.find({
         select: '*',
+
         orderBy: [
           {
             field: `CASE WHEN ${Table.BANNER_ITEM}.position`,
