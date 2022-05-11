@@ -448,6 +448,7 @@ export const tradeinOldReceiptSearchFilter = (
   if (search) {
     arraySearch = [
       { [`${Table.TRADEIN_OLD_RECEIPT}.code`]: Like(search) },
+      { [`${Table.TRADEIN_OLD_RECEIPT}.description`]: Like(search) },
       { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.product_code`]: Like(search) },
       { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.barcode`]: Like(search) },
       { [`${Table.TRADEIN_OLD_RECEIPT_DETAIL}.product`]: Like(search) },
