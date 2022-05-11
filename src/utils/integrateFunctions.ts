@@ -900,7 +900,8 @@ export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
   cmsData['cash_account_name'] = coreData['cashAccName'];
   cmsData['transfer_account_code'] = coreData['transferAccountCode'];
   cmsData['transfer_account_name'] = coreData['transferAccName'];
-  if (coreData['payDate']) {
+
+  if (coreData['payDate'] && moment(coreData['payDate']).isValid()) {
     cmsData['paid_at'] = formatStandardTimeStamp(coreData['payDate']);
   }
 

@@ -55,7 +55,7 @@ import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { generateRandomNumber } from '../../utils/helper';
-import { sha512 } from '../../utils/cipherHelper';
+import { sha512, encodeBase64String } from '../../utils/cipherHelper';
 
 @Injectable()
 export class AuthService {
@@ -78,16 +78,17 @@ export class AuthService {
   ) {}
 
   generateToken(user: UserEntity): string {
-    let { passwordHash: userId, salt } = saltHashPassword(user['user_id']);
-
+    const userIdEncoded = encodeBase64String(
+      `${uuid()}-${user['user_id']}`.toString(),
+    );
+    console.log(userIdEncoded);
     const payload = {
       sub: {
-        user_id: userId,
+        user_id: userIdEncoded,
         email: user.email,
         phone: user.phone,
         lastname: user.lastname,
         firstname: user.firstname,
-        salt,
       },
     };
 

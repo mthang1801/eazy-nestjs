@@ -35,7 +35,7 @@ export class AuthGuard implements CanActivate {
 
     const user = decoded?.sub;
 
-    if (!user || !user['user_id'] || !user['salt']) {
+    if (!user || !user['user_id']) {
       throw new HttpException('Token không hợp lệ.', HttpStatus.UNAUTHORIZED);
     }
 
@@ -43,7 +43,6 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token đã hết hạn.', 408);
     }
     console.log(user['user_id']);
-    console.log(desaltHashPassword(user['user_id'], user['salt']));
 
     req.user = user;
 

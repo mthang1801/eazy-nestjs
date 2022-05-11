@@ -74,4 +74,10 @@ export function uuid() {
   });
 }
 
-export function endcodeBase64String(str) {}
+export function encodeBase64String(str) {
+  return Buffer.from(str, 'utf8').toString('base64');
+}
+
+export function decodeBase64String(buffer) {
+  return Buffer.from(buffer, 'base64').toString('utf8');
+}
