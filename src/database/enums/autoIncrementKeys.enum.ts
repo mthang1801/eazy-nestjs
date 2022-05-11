@@ -9,10 +9,10 @@ export enum PrimaryKeys {
   ddv_user_loyalty_histories = 'auto_increment_id',
 
   //============== User group ==============
-  ddv_users_roles = 'link_id',
-  ddv_roles_functs = 'usergroup_privilege_id',
-  ddv_roles = 'usergroup_id',
-  ddv_functs = 'privilege_id',
+  ddv_users_roles = 'user_role_id',
+  ddv_roles_functs = 'role_funct_id',
+  ddv_roles = 'role_id',
+  ddv_functs = 'funct_id',
 
   //============== Cart ================
   ddv_user_cart_items = 'cart_item_id',

@@ -63,6 +63,6 @@ export class UserSystemController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.service.create(data);
-    return this.responseSuccess(res, null, 'Tạo thành công');
+    return this.responseSuccess(res);
   }
 }

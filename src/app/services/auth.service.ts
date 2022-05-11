@@ -56,6 +56,8 @@ import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { generateRandomNumber } from '../../utils/helper';
 import { sha512, encodeBase64String } from '../../utils/cipherHelper';
+import { FunctRepository } from '../repositories/funct.repository';
+import { FunctEntity } from '../entities/funct.entity';
 
 @Injectable()
 export class AuthService {
@@ -75,6 +77,7 @@ export class AuthService {
     private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
     private imagesRepository: ImagesRepository<ImagesEntity>,
     private customerService: CustomerService,
+    private functRepo: FunctRepository<FunctEntity>,
   ) {}
 
   generateToken(user: UserEntity): string {
@@ -237,14 +240,21 @@ export class AuthService {
     );
 
     // get menu at ddv_roles_functs
-    // const menu = await this.RoleFunctService.getListByUserGroupId(
-    //   user.usergroup_id,
-    // );
+    const menuList = await this.functRepo.find({ level: 0 });
+    if (menuList.length) {
+      for (let menuItem of menuList) {
+        let menu = await this.functRepo.find({
+          level: 1,
+          parent_id: menuItem['funct_id'],
+        });
+        menuItem['children'] = menu;
+      }
+    }
 
     const dataResult = {
       token: this.generateToken(user),
       userData: preprocessUserResult(user),
-      menu: [],
+      menu: menuList,
     };
 
     return dataResult;
@@ -447,12 +457,8 @@ export class AuthService {
     const user = await this.userRepository.findOne({
       [`${Table.USERS}.user_id`]: user_id,
     });
-    let menu;
-    if (user.usergroup_id) {
-      menu = await this.RoleFunctService.getListByUserGroupId(
-        user.usergroup_id,
-      );
-    }
+    let menu = await this.functRepo.find({ level: 0 });
+    console.log(menu);
 
     return {
       token: this.generateToken(user),
