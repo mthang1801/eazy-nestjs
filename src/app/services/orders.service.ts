@@ -1379,19 +1379,18 @@ export class OrdersService {
       join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
-        [`${Table.ORDER_DETAILS}.status`]: 'A',
       },
     });
 
-    if (orderDetails.length) {
-      for (let orderDetailItem of orderDetails) {
-        let productCategory = await this.productCategoryRepo.findOne({
-          select: '*',
-          join: productCategoryJoiner,
-          where: { product_appcore_id: orderDetailItem['product_appcore_id'] },
-        });
-      }
-    }
+    // if (orderDetails.length) {
+    //   for (let orderDetailItem of orderDetails) {
+    //     let productCategory = await this.productCategoryRepo.findOne({
+    //       select: '*',
+    //       join: productCategoryJoiner,
+    //       where: { [`${}`]: orderDetailItem['product_appcore_id'] },
+    //     });
+    //   }
+    // }
 
     if (order['s_city']) {
       order['s_cityName'] = await this.cityService.get(order['s_city'], true);
