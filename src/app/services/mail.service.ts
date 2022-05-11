@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserEntity } from '../entities/user.entity';
 import { join } from 'path';
-import { PrimaryKeys } from '../../database/enums/index';
+import { AutoIncrementKeys } from '../../database/enums/index';
 
 @Injectable()
 export class MailService {
@@ -22,8 +22,8 @@ export class MailService {
       originUrl,
       prefixApi,
       'auth',
-      `restore-password?token=${token}&${PrimaryKeys.ddv_users}=${
-        user[PrimaryKeys.ddv_users]
+      `restore-password?token=${token}&${AutoIncrementKeys.ddv_users}=${
+        user[AutoIncrementKeys.ddv_users]
       }`,
     );
 

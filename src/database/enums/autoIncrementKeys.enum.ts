@@ -1,4 +1,4 @@
-export enum PrimaryKeys {
+export enum AutoIncrementKeys {
   //============== User ==============
   ddv_users = 'user_id',
   ddv_users_auth_external = 'auth_external_id',

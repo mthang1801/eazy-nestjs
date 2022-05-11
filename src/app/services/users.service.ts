@@ -18,7 +18,7 @@ import {
   preprocessUserResult,
 } from '../../utils/helper';
 
-import { PrimaryKeys } from '../../database/enums/autoIncrementKeys.enum';
+import { AutoIncrementKeys } from '../../database/enums/autoIncrementKeys.enum';
 import { saltHashPassword } from '../../utils/cipherHelper';
 
 import { HttpException, HttpStatus, forwardRef } from '@nestjs/common';
@@ -378,7 +378,7 @@ export class UsersService {
           },
         },
       },
-      where: { [`${this.table}.${PrimaryKeys[this.table]}`]: id },
+      where: { [`${this.table}.${AutoIncrementKeys[this.table]}`]: id },
     });
     user['image'] = await this.getUserImage(user.user_id);
     return preprocessUserResult(user);

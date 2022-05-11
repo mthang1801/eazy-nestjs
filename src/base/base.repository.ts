@@ -1,7 +1,7 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { DatabaseCollection } from '../database/database.collection';
-import { Table, PrimaryKeys } from '../database/enums/index';
+import { Table, AutoIncrementKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
 import { preprocessDatabaseBeforeResponse } from './base.helper';
 
@@ -56,7 +56,7 @@ export class BaseRepositorty<T> {
 
     //Primiry keys is unique and db define
 
-    // delete dataObject[PrimaryKeys[this.table]];
+    // delete dataObject[AutoIncrementKeys[this.table]];
 
     return dataObject;
   }
@@ -229,7 +229,7 @@ export class BaseRepositorty<T> {
       }
 
       return this.findOne({
-        [`${this.table}.${[PrimaryKeys[this.table]]}`]: lastInsertId,
+        [`${this.table}.${[AutoIncrementKeys[this.table]]}`]: lastInsertId,
       });
     }
   }
@@ -249,7 +249,7 @@ export class BaseRepositorty<T> {
       rows = await this.databaseService.executeQueryReadPool(stringQuery, [id]);
     } else {
       rows = await this.databaseService.executeQueryReadPool(stringQuery, [
-        { [PrimaryKeys[this.table]]: id },
+        { [AutoIncrementKeys[this.table]]: id },
       ]);
     }
 
@@ -311,7 +311,7 @@ export class BaseRepositorty<T> {
         }
       });
     } else {
-      sql += ` ${PrimaryKeys[this.table]} = '${conditions}'`;
+      sql += ` ${AutoIncrementKeys[this.table]} = '${conditions}'`;
     }
 
     await this.databaseService.executeQueryWritePool(sql);
@@ -370,7 +370,7 @@ export class BaseRepositorty<T> {
     } else {
       queryString += ` ? `;
       res = await this.databaseService.executeQueryWritePool(queryString, [
-        { [PrimaryKeys[this.table]]: conditions },
+        { [AutoIncrementKeys[this.table]]: conditions },
       ]);
     }
 
