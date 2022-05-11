@@ -19,7 +19,6 @@ export class TradeinProgramController extends BaseController {
     super();
   }
   @Get()
-  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getListFE(params);
     return this.responseSuccess(res, result);
