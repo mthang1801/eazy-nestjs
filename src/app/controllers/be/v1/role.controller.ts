@@ -34,8 +34,8 @@ export class RoleController extends BaseController {
 
   @Post()
   async createGroup(@Res() res: Response, @Body() data: CreateGroupDto) {
-    await this.service.createGroup(data);
-    return this.responseSuccess(res);
+    const result = await this.service.createGroup(data);
+    return this.responseSuccess(res, result);
   }
 
   @Put('/:id')
@@ -54,7 +54,7 @@ export class RoleController extends BaseController {
     @Param('id') id: number,
     @Query() params,
   ) {
-    const result = await this.service.getGroupById(params, id);
+    const result = await this.service.getGroupById(id);
     return this.responseSuccess(res, result);
   }
 

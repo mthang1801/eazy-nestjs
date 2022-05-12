@@ -295,16 +295,7 @@ export class RoleService {
 
     const group = await this.roleRepo.create(groupData);
 
-    for (let i = 1; i <= 5; i++) {
-      const groupRole = {
-        ...new RoleFunctionEntity(),
-        ...this.roleFunctRepo.setData(data),
-        role_id: group.role_id,
-        funct_id: data.funct_id,
-        permission: i,
-      };
-      await this.roleFunctRepo.create(groupRole);
-    }
+    return this.getGroupById(group.role_id);
   }
 
   async getGroupList(params) {
@@ -334,7 +325,7 @@ export class RoleService {
     };
   }
 
-  async getGroupById(params, id: number) {
+  async getGroupById(id: number) {
     let group = await this.roleRepo.findOne({
       select: '*',
       where: {

@@ -17,6 +17,7 @@ export class Cryptography {
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     console.log(this.encodeBase64String(encrypted));
+    console.log(this.decodeBase64String(this.encodeBase64String(encrypted)));
     return {
       iv: this.iv.toString('hex'),
       encryptedData: encrypted.toString('hex'),
