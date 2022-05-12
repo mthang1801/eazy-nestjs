@@ -18,7 +18,7 @@ import { Response } from 'express';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateUserGroupPrivilegeDto } from 'src/app/dto/usergroups/create-usergroupPrivilege.dto';
 import { UpdateUserGroupPrivilegeDto } from 'src/app/dto/usergroups/update-usergroupPrivilege.dto';
-@Controller('be/v1/usergroup-privilege')
+@Controller('be/v1/role-functions')
 export class RoleFunctController extends BaseController {
   constructor(private readonly service: RoleFunctService) {
     super();

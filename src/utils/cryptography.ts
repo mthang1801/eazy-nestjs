@@ -42,7 +42,7 @@ export class Cryptography {
     return Buffer.from(str, 'utf8').toString('base64');
   }
 
-  decodeBase64String(buffer) {
+  public decodeBase64String(buffer) {
     return Buffer.from(buffer, 'base64').toString('utf8');
   }
 }

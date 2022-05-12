@@ -8,8 +8,8 @@ import {
 import { defaultPassword } from '../../../constants/defaultPassword';
 
 export class CreateUserSystemDto {
-  @IsNotEmpty()
-  firstname: string;
+  @IsOptional()
+  firstname: string = '';
 
   @IsNotEmpty()
   lastname: string;
@@ -22,7 +22,7 @@ export class CreateUserSystemDto {
   email: string;
 
   @IsNotEmpty()
-  usergroup_id: number;
+  role_id: number;
 
   @IsNotEmpty()
   store_id: number;

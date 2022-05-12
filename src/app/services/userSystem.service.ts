@@ -15,12 +15,12 @@ import { RoleFunctionRepository } from '../repositories/roleFunction.repository'
 import { RoleRepository } from '../repositories/role.repository';
 import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { Table } from '../../database/enums/tables.enum';
-import { Like, Not, Equal } from '../../database/operators/operators';
+import { Like, Not, Equal, In } from '../../database/operators/operators';
 import { userSystemSearchFilter } from 'src/utils/tableConditioner';
 import { UpdateUserSystemDto } from '../dto/userSystem/update-userSystem.dto';
 import { userJoiner } from 'src/utils/joinTable';
 import { customer_type } from '../../constants/customer';
-import { userSystemStoreJoiner } from '../../utils/joinTable';
+import { userSystemStoreJoiner, userRoleJoiner } from '../../utils/joinTable';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { CreateUserSystemDto } from '../dto/userSystem/create-userSystem.dto';
 import { defaultPassword } from '../../constants/defaultPassword';
@@ -39,16 +39,18 @@ import {
   formatStandardTimeStamp,
 } from 'src/utils/helper';
 import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
+import * as moment from 'moment';
+import { UpdateUserSystemRoleFunctsDto } from '../dto/userSystem/update-userSystemRoleFuncts.dto';
 
 @Injectable()
 export class UserSystemService {
   constructor(
-    private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
+    private roleRepo: RoleRepository<RoleEntity>,
+    private userRoleRepo: UserRoleRepository<UserRoleEntity>,
     private userRepository: UserRepository<UserEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
-    private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
-    private privilegeRepo: FunctRepository<FunctEntity>,
+    private roleFunctRepo: RoleFunctionRepository<RoleFunctionEntity>,
+    private functRepo: FunctRepository<FunctEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
     private userLoyalRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private customerService: CustomerService,
@@ -123,10 +125,21 @@ export class UserSystemService {
     return user;
   }
 
-  async update(id: number, data: UpdateUserSystemDto): Promise<any> {
-    const user = await this.userRepository.findById(id);
+  async update(user_id: number, data: UpdateUserSystemDto): Promise<any> {
+    const user = await this.userRepository.findById(user_id);
     if (!user) {
       throw new HttpException('Người dùng không tồn tại trong hệ thống.', 404);
+    }
+
+    const groupRole = await this.roleRepo.findOne({
+      role_id: data.role_id,
+      status: 'A',
+    });
+    if (!groupRole) {
+      throw new HttpException(
+        'Không tìm thấy nhóm người dùng hoặc đã bị vô hiệu hoá.',
+        404,
+      );
     }
 
     const userUpdateData = this.userRepository.setData(data);
@@ -146,17 +159,30 @@ export class UserSystemService {
       result = { ...result, ...updatedUser };
     }
 
-    const userGroupLinkData = this.userGroupLinksRepo.setData(data);
-
-    if (Object.entries(userGroupLinkData).length) {
-      const updatedUserGroupLink = await this.userGroupLinksRepo.update(
-        { user_id: result.user_id },
-        userGroupLinkData,
-      );
-      result = { ...result, ...updatedUserGroupLink };
+    if (data.role_id) {
+      const currentRoleOfUser = await this.userRoleRepo.findOne({
+        select: '*',
+        join: userRoleJoiner,
+        where: { [`${Table.USER_ROLES}.user_id`]: user_id },
+      });
+      if (currentRoleOfUser && currentRoleOfUser.role_id === data.role_id) {
+        return;
+      }
+      if (currentRoleOfUser) {
+        await this.userRoleRepo.delete({ user_id });
+      }
+      const groupRoleFuncts = await this.roleFunctRepo.find({
+        role_id: data.role_id,
+      });
+      if (groupRoleFuncts.length) {
+        for (let groupRoleFunctItem of groupRoleFuncts) {
+          await this.userRoleRepo.create({
+            user_id,
+            role_funct_id: groupRoleFunctItem.role_funct_id,
+          });
+        }
+      }
     }
-
-    return result;
   }
 
   async create(data: CreateUserSystemDto) {
@@ -173,6 +199,17 @@ export class UserSystemService {
       if (checkUserEmailExist) {
         throw new HttpException('Email đã tồn tại', 409);
       }
+    }
+
+    const groupRole = await this.roleRepo.findOne({
+      role_id: data.role_id,
+      status: 'A',
+    });
+    if (!groupRole) {
+      throw new HttpException(
+        'Không tìm thấy nhóm người dùng hoặc đã bị vô hiệu hoá.',
+        404,
+      );
     }
 
     let result: any = {};
@@ -195,8 +232,15 @@ export class UserSystemService {
       if (user.user_type === UserTypeEnum.Employee) {
         throw new HttpException('Người dùng này đã nằm trong hệ thống', 400);
       }
-      const userData = this.userRepository.setData(data);
-      await this.userRepository.update(
+      let userData = this.userRepository.setData(data);
+      if (data.email && !user.email) {
+        userData['email'] = data.email;
+      }
+
+      if (data.phone && !user.phone) {
+        userData['phone'] = data.phone;
+      }
+      let result = await this.userRepository.update(
         { user_id: user.user_id },
         {
           ...userData,
@@ -204,27 +248,38 @@ export class UserSystemService {
           store_id: data.store_id,
           status: data.status,
           updated_at: formatStandardTimeStamp(),
+          lastname: data.lastname,
         },
+        true,
       );
-
-      const userProfile = await this.userProfileRepository.findOne({
+      let userProfile = await this.userProfileRepository.findOne({
         user_id: user.user_id,
       });
+
       if (!userProfile) {
         const newUserPrtofileData = {
           ...new UserProfileEntity(),
           ...userProfile,
+          b_phone: data.phone,
           user_id: user.user_id,
+          b_lastname: data.lastname,
         };
-        await this.userProfileRepository.create(newUserPrtofileData);
+        userProfile = await this.userProfileRepository.create(
+          newUserPrtofileData,
+        );
       } else {
-        await this.userProfileRepository.update(
+        const updatedUserProfile = {
+          b_lastname: data.lastname,
+          b_phone: data.phone,
+        };
+        userProfile = await this.userProfileRepository.update(
           { user_id: user.user_id },
-          userProfile,
+          updatedUserProfile,
+          true,
         );
       }
-
-      result = { ...user };
+      result = { ...result, ...userProfile };
+      await this.customerService.updateCustomerToAppcore(result);
     } else {
       const { passwordHash, salt } = saltHashPassword(data.password);
 
@@ -237,7 +292,10 @@ export class UserSystemService {
         user_type: UserTypeEnum.Employee,
         store_id: data.store_id,
       };
-      userData['birthday'] = convertNullDatetimeData(userData['birthday']);
+      if (data['birthday'] && moment(data['birthday']).isValid()) {
+        userData['birthday'] = formatStandardTimeStamp(userData['birthday']);
+      }
+
       const newUser = await this.userRepository.create(userData);
 
       result = { ...newUser };
@@ -245,6 +303,8 @@ export class UserSystemService {
       const userProfileData = {
         ...new UserProfileEntity(),
         ...this.userProfileRepository.setData(data),
+        b_lastname: data.lastname,
+        b_phone: data.phone,
         user_id: result.user_id,
       };
 
@@ -260,9 +320,7 @@ export class UserSystemService {
         user_id: result.user_id,
       };
 
-      const newUserData = await this.userDataRepo.create(userDataData);
-
-      result = { ...result, ...newUserData };
+      await this.userDataRepo.create(userDataData, false);
 
       const userLoyaltyData = {
         ...new UserLoyaltyEntity(),
@@ -270,16 +328,41 @@ export class UserSystemService {
         user_id: result.user_id,
       };
 
-      const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
-
-      result = { ...result, ...newUserLoyalty };
+      await this.userLoyalRepo.create(userLoyaltyData, false);
 
       await this.customerService.createCustomerToAppcore(result);
-    }
 
-    await this.userGroupLinksRepo.create({
-      usergroup_id: data.usergroup_id,
-      user_id: result.user_id,
-    });
+      const groupRoleFuncts = await this.roleFunctRepo.find({
+        role_id: data.role_id,
+      });
+      if (groupRoleFuncts.length) {
+        for (let groupRoleFunctItem of groupRoleFuncts) {
+          await this.userRoleRepo.create({
+            user_id: result.user_id,
+            role_funct_id: groupRoleFunctItem.role_funct_id,
+          });
+        }
+      }
+    }
+  }
+
+  async changeRoleFuncts(user_id: number, data: UpdateUserSystemRoleFunctsDto) {
+    if (data.role_funct_ids && data.role_funct_ids.length) {
+      const groupRoles = await this.roleFunctRepo.find({
+        role_funct_id: In(data.role_funct_ids),
+      });
+
+      if ([...new Set(groupRoles.map(({ role_id }) => role_id))].length > 1) {
+        throw new HttpException('Không hợp lệ.', 400);
+      }
+
+      await this.userRoleRepo.delete({ user_id });
+      for (let roleFuncId of data.role_funct_ids) {
+        await this.userRoleRepo.create(
+          { user_id, role_funct_id: roleFuncId },
+          false,
+        );
+      }
+    }
   }
 }

@@ -3,7 +3,7 @@ export class UserRoleEntity {
   user_role_id: number = 0;
   partner_id: number = 0;
   user_id: number = 0;
-  role_id: number = 0;
+  role_funct_id: number = 0;
   status: string = 'A';
   created_at: string = formatStandardTimeStamp();
   created_by: number = 0;

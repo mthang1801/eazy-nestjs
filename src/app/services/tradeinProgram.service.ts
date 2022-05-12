@@ -514,6 +514,7 @@ export class TradeinProgramService {
             ...new TradeinProgramCriteriaEntity(),
             ...this.tradeinProgramCriteriaRepo.setData(appliedCriteriaItem),
             tradein_id,
+            criteria_id: appliedCriteriaItem.criteria_id,
           };
           currentCriteria = await this.tradeinProgramCriteriaRepo.create(
             newCriteriaData,

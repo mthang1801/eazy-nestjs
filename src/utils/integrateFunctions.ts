@@ -311,15 +311,15 @@ export const itgCustomerToAppcore = (data) => {
       continue;
     }
     if (app === 'b_city') {
-      cData[core] = +data[app] || '255';
+      cData[core] = +data[app] || 255;
       continue;
     }
     if (app === 'b_district') {
-      cData[core] = +data[app] || '329';
+      cData[core] = +data[app] || 329;
       continue;
     }
     if (app === 'b_ward') {
-      cData[core] = +data[app] || '10266';
+      cData[core] = +data[app] || 10266;
       continue;
     }
     if (app === 'email') {

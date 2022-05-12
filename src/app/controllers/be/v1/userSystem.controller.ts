@@ -16,6 +16,7 @@ import { UserSystemService } from '../../../services/userSystem.service';
 import { Get, Post } from '@nestjs/common';
 import { UpdateUserSystemDto } from 'src/app/dto/userSystem/update-userSystem.dto';
 import { CreateUserSystemDto } from 'src/app/dto/userSystem/create-userSystem.dto';
+import { UpdateUserSystemRoleFunctsDto } from '../../../dto/userSystem/update-userSystemRoleFuncts.dto';
 
 @Controller('/be/v1/user-system')
 export class UserSystemController extends BaseController {
@@ -39,21 +40,24 @@ export class UserSystemController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':id')
+  @Get(':user_id')
   //@UseGuards(AuthGuard)
-  async get(@Param('id') id: number, @Res() res: Response): Promise<IResponse> {
-    const result = await this.service.getById(id);
+  async get(
+    @Param('user_id') user_id: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getById(user_id);
     return this.responseSuccess(res, result);
   }
 
-  @Put(':id')
+  @Put(':user_id')
   // @UseGuards(AuthGuard)
   async update(
-    @Param('id') id: number,
+    @Param('user_id') user_id: number,
     @Body() data: UpdateUserSystemDto,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.update(id, data);
+    const result = await this.service.update(user_id, data);
     return this.responseSuccess(res, result);
   }
 
@@ -63,6 +67,16 @@ export class UserSystemController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.service.create(data);
+    return this.responseSuccess(res);
+  }
+
+  @Put(':user_id/change-roles')
+  async changeRoleFuncts(
+    @Param('user_id') user_id: number,
+    @Body() data: UpdateUserSystemRoleFunctsDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    await this.service.changeRoleFuncts(user_id, data);
     return this.responseSuccess(res);
   }
 }

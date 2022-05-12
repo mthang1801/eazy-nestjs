@@ -30,6 +30,7 @@ import { CreateGroupDto } from '../dto/role/create-user-role.dto';
 import { getPageSkipLimit, removeMoreThanOneSpace } from '../../utils/helper';
 import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
 import { groupListSearchFilter } from '../../utils/tableConditioner';
+import { AuthorizeRoleFunctionDto } from '../dto/userRole/authorizeRoleFunct';
 
 @Injectable()
 export class RoleService {
@@ -39,7 +40,7 @@ export class RoleService {
     private userRoleRepo: UserRoleRepository<UserRoleEntity>,
     private userRepo: UserRepository<UserEntity>,
     private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
-    private privilegeRepo: FunctRepository<FunctEntity>,
+    private functRepo: FunctRepository<FunctEntity>,
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
@@ -67,12 +68,12 @@ export class RoleService {
 
     if (data.privileges.length) {
       for (let privilegeId of data.privileges) {
-        let privilege = await this.privilegeRepo.findOne({
+        let privilege = await this.functRepo.findOne({
           privilege_id: privilegeId,
         });
         // find parent
         if (privilege.level === 1) {
-          let parentPrivilege = await this.privilegeRepo.findOne({
+          let parentPrivilege = await this.functRepo.findOne({
             privilege_id: privilege.parent_id,
           });
           if (parentPrivilege) {
@@ -233,13 +234,13 @@ export class RoleService {
       await this.userGroupPrivilegeRepo.delete({ usergroup_id });
 
       for (let privilegeId of data.privileges) {
-        let privilege = await this.privilegeRepo.findOne({
+        let privilege = await this.functRepo.findOne({
           privilege_id: privilegeId,
         });
 
         // find parent
         if (privilege && privilege.level === 1 && privilege.parent_id) {
-          let parentPrivilege = await this.privilegeRepo.findOne({
+          let parentPrivilege = await this.functRepo.findOne({
             privilege_id: privilege.parent_id,
           });
 
@@ -341,6 +342,47 @@ export class RoleService {
     group['role_functs'] = groupFuncts;
 
     return group;
+  }
+
+  async authorizeRoleFunct(role_id: number, data: AuthorizeRoleFunctionDto) {
+    const groupRole = await this.roleRepo.findOne({ role_id });
+    if (!groupRole) {
+      throw new HttpException('Không tìm thấy nhóm người dùng.', 404);
+    }
+
+    const groupRoleData = {
+      ...this.roleRepo.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
+    await this.roleRepo.update({ role_id }, groupRoleData);
+
+    if (data.funct_ids && data.funct_ids.length) {
+      await this.roleFunctRepo.delete({ role_id });
+      for (let functId of data.funct_ids) {
+        for (let i = 1; i <= 5; i++) {
+          await this.roleFunctRepo.create({
+            role_id,
+            funct_id: functId,
+            permission: i,
+          });
+        }
+      }
+    }
+  }
+
+  async getFunctions() {
+    const rootFunctions = await this.functRepo.find({ level: 0 });
+
+    if (rootFunctions && rootFunctions.length) {
+      for (let functItem of rootFunctions) {
+        const childrenFuncts = await this.functRepo.find({
+          parent_id: functItem['funct_id'],
+        });
+        functItem['children'] = childrenFuncts;
+      }
+    }
+
+    return rootFunctions;
   }
 
   async updateGroup(id: number, data: UpdateGroupDto) {

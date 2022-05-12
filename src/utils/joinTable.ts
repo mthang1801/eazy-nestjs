@@ -880,3 +880,12 @@ export const tradeinOldReceiptJoiner = {
     },
   },
 };
+
+export const userRoleJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.ROLE_FUNC]: {
+      fieldJoin: `${Table.ROLE_FUNC}.role_funct_id`,
+      rootJoin: `${Table.USER_ROLES}.role_funct_id`,
+    },
+  },
+};

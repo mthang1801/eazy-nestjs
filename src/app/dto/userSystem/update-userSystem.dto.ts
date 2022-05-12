@@ -11,7 +11,7 @@ export class UpdateUserSystemDto {
   status: string;
 
   @IsOptional()
-  usergroup_id: number;
+  role_id: number;
 
   @IsOptional()
   store_id: number;

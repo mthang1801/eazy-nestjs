@@ -21,15 +21,7 @@ export class RoleFunctService {
     private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
   ) {}
 
-  async create(data: CreateUserGroupPrivilegeDto): Promise<void> {
-    let usergroup_id = 23;
-    for (let i = 1; i <= 46; i++) {
-      await this.userGroupPrivilegeRepo.create({
-        usergroup_id,
-        privilege_id: i,
-      });
-    }
-  }
+  async create(data: CreateUserGroupPrivilegeDto): Promise<void> {}
 
   async getListByUserGroupId(
     usergroup_id: number,
