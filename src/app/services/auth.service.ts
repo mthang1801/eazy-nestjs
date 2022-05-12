@@ -422,15 +422,14 @@ export class AuthService {
           access_token: providerData.accessToken,
           extra_data: providerData.extra_data,
         },
+        true,
       );
     }
 
     //Update current provider at ddv_users
-    await this.userService.update(userExists.user_id, {
+    await this.userRepository.update(userExists['user_id'], {
       user_login: providerName,
     });
-
-    userExists = { ...userExists, ...authProvider };
 
     const userIdEncoded = encodeBase64String(
       `${uuid()}-${userExists['user_id']}-${uuid()}`,
