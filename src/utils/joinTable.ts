@@ -545,6 +545,15 @@ export const userJoiner = {
   },
 };
 
+export const userPaymentJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USER_PROFILES]: {
+      fieldJoin: `${Table.USER_PROFILES}.user_id`,
+      rootJoin: `${Table.USERS}.user_id`,
+    },
+  },
+};
+
 export const creatorJoiner = {
   [JoinTable.innerJoin]: {
     [Table.USER_PROFILES]: {

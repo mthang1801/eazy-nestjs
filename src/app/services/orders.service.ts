@@ -134,7 +134,10 @@ import { PaymentStatus } from '../../utils/services/payment.helper';
 import { ShippingFeeService } from './shippingFee.service';
 import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
-import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
+import {
+  shippingFeeLocationsJoiner,
+  userPaymentJoiner,
+} from '../../utils/joinTable';
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 
 @Injectable()
@@ -268,16 +271,15 @@ export class OrdersService {
     } else {
       user = await this.userRepo.findOne({
         select: '*',
-        join: userJoiner,
+        join: userPaymentJoiner,
         where: { phone: data.s_phone },
       });
 
       if (!user) {
         let { passwordHash, salt } = saltHashPassword(defaultPassword);
-        let fullname = data.s_firstname + ' ' + data.s_lastname;
         let userData = {
           ...new UserEntity(),
-          lastname: fullname.trim(),
+          lastname: data.s_lastname,
           password: passwordHash,
           phone: data.s_phone,
           salt,
@@ -287,8 +289,8 @@ export class OrdersService {
 
         let userProfileData = {
           ...new UserProfileEntity(),
-          b_lastname: fullname,
-          s_lastname: fullname,
+          b_lastname: data.s_lastname,
+          s_lastname: data.s_lastname,
           b_phone: data.s_phone,
           s_phone: data.s_phone,
           b_city: data.s_city,
@@ -314,7 +316,7 @@ export class OrdersService {
 
         user = await this.userRepo.findOne({
           select: '*',
-          join: userJoiner,
+          join: userPaymentJoiner,
           where: { [`${Table.USERS}.user_id`]: newUser.user_id },
         });
 
@@ -322,7 +324,16 @@ export class OrdersService {
       }
     }
 
-    const cart = await this.cartRepo.findOne({ user_id: user.user_id });
+    if (!user['user_appcore_id']) {
+      throw new HttpException(
+        'Người dùng hiện tại không thể thực hiện tạo đơn hàng, vui lòng liên hệ với nhân viên để được hỗ trợ',
+        409,
+      );
+    }
+
+    const cart = await this.cartRepo.findOne({
+      user_id: userAuth ? userAuth.user_id : data.user_id,
+    });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
@@ -364,7 +375,11 @@ export class OrdersService {
       );
     }
 
-    const sendData = { ...userProfile, order_items: cartItems };
+    const sendData = {
+      ...userProfile,
+      user_appcore_id: user['user_appcore_id'],
+      order_items: cartItems,
+    };
 
     if (data.shipping_fee_location_id) {
       let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
