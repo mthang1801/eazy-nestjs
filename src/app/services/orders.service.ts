@@ -255,6 +255,7 @@ export class OrdersService {
     let user: any;
     if (userAuth) {
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+
       if (!user.phone) {
         throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
       }
@@ -320,7 +321,7 @@ export class OrdersService {
           where: { [`${Table.USERS}.user_id`]: newUser.user_id },
         });
 
-        await this.customerService.createCustomerToAppcore(user);
+        user = await this.customerService.createCustomerToAppcore(user);
       }
     }
 

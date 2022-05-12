@@ -196,6 +196,7 @@ export class CustomerService {
           updated_at: formatStandardTimeStamp(),
           is_sync: 'N',
         },
+        true,
       );
 
       return updatedUser;

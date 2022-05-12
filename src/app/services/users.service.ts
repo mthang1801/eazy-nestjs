@@ -166,6 +166,7 @@ export class UsersService {
           phone: data.b_phone,
           user_id,
         });
+
         if (!checkCurrentPhone) {
           throw new HttpException('Số điện thoại không thể thay đổi.', 401);
         }
@@ -192,17 +193,19 @@ export class UsersService {
       }
     }
 
-    const updatedUser = await this.userRepository.update({ user_id }, userData);
+    const updatedUser = await this.userRepository.update(
+      { user_id },
+      userData,
+      true,
+    );
 
     let result = { ...updatedUser };
     let userProfile = await this.userProfileRepository.findOne({ user_id });
     if (userProfile) {
       let userProfileData = this.userProfileRepository.setData(data);
       if (Object.entries(userProfileData).length) {
-        userProfile = await this.userProfileRepository.update(
-          { user_id },
-          userProfileData,
-        );
+        await this.userProfileRepository.update({ user_id }, userProfileData);
+        false;
       }
     } else {
       let newUserProfileData = {
@@ -219,10 +222,14 @@ export class UsersService {
       where: { [`${Table.USERS}.user_id`]: user_id },
     });
 
-    if (result.user_appcore_id) {
-      await this.updateUserToAppcore(userResult);
-    } else {
-      await this.createUserToAppcore(userResult);
+    try {
+      if (result.user_appcore_id) {
+        await this.updateUserToAppcore(userResult);
+      } else {
+        await this.createUserToAppcore(userResult);
+      }
+    } catch (error) {
+      console.log(error.message, error.status);
     }
   }
 
