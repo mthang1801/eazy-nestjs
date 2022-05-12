@@ -84,8 +84,12 @@ export class bannerController extends BaseController {
   }
 
   @Get('/:id')
-  async getById(@Res() res: Response, @Param('id') id): Promise<IResponse> {
-    const banners = await this.service.getById(id);
+  async getById(
+    @Res() res: Response,
+    @Param('id') id,
+    @Query() params,
+  ): Promise<IResponse> {
+    const banners = await this.service.getById(id, params);
     return this.responseSuccess(res, banners);
   }
 

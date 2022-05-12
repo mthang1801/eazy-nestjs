@@ -165,16 +165,6 @@ export class bannerService {
     if (banners.length) {
       _banners = [];
       for (let banner of banners) {
-        if (banner.end_at && new Date(banner.end_at).getTime() < Date.now()) {
-          continue;
-        }
-
-        if (
-          banner.start_at &&
-          new Date(banner.start_at).getTime() > Date.now()
-        ) {
-          continue;
-        }
         const bannerItems = await this.bannerItemRepo.find({
           select: '*',
           where: {
@@ -250,7 +240,9 @@ export class bannerService {
     };
   }
 
-  async getById(id: number) {
+  async getById(id: number, params = { page: 1, limit: 50 }) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+
     const banner = await this.bannerRepo.findOne({
       select: `*`,
       join: bannerJoiner,
@@ -268,8 +260,20 @@ export class bannerService {
           },
         ],
         where: { [`${Table.BANNER_ITEM}.banner_id`]: id },
+        skip,
+        limit,
+      });
+
+      let count = await this.bannerItemRepo.find({
+        select: `COUNT(${Table.BANNER_ITEM}.banner_item_id) as total`,
+        where: { [`${Table.BANNER_ITEM}.banner_id`]: id },
       });
       banner['banner_items'] = bannerItems;
+      banner['banner_items_paging'] = {
+        pageSize: limit,
+        currentPage: page,
+        total: count[0].total,
+      };
     }
     return banner;
   }

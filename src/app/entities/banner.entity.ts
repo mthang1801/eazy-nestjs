@@ -8,8 +8,6 @@ export class BannerEntity {
   page_location_id: number = null;
   status: string = 'A';
   device_type: string = 'D';
-  start_at: string = null;
-  end_at: string = null;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
 }
