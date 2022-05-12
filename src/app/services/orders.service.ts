@@ -598,6 +598,7 @@ export class OrdersService {
 
   async updateOrderPayment(order_id, data) {
     const orderPayment = await this.orderPaymentRepo.findOne({ order_id });
+
     if (orderPayment) {
       let updatedData = this.orderPaymentRepo.setData(data);
       if (Object.entries(updatedData).length) {

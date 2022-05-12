@@ -457,11 +457,13 @@ export class PaymentService {
           throw new HttpException('Không tìm thấy người dùng', 404);
         }
       } else {
-        user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
-          join: userJoiner,
-          where: { [`${Table.USERS}.user_id`]: data.user_id },
-        });
+        if (data.user_id) {
+          user = await this.userRepo.findOne({
+            select: `*, ${Table.USERS}.user_appcore_id`,
+            join: userJoiner,
+            where: { [`${Table.USERS}.user_id`]: data.user_id },
+          });
+        }
 
         if (!user) {
           user = await this.userRepo.findOne({
@@ -648,6 +650,8 @@ export class PaymentService {
           ? formatStandardTimeStamp(response.data.order.expiry_date)
           : null,
       };
+
+      console.log(654, orderPaymentData);
 
       await this.orderService.updateOrderPayment(
         currentOrder.order_id,
