@@ -212,3 +212,5 @@ export const checkRestrictedCommentsListIntoRegularExpress = (str) =>
     .split(',')
     .map((item) => `(${item})`)
     .join('|');
+
+export const removeMoreThanOneSpace = (str) => str.replace(/\s\s+/g, ' ');

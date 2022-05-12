@@ -27,7 +27,7 @@ import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
 import { formatStandardTimeStamp } from 'src/utils/helper';
 import { CreateGroupDto } from '../dto/role/create-user-role.dto';
-import { getPageSkipLimit } from '../../utils/helper';
+import { getPageSkipLimit, removeMoreThanOneSpace } from '../../utils/helper';
 import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
 import { groupListSearchFilter } from '../../utils/tableConditioner';
 
@@ -279,7 +279,9 @@ export class RoleService {
     const checkList = await this.roleRepo.find();
     if (
       checkList.some(
-        (item) => item.role_name.toLowerCase() == data.role_name.toLowerCase(),
+        (item) =>
+          item.role_name.toLowerCase().trim() ==
+          removeMoreThanOneSpace(data.role_name).toLowerCase().trim(),
       )
     ) {
       throw new HttpException('Tên nhóm đã tồn tại', 409);
@@ -288,6 +290,7 @@ export class RoleService {
     const groupData = {
       ...new RoleEntity(),
       ...this.roleRepo.setData(data),
+      role_name: removeMoreThanOneSpace(data.role_name).trim(),
     };
 
     const group = await this.roleRepo.create(groupData);
@@ -350,17 +353,33 @@ export class RoleService {
   }
 
   async updateGroup(id: number, data: UpdateGroupDto) {
-    const store = await this.roleRepo.findOne({ role_id: id });
-    if (!store) {
+    const group = await this.roleRepo.findOne({ role_id: id });
+    if (!group) {
       throw new HttpException('Không tìm thấy nhóm.', 404);
     }
-    console.log(store);
+
+    const checkList = await this.roleRepo.find();
+
+    if (
+      data.role_name &&
+      checkList.some(
+        (item) =>
+          item.role_name.toLowerCase().trim() ==
+            removeMoreThanOneSpace(data.role_name).toLowerCase().trim() &&
+          item.role_id !== group.role_id,
+      )
+    ) {
+      throw new HttpException('Tên nhóm đã tồn tại', 409);
+    }
 
     let newGroupData = {
       ...new RoleEntity(),
       ...this.roleRepo.setData(data),
       role_id: id,
     };
+    if (data.role_name) {
+      newGroupData['role_name'] = removeMoreThanOneSpace(data.role_name).trim();
+    }
     await this.roleRepo.update({ role_id: id }, newGroupData);
 
     await this.roleFunctRepo.delete({ role_id: id });
@@ -370,9 +389,9 @@ export class RoleService {
         ...new RoleFunctionEntity(),
         ...this.roleFunctRepo.setData(data),
         role_id: id,
-        funct_id: data.funct_id,
         permission: i,
       };
+
       await this.roleFunctRepo.create(groupRole);
     }
   }
