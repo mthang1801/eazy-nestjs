@@ -424,9 +424,9 @@ export class CustomerService {
       throw new HttpException('Không tìm thấy customer', 404);
     }
 
-    if (user.user_type !== UserTypeEnum.Customer) {
-      throw new HttpException('Người dùng không phải là khách hàng.', 409);
-    }
+    // if (user.user_type !== UserTypeEnum.Customer) {
+    //   throw new HttpException('Người dùng không phải là khách hàng.', 409);
+    // }
 
     const userImage = await this.imageLinkRepo.findOne({
       object_id: id,
