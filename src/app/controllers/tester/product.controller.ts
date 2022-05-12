@@ -15,10 +15,14 @@ import { ProductService } from '../../services/products.service';
 import { Response } from 'express';
 import { Req } from '@nestjs/common';
 import { AuthGuard } from '../../../middlewares/be.auth';
+import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
+import { CategoryService } from 'src/app/services/category.service';
 
 @Controller('/web-tester/v1/products')
 export class ProductTesterController extends BaseController {
-  constructor(private service: ProductService) {
+  constructor(
+    private testService: CategoryService,
+    private service: ProductService) {
     super();
   }
 

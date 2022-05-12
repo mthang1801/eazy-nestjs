@@ -47,6 +47,7 @@ export enum AutoIncrementKeys {
   ddv_catalog_category_descriptions = 'id',
   ddv_accessory_categories = 'accessory_category_id',
   ddv_catalog_category_items = 'item_id',
+  ddv_category_features = 'id',
 
   //============== Payment ==============
   ddv_payment_descriptions = 'payment_id',

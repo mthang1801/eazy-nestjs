@@ -13,6 +13,7 @@ import { CatalogCategoryDescriptionRepository } from '../repositories/catalogCat
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { AccessoryCategoryRepository } from '../repositories/accessoryCategory.repository';
 import { CatalogCategoryItemRepository } from '../repositories/catalogCategoryItem.repository';
+import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 
 @Module({
   imports: [forwardRef(() => ProductsModule), ReviewsCommentsModule],
@@ -25,6 +26,7 @@ import { CatalogCategoryItemRepository } from '../repositories/catalogCategoryIt
     CatalogCategoryDescriptionRepository,
     AccessoryCategoryRepository,
     CatalogCategoryItemRepository,
+    CategoryFeaturesRepository,
   ],
   exports: [
     CategoryService,
