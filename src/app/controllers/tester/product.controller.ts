@@ -22,7 +22,8 @@ import { CategoryService } from 'src/app/services/category.service';
 export class ProductTesterController extends BaseController {
   constructor(
     private testService: CategoryService,
-    private service: ProductService) {
+    private service: ProductService,
+  ) {
     super();
   }
 
@@ -69,7 +70,8 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('test')  
+  @Post('test')
+  // @UseGuards(AuthGuard)
   async test(@Req() req) {
     await this.service.testSql(req.clientIp);
   }

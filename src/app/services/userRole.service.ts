@@ -32,7 +32,7 @@ import { ColdObservable } from 'rxjs/internal/testing/ColdObservable';
 import { getPageSkipLimit } from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { userSelector } from '../../utils/tableSelector';
-import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
+import { UpdateRoleGroupDto } from '../dto/role/update-roleGroup.dto';
 
 @Injectable()
 export class UserRoleService {
@@ -61,7 +61,7 @@ export class UserRoleService {
         }
       }
     const userGroupLinks = await this.userRepo.find({
-      select: ['*', `${Table.USERS}.*`],
+      select: userSelector,
       join: {
         [JoinTable.leftJoin]: {
           [Table.USER_ROLES]: {

@@ -169,7 +169,6 @@ export class TradeinProgramService {
         tradeinProgram['last_updater'] = null;
         if (tradeinProgram.updated_by) {
           let user = await this.userRepo.findOne({
-            select: userSelector,
             user_id: tradeinProgram.updated_by,
           });
           tradeinProgram['last_updater'] = user;

@@ -15,22 +15,31 @@ export class Cryptography {
       this.iv,
     );
     let encrypted = cipher.update(text);
+
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-    console.log(this.encodeBase64String(encrypted));
-    console.log(this.decodeBase64String(this.encodeBase64String(encrypted)));
-    return {
-      iv: this.iv.toString('hex'),
-      encryptedData: encrypted.toString('hex'),
-    };
+    let encryptedData = `${this.iv.toString('hex')}-${encrypted.toString(
+      'hex',
+    )}`;
+    let encodeBase64 = `${this.encodeBase64String(encryptedData)}+=${this.key}`;
+    return encodeBase64;
   }
 
   // Decrypting text
-  public decrypt(text) {
-    let iv = Buffer.from(text.iv, 'hex');
-    let encryptedText = Buffer.from(text.encryptedData, 'hex');
+  public decrypt(buffer: string) {
+    let _decrypted: any = buffer.split('+=');
+    _decrypted = _decrypted[0];
+    let key = _decrypted[1];
+
+    let textArr = _decrypted.split('-');
+    console.log(textArr);
+    let _iv = textArr[0];
+    let encryptedData = textArr[1];
+    let iv = Buffer.from(_iv, 'hex');
+    let encryptedText = Buffer.from(encryptedData, 'hex');
+
     let decipher = crypto.createDecipheriv(
       this.algorithm,
-      Buffer.from(this.key),
+      Buffer.from(key),
       iv,
     );
     let decrypted = decipher.update(encryptedText);

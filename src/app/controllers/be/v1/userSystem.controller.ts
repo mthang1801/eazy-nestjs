@@ -6,10 +6,11 @@ import {
   Res,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
 import { BaseController } from '../../../../base/base.controllers';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { UserSystemService } from '../../../services/userSystem.service';
@@ -51,22 +52,31 @@ export class UserSystemController extends BaseController {
   }
 
   @Put(':user_id')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async update(
     @Param('user_id') user_id: number,
     @Body() data: UpdateUserSystemDto,
     @Res() res: Response,
+    @Req() req: Request,
   ): Promise<IResponse> {
-    const result = await this.service.update(user_id, data);
+    const result = await this.service.update(user_id, data, req['user']);
     return this.responseSuccess(res, result);
   }
 
+  /**
+   * Tạo người dùng hệ thống
+   * @param data
+   * @param res
+   * @returns
+   */
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserSystemDto,
     @Res() res: Response,
+    @Req() req: Request,
   ): Promise<IResponse> {
-    await this.service.create(data);
+    await this.service.create(data, req['user']);
     return this.responseSuccess(res);
   }
 

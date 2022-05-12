@@ -104,11 +104,18 @@ export const productDetailSelector = [
   `${Table.CATEGORIES}.slug as categorySlug`,
 ];
 
-export const userSelector = [
-  'firstname',
-  'lastname',
-  'phone',
-  'user_id',
-  'email',
-  'avatar',
+export const userSelector = ['*', `${Table.USERS}.*`];
+
+export const menuSelector = [
+  `funct_id`,
+  `parent_id`,
+  `funct_code`,
+  `funct_name`,
+  `route`,
+  `icon`,
+  `level`,
+  `created_at`,
+  `created_by`,
+  `updated_at`,
+  `updated_by`,
 ];

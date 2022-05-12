@@ -42,6 +42,7 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { userLoyaltyHistorySearchFilter } from 'src/database/sqlQuery/where/customer.where';
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
+import { userSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class UsersService {
@@ -301,7 +302,7 @@ export class UsersService {
 
   async findUsersAllInfo(condition: any, limit = 30): Promise<any> {
     const users = await this.userRepository.find({
-      select: ['*', `${Table.USERS}.*`],
+      select: userSelector,
       join: {
         [JoinTable.leftJoin]: {
           [Table.USER_ROLES]: {

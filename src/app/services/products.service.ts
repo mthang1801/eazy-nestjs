@@ -4139,8 +4139,11 @@ export class ProductService {
 
   async testSql(userIp) {
     let cryptography = new Cryptography();
-    var hw = cryptography.encrypt('Welcome to Tutorials Point...');
+    var hw = cryptography.encrypt('30512');
     console.log(hw);
+    let cryptography1 = new Cryptography();
+
+    console.log(cryptography1.decrypt(hw));
     // const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
     // await this.productRepo.findOne({
     //   select: '*',

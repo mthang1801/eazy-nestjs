@@ -72,6 +72,7 @@ import { creatorJoiner } from '../../utils/joinTable';
 import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
 import { CreateCustomerPaymentDto } from '../dto/customer/create-customerPayment.dto';
 import { DatabaseService } from '../../database/database.service';
+import { userSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class CustomerService {
@@ -173,6 +174,7 @@ export class CustomerService {
 
   async createCustomerToAppcore(user) {
     try {
+      console.log('create User To Appcore');
       const customerAppcoreData = itgCustomerToAppcore(user);
 
       const response = await axios({
@@ -395,7 +397,7 @@ export class CustomerService {
     });
 
     let customersList = await this.userRepo.find({
-      select: ['*', `${Table.USERS}.*`],
+      select: userSelector,
       join: userJoiner,
       orderBy: [{ field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC }],
       where: customersListSearchFilter(search, filterConditions),
@@ -415,7 +417,7 @@ export class CustomerService {
 
   async getById(id) {
     let user = await this.userRepo.findOne({
-      select: ['*'],
+      select: userSelector,
       join: userJoiner,
       where: {
         [`${Table.USERS}.user_id`]: id,
@@ -574,6 +576,7 @@ export class CustomerService {
 
   async updateCustomerToAppcore(customer) {
     try {
+      console.log('Update user Appcore');
       const customerDataToAppcore = itgCustomerToAppcore(customer);
 
       await axios({
@@ -667,7 +670,7 @@ export class CustomerService {
 
   async itgGet(user_appcore_id: number) {
     const customer = await this.userRepo.findOne({
-      select: '*',
+      select: userSelector,
       join: userJoiner,
       where: { [`${Table.USERS}.user_appcore_id`]: user_appcore_id },
     });
@@ -1097,7 +1100,7 @@ export class CustomerService {
   async requestSyncCustomerFromCMS() {
     try {
       const customersUnsync = await this.userRepo.find({
-        select: `*, ${Table.USERS}.user_id`,
+        select: userSelector,
         join: userJoiner,
         where: { [`${Table.USERS}.user_appcore_id`]: IsNull() },
       });

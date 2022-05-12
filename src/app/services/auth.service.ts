@@ -58,6 +58,7 @@ import { generateRandomNumber } from '../../utils/helper';
 import { sha512, encodeBase64String } from '../../utils/cipherHelper';
 import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
+import { menuSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class AuthService {
@@ -238,12 +239,19 @@ export class AuthService {
     );
 
     // get menu at ddv_roles_functs
-    const menuList = await this.functRepo.find({ level: 0 });
+    const menuList = await this.functRepo.find({
+      select: menuSelector,
+      where: { level: 0 },
+    });
+
     if (menuList.length) {
       for (let menuItem of menuList) {
         let menu = await this.functRepo.find({
-          level: 1,
-          parent_id: menuItem['funct_id'],
+          select: menuSelector,
+          where: {
+            level: 1,
+            parent_id: menuItem['funct_id'],
+          },
         });
         menuItem['children'] = menu;
       }

@@ -75,6 +75,7 @@ import {
 } from '../../utils/services/payment.helper';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
 import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
+import { userSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class PaymentService {
@@ -231,7 +232,7 @@ export class PaymentService {
       let user;
       if (userAuth) {
         user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
+          select: userSelector,
           join: userJoiner,
           where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
         });
@@ -244,14 +245,14 @@ export class PaymentService {
         }
       } else {
         user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
+          select: userSelector,
           join: userJoiner,
           where: { [`${Table.USERS}.phone`]: data['s_phone'] },
         });
         if (!user) {
           await this.customerService.createCustomerFromWebPayment(data);
           user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
+            select: userSelector,
             join: userJoiner,
             where: { phone: data['s_phone'] },
           });
@@ -449,7 +450,7 @@ export class PaymentService {
       let user;
       if (userAuth) {
         user = await this.userRepo.findOne({
-          select: `*, ${Table.USERS}.user_appcore_id`,
+          select: userSelector,
           join: userJoiner,
           where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
         });
@@ -459,7 +460,7 @@ export class PaymentService {
       } else {
         if (data.user_id) {
           user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
+            select: userSelector,
             join: userJoiner,
             where: { [`${Table.USERS}.user_id`]: data.user_id },
           });
@@ -467,7 +468,7 @@ export class PaymentService {
 
         if (!user) {
           user = await this.userRepo.findOne({
-            select: `*, ${Table.USERS}.user_appcore_id`,
+            select: userSelector,
             join: userJoiner,
             where: {
               [`${Table.USERS}.phone`]:
@@ -477,7 +478,7 @@ export class PaymentService {
           if (!user) {
             await this.customerService.createCustomerFromWebPayment(data);
             user = await this.userRepo.findOne({
-              select: `*, ${Table.USERS}.user_appcore_id`,
+              select: userSelector,
               join: userJoiner,
               where: {
                 phone:

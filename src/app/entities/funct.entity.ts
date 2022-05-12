@@ -5,6 +5,7 @@ export class FunctEntity {
   funct_code: string = '';
   funct_name: string = '';
   route: string = '';
+  be_route: string = '';
   icon: string = '';
   level: number = 0;
   created_at: string = formatStandardTimeStamp();

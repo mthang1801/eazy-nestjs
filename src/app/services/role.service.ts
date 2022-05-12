@@ -28,7 +28,7 @@ import { FunctEntity } from '../entities/funct.entity';
 import { formatStandardTimeStamp } from 'src/utils/helper';
 import { CreateGroupDto } from '../dto/role/create-user-role.dto';
 import { getPageSkipLimit, removeMoreThanOneSpace } from '../../utils/helper';
-import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
+import { UpdateRoleGroupDto } from '../dto/role/update-roleGroup.dto';
 import { groupListSearchFilter } from '../../utils/tableConditioner';
 import { AuthorizeRoleFunctionDto } from '../dto/userRole/authorizeRoleFunct';
 
@@ -276,7 +276,7 @@ export class RoleService {
     return result;
   }
 
-  async createGroup(data: CreateGroupDto) {
+  async createRoleGroup(data: CreateGroupDto, user) {
     const checkList = await this.roleRepo.find();
     if (
       checkList.some(
@@ -292,6 +292,8 @@ export class RoleService {
       ...new RoleEntity(),
       ...this.roleRepo.setData(data),
       role_name: removeMoreThanOneSpace(data.role_name).trim(),
+      created_by: user['user_id'],
+      updated_by: user['user_id'],
     };
 
     const group = await this.roleRepo.create(groupData);
@@ -385,9 +387,9 @@ export class RoleService {
     return rootFunctions;
   }
 
-  async updateGroup(id: number, data: UpdateGroupDto) {
-    const group = await this.roleRepo.findOne({ role_id: id });
-    if (!group) {
+  async updateRoleGroup(id: number, data: UpdateRoleGroupDto, user) {
+    const roleGroup = await this.roleRepo.findOne({ role_id: id });
+    if (!roleGroup) {
       throw new HttpException('Không tìm thấy nhóm.', 404);
     }
 
@@ -399,33 +401,79 @@ export class RoleService {
         (item) =>
           item.role_name.toLowerCase().trim() ==
             removeMoreThanOneSpace(data.role_name).toLowerCase().trim() &&
-          item.role_id !== group.role_id,
+          item.role_id !== roleGroup.role_id,
       )
     ) {
       throw new HttpException('Tên nhóm đã tồn tại', 409);
     }
 
     let newGroupData = {
-      ...new RoleEntity(),
       ...this.roleRepo.setData(data),
-      role_id: id,
+      updated_at: formatStandardTimeStamp(),
+      updated_by: user['user_id'],
     };
+
     if (data.role_name) {
       newGroupData['role_name'] = removeMoreThanOneSpace(data.role_name).trim();
     }
+
     await this.roleRepo.update({ role_id: id }, newGroupData);
 
-    await this.roleFunctRepo.delete({ role_id: id });
-
-    for (let i = 1; i <= 5; i++) {
-      const groupRole = {
-        ...new RoleFunctionEntity(),
-        ...this.roleFunctRepo.setData(data),
-        role_id: id,
-        permission: i,
-      };
-
-      await this.roleFunctRepo.create(groupRole);
+    if (data.funct_ids && data.funct_ids.length) {
+      await this.roleFunctRepo.delete({ role_id: id });
+      for (let functId of data.funct_ids) {
+        const functItem = await this.functRepo.findOne({ funct_id: functId });
+        if (functItem) {
+          let checkFunctExist = await this.roleFunctRepo.findOne({
+            role_id: id,
+            funct_id: functId,
+          });
+          if (checkFunctExist) continue;
+          await this.roleFunctRepo.create({
+            role_id: id,
+            funct_id: functId,
+            updated_by: user.user_id,
+            created_by: user.user_id,
+          });
+          let childrenFuncts = await this.functRepo.find({
+            parent_id: functId,
+          });
+          if (childrenFuncts) {
+            for (let childFunct of childrenFuncts) {
+              let checkChildFunctExist = await this.roleFunctRepo.findOne({
+                role_id: id,
+                funct_id: childFunct.funct_id,
+              });
+              if (checkChildFunctExist) continue;
+              await this.roleFunctRepo.create({
+                role_id: id,
+                funct_id: childFunct.funct_id,
+                updated_by: user.user_id,
+                created_by: user.user_id,
+              });
+              let grandChildrenFuncts = await this.functRepo.find({
+                parent_id: childFunct.funct_id,
+              });
+              if (grandChildrenFuncts.length) {
+                for (let grandChildFunct of grandChildrenFuncts) {
+                  let checkGrandChildFunctExist =
+                    await this.roleFunctRepo.findOne({
+                      role_id: id,
+                      funct_id: grandChildFunct.funct_id,
+                    });
+                  if (checkGrandChildFunctExist) continue;
+                  await this.roleFunctRepo.create({
+                    role_id: id,
+                    funct_id: grandChildFunct.funct_id,
+                    updated_by: user.user_id,
+                    created_by: user.user_id,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

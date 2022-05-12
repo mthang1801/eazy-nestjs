@@ -41,6 +41,7 @@ import {
 import { getUserSystemByIdSelector } from 'src/utils/tableSelector';
 import * as moment from 'moment';
 import { UpdateUserSystemRoleFunctsDto } from '../dto/userSystem/update-userSystemRoleFuncts.dto';
+import { userSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class UserSystemService {
@@ -84,7 +85,7 @@ export class UserSystemService {
     });
 
     const users = await this.userRepository.find({
-      select: ['*', `${Table.USERS}.*`],
+      select: userSelector,
       join: userSystemStoreJoiner,
       where: userSystemSearchFilter(search, filterCondition),
       orderBy: [
@@ -125,7 +126,11 @@ export class UserSystemService {
     return user;
   }
 
-  async update(user_id: number, data: UpdateUserSystemDto): Promise<any> {
+  async update(
+    user_id: number,
+    data: UpdateUserSystemDto,
+    userAuth,
+  ): Promise<any> {
     const user = await this.userRepository.findById(user_id);
     if (!user) {
       throw new HttpException('Người dùng không tồn tại trong hệ thống.', 404);
@@ -160,42 +165,42 @@ export class UserSystemService {
     }
 
     if (data.role_id) {
-      const currentRoleOfUser = await this.userRoleRepo.findOne({
-        select: '*',
-        join: userRoleJoiner,
-        where: { [`${Table.USER_ROLES}.user_id`]: user_id },
+      const userRole = await this.userRoleRepo.findOne({
+        user_id: result['user_id'],
       });
-      if (currentRoleOfUser && currentRoleOfUser.role_id === data.role_id) {
-        return;
-      }
-      if (currentRoleOfUser) {
-        await this.userRoleRepo.delete({ user_id });
-      }
-      const groupRoleFuncts = await this.roleFunctRepo.find({
-        role_id: data.role_id,
-      });
-      if (groupRoleFuncts.length) {
-        for (let groupRoleFunctItem of groupRoleFuncts) {
-          await this.userRoleRepo.create({
-            user_id,
-            role_funct_id: groupRoleFunctItem.role_funct_id,
-          });
-        }
+      if (userRole) {
+        await this.userRoleRepo.update(
+          {
+            user_id: result['user_id'],
+          },
+          {
+            role_id: data.role_id,
+            updated_at: formatStandardTimeStamp(),
+            updated_by: userAuth['user_id'],
+          },
+        );
+      } else {
+        await this.userRoleRepo.create(
+          {
+            user_id: result['user_id'],
+            role_id: data.role_id,
+            created_by: userAuth['user_id'],
+            updated_by: userAuth['user_id'],
+          },
+          false,
+        );
       }
     }
   }
 
-  async create(data: CreateUserSystemDto) {
-    const user = await this.userRepository.findOne({
-      select: '*',
-      join: userJoiner,
-      where: { phone: data.phone },
-    });
+  async create(data: CreateUserSystemDto, userAuth) {
+    const user = await this.userRepository.findOne({ phone: data.phone });
 
     if (data.email) {
-      const checkUserEmailExist = await this.userRepository.findOne({
+      let checkUserEmailExist = await this.userRepository.findOne({
         email: data.email,
       });
+
       if (checkUserEmailExist) {
         throw new HttpException('Email đã tồn tại', 409);
       }
@@ -214,20 +219,6 @@ export class UserSystemService {
 
     let result: any = {};
 
-    let userProfile = {};
-    if (data.firstname) {
-      userProfile['b_firstname'] = data.firstname;
-      userProfile['s_firstname'] = data.firstname;
-    }
-    if (data.lastname) {
-      userProfile['s_lastname'] = data.lastname;
-      userProfile['s_lastname'] = data.lastname;
-    }
-    if (data.phone) {
-      userProfile['b_phone'] = data.phone;
-      userProfile['s_phone'] = data.phone;
-    }
-
     if (user) {
       if (user.user_type === UserTypeEnum.Employee) {
         throw new HttpException('Người dùng này đã nằm trong hệ thống', 400);
@@ -240,7 +231,10 @@ export class UserSystemService {
       if (data.phone && !user.phone) {
         userData['phone'] = data.phone;
       }
-      let result = await this.userRepository.update(
+
+      const { passwordHash, salt } = saltHashPassword(data.password);
+
+      await this.userRepository.update(
         { user_id: user.user_id },
         {
           ...userData,
@@ -249,8 +243,9 @@ export class UserSystemService {
           status: data.status,
           updated_at: formatStandardTimeStamp(),
           lastname: data.lastname,
+          password: passwordHash,
+          salt,
         },
-        true,
       );
       let userProfile = await this.userProfileRepository.findOne({
         user_id: user.user_id,
@@ -259,10 +254,10 @@ export class UserSystemService {
       if (!userProfile) {
         const newUserPrtofileData = {
           ...new UserProfileEntity(),
-          ...userProfile,
+          ...this.userProfileRepository.setData(userProfile),
           b_phone: data.phone,
-          user_id: user.user_id,
           b_lastname: data.lastname,
+          user_id: user['user_id'],
         };
         userProfile = await this.userProfileRepository.create(
           newUserPrtofileData,
@@ -278,7 +273,12 @@ export class UserSystemService {
           true,
         );
       }
-      result = { ...result, ...userProfile };
+      result = await this.userRepository.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: user['user_id'] },
+      });
+
       await this.customerService.updateCustomerToAppcore(result);
     } else {
       const { passwordHash, salt } = saltHashPassword(data.password);
@@ -292,9 +292,9 @@ export class UserSystemService {
         user_type: UserTypeEnum.Employee,
         store_id: data.store_id,
       };
-      if (data['birthday'] && moment(data['birthday']).isValid()) {
-        userData['birthday'] = formatStandardTimeStamp(userData['birthday']);
-      }
+      // if (data['birthday'] && moment(data['birthday']).isValid()) {
+      //   userData['birthday'] = formatStandardTimeStamp(userData['birthday']);
+      // }
 
       const newUser = await this.userRepository.create(userData);
 
@@ -331,17 +331,33 @@ export class UserSystemService {
       await this.userLoyalRepo.create(userLoyaltyData, false);
 
       await this.customerService.createCustomerToAppcore(result);
+    }
 
-      const groupRoleFuncts = await this.roleFunctRepo.find({
-        role_id: data.role_id,
+    if (data.role_id) {
+      const userRole = await this.userRoleRepo.findOne({
+        user_id: result['user_id'],
       });
-      if (groupRoleFuncts.length) {
-        for (let groupRoleFunctItem of groupRoleFuncts) {
-          await this.userRoleRepo.create({
-            user_id: result.user_id,
-            role_funct_id: groupRoleFunctItem.role_funct_id,
-          });
-        }
+      if (userRole) {
+        await this.userRoleRepo.update(
+          {
+            user_id: result['user_id'],
+          },
+          {
+            role_id: data.role_id,
+            updated_at: formatStandardTimeStamp(),
+            updated_by: userAuth['user_id'],
+          },
+        );
+      } else {
+        await this.userRoleRepo.create(
+          {
+            user_id: result['user_id'],
+            role_id: data.role_id,
+            created_by: userAuth['user_id'],
+            updated_by: userAuth['user_id'],
+          },
+          false,
+        );
       }
     }
   }

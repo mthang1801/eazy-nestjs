@@ -16,11 +16,11 @@ import { RoleService } from '../../../services/role.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { IResponse } from '../../../interfaces/response.interface';
 import { AuthGuard } from '../../../../middlewares/be.auth';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { CreateUserGroupsDto } from 'src/app/dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
 import { CreateGroupDto } from '../../../dto/role/create-user-role.dto';
-import { UpdateGroupDto } from '../../../dto/role/update-user-role.dto';
+import { UpdateRoleGroupDto } from '../../../dto/role/update-roleGroup.dto';
 import { AuthorizeRoleFunctionDto } from '../../../dto/userRole/authorizeRoleFunct';
 
 /**
@@ -33,23 +33,49 @@ export class RoleController extends BaseController {
     super();
   }
 
+  /**
+   * Tạo nhóm người dùng
+   * @param res
+   * @param data
+   * @returns
+   */
   @Post()
-  async createGroup(@Res() res: Response, @Body() data: CreateGroupDto) {
-    const result = await this.service.createGroup(data);
+  @UseGuards(AuthGuard)
+  async createRoleGroup(
+    @Res() res: Response,
+    @Body() data: CreateGroupDto,
+    @Req() req: Request,
+  ) {
+    const result = await this.service.createRoleGroup(data, req['user']);
     return this.responseSuccess(res, result);
   }
 
+  /**
+   * Cập nhật nhóm người dùng
+   * @param id
+   * @param res
+   * @param data
+   * @returns
+   */
   @Put('/:id')
   @UseGuards(AuthGuard)
-  async updateGroup(
+  async updateRoleGroup(
     @Param('id') id: number,
     @Res() res: Response,
-    @Body() data: UpdateGroupDto,
+    @Body() data: UpdateRoleGroupDto,
+    @Req() req: Request,
   ): Promise<IResponse> {
-    await this.service.updateGroup(id, data);
+    await this.service.updateRoleGroup(id, data, req['user']);
     return this.responseSuccess(res);
   }
 
+  /**
+   * Gắn quyền vào người dùng
+   * @param role_id
+   * @param data
+   * @param res
+   * @returns
+   */
   @Put('/role-functs/:role_id')
   async authorizeRoleFunct(
     @Param('role_id') role_id: number,
