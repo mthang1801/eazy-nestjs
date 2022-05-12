@@ -459,3 +459,13 @@ export const tradeinOldReceiptSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const groupListSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.ROLE}.role_name`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

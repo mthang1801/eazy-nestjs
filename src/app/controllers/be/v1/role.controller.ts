@@ -19,6 +19,8 @@ import { AuthGuard } from '../../../../middlewares/be.auth';
 import { Response } from 'express';
 import { CreateUserGroupsDto } from 'src/app/dto/usergroups/create-usergroups.dto';
 import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dto';
+import { CreateGroupDto } from '../../../dto/role/create-user-role.dto';
+import { UpdateGroupDto } from '../../../dto/role/update-user-role.dto';
 
 /**
  * User groups controllers
@@ -28,6 +30,38 @@ import { UpdateUserGroupsDto } from 'src/app/dto/usergroups/update-usergroups.dt
 export class RoleController extends BaseController {
   constructor(private readonly service: RoleService) {
     super();
+  }
+
+  @Post()
+  async createGroup(@Res() res: Response, @Body() data: CreateGroupDto) {
+    await this.service.createGroup(data);
+    return this.responseSuccess(res);
+  }
+
+  @Put('/:id')
+  async updateGroup(
+    @Param('id') id: number,
+    @Res() res: Response,
+    @Body() data: UpdateGroupDto,
+  ): Promise<IResponse> {
+    await this.service.updateGroup(id, data);
+    return this.responseSuccess(res, null, 'Thành công.');
+  }
+
+  @Get('/:id')
+  async getGroupById(
+    @Res() res: Response,
+    @Param('id') id: number,
+    @Query() params,
+  ) {
+    const result = await this.service.getGroupById(params, id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
+  async getGroupList(@Res() res: Response, @Query() params) {
+    const result = await this.service.getGroupList(params);
+    return this.responseSuccess(res, result);
   }
 
   /**

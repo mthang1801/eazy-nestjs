@@ -26,20 +26,24 @@ import { SortBy } from '../../database/enums/sortBy.enum';
 import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
 import { formatStandardTimeStamp } from 'src/utils/helper';
+import { CreateGroupDto } from '../dto/role/create-user-role.dto';
+import { getPageSkipLimit } from '../../utils/helper';
+import { UpdateGroupDto } from '../dto/role/update-user-role.dto';
+import { groupListSearchFilter } from '../../utils/tableConditioner';
 
 @Injectable()
 export class RoleService {
   constructor(
-    private userGroupRepo: RoleRepository<RoleEntity>,
-    private userGroupLinksRepo: UserRoleRepository<UserRoleEntity>,
-    private userRepository: UserRepository<UserEntity>,
-    private userProfileRepository: UserProfileRepository<UserProfileEntity>,
+    private roleRepo: RoleRepository<RoleEntity>,
+    private roleFunctRepo: RoleFunctionRepository<RoleFunctionEntity>,
+    private userRoleRepo: UserRoleRepository<UserRoleEntity>,
+    private userRepo: UserRepository<UserEntity>,
     private userGroupPrivilegeRepo: RoleFunctionRepository<RoleFunctionEntity>,
     private privilegeRepo: FunctRepository<FunctEntity>,
   ) {}
 
   async create(data: CreateUserGroupsDto): Promise<any> {
-    const userGroupDB = await this.userGroupRepo.find({
+    const userGroupDB = await this.roleRepo.find({
       select: '*',
     });
 
@@ -55,10 +59,10 @@ export class RoleService {
 
     const userGroupData = {
       ...new RoleEntity(),
-      ...this.userGroupRepo.setData(data),
+      ...this.roleRepo.setData(data),
     };
 
-    const newUserGroup = await this.userGroupRepo.create(userGroupData);
+    const newUserGroup = await this.roleRepo.create(userGroupData);
     let result = { ...newUserGroup };
 
     if (data.privileges.length) {
@@ -102,7 +106,7 @@ export class RoleService {
   }
 
   async getByUserGroupId(id: number): Promise<any> {
-    const userGroup = await this.userGroupRepo.findOne({
+    const userGroup = await this.roleRepo.findOne({
       select: ['*'],
       where: { [`${Table.ROLE}.usergroup_id`]: id },
     });
@@ -159,13 +163,13 @@ export class RoleService {
       filterConditions['status'] = status;
     }
 
-    let count = await this.userGroupRepo.find({
+    let count = await this.roleRepo.find({
       select: [`COUNT(DISTINCT(${Table.ROLE}.usergroup_id)) as total`],
 
       where: userGroupSearchByNameCode(search, filterConditions),
     });
 
-    let userGroupsList = await this.userGroupRepo.find({
+    let userGroupsList = await this.roleRepo.find({
       select: ['*'],
 
       orderBy: [
@@ -188,7 +192,7 @@ export class RoleService {
   }
 
   async update(usergroup_id: number, data: UpdateUserGroupsDto): Promise<any> {
-    const currentUserGroup = await this.userGroupRepo.findOne({
+    const currentUserGroup = await this.roleRepo.findOne({
       usergroup_id,
     });
 
@@ -196,7 +200,7 @@ export class RoleService {
       throw new HttpException('Không tìm thấy usergroup', 404);
     }
 
-    const userGroupDB = await this.userGroupRepo.find();
+    const userGroupDB = await this.roleRepo.find();
 
     if (
       data.usergroup &&
@@ -211,13 +215,13 @@ export class RoleService {
 
     let result = { ...currentUserGroup };
 
-    const userGroupData = this.userGroupRepo.setData({
+    const userGroupData = this.roleRepo.setData({
       ...data,
       updated_at: formatStandardTimeStamp(),
     });
 
     if (Object.entries(userGroupData).length) {
-      const updatedUserGroup = await this.userGroupRepo.update(
+      const updatedUserGroup = await this.roleRepo.update(
         { usergroup_id },
         userGroupData,
       );
@@ -269,5 +273,107 @@ export class RoleService {
     }
 
     return result;
+  }
+
+  async createGroup(data: CreateGroupDto) {
+    const checkList = await this.roleRepo.find();
+    if (
+      checkList.some(
+        (item) => item.role_name.toLowerCase() == data.role_name.toLowerCase(),
+      )
+    ) {
+      throw new HttpException('Tên nhóm đã tồn tại', 409);
+    }
+
+    const groupData = {
+      ...new RoleEntity(),
+      ...this.roleRepo.setData(data),
+    };
+
+    const group = await this.roleRepo.create(groupData);
+
+    for (let i = 1; i <= 5; i++) {
+      const groupRole = {
+        ...new RoleFunctionEntity(),
+        ...this.roleFunctRepo.setData(data),
+        role_id: group.role_id,
+        funct_id: data.funct_id,
+        permission: i,
+      };
+      await this.roleFunctRepo.create(groupRole);
+    }
+  }
+
+  async getGroupList(params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterCondition = {};
+
+    let groupList = await this.roleRepo.find({
+      select: `*`,
+      where: groupListSearchFilter(search, filterCondition),
+      orderBy: [{ field: `${Table.ROLE}.updated_at`, sortBy: SortBy.DESC }],
+      skip,
+      limit,
+    });
+
+    let count = await this.roleRepo.find({
+      select: `COUNT(DISTINCT(${Table.ROLE}.role_id)) as total `,
+      where: groupListSearchFilter(search, filterCondition),
+    });
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: groupList,
+    };
+  }
+
+  async getGroupById(params, id: number) {
+    let group = await this.roleRepo.findOne({
+      select: '*',
+      where: {
+        [`${Table.ROLE}.role_id`]: id,
+      },
+    });
+    if (!group) {
+      throw new HttpException('Không tìm thấy nhóm.', 404);
+    }
+    const groupFuncts = await this.roleFunctRepo.find({
+      role_id: group.role_id,
+    });
+    group['role_functs'] = groupFuncts;
+
+    return group;
+  }
+
+  async updateGroup(id: number, data: UpdateGroupDto) {
+    const store = await this.roleRepo.findOne({ role_id: id });
+    if (!store) {
+      throw new HttpException('Không tìm thấy nhóm.', 404);
+    }
+    console.log(store);
+
+    let newGroupData = {
+      ...new RoleEntity(),
+      ...this.roleRepo.setData(data),
+      role_id: id,
+    };
+    await this.roleRepo.update({ role_id: id }, newGroupData);
+
+    await this.roleFunctRepo.delete({ role_id: id });
+
+    for (let i = 1; i <= 5; i++) {
+      const groupRole = {
+        ...new RoleFunctionEntity(),
+        ...this.roleFunctRepo.setData(data),
+        role_id: id,
+        funct_id: data.funct_id,
+        permission: i,
+      };
+      await this.roleFunctRepo.create(groupRole);
+    }
   }
 }
