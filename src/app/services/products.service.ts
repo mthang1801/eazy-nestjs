@@ -206,6 +206,7 @@ import {
 } from '../../utils/joinTable';
 import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
 import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
+import { Cryptography } from '../../utils/cryptography';
 
 @Injectable()
 export class ProductService {
@@ -4137,37 +4138,9 @@ export class ProductService {
   }
 
   async testSql(userIp) {
-    const checkUserIp = await this.revisewCommentUserIPRepo.findOne({
-      user_ip: userIp,
-    });
-    console.log(checkUserIp);
-    if (checkUserIp && checkUserIp['last_comment']) {
-      let now = Date.now();
-      let lastComment = new Date(checkUserIp['last_comment']).getTime();
-      let restrictedTime = 3 * 60 * 1000;
-
-      console.log(now, lastComment + restrictedTime);
-      if (now < lastComment + restrictedTime) {
-        throw new HttpException(
-          `Vui lòng chờ trong ${Math.ceil(
-            (lastComment + restrictedTime - now) / 1000,
-          )}s để bình luận tiếp theo`,
-          400,
-        );
-      }
-    }
-
-    if (checkUserIp) {
-      await this.revisewCommentUserIPRepo.update(
-        { user_ip: userIp },
-        { last_comment: formatStandardTimeStamp() },
-      );
-    } else {
-      await this.revisewCommentUserIPRepo.create({
-        user_ip: userIp,
-        last_comment: formatStandardTimeStamp(),
-      });
-    }
+    let cryptography = new Cryptography();
+    var hw = cryptography.encrypt('Welcome to Tutorials Point...');
+    console.log(hw);
     // const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
     // await this.productRepo.findOne({
     //   select: '*',

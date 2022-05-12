@@ -60,4 +60,7 @@ export class CreateOrderFEDto {
 
   @IsOptional()
   shipping_fee_location_id: number;
+
+  @IsOptional()
+  user_id: string;
 }

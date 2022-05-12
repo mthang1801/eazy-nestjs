@@ -65,8 +65,7 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('test')
-  @UseGuards(AuthGuard)
+  @Post('test')  
   async test(@Req() req) {
     await this.service.testSql(req.clientIp);
   }
