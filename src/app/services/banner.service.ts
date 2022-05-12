@@ -175,15 +175,11 @@ export class bannerService {
         ) {
           continue;
         }
-
         const bannerItems = await this.bannerItemRepo.find({
           select: '*',
           where: {
             [`${Table.BANNER_ITEM}.status`]: 'A',
             [`${Table.BANNER_ITEM}.banner_id`]: banner.banner_id,
-            [`${Table.BANNER_ITEM}.start_at`]: LessThanOrEqual(
-              formatStandardTimeStamp(),
-            ),
           },
           orderBy: [
             {
@@ -192,7 +188,8 @@ export class bannerService {
             },
           ],
         });
-        let bannerItemsResult = []
+
+        let bannerItemsResult = [];
         for (let bannerItem of bannerItems) {
           if (
             bannerItem.end_at &&
@@ -207,9 +204,9 @@ export class bannerService {
           ) {
             continue;
           }
-
+          bannerItemsResult = [...bannerItemsResult, bannerItem];
         }
-        banner['banner_items'] = bannerItems;
+        banner['banner_items'] = bannerItemsResult;
 
         _banners = [..._banners, { ...banner }];
       }
