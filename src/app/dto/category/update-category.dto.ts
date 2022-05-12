@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsNotEmpty, IsIn, ValidateNested } from 'class-validator';
+import { IsOptional, IsNotEmpty, IsIn, ValidateNested, IsNumber, IsString } from 'class-validator';
 
 export class UpdateCategoryDto {
   @IsOptional()
@@ -115,6 +115,11 @@ export class UpdateCategoryDto {
 
   @IsOptional()
   removed_products: number[];
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CategoryFeature)
+  category_features: CategoryFeature[];
 }
 
 class AppliedProduct {
@@ -123,4 +128,19 @@ class AppliedProduct {
 
   @IsOptional()
   position: number;
+
+}
+
+class CategoryFeature{
+  @IsOptional()
+  @IsNumber()
+  feature_id: number;
+
+  @IsNumber()
+  @IsOptional()
+  position: number;
+
+  @IsString()
+  @IsOptional()
+  status: string;
 }

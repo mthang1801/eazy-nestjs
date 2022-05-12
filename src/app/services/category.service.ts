@@ -74,6 +74,8 @@ import { IMPORT_CATEGORIES_APPCORE } from '../../constants/api.appcore';
 import { UpDateCategoriesListDto } from '../dto/category/update-categoriesList.dto';
 import { CreateCatalogCategoryItemDto } from '../dto/category/create-catalogCategoryItem.dto';
 import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entity';
+import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
+import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -88,6 +90,7 @@ export class CategoryService {
     private catalogCategoryDescRepo: CatalogCategoryDescriptionRepository<CatalogCategoryDescriptionEntity>,
     private accessoryCategoryRepo: AccessoryCategoryRepository<AccessoryCategoryEntity>,
     private catalogCategoryItemRepo: CatalogCategoryItemRepository<CatalogCategoryItemEntity>,
+    private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
@@ -504,7 +507,53 @@ export class CategoryService {
         }
       }
     }
+
+    //update table category_features
+    if (data.category_features && data.category_features.length) {
+      await this.categoryFeatureRepo.delete({category_id: id})
+
+      for (let { feature_id, position, status } of data.category_features){
+        const checkExist = await this.categoryFeatureRepo.findOne({category_id: id, feature_id: feature_id,})
+        console.log(checkExist);
+        if (checkExist){
+          continue;
+        }
+
+        const categoryFeature = {
+          ...new CategoryFeatureEntity(),
+          ...this.categoryFeatureRepo.setData(data),
+          category_id: id,
+          feature_id: feature_id,
+          status: status,
+          position: position,
+        }
+        await this.categoryFeatureRepo.create(categoryFeature);
+      }
+    }
   }
+  // async testCate(id: number, data: UpdateCategoryDto) {
+  //   if (data.category_features && data.category_features.length) {
+  //     await this.categoryFeatureRepo.delete({category_id: id})
+
+  //     for (let { feature_id, position, status } of data.category_features){
+  //       const checkExist = await this.categoryFeatureRepo.findOne({category_id: id, feature_id: feature_id,})
+  //       console.log(checkExist);
+  //       if (checkExist){
+  //         continue;
+  //       }
+
+  //       const categoryFeature = {
+  //         ...new CategoryFeatureEntity(),
+  //         ...this.categoryFeatureRepo.setData(data),
+  //         category_id: id,
+  //         feature_id: feature_id,
+  //         status: status,
+  //         position: position,
+  //       }
+  //       await this.categoryFeatureRepo.create(categoryFeature);
+  //     }
+  //   }
+  // }
 
   async updateLevelChildrenCategories(category_id) {
     let currentCategory = await this.categoryRepository.findOne({
