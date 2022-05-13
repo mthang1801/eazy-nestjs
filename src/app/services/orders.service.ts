@@ -397,6 +397,8 @@ export class OrdersService {
       }
     }
 
+    console.log(sendData);
+
     const result = await this.createOrder(user, sendData);
 
     // await this.cartRepo.delete({ cart_id: cart.cart_id });
@@ -1032,7 +1034,7 @@ export class OrdersService {
   }
 
   async itgUpdate(order_code: string, data) {
-    console.log('update');
+    console.log('itg update');
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
