@@ -28,6 +28,7 @@ import { AuthorizeRoleFunctionDto } from '../../../dto/userRole/authorizeRoleFun
  * @author MvThang
  */
 @Controller('/be/v1/user-groups')
+@UseGuards(AuthGuard)
 export class RoleController extends BaseController {
   constructor(private readonly service: RoleService) {
     super();
@@ -40,7 +41,6 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Post()
-  @UseGuards(AuthGuard)
   async createRoleGroup(
     @Res() res: Response,
     @Body() data: CreateGroupDto,
@@ -58,7 +58,6 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Put('/:id')
-  @UseGuards(AuthGuard)
   async updateRoleGroup(
     @Param('id') id: number,
     @Res() res: Response,
@@ -116,7 +115,6 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Post()
-  //@UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserGroupsDto,
     @Res() res: Response,
@@ -126,7 +124,6 @@ export class RoleController extends BaseController {
   }
 
   @Get()
-  @UseGuards(AuthGuard)
   async getList(
     @Res() res: Response,
     @Req() req,
@@ -143,7 +140,6 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Get(':id')
-  //@UseGuards(AuthGuard)
   async getByUserGroupId(
     @Param('id') id: number,
     @Res() res: Response,
@@ -160,7 +156,6 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Put(':id')
-  // @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() data: UpdateUserGroupsDto,

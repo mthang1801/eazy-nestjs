@@ -32,8 +32,9 @@ import { UpDateCategoriesListDto } from '../../../dto/category/update-categories
  * Controller for Category
  * @Author MvThang
  */
-//@UseGuards(AuthGuard)
+
 @Controller('/be/v1/category')
+@UseGuards(AuthGuard)
 export class CategoryController extends BaseController {
   constructor(
     private service: CategoryService,

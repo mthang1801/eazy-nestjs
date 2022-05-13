@@ -25,6 +25,7 @@ import { CreatePaynowDto } from 'src/app/dto/orders/create-paynow.dto';
 import { CreateOrderSelfTransportDto } from '../../../dto/orders/create-orderSelfTransport.dto';
 
 @Controller('/be/v1/orders')
+@UseGuards(AuthGuard)
 export class OrderController extends BaseController {
   constructor(private service: OrdersService) {
     super();

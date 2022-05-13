@@ -18,13 +18,13 @@ import { Response } from 'express';
 import { CreateTradeinProgramDto } from '../../../dto/tradein/create-tradeinProgram.dto';
 import { UpdateTradeinProgramDto } from '../../../dto/tradein/update-tradeinProgram.dto';
 @Controller('/be/v1/tradein-programs')
+@UseGuards(AuthGuard)
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
     super();
   }
 
   @Post()
-  @UseGuards(AuthGuard)
   async cmsCreate(
     @Res() res: Response,
     @Body() data: CreateTradeinProgramDto,
@@ -66,7 +66,6 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Put(':tradein_id')
-  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('tradein_id') tradein_id: number,

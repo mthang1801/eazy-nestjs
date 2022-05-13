@@ -17,6 +17,7 @@ import { Param } from '@nestjs/common';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateCommentCMSDto } from '../../../dto/reviewComment/create-comment.cms.dto';
 @Controller('/be/v1/reviews-comments')
+@UseGuards(AuthGuard)
 export class ReviewsCommentsController extends BaseController {
   constructor(private service: ReviewsCommentService) {
     super();
@@ -32,7 +33,6 @@ export class ReviewsCommentsController extends BaseController {
   }
 
   @Post('/response/:product_id')
-  @UseGuards(AuthGuard)
   async createComment(
     @Param('product_id') product_id: number,
     @Body() data: CreateCommentCMSDto,

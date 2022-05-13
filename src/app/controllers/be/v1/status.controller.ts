@@ -18,6 +18,7 @@ import { Put } from '@nestjs/common';
 import { OrderStatusUpdateDTO } from '../../../dto/orderStatus/update-orderStatus.dto';
 
 @Controller('/be/v1/status')
+@UseGuards(AuthGuard)
 export class StatusController extends BaseController {
   constructor(private service: StatusService) {
     super();
@@ -45,7 +46,6 @@ export class StatusController extends BaseController {
   }
 
   @Put('/:id')
-  @UseGuards(AuthGuard)
   async UpdateOrderStatus(
     @Res() res,
     @Body() data: OrderStatusUpdateDTO,

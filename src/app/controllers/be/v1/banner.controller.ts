@@ -29,6 +29,7 @@ import { CreateBannerTargetDescriptionDto } from '../../../dto/banner/create-ban
 import { createPool } from 'mysql2/promise';
 import { UpdateBannerTargetDescriptionDto } from '../../../dto/banner/update-bannerTargetDescription.dto';
 @Controller('/be/v1/banners')
+@UseGuards(AuthGuard)
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
     super();
@@ -94,7 +95,6 @@ export class bannerController extends BaseController {
   }
 
   @Put('/:id')
-  //@UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
     @Body() data,
@@ -105,7 +105,6 @@ export class bannerController extends BaseController {
   }
 
   @Delete('/:banner_id')
-  //@UseGuards(AuthGuard)
   async deleteBannerById(
     @Res() res,
     @Param('banner_id') banner_id: number,
