@@ -333,6 +333,8 @@ export class UserSystemService {
       await this.customerService.createCustomerToAppcore(result);
     }
 
+    console.log(336, result);
+
     if (data.role_id) {
       const userRole = await this.userRoleRepo.findOne({
         user_id: result['user_id'],
@@ -345,7 +347,7 @@ export class UserSystemService {
           {
             role_id: data.role_id,
             updated_at: formatStandardTimeStamp(),
-            updated_by: userAuth['user_id'],
+            updated_by: userAuth ? userAuth['user_id'] : '',
           },
         );
       } else {
@@ -353,8 +355,8 @@ export class UserSystemService {
           {
             user_id: result['user_id'],
             role_id: data.role_id,
-            created_by: userAuth['user_id'],
-            updated_by: userAuth['user_id'],
+            created_by: userAuth ? userAuth['user_id'] : '',
+            updated_by: userAuth ? userAuth['user_id'] : '',
           },
           false,
         );
