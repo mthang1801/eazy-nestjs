@@ -16,7 +16,6 @@ export class LogsService {
   ) {}
   async create(data) {
     const logData = { ...new LogEntity(), ...this.logRepo.setData(data) };
-
     await this.logRepo.create(logData);
   }
 

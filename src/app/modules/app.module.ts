@@ -50,6 +50,7 @@ import { ShippingFeeModule } from './shippingFee.module';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { TradeinProgramModule } from './tradeinProgram.module';
 import { HomepageConfigModule } from './homepageConfig.module';
+import { LogsModule } from './logs.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { HomepageConfigModule } from './homepageConfig.module';
     MailModule,
     DatabaseModule,
     LoggerModule,
+    LogsModule,
     BannerModule,
     StringModule,
     ObjectModule,

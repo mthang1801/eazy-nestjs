@@ -42,6 +42,7 @@ import { getUserFromToken } from '../../middlewares/getUserFromToken';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { ReviewsCommentsModule } from './reviewsComment.module';
+import { LogRepository } from '../repositories/log.repository';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
     ProductStoreHistoryRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
+    LogRepository,
   ],
   exports: [
     ProductService,

@@ -207,6 +207,9 @@ import {
 import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
 import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
 import { Cryptography } from '../../utils/cryptography';
+import { Response } from 'express';
+import { LogEntity } from '../entities/logs.entity';
+import { LogRepository } from '../repositories/log.repository';
 
 @Injectable()
 export class ProductService {
@@ -249,6 +252,7 @@ export class ProductService {
     private reviewCommentItemsRepo: ReviewCommentItemRepository<ReviewCommentItemsEntity>,
     private reviewCommentService: ReviewsCommentService,
     private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
+    private logRepo: LogRepository<LogEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -4140,13 +4144,30 @@ export class ProductService {
     return this.testGetProductDetails(product_id);
   }
 
-  async testSql(userIp) {
-    let cryptography = new Cryptography();
-    var hw = cryptography.encrypt('30512');
-    console.log(hw);
-    let cryptography1 = new Cryptography();
+  async testSql(files) {
+    let config: any = {
+      method: 'get',
+      url: "https://ddvcmsdev.ntlogistics.vn/products",
+    };
 
-    console.log(cryptography1.decrypt(hw));
+    try {
+      const response = await axios(config);
+      const data = { error_code: response.status, method: response.config.method, source_url: response.config.url }
+      const logData = {
+        ...new LogEntity(),
+        ...this.logRepo.setData(data),
+      };
+      console.log(logData);
+      const newLog = await this.logRepo.create(logData);
+    } catch (error) {
+      console.log(error);
+    }
+    // let cryptography = new Cryptography();
+    // var hw = cryptography.encrypt('30512');
+    // console.log(hw);
+    // let cryptography1 = new Cryptography();
+
+    // console.log(cryptography1.decrypt(hw));
     // const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
     // await this.productRepo.findOne({
     //   select: '*',
