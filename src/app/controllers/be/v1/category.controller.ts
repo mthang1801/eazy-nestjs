@@ -34,7 +34,6 @@ import { UpDateCategoriesListDto } from '../../../dto/category/update-categories
  */
 
 @Controller('/be/v1/category')
-@UseGuards(AuthGuard)
 export class CategoryController extends BaseController {
   constructor(
     private service: CategoryService,
@@ -50,6 +49,7 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Body() categoryDto: CreateCategoryDto,
     @Res() res: Response,
@@ -109,6 +109,7 @@ export class CategoryController extends BaseController {
   }
 
   @Get('accessories')
+  @UseGuards(AuthGuard)
   async getAccessories(@Res() res: Response, @Query() params) {
     const result = await this.service.getAccessories(params);
     return this.responseSuccess(res, result);
@@ -122,6 +123,7 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const categoriesMenuList = await this.service.getList(params);
     return this.responseSuccess(res, categoriesMenuList);
@@ -150,6 +152,7 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Get(':id')
+  @UseGuards(AuthGuard)
   async get(
     @Param('id') id: number,
     @Res() res: Response,
@@ -160,6 +163,7 @@ export class CategoryController extends BaseController {
   }
 
   @Put()
+  @UseGuards(AuthGuard)
   async updateList(
     @Body() data: UpDateCategoriesListDto,
     @Res() res: Response,
@@ -176,6 +180,7 @@ export class CategoryController extends BaseController {
    * @returns
    */
   @Put('/:id')
+  @UseGuards(AuthGuard)
   async update(
     @Body() categoryDto: UpdateCategoryDto,
     @Param('id') id: number,
@@ -241,6 +246,7 @@ export class CategoryController extends BaseController {
   }
 
   @Delete(':category_id/icon/')
+  @UseGuards(AuthGuard)
   async deleteIcon(
     @Res() res: Response,
     @Param('category_id') category_id: string,
@@ -250,6 +256,7 @@ export class CategoryController extends BaseController {
   }
 
   @Delete('/:id')
+  @UseGuards(AuthGuard)
   async delete(
     @Param('id') id: number,
     @Res() res: Response,
@@ -264,6 +271,7 @@ export class CategoryController extends BaseController {
   }
 
   @Get(':id/products')
+  @UseGuards(AuthGuard)
   async getProductsList(
     @Param('id') categoryId: number,
     @Query() params,
@@ -277,12 +285,13 @@ export class CategoryController extends BaseController {
   }
 
   @Put(':id/products')
+  @UseGuards(AuthGuard)
   async updateProductIntoCategory(
     @Param('id') categoryId: number,
     @Body() data: UpdateProductsInCategory,
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.productService.updateProductIntoCategory(categoryId, data);
-    return this.responseSuccess(res, null, 'Thành công');
+    return this.responseSuccess(res);
   }
 }

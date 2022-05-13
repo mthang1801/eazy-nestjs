@@ -29,13 +29,13 @@ import { CreateBannerTargetDescriptionDto } from '../../../dto/banner/create-ban
 import { createPool } from 'mysql2/promise';
 import { UpdateBannerTargetDescriptionDto } from '../../../dto/banner/update-bannerTargetDescription.dto';
 @Controller('/be/v1/banners')
-@UseGuards(AuthGuard)
 export class bannerController extends BaseController {
   constructor(private service: bannerService) {
     super();
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const banners = await this.service.getList(params);
     return this.responseSuccess(res, banners);
@@ -70,6 +70,7 @@ export class bannerController extends BaseController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() body: CreateBannerDto,
@@ -85,6 +86,7 @@ export class bannerController extends BaseController {
   }
 
   @Get('/:id')
+  @UseGuards(AuthGuard)
   async getById(
     @Res() res: Response,
     @Param('id') id,
@@ -95,6 +97,7 @@ export class bannerController extends BaseController {
   }
 
   @Put('/:id')
+  @UseGuards(AuthGuard)
   async updateBannerbyId(
     @Res() res,
     @Body() data,
@@ -105,6 +108,7 @@ export class bannerController extends BaseController {
   }
 
   @Delete('/:banner_id')
+  @UseGuards(AuthGuard)
   async deleteBannerById(
     @Res() res,
     @Param('banner_id') banner_id: number,
