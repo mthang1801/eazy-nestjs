@@ -311,7 +311,7 @@ export const itgCustomerToAppcore = (data) => {
       continue;
     }
     if (app === 'b_city') {
-      cData[core] = +data[app] || 255;
+      cData[core] = +data[app] || 255
       continue;
     }
     if (app === 'b_district') {

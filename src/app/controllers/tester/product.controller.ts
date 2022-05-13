@@ -75,4 +75,6 @@ export class ProductTesterController extends BaseController {
   async test(@Req() req) {
     await this.service.testSql(req.clientIp);
   }
+
+  
 }

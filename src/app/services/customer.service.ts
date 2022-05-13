@@ -73,6 +73,10 @@ import { formatCustomerTimestamp } from 'src/utils/services/customer.helper';
 import { CreateCustomerPaymentDto } from '../dto/customer/create-customerPayment.dto';
 import { DatabaseService } from '../../database/database.service';
 import { userSelector } from '../../utils/tableSelector';
+import { LogsService } from './logs.service';
+import { LoggerSuccessBetweenCMSAndAppCore, LoggerFailBetweenCMSAndAppCore } from '../../utils/helper';
+import { logModules, logSources, logThreads } from '../../constants/logs';
+import { Response } from 'express';
 
 @Injectable()
 export class CustomerService {
@@ -86,6 +90,7 @@ export class CustomerService {
     private userDataRepo: UserDataRepository<UserDataEntity>,
     private userLoyalHistory: UserLoyaltyHistoryRepository<UserLoyaltyHistoryEntity>,
     private dbService: DatabaseService,
+    private logService: LogsService,
   ) {}
 
   async create(creator, data: CreateCustomerDto) {
@@ -200,10 +205,21 @@ export class CustomerService {
         },
         true,
       );
-
+      const module_id: number = 3;
+      const module_name: string = logModules["3"];
+      const source_id: number = 1;
+      const source_name: string = logSources["1"];
+      const thread: string = logThreads["2"];
+      await this.logService.create(LoggerSuccessBetweenCMSAndAppCore(response, module_id, module_name, source_id, source_name, thread));
       return updatedUser;
     } catch (error) {
-      console.log(error);
+      console.log(error.response);
+      const module_id: number = 3;
+      const module_name: string = logModules["3"];
+      const source_id: number = 1;
+      const source_name: string = logSources["1"];
+      const thread: string = logThreads["2"];
+      await this.logService.create(LoggerFailBetweenCMSAndAppCore(error.response, module_id, module_name, source_id, source_name, thread));
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -579,13 +595,26 @@ export class CustomerService {
       console.log('Update user Appcore');
       const customerDataToAppcore = itgCustomerToAppcore(customer);
 
-      await axios({
+      const response = await axios({
         url: `${CREATE_CUSTOMER_API}/${customer.user_appcore_id}`,
         method: 'PUT',
         data: customerDataToAppcore,
       });
+      console.log(response);
+      const module_id: number = 4;
+      const module_name: string = logModules["4"];
+      const source_id: number = 1;
+      const source_name: string = logSources["1"];
+      const thread: string = logThreads["2"];
+      await this.logService.create(LoggerSuccessBetweenCMSAndAppCore(response, module_id, module_name, source_id, source_name, thread));
     } catch (error) {
-      console.log(error);
+      console.log(error.response);
+      const module_id: number = 4;
+      const module_name: string = logModules["4"];
+      const source_id: number = 1;
+      const source_name: string = logSources["1"];
+      const thread: string = logThreads["2"];
+      await this.logService.create(LoggerFailBetweenCMSAndAppCore(error.response, module_id, module_name, source_id, source_name, thread));
       throw new HttpException('Cập nhật tới Appcore không thành công', 400);
     }
   }

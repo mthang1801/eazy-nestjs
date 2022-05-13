@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import * as moment from 'moment';
 
 import * as crypto from 'crypto';
+import { url } from 'inspector';
 
 export function genRandomString(length: number): string {
   return crypto
@@ -214,3 +215,33 @@ export const checkRestrictedCommentsListIntoRegularExpress = (str) =>
     .join('|');
 
 export const removeMoreThanOneSpace = (str) => str.replace(/\s\s+/g, ' ');
+
+export function LoggerSuccessBetweenCMSAndAppCore(data, moduleId, moduleName, sourceId, sourceName, thread){
+  const res = {module_id: moduleId, 
+    module_name: moduleName, 
+    source_id: sourceId, 
+    source_name: sourceName, 
+    thread: thread, 
+    error_code: data.status, 
+    method: data.config.method, 
+    source_url: data.config.url, 
+    detail: JSON.stringify(JSON.parse(data.config.data)),
+  };
+  return res;
+}
+
+export function LoggerFailBetweenCMSAndAppCore(data, moduleId, moduleName, sourceId, sourceName, thread){
+  const res = {status: 2,
+    error_detail: data.data.message,
+    module_id: moduleId,
+    module_name: moduleName, 
+    source_id: sourceId, 
+    source_name: sourceName, 
+    thread: thread, 
+    error_code: data.status, 
+    method: data.config.method, 
+    source_url: data.config.url, 
+    detail: JSON.stringify(JSON.parse(data.config.data)),
+  };
+  return res;
+}
