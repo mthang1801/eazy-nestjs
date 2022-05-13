@@ -6,12 +6,14 @@ import { CustomerController as CustomerControllerIntergration } from '../control
 import { MailModule } from './mail.module';
 import { OrdersModule } from './orders.module';
 import { CustomerControllers } from '../controllers/sync/v1/customers.controller';
+import { CustomerController as CustomerControllerFE } from '../controllers/fe/v1/customer.controller';
 
 @Module({
   controllers: [
     CustomerControllerBE,
     CustomerControllerIntergration,
     CustomerControllers,
+    CustomerControllerFE,
   ],
   providers: [CustomerService],
   exports: [CustomerService],

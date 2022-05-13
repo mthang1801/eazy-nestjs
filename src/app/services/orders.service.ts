@@ -367,6 +367,9 @@ export class OrdersService {
     userProfile['s_district'] = data.s_district || userProfile['s_district'];
     userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
     userProfile['s_address'] = data.s_address || userProfile['s_address'];
+    if (!userProfile['b_lastname']) {
+      userProfile['b_lastname'] = data.s_lastname;
+    }
 
     if (Object.entries(userProfile).length) {
       userProfile = await this.userProfileRepo.update(

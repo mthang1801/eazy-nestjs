@@ -61,7 +61,6 @@ export class CustomerController extends BaseController {
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getById(id);
-
     return this.responseSuccess(res, result);
   }
 
@@ -96,7 +95,6 @@ export class CustomerController extends BaseController {
     @Body() body: UpdateCustomerDTO,
   ): Promise<IResponse> {
     const result = await this.service.update(user_id, body);
-
     return this.responseSuccess(res, result);
   }
 
