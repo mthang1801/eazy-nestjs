@@ -10,6 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { CustomerService } from 'src/app/services/customer.service';
+import { AuthGuard } from 'src/middlewares/fe.auth';
 import { BaseController } from '../../../../base/base.controllers';
 import { IResponse } from '../../../interfaces/response.interface';
 
@@ -25,9 +26,11 @@ export class CustomerController extends BaseController {
    * @param id
    * @returns
    */
-  @Get('/:id')
-  async getById(@Res() res, @Param('id') id): Promise<IResponse> {
-    const result = await this.service.getById(id);
+  @Get()
+  @UseGuards(AuthGuard)
+  async getById(@Res() res, @Req() req): Promise<IResponse> {
+    const { user_id } = req.user;
+    const result = await this.service.getById(user_id);
     return this.responseSuccess(res, result);
   }
 }
