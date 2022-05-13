@@ -429,6 +429,7 @@ export const mappingStatusOrder = (coreStatus) => {
 };
 
 export const convertOrderDataFromAppcore = (coreData) => {
+  console.log(432, coreData);
   let cmsData = { ...coreData };
   if (coreData['b_firstname']) {
     delete cmsData['b_firstname'];
