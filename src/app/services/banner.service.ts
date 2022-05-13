@@ -159,7 +159,7 @@ export class bannerService {
         [`${Table.BANNER_TARGET_DESCRIPTION}.url`]: slug,
       },
     });
-
+    console.log(banners);
     let _banners = [...banners];
 
     if (banners.length) {
