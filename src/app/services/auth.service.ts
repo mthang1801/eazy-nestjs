@@ -270,7 +270,7 @@ export class AuthService {
     );
 
     const dataResult = {
-      token: this.generateToken(user, user['user_id']),
+      token: this.generateToken(user, userIdEncoded),
       userData: {
         firstname: user['firstname'],
         lastname: user['lastname'],

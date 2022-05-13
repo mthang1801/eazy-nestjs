@@ -25,19 +25,20 @@ import { CreatePaynowDto } from 'src/app/dto/orders/create-paynow.dto';
 import { CreateOrderSelfTransportDto } from '../../../dto/orders/create-orderSelfTransport.dto';
 
 @Controller('/be/v1/orders')
-@UseGuards(AuthGuard)
 export class OrderController extends BaseController {
   constructor(private service: OrdersService) {
     super();
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
     const result = await this.service.CMScreate(body);
     return this.responseSuccess(res, result);
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
