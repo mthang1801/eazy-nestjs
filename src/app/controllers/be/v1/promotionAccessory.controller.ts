@@ -19,12 +19,12 @@ import { UpdatePromotionAccessoryDto } from '../../../dto/promotionAccessories/u
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { UpdateProductPromotionAccessoryDto } from '../../../dto/promotionAccessories/update-productPromotionAccessory.dto';
 @Controller('be/v1/promotion-accessories')
-@UseGuards(AuthGuard)
 export class PromotionAccessoriesController extends BaseController {
   constructor(private service: PromotionAccessoryService) {
     super();
   }
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() data: CreatePromotionAccessoryDto,
@@ -35,12 +35,14 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
   @Get(':accessory_id')
+  @UseGuards(AuthGuard)
   async get(
     @Res() res: Response,
     @Param('accessory_id') accessory_id: number,
@@ -50,6 +52,7 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Put(':accessory_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('accessory_id') accessory_id: number,
@@ -61,6 +64,7 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Get('products/:product_id')
+  @UseGuards(AuthGuard)
   async getByProductId(
     @Res() res: Response,
     @Param('product_id') product_id: number,
@@ -70,6 +74,7 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Get(':accessory_id/products')
+  @UseGuards(AuthGuard)
   async getProductsListByAccessoryId(
     @Res() res: Response,
     @Param('accessory_id') accessory_id: number,
@@ -83,6 +88,7 @@ export class PromotionAccessoriesController extends BaseController {
   }
 
   @Put(':accessory_id/update-products')
+  @UseGuards(AuthGuard)
   async updateAccessoryProducts(
     @Res() res: Response,
     @Body() data: UpdateProductPromotionAccessoryDto,

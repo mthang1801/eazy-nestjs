@@ -84,6 +84,7 @@ export class CategoryController extends BaseController {
   }
 
   @Put('/catalog/item/:id')
+  @UseGuards(AuthGuard)
   async updateCatalogCategoryItem(
     @Param('id') id: number,
     @Res() res: Response,
@@ -109,7 +110,6 @@ export class CategoryController extends BaseController {
   }
 
   @Get('accessories')
-  @UseGuards(AuthGuard)
   async getAccessories(@Res() res: Response, @Query() params) {
     const result = await this.service.getAccessories(params);
     return this.responseSuccess(res, result);
@@ -255,20 +255,20 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
-  @Delete('/:id')
-  @UseGuards(AuthGuard)
-  async delete(
-    @Param('id') id: number,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const boolRes = await this.service.delete(id);
-    return boolRes
-      ? this.responseSuccess(res, null, 'Xoá thành công')
-      : this.responseNotFound(
-          res,
-          `Xoá không thành công, không tìm thấy id ${id}.`,
-        );
-  }
+  // @Delete('/:id')
+  // @UseGuards(AuthGuard)
+  // async delete(
+  //   @Param('id') id: number,
+  //   @Res() res: Response,
+  // ): Promise<IResponse> {
+  //   const boolRes = await this.service.delete(id);
+  //   return boolRes
+  //     ? this.responseSuccess(res, null, 'Xoá thành công')
+  //     : this.responseNotFound(
+  //         res,
+  //         `Xoá không thành công, không tìm thấy id ${id}.`,
+  //       );
+  // }
 
   @Get(':id/products')
   @UseGuards(AuthGuard)

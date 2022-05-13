@@ -62,24 +62,6 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/reviews')
-  async getReviewsList(
-    @Query() params,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.getReviewsListCMS(params, 1);
-    return this.responseSuccess(res, result);
-  }
-
-  @Get('/comments')
-  async getCommentsList(
-    @Query() params,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    const result = await this.service.getReviewsListCMS(params, 2);
-    return this.responseSuccess(res, result);
-  }
-
   @Get('/reviews-comments')
   async getCommentsReviewsList(
     @Query() params,
@@ -117,21 +99,21 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get(':identifier')
+  @Get(':product_id')
   async get(
-    @Param('identifier') identifier: number | string,
+    @Param('product_id') product_id: number | string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.get(identifier);
+    const result = await this.service.get(product_id);
     return this.responseSuccess(res, result);
   }
 
-  @Get('/:id/products-stores')
+  @Get('/:product_id/products-stores')
   async getProductsStores(
-    @Param('id') id: string,
+    @Param('product_id') product_id: string,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.getProductsStores(id);
+    const result = await this.service.getProductsStores(product_id);
     return this.responseSuccess(res, result);
   }
 
@@ -242,7 +224,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
   }
 
-  @Delete(':product_id/meta-image/')
+  @Delete(':product_id/meta-image')
   async deleteMetaImage(
     @Res() res: Response,
     @Param('product_id') product_id: string,
@@ -251,7 +233,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
-  @Delete(':product_id/thumbnail/')
+  @Delete(':product_id/thumbnail')
   async deleteThumbnail(
     @Res() res: Response,
     @Param('product_id') product_id: string,
@@ -270,9 +252,9 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, message);
   }
 
-  @Delete('/clear')
-  async delete(@Res() res: Response): Promise<IResponse> {
-    await this.service.clearAll();
-    return this.responseSuccess(res, null, 'Clear thành công');
-  }
+  // @Delete('/clear')
+  // async delete(@Res() res: Response): Promise<IResponse> {
+  //   await this.service.clearAll();
+  //   return this.responseSuccess(res, null, 'Clear thành công');
+  // }
 }

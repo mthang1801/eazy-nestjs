@@ -19,13 +19,13 @@ import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 
 @Controller('/be/v1/stores')
-@UseGuards(AuthGuard)
 export class StoreController extends BaseController {
   constructor(private service: StoreService) {
     super();
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
@@ -38,6 +38,7 @@ export class StoreController extends BaseController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() data: CreateStoreDto,
@@ -47,6 +48,7 @@ export class StoreController extends BaseController {
   }
 
   @Put(':store_location_id')
+  @UseGuards(AuthGuard)
   async update(
     @Param('store_location_id') store_location_id: number,
     @Res() res: Response,
@@ -57,6 +59,7 @@ export class StoreController extends BaseController {
   }
 
   @Get(':store_location_id')
+  @UseGuards(AuthGuard)
   async getById(
     @Res() res: Response,
     @Param('store_location_id') store_location_id: number,
