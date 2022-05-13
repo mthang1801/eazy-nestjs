@@ -10,9 +10,6 @@ import {
 
 export class CreateCategoryDto {
   @IsOptional()
-  category_id: number;
-
-  @IsOptional()
   parent_id: null | number = 0;
 
   @IsOptional()

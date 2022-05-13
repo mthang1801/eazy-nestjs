@@ -95,17 +95,20 @@ export class CategoryService {
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
-    const checkSlugExist = await this.categoryRepository.findOne({
-      slug: convertToSlug(data.slug),
-    });
+    if (data.slug) {
+      const checkSlugExist = await this.categoryRepository.findOne({
+        slug: convertToSlug(data.slug),
+      });
 
-    if (checkSlugExist) {
-      throw new HttpException('Đường dẫn đã tồn tại.', 409);
+      if (checkSlugExist) {
+        throw new HttpException('Đường dẫn đã tồn tại.', 409);
+      }
     }
 
     const categoryData = {
       ...new CategoryEntity(),
       ...this.categoryRepository.setData(data),
+      slug: data.slug ? data.slug : convertToSlug(data.category, true),
     };
 
     if (data.parent_id) {
@@ -129,6 +132,7 @@ export class CategoryService {
           ? `${category['id_path']}/${category['category_id']}`
           : category['category_id'],
       },
+      true,
     );
 
     let result: any = { ...category };
@@ -721,10 +725,9 @@ export class CategoryService {
   }
 
   async getListFE(params = {}) {
-    return this.categoryRepository.find({
-      select: '*',
-      join: categoryJoiner,
-    });
+    let filterConditions = {};
+
+    const categoriesList = await this.categoryRepository.find({});
   }
 
   async getList(params) {
