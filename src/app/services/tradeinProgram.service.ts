@@ -983,4 +983,6 @@ export class TradeinProgramService {
     }
     return oldReceipt;
   }
+
+  async getOldReceiptByUserId(user_id) {}
 }
