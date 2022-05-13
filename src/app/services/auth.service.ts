@@ -255,7 +255,7 @@ export class AuthService {
     if (menuList.length) {
       for (let menuItem of menuList) {
         let menu = await this.functRepo.find({
-          select: '*',
+          select: menuSelector,
           where: {
             level: 1,
             parent_id: menuItem['funct_id'],
