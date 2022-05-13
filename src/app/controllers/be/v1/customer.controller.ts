@@ -47,6 +47,7 @@ export class CustomerController extends BaseController {
    * @returns
    */
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
