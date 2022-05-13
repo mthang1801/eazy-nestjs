@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { RoleService } from '../services/role.service';
 
 import { RoleController } from '../controllers/be/v1/role.controller';
@@ -9,6 +9,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserRepository } from '../repositories/user.repository';
 import { FunctRepository } from '../repositories/funct.repository';
 
+@Global()
 @Module({
   imports: [RoleFunctionModule, UserRoleModule],
   providers: [

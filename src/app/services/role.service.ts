@@ -31,6 +31,7 @@ import { getPageSkipLimit, removeMoreThanOneSpace } from '../../utils/helper';
 import { UpdateRoleGroupDto } from '../dto/role/update-roleGroup.dto';
 import { groupListSearchFilter } from '../../utils/tableConditioner';
 import { AuthorizeRoleFunctionDto } from '../dto/userRole/authorizeRoleFunct';
+import { roleFunctJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class RoleService {
@@ -475,5 +476,26 @@ export class RoleService {
         }
       }
     }
+  }
+
+  async checkUserRole(user_id, method, path): Promise<boolean> {
+    const userRole = await this.userRoleRepo.findOne({ user_id });
+    if (!userRole) {
+      return false;
+    }
+    const roleGroup = await this.roleFunctRepo.findOne({
+      select: '*',
+      join: roleFunctJoiner,
+      where: {
+        [`${Table.ROLE_FUNC}.role_id`]: userRole.role_id,
+        [`${Table.FUNC}.method`]: method,
+        [`${Table.FUNC}.be_route`]: path,
+      },
+    });
+
+    if (!roleGroup) {
+      return false;
+    }
+    return true;
   }
 }

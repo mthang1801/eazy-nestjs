@@ -20,8 +20,8 @@ import { ShippingService } from 'src/app/services/shippings.service';
 import { CreateShippingDto } from 'src/app/dto/shipping/create-shipping.dto';
 import { UpdateShippingDto } from '../../../dto/shipping/update-shipping.dto';
 
-//@UseGuards(AuthGuard)
 @Controller('/be/v1/shippings')
+@UseGuards(AuthGuard)
 export class ShippingController extends BaseController {
   constructor(private service: ShippingService) {
     super();

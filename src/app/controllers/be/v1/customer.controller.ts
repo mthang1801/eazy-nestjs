@@ -21,6 +21,7 @@ import { Response } from 'express';
 import { OrdersService } from 'src/app/services/orders.service';
 
 @Controller('/be/v1/customers')
+@UseGuards(AuthGuard)
 export class CustomerController extends BaseController {
   constructor(
     private service: CustomerService,
@@ -30,14 +31,13 @@ export class CustomerController extends BaseController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Req() req,
     @Body() data: CreateCustomerDto,
   ): Promise<IResponse> {
     await this.service.create(req.user, data);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   /**
@@ -49,7 +49,7 @@ export class CustomerController extends BaseController {
   @Get()
   async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
-    return this.responseSuccess(res, result, `action return all customer`);
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -61,8 +61,7 @@ export class CustomerController extends BaseController {
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getById(id);
-
-    return this.responseSuccess(res, result, `action return all customer`);
+    return this.responseSuccess(res, result);
   }
 
   /**
@@ -96,8 +95,7 @@ export class CustomerController extends BaseController {
     @Body() body: UpdateCustomerDTO,
   ): Promise<IResponse> {
     const result = await this.service.update(user_id, body);
-
-    return this.responseSuccess(res, result, `Cập nhật thành công.`);
+    return this.responseSuccess(res, result);
   }
 
   /**

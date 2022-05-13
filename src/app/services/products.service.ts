@@ -3754,7 +3754,7 @@ export class ProductService {
 
     // Get Current category info
     if (product['category_id']) {
-      product['currentCategory'] = await this.categoryRepo.findOne({
+      result['currentCategory'] = await this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },

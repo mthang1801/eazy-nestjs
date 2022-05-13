@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateProductFeatureDto } from 'src/app/dto/productFeatures/create-productFeatures.dto';
 import { BaseController } from '../../../../base/base.controllers';
@@ -15,8 +16,10 @@ import { Response } from 'express';
 import { IResponse } from '../../../interfaces/response.interface';
 import { ProductFeatureService } from 'src/app/services/productFeature.service';
 import { UpdateProductFeatureDto } from 'src/app/dto/productFeatures/update-productFeatures.dto';
+import { AuthGuard } from '../../../../middlewares/be.auth';
 
 @Controller('/be/v1/product-features')
+@UseGuards(AuthGuard)
 export class ProductFeatureController extends BaseController {
   constructor(private service: ProductFeatureService) {
     super();

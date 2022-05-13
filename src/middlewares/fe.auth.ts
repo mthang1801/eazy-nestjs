@@ -45,9 +45,6 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token không hợp lệ.', HttpStatus.UNAUTHORIZED);
     }
 
-    const userId = decodeBase64String(user['user_id']).split('-')[5];
-    user['user_id'] = userId;
-
     req.user = user;
 
     return true;

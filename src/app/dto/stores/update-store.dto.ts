@@ -1,6 +1,9 @@
 import { IsDateString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class UpdateStoreDto {
+  @IsOptional()
+  store_location_id: number;
+
   @IsNotEmpty()
   store_name: string;
 

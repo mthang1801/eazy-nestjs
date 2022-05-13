@@ -107,15 +107,11 @@ export const productDetailSelector = [
 export const userSelector = ['*', `${Table.USERS}.*`];
 
 export const menuSelector = [
-  `funct_id`,
+  `${Table.FUNC}.funct_id`,
   `parent_id`,
   `funct_code`,
   `funct_name`,
   `route`,
   `icon`,
   `level`,
-  `created_at`,
-  `created_by`,
-  `updated_at`,
-  `updated_by`,
 ];

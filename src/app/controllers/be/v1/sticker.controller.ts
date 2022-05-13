@@ -8,6 +8,7 @@ import {
   Get,
   Param,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { IResponse } from '../../../interfaces/response.interface';
@@ -17,7 +18,9 @@ import { UpdateStickerDto } from 'src/app/dto/sticker/update-sticker.dto';
 import { CreateProductStickerDto } from 'src/app/dto/sticker/create-productSticker.dto';
 import { UpdateProductDto } from 'src/app/dto/product/update-product.dto';
 import { UpdateProductStickerDto } from 'src/app/dto/sticker/update-productSticker.dto';
+import { AuthGuard } from '../../../../middlewares/be.auth';
 @Controller('/be/v1/stickers')
+@UseGuards(AuthGuard)
 export class StickerController extends BaseController {
   constructor(private service: StickerService) {
     super();

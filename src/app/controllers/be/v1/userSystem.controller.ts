@@ -20,6 +20,7 @@ import { CreateUserSystemDto } from 'src/app/dto/userSystem/create-userSystem.dt
 import { UpdateUserSystemRoleFunctsDto } from '../../../dto/userSystem/update-userSystemRoleFuncts.dto';
 
 @Controller('/be/v1/user-system')
+@UseGuards(AuthGuard)
 export class UserSystemController extends BaseController {
   constructor(private service: UserSystemService) {
     super();
@@ -70,7 +71,6 @@ export class UserSystemController extends BaseController {
    * @returns
    */
   @Post()
-  @UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserSystemDto,
     @Res() res: Response,

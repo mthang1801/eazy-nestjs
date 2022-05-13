@@ -3,6 +3,7 @@ import { formatStandardTimeStamp } from 'src/utils/helper';
 export class ProductFeatureEntity {
   feature_id: number = 0;
   feature_code: string = '';
+  description: string = '';
   company_id: number = 0;
   is_singly_choosen: string = 'N';
   purpose: string = '';

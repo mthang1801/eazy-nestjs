@@ -76,6 +76,7 @@ import { CreateCatalogCategoryItemDto } from '../dto/category/create-catalogCate
 import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entity';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
+import { categoryFeatureJoiner } from '../../utils/joinTable';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -94,17 +95,20 @@ export class CategoryService {
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
-    const checkSlugExist = await this.categoryRepository.findOne({
-      slug: convertToSlug(data.slug),
-    });
+    if (data.slug) {
+      const checkSlugExist = await this.categoryRepository.findOne({
+        slug: convertToSlug(data.slug),
+      });
 
-    if (checkSlugExist) {
-      throw new HttpException('Đường dẫn đã tồn tại.', 409);
+      if (checkSlugExist) {
+        throw new HttpException('Đường dẫn đã tồn tại.', 409);
+      }
     }
 
     const categoryData = {
       ...new CategoryEntity(),
       ...this.categoryRepository.setData(data),
+      slug: data.slug ? data.slug : convertToSlug(data.category, true),
     };
 
     if (data.parent_id) {
@@ -128,6 +132,7 @@ export class CategoryService {
           ? `${category['id_path']}/${category['category_id']}`
           : category['category_id'],
       },
+      true,
     );
 
     let result: any = { ...category };
@@ -141,6 +146,33 @@ export class CategoryService {
       categoryDescData,
     );
     result = { ...result, ...categoryDesc };
+
+    //update table category_features
+    await this.categoryFeatureRepo.delete({
+      category_id: result['category_id'],
+    });
+    if (data.category_features && data.category_features.length) {
+      for (let { feature_id, position, status } of data.category_features) {
+        const checkExist = await this.categoryFeatureRepo.findOne({
+          category_id: result['category_id'],
+          feature_id: feature_id,
+        });
+
+        if (checkExist) {
+          continue;
+        }
+
+        const categoryFeature = {
+          ...new CategoryFeatureEntity(),
+          ...this.categoryFeatureRepo.setData(data),
+          category_id: result['category_id'],
+          feature_id: feature_id,
+          status: status,
+          position: position,
+        };
+        await this.categoryFeatureRepo.create(categoryFeature);
+      }
+    }
     return result;
   }
 
@@ -509,13 +541,15 @@ export class CategoryService {
     }
 
     //update table category_features
+    await this.categoryFeatureRepo.delete({ category_id: id });
     if (data.category_features && data.category_features.length) {
-      await this.categoryFeatureRepo.delete({category_id: id})
-
-      for (let { feature_id, position, status } of data.category_features){
-        const checkExist = await this.categoryFeatureRepo.findOne({category_id: id, feature_id: feature_id,})
+      for (let { feature_id, position, status } of data.category_features) {
+        const checkExist = await this.categoryFeatureRepo.findOne({
+          category_id: id,
+          feature_id: feature_id,
+        });
         console.log(checkExist);
-        if (checkExist){
+        if (checkExist) {
           continue;
         }
 
@@ -526,7 +560,7 @@ export class CategoryService {
           feature_id: feature_id,
           status: status,
           position: position,
-        }
+        };
         await this.categoryFeatureRepo.create(categoryFeature);
       }
     }
@@ -690,7 +724,7 @@ export class CategoryService {
     );
   }
 
-  async getListFE() {
+  async getListFE(params: any = {}) {
     return this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
@@ -1075,6 +1109,13 @@ export class CategoryService {
         },
       ];
     }
+
+    const categoryFeatures = await this.categoryFeatureRepo.find({
+      select: '*',
+      join: categoryFeatureJoiner,
+      where: { [`${Table.CATEGORIES}.category_id`]: id },
+    });
+    category['category_features'] = categoryFeatures;
 
     const productsListInCategory = await this.productCategoryRepository.find({
       select: `${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,

@@ -840,6 +840,14 @@ export class TradeinProgramService {
       ...new TradeinOldReceiptEntity(),
       ...this.tradeinOldReceiptRepo.setData(cvtData),
     };
+
+    const user = await this.userRepo.findOne({
+      user_appcore_id: cvtData['user_appcore_id'],
+    });
+    if (user) {
+      oldReceiptData['user_id'] = user['user_id'];
+    }
+
     const newOldReceipt = await this.tradeinOldReceiptRepo.create(
       oldReceiptData,
     );
@@ -900,7 +908,17 @@ export class TradeinProgramService {
     if (!currentOldReipt) {
       return this.itgCreateOldReceipt(data);
     }
+
     const oldReceiptData = this.tradeinOldReceiptRepo.setData(cvtData);
+    if (cvtData['user_appcore_id']) {
+      const user = await this.userRepo.findOne({
+        user_appcore_id: cvtData['user_appcore_id'],
+      });
+      if (user) {
+        oldReceiptData['user_id'] = user['user_id'];
+      }
+    }
+
     const updatedOldReceipt = await this.tradeinOldReceiptRepo.update(
       { old_receipt_id: currentOldReipt['old_receipt_id'] },
       oldReceiptData,
@@ -982,5 +1000,32 @@ export class TradeinProgramService {
       }
     }
     return oldReceipt;
+  }
+
+  async getOldReceiptByUserId(user_id, params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    const tradeinOldReceipts = await this.tradeinOldReceiptRepo.find({
+      where: { user_id },
+      skip,
+      limit,
+    });
+    const count = await this.tradeinOldReceiptRepo.find({
+      select: `COUNT(${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id) as total`,
+      where: { user_id },
+    });
+
+    if (tradeinOldReceipts.length) {
+      for (let tradeinOldReceipt of tradeinOldReceipts) {
+        const tradeinOldReceiptDetails =
+          await this.tradeinOldReceiptDetailRepo.find({
+            old_receipt_id: tradeinOldReceipt.old_receipt_id,
+          });
+        tradeinOldReceipt['detail_items'] = tradeinOldReceiptDetails;
+      }
+    }
+    return {
+      paging: { pageSize: limit, currentPage: page, total: count[0].total },
+      data: tradeinOldReceipts,
+    };
   }
 }

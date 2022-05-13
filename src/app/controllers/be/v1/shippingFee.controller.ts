@@ -19,12 +19,12 @@ import { Put, Query, Get } from '@nestjs/common';
 import { UpdateShippingFeeLocationDto } from '../../../dto/shippingFee/update-shippingFeeLocation.dto';
 
 @Controller('be/v1/shipping-fees')
+@UseGuards(AuthGuard)
 export class ShippingFeesController extends BaseController {
   constructor(private service: ShippingFeeService) {
     super();
   }
   @Post()
-  @UseGuards(AuthGuard)
   async createShippingFee(
     @Body() data: CreateShippingFeeDto,
     @Res() res: Response,
@@ -35,7 +35,6 @@ export class ShippingFeesController extends BaseController {
   }
 
   @Put('/:shipping_fee_id')
-  @UseGuards(AuthGuard)
   async updateShippingFee(
     @Body() data: UpdateShippingFeeDto,
     @Param('shipping_fee_id') shipping_fee_id: number,
@@ -51,7 +50,6 @@ export class ShippingFeesController extends BaseController {
   }
 
   @Post('/:shipping_fee_id/locations')
-  @UseGuards(AuthGuard)
   async createShippingFeeByLocation(
     @Body() data: CreateShippingFeeLocationDto,
     @Param('shipping_fee_id') shipping_fee_id: number,
@@ -67,7 +65,6 @@ export class ShippingFeesController extends BaseController {
   }
 
   @Put('/locations/:shipping_fee_location_id')
-  @UseGuards(AuthGuard)
   async updateShippingFeeLocation(
     @Body() data: UpdateShippingFeeLocationDto,
     @Param('shipping_fee_location_id') shipping_fee_location_id: number,

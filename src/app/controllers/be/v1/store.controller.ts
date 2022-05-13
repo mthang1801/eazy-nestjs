@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 
@@ -15,8 +16,10 @@ import { StoreService } from 'src/app/services/store.service';
 import { BaseController } from '../../../../base/base.controllers';
 import { CreateStoreDto } from '../../../dto/stores/create-store.dto';
 import { UpdateStoreDto } from 'src/app/dto/stores/update-store.dto';
+import { AuthGuard } from '../../../../middlewares/be.auth';
 
 @Controller('/be/v1/stores')
+@UseGuards(AuthGuard)
 export class StoreController extends BaseController {
   constructor(private service: StoreService) {
     super();

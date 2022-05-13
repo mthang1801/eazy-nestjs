@@ -231,13 +231,15 @@ export class StoreService {
       }
     }
 
-    let storeLocationData = this.storeLocationRepo.setData(data);
-    if (Object.entries(storeLocationData).length) {
-      await this.storeLocationRepo.update(
-        { store_location_id },
-        storeLocationData,
-      );
-    }
+    let storeLocationData = {
+      ...this.storeLocationRepo.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
+
+    await this.storeLocationRepo.update(
+      { store_location_id },
+      storeLocationData,
+    );
 
     let storeLocationDesc = await this.storeLocationDescRepo.findOne({
       store_location_id,
@@ -256,6 +258,10 @@ export class StoreService {
         ...this.storeLocationDescRepo.setData(data),
         store_location_id,
       };
+
+      if (data.store_location_id) {
+        newStoreLocationData['store_location_id'] = data.store_location_id;
+      }
       await this.storeLocationDescRepo.create(newStoreLocationData, false);
     }
   }

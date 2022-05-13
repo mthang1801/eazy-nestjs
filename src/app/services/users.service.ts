@@ -126,11 +126,9 @@ export class UsersService {
     data: UpdateUserProfileDto,
   ): Promise<void> {
     let user = await this.userRepository.findOne({ user_id });
+
     if (!user) {
-      throw new HttpException(
-        'Không tìm thấy người dùng hoặc người dùng.',
-        404,
-      );
+      throw new HttpException('Không tìm thấy người dùng.', 404);
     }
 
     if (user.status === 'D') {
@@ -218,7 +216,7 @@ export class UsersService {
     }
 
     const userResult = await this.userRepo.findOne({
-      select: '*',
+      select: userSelector,
       join: userJoiner,
       where: { [`${Table.USERS}.user_id`]: user_id },
     });

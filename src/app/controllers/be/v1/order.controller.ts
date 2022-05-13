@@ -31,12 +31,14 @@ export class OrderController extends BaseController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
     const result = await this.service.CMScreate(body);
     return this.responseSuccess(res, result);
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);

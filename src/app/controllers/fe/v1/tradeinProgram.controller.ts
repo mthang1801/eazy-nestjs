@@ -6,6 +6,7 @@ import {
   Post,
   Body,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import { BaseController } from '../../../../base/base.controllers';
 
@@ -31,5 +32,15 @@ export class TradeinProgramController extends BaseController {
   ): Promise<IResponse> {
     await this.service.createValuationBill(data);
     return this.responseSuccess(res);
+  }
+
+  @Get('/old-receipts/:user_id')
+  async getOldReceiptByUserId(
+    @Res() res: Response,
+    @Param('user_id') user_id: number,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getOldReceiptByUserId(user_id, params);
+    return this.responseSuccess(res, result);
   }
 }

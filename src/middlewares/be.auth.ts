@@ -10,24 +10,26 @@ import * as jwt from 'jsonwebtoken';
 
 import { ConfigService } from '@nestjs/config';
 import { desaltHashPassword, decodeBase64String } from '../utils/cipherHelper';
+import { RoleService } from '../app/services/role.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {} //reflect roles of user
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly roleService: RoleService,
+  ) {} //reflect roles of user
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
     const authorizationUUID = req.headers['x-auth-uuid'];
 
     if (!authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối 1.', 401);
     }
 
     const authoriazationToken = req.headers?.authorization;
 
     if (!authoriazationToken) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối 2.', 401);
     }
 
     const token = authoriazationToken.split(' ').slice(-1)[0];
@@ -43,15 +45,34 @@ export class AuthGuard implements CanActivate {
     }
 
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
-      throw new HttpException('Token đã hết hạn.', 408);
+      throw new HttpException('Token đã hết hạn 3.', 408);
     }
+    console.log(user['user_id']);
 
     if (user['user_id'] !== authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối 4.', 401);
     }
 
     const userId = decodeBase64String(user['user_id']).split('-')[5];
     user['user_id'] = userId;
+
+    let {
+      method,
+      route: { path },
+    } = req;
+    console.log(userId);
+    try {
+      const result: boolean = await this.roleService.checkUserRole(
+        userId,
+        method,
+        path,
+      );
+      if (!result) {
+        throw new HttpException('Yêu cầu truy cập bị từ chối 5.', 401);
+      }
+    } catch (error) {
+      throw new HttpException('Yêu cầu truy cập bị từ chối 6.', 401);
+    }
 
     req.user = user;
 

@@ -119,6 +119,7 @@ export class CartService {
     const updatedCart = await this.cartRepo.update(
       { cart_id: currentCart.cart_id },
       { user_id: alter_user_id },
+      true,
     );
 
     currentCartItems = [
