@@ -906,8 +906,20 @@ export const categoryFeatureJoiner = {
 export const roleFunctJoiner = {
   [JoinTable.leftJoin]: {
     [Table.FUNC]: {
-      fieldJoin: `${Table.ROLE_FUNC}.funct_id`,
-      rootJoin: `${Table.FUNC}.funct_id`,
+      fieldJoin: `${Table.FUNC}.funct_id`,
+      rootJoin: `${Table.ROLE_FUNC}.funct_id`,
+    },
+  },
+};
+export const userRoleFunctJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USER_ROLES]: {
+      fieldJoin: `${Table.USER_ROLES}.role_id`,
+      rootJoin: `${Table.ROLE_FUNC}.role_id`,
+    },
+    [Table.FUNC]: {
+      fieldJoin: `${Table.FUNC}.funct_id`,
+      rootJoin: `${Table.ROLE_FUNC}.funct_id`,
     },
   },
 };

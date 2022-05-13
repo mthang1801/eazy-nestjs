@@ -26,6 +26,7 @@ import { CreateCommentDto } from '../../../dto/reviewComment/create-comment.dto'
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateCommentReviewCMSDto } from '../../../dto/reviewComment/create-commentReview.cms.dto';
 @Controller('be/v1/products')
+@UseGuards(AuthGuard)
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
     super();
@@ -145,7 +146,6 @@ export class ProductsController extends BaseController {
   }
 
   @Post('/:product_id/reviews-comments/')
-  @UseGuards(AuthGuard)
   async createReviewComment(
     @Body() data: CreateCommentReviewCMSDto,
     @Res() res,

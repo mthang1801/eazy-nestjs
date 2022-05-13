@@ -59,6 +59,11 @@ import { sha512, encodeBase64String } from '../../utils/cipherHelper';
 import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
 import { menuSelector } from '../../utils/tableSelector';
+import { userRoleJoiner, userRoleFunctJoiner } from '../../utils/joinTable';
+import { UserRoleRepository } from '../repositories/userRole.repository';
+import { UserRoleEntity } from '../entities/userRole.entity';
+import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
+import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 
 @Injectable()
 export class AuthService {
@@ -79,6 +84,8 @@ export class AuthService {
     private imagesRepository: ImagesRepository<ImagesEntity>,
     private customerService: CustomerService,
     private functRepo: FunctRepository<FunctEntity>,
+    private userRoleRepo: UserRoleRepository<UserRoleEntity>,
+    private roleFunctRepo: RoleFunctionRepository<RoleFunctionEntity>,
   ) {}
 
   generateToken(user: UserEntity, uuid): string {
@@ -239,15 +246,16 @@ export class AuthService {
     );
 
     // get menu at ddv_roles_functs
-    const menuList = await this.functRepo.find({
+    const menuList = await this.roleFunctRepo.find({
       select: menuSelector,
-      where: { level: 0 },
+      join: userRoleFunctJoiner,
+      where: { level: 0, [`${Table.USER_ROLES}.user_id`]: user['user_id'] },
     });
 
     if (menuList.length) {
       for (let menuItem of menuList) {
         let menu = await this.functRepo.find({
-          select: menuSelector,
+          select: '*',
           where: {
             level: 1,
             parent_id: menuItem['funct_id'],
