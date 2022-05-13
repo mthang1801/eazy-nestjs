@@ -889,3 +889,16 @@ export const userRoleJoiner = {
     },
   },
 };
+
+export const categoryFeatureJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.CATEGORIES]: {
+      fieldJoin: `${Table.CATEGORY_FEATURES}.category_id`,
+      rootJoin: `${Table.CATEGORIES}.category_id`,
+    },
+    [Table.PRODUCT_FEATURES]: {
+      fieldJoin: `${Table.PRODUCT_FEATURES}.feature_id`,
+      rootJoin: `${Table.CATEGORY_FEATURES}.feature_id`,
+    },
+  },
+};

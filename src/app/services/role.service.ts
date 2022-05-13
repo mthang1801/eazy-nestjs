@@ -476,4 +476,16 @@ export class RoleService {
       }
     }
   }
+
+  async checkUserRole(user_id, method, path): Promise<boolean> {
+    const userRole = await this.userRoleRepo.findOne({ user_id });
+    if (!userRole) {
+      return false;
+    }
+    const roleGroup = await this.roleFunctRepo.find({
+      role_id: userRole.role_id,
+    });
+
+    return true;
+  }
 }

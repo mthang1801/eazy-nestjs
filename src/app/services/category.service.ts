@@ -76,6 +76,7 @@ import { CreateCatalogCategoryItemDto } from '../dto/category/create-catalogCate
 import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entity';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
+import { categoryFeatureJoiner } from '../../utils/joinTable';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -510,12 +511,15 @@ export class CategoryService {
 
     //update table category_features
     if (data.category_features && data.category_features.length) {
-      await this.categoryFeatureRepo.delete({category_id: id})
+      await this.categoryFeatureRepo.delete({ category_id: id });
 
-      for (let { feature_id, position, status } of data.category_features){
-        const checkExist = await this.categoryFeatureRepo.findOne({category_id: id, feature_id: feature_id,})
+      for (let { feature_id, position, status } of data.category_features) {
+        const checkExist = await this.categoryFeatureRepo.findOne({
+          category_id: id,
+          feature_id: feature_id,
+        });
         console.log(checkExist);
-        if (checkExist){
+        if (checkExist) {
           continue;
         }
 
@@ -526,7 +530,7 @@ export class CategoryService {
           feature_id: feature_id,
           status: status,
           position: position,
-        }
+        };
         await this.categoryFeatureRepo.create(categoryFeature);
       }
     }
@@ -1075,6 +1079,13 @@ export class CategoryService {
         },
       ];
     }
+
+    const categoryFeatures = await this.categoryFeatureRepo.find({
+      select: '*',
+      join: categoryFeatureJoiner,
+      where: { [`${Table.CATEGORIES}.category_id`]: id },
+    });
+    category['category_features'] = categoryFeatures;
 
     const productsListInCategory = await this.productCategoryRepository.find({
       select: `${Table.PRODUCTS}.*, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.CATEGORIES}.slug as slug,  ${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS_CATEGORIES}.position`,

@@ -10,12 +10,14 @@ import * as jwt from 'jsonwebtoken';
 
 import { ConfigService } from '@nestjs/config';
 import { desaltHashPassword, decodeBase64String } from '../utils/cipherHelper';
+import { RoleService } from '../app/services/role.service';
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {} //reflect roles of user
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly roleService: RoleService,
+  ) {} //reflect roles of user
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
     const authorizationUUID = req.headers['x-auth-uuid'];
@@ -52,6 +54,24 @@ export class AuthGuard implements CanActivate {
 
     const userId = decodeBase64String(user['user_id']).split('-')[5];
     user['user_id'] = userId;
+
+    let {
+      method,
+      route: { path },
+    } = req;
+
+    try {
+      const result: boolean = await this.roleService.checkUserRole(
+        userId,
+        method,
+        path,
+      );
+      if (!result) {
+        throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      }
+    } catch (error) {
+      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+    }
 
     req.user = user;
 
