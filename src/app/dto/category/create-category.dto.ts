@@ -1,4 +1,12 @@
-import { IsOptional, IsIn, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsIn,
+  Min,
+  IsString,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateCategoryDto {
   @IsOptional()
@@ -112,4 +120,23 @@ export class CreateCategoryDto {
 
   @IsOptional()
   icon: string = '';
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CategoryFeature)
+  category_features: CategoryFeature[];
+}
+
+class CategoryFeature {
+  @IsOptional()
+  @IsNumber()
+  feature_id: number;
+
+  @IsNumber()
+  @IsOptional()
+  position: number;
+
+  @IsString()
+  @IsOptional()
+  status: string;
 }

@@ -142,6 +142,33 @@ export class CategoryService {
       categoryDescData,
     );
     result = { ...result, ...categoryDesc };
+
+    //update table category_features
+    await this.categoryFeatureRepo.delete({
+      category_id: result['category_id'],
+    });
+    if (data.category_features && data.category_features.length) {
+      for (let { feature_id, position, status } of data.category_features) {
+        const checkExist = await this.categoryFeatureRepo.findOne({
+          category_id: result['category_id'],
+          feature_id: feature_id,
+        });
+
+        if (checkExist) {
+          continue;
+        }
+
+        const categoryFeature = {
+          ...new CategoryFeatureEntity(),
+          ...this.categoryFeatureRepo.setData(data),
+          category_id: result['category_id'],
+          feature_id: feature_id,
+          status: status,
+          position: position,
+        };
+        await this.categoryFeatureRepo.create(categoryFeature);
+      }
+    }
     return result;
   }
 
@@ -693,7 +720,7 @@ export class CategoryService {
     );
   }
 
-  async getListFE() {
+  async getListFE(params = {}) {
     return this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
