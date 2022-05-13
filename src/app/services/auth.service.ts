@@ -270,7 +270,7 @@ export class AuthService {
     );
 
     const dataResult = {
-      token: this.generateToken(user, userIdEncoded),
+      token: this.generateToken(user, user['user_id']),
       userData: {
         firstname: user['firstname'],
         lastname: user['lastname'],
@@ -319,12 +319,8 @@ export class AuthService {
       },
     );
 
-    const userIdEncoded = encodeBase64String(
-      `${uuid()}-${user['user_id']}-${uuid()}`,
-    );
-
     const dataResult = {
-      token: this.generateToken(user, userIdEncoded),
+      token: this.generateToken(user, user['user_id']),
       userData: {
         user_id: user['user_id'],
         phone: user['phone'],

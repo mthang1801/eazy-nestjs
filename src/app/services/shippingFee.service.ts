@@ -17,6 +17,7 @@ import { JoinTable } from '../../database/enums/joinTable.enum';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
+import { userSelector } from '../../utils/tableSelector';
 
 @Injectable()
 export class ShippingFeeService {
@@ -187,7 +188,7 @@ export class ShippingFeeService {
 
     if (shippingFee.updated_by) {
       let updater = await this.userRepo.findOne({
-        select: '*',
+        select: userSelector,
         join: userJoiner,
         where: { [`${Table.USERS}.user_id`]: shippingFee.updated_by },
       });
