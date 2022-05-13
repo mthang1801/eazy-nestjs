@@ -724,10 +724,11 @@ export class CategoryService {
     );
   }
 
-  async getListFE(params = {}) {
-    let filterConditions = {};
-
-    const categoriesList = await this.categoryRepository.find({});
+  async getListFE(params: any = {}) {
+    return this.categoryRepository.find({
+      select: '*',
+      join: categoryJoiner,
+    });
   }
 
   async getList(params) {
