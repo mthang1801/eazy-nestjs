@@ -43,6 +43,7 @@ export class ImagesService {
     let _images_link = await this.imageLinkRepo.update(
       images_id,
       imageLinkTableData,
+      true,
     );
   }
   async Delete(banner_id, images_id) {

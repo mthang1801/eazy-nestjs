@@ -122,6 +122,7 @@ export class RoleFunctService {
     const updatedGroupPrivilege = await this.userGroupPrivilegeRepo.update(
       id,
       data,
+      true,
     );
     return updatedGroupPrivilege;
   }

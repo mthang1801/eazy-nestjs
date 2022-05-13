@@ -373,7 +373,7 @@ export class ProductFeatureService {
           const productFeatureVariantData =
             this.productFeatureVariantsRepo.setData(featureVariant);
           if (Object.entries(productFeatureVariantData).length) {
-            const udpateVariant = await this.productFeatureVariantsRepo.update(
+            await this.productFeatureVariantsRepo.update(
               { variant_id: checkFeatureVariant['variant_id'] },
               {
                 ...productFeatureVariantData,
@@ -502,6 +502,7 @@ export class ProductFeatureService {
         await this.productFeatureDescriptionRepo.update(
           { feature_id: id },
           productFeatureDescriptionData,
+          true,
         );
     }
 
@@ -621,6 +622,7 @@ export class ProductFeatureService {
             await this.productFeatureVariantsRepo.update(
               { variant_id: variantItem['variant_id'] },
               productFeatureVariantData,
+              true,
             );
           updatedResult = {
             ...updatedResult,
@@ -633,6 +635,7 @@ export class ProductFeatureService {
             await this.productFeatureVariantDescriptionRepo.update(
               { variant_id: variantItem.variant_id },
               productFeatureDescriptionData,
+              true,
             );
           updatedResult = {
             ...updatedResult,

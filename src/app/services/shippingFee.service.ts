@@ -101,6 +101,7 @@ export class ShippingFeeService {
     const shippingFeeLocation = await this.shippingFeeLocationRepo.update(
       { shipping_fee_location_id },
       shippingFeeLocationData,
+      true,
     );
     if (shippingFeeLocation) {
       await this.shippingFeeRepo.update(

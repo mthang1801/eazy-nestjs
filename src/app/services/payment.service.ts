@@ -208,6 +208,7 @@ export class PaymentService {
     let _paymentDes = await this.paymentDescriptionRepo.update(
       id,
       PaymentDesData,
+      true,
     );
     return { ..._payment, ..._paymentDes };
   }

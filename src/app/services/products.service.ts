@@ -1533,6 +1533,7 @@ export class ProductService {
       const updatedProduct = await this.productRepo.update(
         { product_id: result.product_id },
         productData,
+        true,
       );
 
       result = { ...result, ...updatedProduct };
@@ -1548,6 +1549,7 @@ export class ProductService {
         const updatedProductDesc = await this.productDescriptionsRepo.update(
           { product_id: result.product_id },
           productDescData,
+          true,
         );
         result = { ...result, ...updatedProductDesc };
       }
@@ -1573,6 +1575,7 @@ export class ProductService {
         const updatedProductPrice = await this.productPriceRepo.update(
           { product_id: result.product_id },
           productPriceData,
+          true,
         );
         result = { ...result, ...updatedProductPrice };
       }
@@ -2000,6 +2003,7 @@ export class ProductService {
         const currentProduct = await this.productRepo.update(
           { product_appcore_id: data['product_appcore_id'] },
           { product_function: 1 },
+          true,
         );
         await this.supplyPriceToParentProduct(currentProduct['product_id']);
         let group = await this.productVariationGroupRepo.findOne({
