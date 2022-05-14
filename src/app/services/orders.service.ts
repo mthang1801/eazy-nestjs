@@ -1330,17 +1330,17 @@ export class OrdersService {
       ? await this.districtService.get(order['b_district'], true)
       : order['b_district'];
 
-    // order['s_district'] = isNumeric(order['s_district'])
-    //   ? await this.districtService.get(order['s_district'], true)
-    //   : order['s_district'];
+    order['s_district'] = isNumeric(order['s_district'])
+      ? await this.districtService.get(order['s_district'], true)
+      : order['s_district'];
 
-    // order['b_ward'] = isNumeric(order['b_ward'])
-    //   ? await this.wardService.get(order['b_ward'], true)
-    //   : order['b_ward'];
+    order['b_ward'] = isNumeric(order['b_ward'])
+      ? await this.wardService.get(order['b_ward'], true)
+      : order['b_ward'];
 
-    // order['s_ward'] = isNumeric(order['s_ward'])
-    //   ? await this.wardService.get(order['s_ward'], true)
-    //   : order['s_ward'];
+    order['s_ward'] = isNumeric(order['s_ward'])
+      ? await this.wardService.get(order['s_ward'], true)
+      : order['s_ward'];
 
     return order;
   }
