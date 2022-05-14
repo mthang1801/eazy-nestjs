@@ -11,6 +11,7 @@ import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { desaltHashPassword, decodeBase64String } from '../utils/cipherHelper';
 import { RoleService } from '../app/services/role.service';
+import { Cryptography } from '../utils/cryptography';
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -47,20 +48,22 @@ export class AuthGuard implements CanActivate {
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
       throw new HttpException('Token đã hết hạn 3.', 408);
     }
-    console.log(user['user_id']);
+
+    const cryptography = new Cryptography();
+    const decryptedData = cryptography.decrypt(user['user_id']);
 
     if (user['user_id'] !== authorizationUUID) {
       throw new HttpException('Yêu cầu truy cập bị từ chối 4.', 401);
     }
 
-    const userId = decodeBase64String(user['user_id']).split('-')[5];
+    const userId = decryptedData;
     user['user_id'] = userId;
 
     let {
       method,
       route: { path },
     } = req;
-    console.log(userId);
+
     try {
       const result: boolean = await this.roleService.checkUserRole(
         userId,
