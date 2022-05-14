@@ -18,19 +18,20 @@ import { Put } from '@nestjs/common';
 import { OrderStatusUpdateDTO } from '../../../dto/orderStatus/update-orderStatus.dto';
 
 @Controller('/be/v1/status')
-@UseGuards(AuthGuard)
 export class StatusController extends BaseController {
   constructor(private service: StatusService) {
     super();
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() data: OrderStatusCreateDTO,
@@ -40,12 +41,14 @@ export class StatusController extends BaseController {
   }
 
   @Get('/:id')
+  @UseGuards(AuthGuard)
   async getById(@Res() res, @Param('id') id: number): Promise<IResponse> {
     const order = await this.service.getById(id);
     return this.responseSuccess(res, order);
   }
 
   @Put('/:id')
+  @UseGuards(AuthGuard)
   async UpdateOrderStatus(
     @Res() res,
     @Body() data: OrderStatusUpdateDTO,

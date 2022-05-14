@@ -45,6 +45,7 @@ export class OrderController extends BaseController {
   }
 
   @Put('/:order_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res,
     @Param('order_id') order_id,
@@ -55,6 +56,7 @@ export class OrderController extends BaseController {
   }
 
   @Get('/:order_code')
+  @UseGuards(AuthGuard)
   async get(
     @Res() res,
     @Param('order_code') order_code: number,
@@ -64,6 +66,7 @@ export class OrderController extends BaseController {
   }
 
   @Get(':order_id/history')
+  @UseGuards(AuthGuard)
   async getHistory(
     @Res() res: Response,
     @Param('order_id') order_id: number,
@@ -73,6 +76,7 @@ export class OrderController extends BaseController {
   }
 
   @Put('/:order_code/cancel')
+  @UseGuards(AuthGuard)
   async cancelOrder(
     @Param('order_code') order_code: number,
     @Res() res,
@@ -82,6 +86,7 @@ export class OrderController extends BaseController {
   }
 
   @Post('/sync')
+  @UseGuards(AuthGuard)
   async syncOrder(@Res() res: Response): Promise<IResponse> {
     await this.service.requestSyncOrders();
     return this.responseSuccess(res);

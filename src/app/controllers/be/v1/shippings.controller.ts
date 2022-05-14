@@ -21,13 +21,13 @@ import { CreateShippingDto } from 'src/app/dto/shipping/create-shipping.dto';
 import { UpdateShippingDto } from '../../../dto/shipping/update-shipping.dto';
 
 @Controller('/be/v1/shippings')
-@UseGuards(AuthGuard)
 export class ShippingController extends BaseController {
   constructor(private service: ShippingService) {
     super();
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res,
     @Body() data: CreateShippingDto,
@@ -37,6 +37,7 @@ export class ShippingController extends BaseController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Res()
@@ -48,12 +49,14 @@ export class ShippingController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async get(@Res() res: Response, @Param('id') id: number): Promise<IResponse> {
     const result = await this.service.get(id);
     return this.responseSuccess(res, result);

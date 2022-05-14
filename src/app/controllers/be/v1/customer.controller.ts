@@ -21,7 +21,6 @@ import { Response } from 'express';
 import { OrdersService } from 'src/app/services/orders.service';
 
 @Controller('/be/v1/customers')
-@UseGuards(AuthGuard)
 export class CustomerController extends BaseController {
   constructor(
     private service: CustomerService,
@@ -31,6 +30,7 @@ export class CustomerController extends BaseController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Req() req,
@@ -47,6 +47,7 @@ export class CustomerController extends BaseController {
    * @returns
    */
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
@@ -59,6 +60,7 @@ export class CustomerController extends BaseController {
    * @returns
    */
   @Get('/:id')
+  @UseGuards(AuthGuard)
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getById(id);
     return this.responseSuccess(res, result);
@@ -72,6 +74,7 @@ export class CustomerController extends BaseController {
    * @returns
    */
   @Get('/:id/loyalty-histories')
+  @UseGuards(AuthGuard)
   async getCustomerLoyaltyHistory(
     @Param('id') id: number,
     @Res() res: Response,

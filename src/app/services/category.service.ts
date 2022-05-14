@@ -1686,7 +1686,7 @@ export class CategoryService {
         ...this.catalogCategoryItemRepo.setData(data),
         item_id: id,
       };
-      console.log(newItemData);
+
       await this.catalogCategoryItemRepo.update({ item_id: id }, newItemData);
     }
   }

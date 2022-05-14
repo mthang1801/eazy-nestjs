@@ -107,13 +107,13 @@ export class bannerController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Delete('/:banner_id')
-  @UseGuards(AuthGuard)
-  async deleteBannerById(
-    @Res() res,
-    @Param('banner_id') banner_id: number,
-  ): Promise<IResponse> {
-    await this.service.delete(banner_id);
-    return this.responseSuccess(res);
-  }
+  // @Delete('/:banner_id')
+  // @UseGuards(AuthGuard)
+  // async deleteBannerById(
+  //   @Res() res,
+  //   @Param('banner_id') banner_id: number,
+  // ): Promise<IResponse> {
+  //   await this.service.delete(banner_id);
+  //   return this.responseSuccess(res);
+  // }
 }

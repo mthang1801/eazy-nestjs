@@ -18,7 +18,6 @@ import { Response } from 'express';
 import { CreateTradeinProgramDto } from '../../../dto/tradein/create-tradeinProgram.dto';
 import { UpdateTradeinProgramDto } from '../../../dto/tradein/update-tradeinProgram.dto';
 @Controller('/be/v1/tradein-programs')
-@UseGuards(AuthGuard)
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
     super();
@@ -35,6 +34,7 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
@@ -56,6 +56,7 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Get(':tradein_id')
+  @UseGuards(AuthGuard)
   async get(
     @Res() res: Response,
     @Param('tradein_id') tradein_id: number,

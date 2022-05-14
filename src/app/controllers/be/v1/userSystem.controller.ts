@@ -20,7 +20,6 @@ import { CreateUserSystemDto } from 'src/app/dto/userSystem/create-userSystem.dt
 import { UpdateUserSystemRoleFunctsDto } from '../../../dto/userSystem/update-userSystemRoleFuncts.dto';
 
 @Controller('/be/v1/user-system')
-@UseGuards(AuthGuard)
 export class UserSystemController extends BaseController {
   constructor(private service: UserSystemService) {
     super();
@@ -33,7 +32,7 @@ export class UserSystemController extends BaseController {
    * @returns
    */
   @Get()
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async getUserLists(
     @Res() res: Response,
     @Query() params,
@@ -43,7 +42,7 @@ export class UserSystemController extends BaseController {
   }
 
   @Get(':user_id')
-  //@UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async get(
     @Param('user_id') user_id: number,
     @Res() res: Response,
@@ -77,16 +76,6 @@ export class UserSystemController extends BaseController {
     @Req() req: Request,
   ): Promise<IResponse> {
     await this.service.create(data, req['user']);
-    return this.responseSuccess(res);
-  }
-
-  @Put(':user_id/change-roles')
-  async changeRoleFuncts(
-    @Param('user_id') user_id: number,
-    @Body() data: UpdateUserSystemRoleFunctsDto,
-    @Res() res: Response,
-  ): Promise<IResponse> {
-    await this.service.changeRoleFuncts(user_id, data);
     return this.responseSuccess(res);
   }
 }

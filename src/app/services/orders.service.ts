@@ -397,6 +397,8 @@ export class OrdersService {
       }
     }
 
+    console.log(sendData);
+
     const result = await this.createOrder(user, sendData);
 
     // await this.cartRepo.delete({ cart_id: cart.cart_id });
@@ -713,6 +715,7 @@ export class OrdersService {
           status: OrderStatus.invalid,
           reason_fail: error?.response?.data?.message,
         },
+        true,
       );
       await this.orderHistoryRepo.create(updatedOrder);
       throw new HttpException(
@@ -789,6 +792,7 @@ export class OrdersService {
       const updatedOrder = await this.orderRepo.update(
         { order_id: order['order_id'] },
         orderData,
+        true,
       );
       result = { ...result, ...updatedOrder };
     }
@@ -1030,7 +1034,7 @@ export class OrdersService {
   }
 
   async itgUpdate(order_code: string, data) {
-    console.log('update');
+    console.log('itg update');
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
@@ -1069,6 +1073,7 @@ export class OrdersService {
       const updatedOrder = await this.orderRepo.update(
         { order_code },
         orderData,
+        true,
       );
       result = { ...result, ...updatedOrder };
 
@@ -1473,6 +1478,7 @@ export class OrdersService {
           status: OrderStatus.cancelled,
           updated_date: formatStandardTimeStamp(),
         },
+        true,
       );
       await this.orderHistoryRepo.create(updatedOrder, false);
     } catch (error) {
@@ -1505,6 +1511,7 @@ export class OrdersService {
                 status: OrderStatus.invalid,
                 reason_fail: error.response,
               },
+              true,
             );
             await this.orderHistoryRepo.create(updatedOrder, false);
           }

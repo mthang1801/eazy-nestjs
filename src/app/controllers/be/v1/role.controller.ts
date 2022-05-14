@@ -28,7 +28,6 @@ import { AuthorizeRoleFunctionDto } from '../../../dto/userRole/authorizeRoleFun
  * @author MvThang
  */
 @Controller('/be/v1/user-groups')
-@UseGuards(AuthGuard)
 export class RoleController extends BaseController {
   constructor(private readonly service: RoleService) {
     super();
@@ -41,6 +40,7 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Post()
+  @UseGuards(AuthGuard)
   async createRoleGroup(
     @Res() res: Response,
     @Body() data: CreateGroupDto,
@@ -58,6 +58,7 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Put('/:id')
+  @UseGuards(AuthGuard)
   async updateRoleGroup(
     @Param('id') id: number,
     @Res() res: Response,
@@ -76,6 +77,7 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Put('/role-functs/:role_id')
+  @UseGuards(AuthGuard)
   async authorizeRoleFunct(
     @Param('role_id') role_id: number,
     @Body() data: AuthorizeRoleFunctionDto,
@@ -86,19 +88,21 @@ export class RoleController extends BaseController {
   }
 
   @Get('/functions')
-  // @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard)
   async getFunctions(@Res() res: Response) {
     const result = await this.service.getFunctions();
     return this.responseSuccess(res, result);
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getGroupList(@Res() res: Response, @Query() params) {
     const result = await this.service.getGroupList(params);
     return this.responseSuccess(res, result);
   }
 
   @Get('/:id')
+  @UseGuards(AuthGuard)
   async getGroupById(
     @Res() res: Response,
     @Param('id') id: number,
@@ -115,6 +119,7 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Body() data: CreateUserGroupsDto,
     @Res() res: Response,
@@ -124,6 +129,7 @@ export class RoleController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(
     @Res() res: Response,
     @Req() req,
@@ -156,6 +162,7 @@ export class RoleController extends BaseController {
    * @returns
    */
   @Put(':id')
+  @UseGuards(AuthGuard)
   async update(
     @Param('id') id: number,
     @Body() data: UpdateUserGroupsDto,

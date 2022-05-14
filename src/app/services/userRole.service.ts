@@ -123,6 +123,7 @@ export class UserRoleService {
     const updatedUserGroupLink = await this.userRoleRepo.update(
       userGroupLink.link_id,
       data,
+      true,
     );
     return updatedUserGroupLink;
   }

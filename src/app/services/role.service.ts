@@ -226,6 +226,7 @@ export class RoleService {
       const updatedUserGroup = await this.roleRepo.update(
         { usergroup_id },
         userGroupData,
+        true,
       );
 
       result = { ...result, ...updatedUserGroup };

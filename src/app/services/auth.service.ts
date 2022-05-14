@@ -64,6 +64,7 @@ import { UserRoleRepository } from '../repositories/userRole.repository';
 import { UserRoleEntity } from '../entities/userRole.entity';
 import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
 import { RoleFunctionEntity } from '../entities/roleFunction.entity';
+import { Cryptography } from '../../utils/cryptography';
 
 @Injectable()
 export class AuthService {
@@ -264,19 +265,21 @@ export class AuthService {
         menuItem['children'] = menu;
       }
     }
+    const cryptography = new Cryptography();
+    const encryptedData = cryptography.encrypt(user['user_id'].toString());
 
     const userIdEncoded = encodeBase64String(
       `${uuid()}-${user['user_id']}-${uuid()}`,
     );
 
     const dataResult = {
-      token: this.generateToken(user, userIdEncoded),
+      token: this.generateToken(user, encryptedData),
       userData: {
         firstname: user['firstname'],
         lastname: user['lastname'],
         avatar: user['avatar'],
       },
-      uuid: userIdEncoded,
+      uuid: encryptedData,
       menu: menuList,
     };
 
@@ -443,12 +446,8 @@ export class AuthService {
       user_login: providerName,
     });
 
-    const userIdEncoded = encodeBase64String(
-      `${uuid()}-${userExists['user_id']}-${uuid()}`,
-    );
-
     return {
-      token: this.generateToken(userExists, userIdEncoded),
+      token: this.generateToken(userExists, userExists['user_id']),
       userData: {
         user_id: userExists['user_id'],
         firstname: userExists['firstname'],

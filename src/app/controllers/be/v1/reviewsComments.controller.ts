@@ -17,13 +17,13 @@ import { Param } from '@nestjs/common';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateCommentCMSDto } from '../../../dto/reviewComment/create-comment.cms.dto';
 @Controller('/be/v1/reviews-comments')
-@UseGuards(AuthGuard)
 export class ReviewsCommentsController extends BaseController {
   constructor(private service: ReviewsCommentService) {
     super();
   }
 
   @Post('/restricted-keywords')
+  @UseGuards(AuthGuard)
   async createRestrictedCommentsKeywords(
     @Res() res: Response,
     @Body() data,
@@ -33,6 +33,7 @@ export class ReviewsCommentsController extends BaseController {
   }
 
   @Post('/response/:product_id')
+  @UseGuards(AuthGuard)
   async createComment(
     @Param('product_id') product_id: number,
     @Body() data: CreateCommentCMSDto,
@@ -48,6 +49,7 @@ export class ReviewsCommentsController extends BaseController {
   }
 
   @Get('/restricted-keywords')
+  @UseGuards(AuthGuard)
   async getRestrictedCommentsKeywords(
     @Res() res: Response,
   ): Promise<IResponse> {
@@ -56,12 +58,14 @@ export class ReviewsCommentsController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
   @Get('/:item_id/response')
+  @UseGuards(AuthGuard)
   async getCommentReviewResponse(
     @Param('item_id') item_id: number,
     @Query() params,

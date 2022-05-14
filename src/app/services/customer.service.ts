@@ -543,7 +543,7 @@ export class CustomerService {
       updated_at: formatStandardTimeStamp(),
     };
 
-    const updatedUser = await this.userRepo.update({ user_id }, userData);
+    const updatedUser = await this.userRepo.update({ user_id }, userData, true);
     result = { ...result, ...updatedUser };
 
     const userProfileData = this.userProfileRepo.setData(data);
@@ -551,6 +551,7 @@ export class CustomerService {
       const updatedUserProfile = await this.userProfileRepo.update(
         { user_id: result.user_id },
         userProfileData,
+        true,
       );
       result = { ...result, ...updatedUserProfile };
     }
@@ -573,6 +574,7 @@ export class CustomerService {
           {
             loyalty_point: data.loyalty_point,
           },
+          true,
         );
         result['loyalty'] = updatedUserLoyal;
       }
@@ -583,6 +585,7 @@ export class CustomerService {
       const updatedUserData = await this.userDataRepo.update(
         { user_id: result.user_id },
         userDataData,
+        true,
       );
       result = { ...result, ...updatedUserData };
     }
@@ -731,6 +734,7 @@ export class CustomerService {
       const updatedUser = await this.userRepo.update(
         { phone: data.phone },
         userData,
+        true,
       );
       result = { ...updatedUser };
     } else {
@@ -836,7 +840,7 @@ export class CustomerService {
     const userData = this.userRepo.setData(convertedData);
 
     if (Object.entries(userData).length) {
-      const updatedUser = await this.userRepo.update(
+      await this.userRepo.update(
         { user_id: result.user_id },
         { ...userData, updated_at: formatStandardTimeStamp() },
       );

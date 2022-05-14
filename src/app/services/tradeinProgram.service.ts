@@ -507,6 +507,7 @@ export class TradeinProgramService {
           currentCriteria = await this.tradeinProgramCriteriaRepo.update(
             { tradein_id, criteria_id: appliedCriteriaItem.criteria_id },
             updateCriteriaData,
+            true,
           );
         } else {
           const newCriteriaData = {
