@@ -266,9 +266,7 @@ export class AuthService {
       }
     }
     const cryptography = new Cryptography();
-    const encryptedData = cryptography.encrypt(user['user_id'].toString());
-
-    const userIdEncoded = encodeBase64String(
+    const encryptedData = cryptography.encrypt(
       `${uuid()}-${user['user_id']}-${uuid()}`,
     );
 

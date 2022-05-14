@@ -327,12 +327,16 @@ export class TradeinProgramService {
     );
 
     if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
-      for (let criteriaId of data.valuation_criteria_list) {
+      for (let {
+        criteria_id,
+        criteria_detail_id,
+      } of data.valuation_criteria_list) {
         const valuationBillCriteriaDetailData = {
           ...new ValuationBillCriteriaDetailEntity(),
           ...this.valuationBillCriteriaDetailRepo.setData(data),
           valuation_bill_id: newValuationBill.valuation_bill_id,
-          criteria_detail_id: criteriaId,
+          criteria_detail_id,
+          criteria_id,
         };
         await this.valuationBillCriteriaDetailRepo.create(
           valuationBillCriteriaDetailData,
