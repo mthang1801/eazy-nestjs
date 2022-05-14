@@ -798,6 +798,18 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
 
 export const convertTradeinProgramFromAppcore = (coreData) => {
   let cmsData = {};
+
+  cmsData['tradein_program_id'] = coreData['tradeInProgramId'];
+  cmsData['product_id'] = coreData['productId'];
+  cmsData['collect_price'] = coreData['productBuyingPrice'];
+  cmsData['criteria_price'] = coreData['totalCriteriaPrice'];
+  cmsData['final_price'] = coreData['finalPrice'];
+  cmsData['customer_phone'] = coreData['customerPhone'];
+  cmsData['customer_name'] = coreData['customerName'];
+  cmsData['valuation_criteria_list'] = coreData['options'];
+  cmsData['criteria_detail_id'] = coreData['optionId'];
+  cmsData['criteria_id'] = coreData['criteriaId'];
+
   cmsData['tradein_appcore_id'] = coreData['id'];
   cmsData['name'] = coreData['name'];
   cmsData['description'] = coreData['description'];

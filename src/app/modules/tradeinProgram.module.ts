@@ -1,3 +1,4 @@
+import { TradeinProgramController } from './../controllers/fe/v1/tradeinProgram.controller';
 import { Module } from '@nestjs/common';
 import { TradeinProgramRepository } from '../repositories/tradeinProgram.repository';
 import { TradeinProgramService } from '../services/tradeinProgram.service';
@@ -42,6 +43,7 @@ import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldRec
     TradeinProgramControllerBE,
     TradeinProgramControllerFE,
     TradeinProgramControllerItg,
+    TradeinProgramController,
   ],
 })
 export class TradeinProgramModule {}

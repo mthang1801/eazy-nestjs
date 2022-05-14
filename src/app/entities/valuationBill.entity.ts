@@ -9,12 +9,14 @@ export class ValuationBillEntity {
   is_sync: string = 'Y';
   customer_phone: string = '';
   customer_name: string = '';
-  tradein_program_id: number = null;
+  tradein_appcore_id: number = null;
+  tradein_id: number = null;
   collect_price: number = 0;
   criteria_price: number = 0;
   estimate_price: number = 0;
   final_price: number = 0;
   product_id: number = null;
+  product_appcore_id: number = null;
   imei: string = null;
   note: string = '';
   handle_by: number = null;

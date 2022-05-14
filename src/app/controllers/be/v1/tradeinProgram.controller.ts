@@ -17,6 +17,7 @@ import { AuthGuard } from '../../../../middlewares/be.auth';
 import { Response } from 'express';
 import { CreateTradeinProgramDto } from '../../../dto/tradein/create-tradeinProgram.dto';
 import { UpdateTradeinProgramDto } from '../../../dto/tradein/update-tradeinProgram.dto';
+import { CreateValuationBillDto } from '../../../dto/tradein/create-valuationBill.dto';
 @Controller('/be/v1/tradein-programs')
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
