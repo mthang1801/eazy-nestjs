@@ -1595,29 +1595,29 @@ export class ProductService {
       result = { ...result, ...newProductPrice };
     }
 
-    // Update product category
-    if (data?.category_id?.length) {
-      //decrese the number of product of old category
-      let oldCategories = await this.productCategoryRepo.find({
-        product_id: result.product_id,
-      });
+    //decrese the number of product of old category
+    let oldCategories = await this.productCategoryRepo.find({
+      product_id: result.product_id,
+    });
 
-      if (oldCategories.length) {
-        for (let oldCategoryItem of oldCategories) {
-          let category = await this.categoryRepo.findOne({
-            category_id: oldCategoryItem.category_id,
-          });
-          if (category) {
-            await this.categoryRepo.update(
-              { category_id: category.category_id },
-              { product_count: category.product_count - 1 },
-            );
-          }
+    if (oldCategories.length) {
+      for (let oldCategoryItem of oldCategories) {
+        let category = await this.categoryRepo.findOne({
+          category_id: oldCategoryItem.category_id,
+        });
+        if (category) {
+          await this.categoryRepo.update(
+            { category_id: category.category_id },
+            { product_count: category.product_count - 1 },
+          );
         }
       }
+    }
+    //delete all old product categories
+    await this.productCategoryRepo.delete({ product_id: result.product_id });
 
-      //delete all old product categories
-      await this.productCategoryRepo.delete({ product_id: result.product_id });
+    // Update product category
+    if (data?.category_id?.length) {
       for (let categoryId of data.category_id) {
         const newProductCategoryData = {
           ...new ProductsCategoriesEntity(),
@@ -1635,19 +1635,12 @@ export class ProductService {
       }
     }
 
+    // Remove all old product features
+    await this.productFeatureValueRepo.delete({
+      product_id: result['product_id'],
+    });
+    //create new product features
     if (data?.product_features?.length) {
-      // Remove all old product features
-      const oldFeatrures = await this.productFeatureValueRepo.find({
-        where: { product_id: result.product_id },
-      });
-      if (oldFeatrures.length) {
-        for (let oldFeatureItem of oldFeatrures) {
-          await this.productFeatureValueRepo.delete({
-            feature_value_id: oldFeatureItem.feature_value_id,
-          });
-        }
-      }
-
       for (let { feature_id, variant_id } of data.product_features) {
         const productFeature = await this.productFeaturesRepo.findOne({
           feature_id,
@@ -4145,24 +4138,29 @@ export class ProductService {
   }
 
   async testSql(files) {
-    let config: any = {
-      method: 'get',
-      url: "https://ddvcmsdev.ntlogistics.vn/products",
-    };
+    // let config: any = {
+    //   method: 'get',
+    //   url: "https://ddvcmsdev.ntlogistics.vn/products",
+    // };
 
-    try {
-      const response = await axios(config);
-      const data = { error_code: response.status, method: response.config.method, source_url: response.config.url }
-      const logData = {
-        ...new LogEntity(),
-        ...this.logRepo.setData(data),
-      };
-      console.log(logData);
-      const newLog = await this.logRepo.create(logData);
-    } catch (error) {
-      console.log(error);
-    }
-    // let cryptography = new Cryptography();
+    // try {
+    //   const response = await axios(config);
+    //   const data = { error_code: response.status, method: response.config.method, source_url: response.config.url }
+    //   const logData = {
+    //     ...new LogEntity(),
+    //     ...this.logRepo.setData(data),
+    //   };
+    //   console.log(logData);
+    //   const newLog = await this.logRepo.create(logData);
+    // } catch (error) {
+    //   console.log(error);
+    // }
+    let cryptography = new Cryptography();
+    const encryptedData = cryptography.encrypt('This is a secret message');
+    console.log(encryptedData);
+    let c1 = new Cryptography();
+    let decryptedData = c1.decrypt(encryptedData);
+    console.log(decryptedData);
     // var hw = cryptography.encrypt('30512');
     // console.log(hw);
     // let cryptography1 = new Cryptography();
