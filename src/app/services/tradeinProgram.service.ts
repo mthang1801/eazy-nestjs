@@ -317,8 +317,11 @@ export class TradeinProgramService {
   }
 
   async createValuationBill(data) {
+    // Kiểm tra điều kiên tại đây trước
+    // Tạo 1 biến temp để lưu các core_id trong quá trình check để khỏi check lại khi vào vòng lặp
+
     let valuationBillData = {
-      ...new ValuationBillCriteriaDetailEntity(),
+      ...new ValuationBillEntity(),
       ...this.valuationBillRepo.setData(data),
     };
 

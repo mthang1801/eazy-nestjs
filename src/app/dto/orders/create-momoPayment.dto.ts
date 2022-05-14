@@ -1,14 +1,11 @@
 import { IsNotEmpty, IsOptional } from 'class-validator';
 
-export class CreatePaynowDto {
+export class CreateMomoPaymentDto {
   @IsNotEmpty()
   user_id: string;
 
   @IsOptional()
   coupon_code: string;
-
-  @IsOptional()
-  s_firstname: string;
 
   @IsOptional()
   s_lastname: string;
@@ -29,13 +26,7 @@ export class CreatePaynowDto {
   s_ward: string;
 
   @IsOptional()
-  callback_url: string;
-
-  @IsNotEmpty()
-  method: string;
-
-  @IsOptional()
-  bank: string;
+  callback_url: string = '/payment/success';
 
   @IsOptional()
   shipping_fee_location_id: number;

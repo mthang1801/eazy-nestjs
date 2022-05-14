@@ -55,6 +55,7 @@ export class ProductsEntity {
   open_new_tab: string = 'N';
   color: string = '';
   size: string = '';
+  view_count: number = 0;
   warranty_package_id: number = 0;
   free_accessory_id: number = 0;
   promotion_accessory_id: number = 0;

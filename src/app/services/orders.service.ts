@@ -93,7 +93,7 @@ import { formatOrderTimestamp } from 'src/utils/services/order.helper';
 import { CityService } from './city.service';
 import { DistrictService } from './district.service';
 import { WardService } from './ward.service';
-import { CreatePaynowDto } from '../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../dto/orders/create-payooPaynow.dto';
 import { DatabaseService } from '../../database/database.service';
 import {
   payooAPIUserName,
@@ -104,9 +104,9 @@ import {
   payooShopId,
   payooBusinessName,
   payooShopTitle,
-} from '../../constants/payment';
+} from '../../constants/payooPayment';
 import * as moment from 'moment';
-import { payooChecksum } from '../../constants/payment';
+import { payooChecksum } from '../../constants/payooPayment';
 import {
   userJoiner,
   cartPaymentJoiner,

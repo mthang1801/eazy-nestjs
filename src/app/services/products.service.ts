@@ -3593,6 +3593,11 @@ export class ProductService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
+    this.productRepo.update(
+      { product_id: product.product_id },
+      { view_count: product.view_count + 1 },
+    );
+
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
         select: productDetailSelector,

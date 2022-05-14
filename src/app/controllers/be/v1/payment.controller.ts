@@ -19,7 +19,7 @@ import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
 import { Query } from '@nestjs/common';
 import { Response } from 'express';
-import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../../../dto/orders/create-payooPaynow.dto';
 /**
  * Controller for Category
  * @Author TrinhLong
