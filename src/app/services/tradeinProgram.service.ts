@@ -317,23 +317,58 @@ export class TradeinProgramService {
   }
 
   async createValuationBill(data) {
+    //const check = await this.tradeinProgramCriteriaRepo.findOne();
+    //console.log(data);
+    const temp: any[] = [];
+    if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
+      for (let valuation_criteria of data.valuation_criteria_list) {
+        const checkCriteriaId = await this.tradeinProgramCriteriaRepo.findOne({criteria_id: valuation_criteria.criteria_id});
+        const checkCriteriaDetailId = await this.tradeinProgramCriteriaDetailRepo.findOne({criteria_detail_id: valuation_criteria.criteria_detail_id});
+        if (!checkCriteriaId || !checkCriteriaDetailId){
+          throw new HttpException("Không tìm thấy criteria id hoặc criteria detail id.", 400);
+        }
+        // console.log(checkCriteriaId.criteria_appcore_id);
+        // console.log(checkCriteriaDetailId.criteria_detail_appcore_id);
+        let criteria = {  
+          criteria_appcore_id : checkCriteriaId.criteria_appcore_id, 
+          criteria_detail_appcore_id : checkCriteriaDetailId.criteria_detail_appcore_id
+        }
+        temp.push(criteria);
+      }
+    }
+
+    let checkTradeinId = await this.tradeinProgramRepo.findOne({tradein_id: data.tradein_id})
+    if (!checkTradeinId){
+      throw new HttpException("Không tìm thấy tradein id.", 400);
+    }
+
     let valuationBillData = {
-      ...new ValuationBillCriteriaDetailEntity(),
+      ...new ValuationBillEntity(),
       ...this.valuationBillRepo.setData(data),
+      tradein_appcore_id: checkTradeinId.tradein_appcore_id,
     };
 
     const newValuationBill = await this.valuationBillRepo.create(
       valuationBillData,
     );
 
+    console.log(newValuationBill);
+      
+    let i = 0;
+
     if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
-      for (let criteriaId of data.valuation_criteria_list) {
+      for (let valuation_criteria of data.valuation_criteria_list) { 
         const valuationBillCriteriaDetailData = {
           ...new ValuationBillCriteriaDetailEntity(),
           ...this.valuationBillCriteriaDetailRepo.setData(data),
           valuation_bill_id: newValuationBill.valuation_bill_id,
-          criteria_detail_id: criteriaId,
+          criteria_detail_id: valuation_criteria.criteria_detail_id,
+          criteria_id: valuation_criteria.criteria_id,
+          criteria_appcore_id: temp[i].criteria_appcore_id,
+          criteria_detail_appcore_id: temp[i].criteria_detail_appcore_id,
         };
+        i++;
+        console.log(valuationBillCriteriaDetailData);
         await this.valuationBillCriteriaDetailRepo.create(
           valuationBillCriteriaDetailData,
         );
