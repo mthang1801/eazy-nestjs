@@ -395,7 +395,10 @@ export class PaymentService {
 
       await this.orderRepo.update(
         { order_id: result['order_id'] },
-        { status: OrderStatus.purchased },
+        {
+          status: OrderStatus.purchased,
+          updated_date: formatStandardTimeStamp(),
+        },
       );
     } catch (error) {
       throw new HttpException(error.message, error.status);
@@ -750,6 +753,7 @@ export class PaymentService {
       const updateOrderData = {
         payment_status: PaymentStatus.success,
         status: OrderStatus.purchased,
+        updated_date: formatStandardTimeStamp(),
       };
       await this.orderRepo.update(
         { order_id: order.order_id },

@@ -686,7 +686,7 @@ export class OrdersService {
           installed_money_code: orderPayment['order_gateway_id'],
           status: OrderStatus.purchased,
           payment_status: PaymentStatus.success,
-          updated_at: formatStandardTimeStamp(),
+          updated_date: formatStandardTimeStamp(),
         },
       );
     } catch (error) {
@@ -751,6 +751,7 @@ export class OrdersService {
         {
           status: OrderStatus.invalid,
           reason_fail: error?.response?.data?.message,
+          updated_date: formatStandardTimeStamp(),
         },
         true,
       );
@@ -823,7 +824,10 @@ export class OrdersService {
     }
 
     let result = { ...order };
-    const orderData = this.orderRepo.setData(data);
+    const orderData = {
+      ...this.orderRepo.setData(data),
+      updated_date: formatStandardTimeStamp(),
+    };
 
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
@@ -1005,6 +1009,22 @@ export class OrdersService {
       }
     }
 
+    if (convertedData['s_lastname'] && !convertedData['s_lastname']) {
+      convertedData['s_lastname'] = convertedData['s_lastname'];
+    }
+    if (convertedData['b_city'] && !convertedData['s_city']) {
+      convertedData['s_city'] = convertedData['b_city'];
+    }
+    if (convertedData['b_district'] && !convertedData['s_district']) {
+      convertedData['s_district'] = convertedData['b_district'];
+    }
+    if (convertedData['b_ward'] && !convertedData['s_ward']) {
+      convertedData['s_ward'] = convertedData['b_ward'];
+    }
+    if (convertedData['b_address'] && !convertedData['s_address']) {
+      convertedData['s_address'] = convertedData['b_address'];
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(convertedData),
@@ -1089,6 +1109,24 @@ export class OrdersService {
         )
       ) {
         convertedData['payment_status'] = 1;
+      }
+    }
+
+    if (order['order_type'] != 2) {
+      if (convertedData['s_lastname'] && !order['s_lastname']) {
+        convertedData['s_lastname'] = convertedData['s_lastname'];
+      }
+      if (convertedData['b_city'] && !order['s_city']) {
+        convertedData['s_city'] = convertedData['b_city'];
+      }
+      if (convertedData['b_district'] && !order['s_district']) {
+        convertedData['s_district'] = convertedData['b_district'];
+      }
+      if (convertedData['b_ward'] && !order['s_ward']) {
+        convertedData['s_ward'] = convertedData['b_ward'];
+      }
+      if (convertedData['b_address'] && !order['s_address']) {
+        convertedData['s_address'] = convertedData['b_address'];
       }
     }
 
@@ -1189,7 +1227,10 @@ export class OrdersService {
         0,
       );
 
-      await this.orderRepo.update({ order_code }, { total });
+      await this.orderRepo.update(
+        { order_code },
+        { total, udpated_date: formatStandardTimeStamp() },
+      );
     }
   }
 
@@ -1484,7 +1525,10 @@ export class OrdersService {
         404,
       );
     }
-    await this.orderRepo.update({ order_code }, { status: order_status });
+    await this.orderRepo.update(
+      { order_code },
+      { status: order_status, updated_date: formatStandardTimeStamp() },
+    );
   }
 
   async getHistory(order_id: number) {
@@ -1547,6 +1591,7 @@ export class OrdersService {
               {
                 status: OrderStatus.invalid,
                 reason_fail: error.response,
+                updated_date: formatStandardTimeStamp(),
               },
               true,
             );
@@ -1562,7 +1607,7 @@ export class OrdersService {
       }
       await this.orderRepo.update(
         { order_code: Not(IsNull()) },
-        { is_sync: 'N' },
+        { is_sync: 'N', updated_date: formatStandardTimeStamp() },
       );
     } catch (error) {
       throw new HttpException(
