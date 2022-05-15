@@ -51,6 +51,7 @@ import { ReviewsCommentsModule } from './reviewsComment.module';
 import { TradeinProgramModule } from './tradeinProgram.module';
 import { HomepageConfigModule } from './homepageConfig.module';
 import { LogsModule } from './logs.module';
+import { PageModule } from './page.module';
 
 @Module({
   imports: [
@@ -107,6 +108,7 @@ import { LogsModule } from './logs.module';
     ReviewsCommentsModule,
     TradeinProgramModule,
     HomepageConfigModule,
+    PageModule,
   ],
   providers: [
     {

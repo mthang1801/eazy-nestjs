@@ -950,3 +950,12 @@ export const tradeinCriteriaJoiner = {
     },
   },
 };
+
+export const tradeinProgrameDetailJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.TRADEIN_PROGRAM]: {
+      fieldJoin: `${Table.TRADEIN_PROGRAM}.tradein_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`,
+    },
+  },
+};

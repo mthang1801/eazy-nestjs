@@ -133,6 +133,11 @@ export enum AutoIncrementKeys {
   ddv_homepage_modules = 'module_id',
   ddv_homepage_modules_items = 'item_id',
 
+  //============ Page config =============
+  ddv_pages = 'page_id',
+  ddv_page_details = 'page_detail_id',
+  ddv_page_detail_values = 'value_id',
+
   //============ LOG =============
   ddv_logs = 'log_id',
   ddv_log_modules = 'module_id',

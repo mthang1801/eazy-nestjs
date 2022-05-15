@@ -62,7 +62,11 @@ import { StoreLocationEntity } from '../entities/storeLocation.entity';
 import { FIND_TRADEIN_PROGRAM } from '../../constants/api.appcore';
 import axios from 'axios';
 import { ValuateBillDto } from '../dto/tradein/valuateBill.dto';
-import { tradeinCriteriaJoiner } from '../../utils/joinTable';
+import { productPriceJoiner } from '../../utils/joinTable';
+import {
+  tradeinCriteriaJoiner,
+  tradeinProgrameDetailJoiner,
+} from '../../utils/joinTable';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -1082,7 +1086,8 @@ export class TradeinProgramService {
 
   async getValuationBill(data: ValuateBillDto) {
     const product = await this.productRepo.findOne({
-      product_id: data.product_id,
+      join: productPriceJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
     });
     if (!product) {
       throw new HttpException('Không tìm thấy sản phẩm áp dụng.', 404);
@@ -1101,9 +1106,18 @@ export class TradeinProgramService {
       }
 
       const tradeinProgramAppcoreId = responseAppliedTradeinProgram.data.data;
-      const tradeinProgram = await this.tradeinProgramRepo.findOne({
-        tradein_appcore_id: tradeinProgramAppcoreId,
+      let tradeinProgram = await this.tradeinProgramDetailRepo.findOne({
+        select: '*',
+        join: tradeinProgrameDetailJoiner,
+        where: {
+          [`${Table.TRADEIN_PROGRAM}.tradein_appcore_id`]:
+            tradeinProgramAppcoreId,
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.product_id`]: data.product_id,
+        },
       });
+
+      tradeinProgram['price'] = product['price'];
+      tradeinProgram['collect_price'] = product['collect_price'];
 
       if (!tradeinProgram) {
         throw new HttpException(

@@ -1,0 +1,86 @@
+import {
+  Controller,
+  Res,
+  Post,
+  Body,
+  Put,
+  Param,
+  Get,
+  Query,
+} from '@nestjs/common';
+import { IResponse } from 'src/app/interfaces/response.interface';
+import { BaseController } from '../../../../base/base.controllers';
+import { CreatePageDto } from '../../../dto/page/create-page.dto';
+import { PageService } from '../../../services/page.service';
+import { UpdatePageDto } from '../../../dto/page/update-page.dto';
+import { CreatePageDetailDto } from '../../../dto/page/create-pageDetail.dto';
+import { UpdatePageDetailDto } from '../../../dto/page/update-pageDetail.dto';
+import { Response } from 'express';
+@Controller('be/v1/pages')
+export class PageController extends BaseController {
+  constructor(private service: PageService) {
+    super();
+  }
+  @Post()
+  async createPage(
+    @Res() res: Response,
+    @Body() data: CreatePageDto,
+  ): Promise<IResponse> {
+    await this.service.createPage(data);
+    return this.responseSuccess(res);
+  }
+
+  @Put(':page_id')
+  async updatePage(
+    @Param('page_id') page_id: number,
+    @Res() res: Response,
+    @Body() data: UpdatePageDto,
+  ): Promise<IResponse> {
+    await this.service.updatePage(page_id, data);
+    return this.responseSuccess(res);
+  }
+
+  @Post('/:page_id/page_detail')
+  async createPageDetail(
+    @Res() res: Response,
+    @Body() data: CreatePageDetailDto,
+    @Param('page_id') page_id: number,
+  ): Promise<IResponse> {
+    await this.service.createPageDetail(page_id, data);
+    return this.responseSuccess(res);
+  }
+
+  @Put('/page_detail/:page_detail_id')
+  async updatePageDetail(
+    @Res() res: Response,
+    @Body() data: UpdatePageDetailDto,
+    @Param('page_detail_id') page_detail_id: number,
+  ): Promise<IResponse> {
+    await this.service.updatePageDetail(page_detail_id, data);
+    return this.responseSuccess(res);
+  }
+
+  @Get()
+  async getPages(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getPages(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':page_id')
+  async getPageDetail(
+    @Res() res: Response,
+    @Param('page_id') page_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getPageDetail(page_id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('page_detail/:page_detail_id')
+  async getPageDetailValues(
+    @Res() res: Response,
+    @Param('page_detail_id') page_detail_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getPageDetailValues(page_detail_id);
+    return this.responseSuccess(res, result);
+  }
+}

@@ -137,6 +137,11 @@ export enum Table {
   HOMEPAGE_MODULE = 'ddv_homepage_modules',
   HOMEPAGE_MODULE_ITEM = 'ddv_homepage_modules_items',
 
+  //============ Page config ==============
+  PAGE = 'ddv_pages',
+  PAGE_DETAIL = 'ddv_page_details',
+  PAGE_DETAIL_VALUE = 'ddv_page_detail_values',
+
   //============ Logs ===============
   LOG = 'ddv_logs',
   LOG_MODULE = 'ddv_log_modules',

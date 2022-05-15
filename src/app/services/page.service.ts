@@ -1,0 +1,399 @@
+import { Injectable, HttpException } from '@nestjs/common';
+import { CreatePageDto } from '../dto/page/create-page.dto';
+import { PageEntity } from '../entities/page.entity';
+import { PageDetailEntity } from '../entities/pageDetail.entity';
+import { PageRepository } from '../repositories/page.repository';
+import { PageDetailRepository } from '../repositories/pageDetail.repository';
+import { PageDetailValueRepository } from '../repositories/pageDetailValue.repository';
+import { PageDetailValueEntity } from '../entities/pageDetailValue.entity';
+import {
+  removeMoreThanOneSpace,
+  formatStandardTimeStamp,
+} from '../../utils/helper';
+import { genRandomString } from '../../utils/cipherHelper';
+import { CreatePageDetailDto } from '../dto/page/create-pageDetail.dto';
+import { UpdatePageDetailDto } from '../dto/page/update-pageDetail.dto';
+import { getPageSkipLimit } from '../../utils/helper';
+
+import { Table } from 'src/database/enums';
+import { pagesListSearchFilter } from '../../utils/tableConditioner';
+import { IGetPagesFilters } from '../interfaces/pages/getPagesFitlers.interface';
+import { sortBy } from 'lodash';
+import { SortBy } from '../../database/enums/sortBy.enum';
+
+@Injectable()
+export class PageService {
+  constructor(
+    private pageRepo: PageRepository<PageEntity>,
+    private pageDetailRepo: PageDetailRepository<PageDetailEntity>,
+    private pageDetailValueRepo: PageDetailValueRepository<PageDetailValueEntity>,
+  ) {}
+  async createPage(data: CreatePageDto) {
+    const pages = await this.pageRepo.find();
+    if (
+      pages.length &&
+      pages.some(
+        ({ page_name }) =>
+          page_name.toLowerCase().trim() ==
+          removeMoreThanOneSpace(data.page_name).toLocaleLowerCase().trim(),
+      )
+    ) {
+      throw new HttpException('Tên page đã tồn tại.', 409);
+    }
+
+    const newPageData = {
+      ...new PageEntity(),
+      ...this.pageRepo.setData(data),
+      page_name: removeMoreThanOneSpace(data.page_name),
+    };
+    const newPage = await this.pageRepo.create(newPageData);
+
+    if (data.page_details && data.page_details.length) {
+      for (let pageDetail of data.page_details) {
+        const pageDetails = await this.pageDetailRepo.find({
+          page_id: newPage.page_id,
+        });
+        if (
+          pageDetails.length &&
+          pageDetails.some(
+            ({ module_name }) =>
+              module_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(pageDetail.module_name)
+                .toLowerCase()
+                .trim(),
+          )
+        ) {
+          pageDetail['module_name'] = `${
+            pageDetail['module_name']
+          }-${genRandomString(6)}`;
+        }
+
+        const pageDetailData = {
+          ...new PageDetailEntity(),
+          ...this.pageDetailRepo.setData(pageDetail),
+          module_name: removeMoreThanOneSpace(pageDetail.module_name),
+          page_id: newPage.page_id,
+        };
+        const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
+
+        if (
+          pageDetail.page_detail_values &&
+          pageDetail.page_detail_values.length
+        ) {
+          for (let pageDetailValue of pageDetail.page_detail_values) {
+            let detailValues = await this.pageDetailValueRepo.find({
+              page_detail_id: newPageDetail.page_detail_id,
+            });
+            if (
+              detailValues.length &&
+              detailValues.some(
+                ({ name }) =>
+                  name.toLowerCase().trim() ==
+                  removeMoreThanOneSpace(pageDetailValue.name)
+                    .toLowerCase()
+                    .trim(),
+              )
+            ) {
+              pageDetailValue['name'] = `${
+                pageDetailValue['name']
+              }-${genRandomString(6)}`;
+            }
+            const pageDetailValueData = {
+              ...new PageDetailValueEntity(),
+              ...this.pageDetailValueRepo.setData(pageDetailValue),
+              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_id: newPageDetail.page_detail_id,
+            };
+            await this.pageDetailValueRepo.create(pageDetailValueData);
+          }
+        }
+      }
+    }
+  }
+  async updatePage(page_id: number, data: CreatePageDto) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+    if (!currentPage) {
+      throw new HttpException('Không tìm thấy trang', 404);
+    }
+
+    if (data.page_name) {
+      const pages = await this.pageRepo.find();
+      if (
+        pages.length &&
+        pages.some(
+          ({ page_id: pageId, page_name }) =>
+            page_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(data.page_name)
+                .toLocaleLowerCase()
+                .trim() && page_id != pageId,
+        )
+      ) {
+        throw new HttpException('Tên page đã tồn tại.', 409);
+      }
+    }
+
+    const updatedPageData = {
+      ...this.pageRepo.setData(data),
+      page_name: data.page_name
+        ? removeMoreThanOneSpace(data.page_name)
+        : currentPage.page_name,
+      updated_at: formatStandardTimeStamp(),
+    };
+    await this.pageRepo.update({ page_id }, updatedPageData);
+
+    if (data.page_details && data.page_details.length) {
+      await this.pageDetailRepo.delete({ page_id });
+      for (let pageDetail of data.page_details) {
+        const pageDetails = await this.pageDetailRepo.find({
+          page_id,
+        });
+        if (
+          pageDetails.length &&
+          pageDetails.some(
+            ({ module_name }) =>
+              module_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(pageDetail.module_name)
+                .toLowerCase()
+                .trim(),
+          )
+        ) {
+          pageDetail['module_name'] = `${
+            pageDetail['module_name']
+          }-${genRandomString(6)}`;
+        }
+
+        const pageDetailData = {
+          ...new PageDetailEntity(),
+          ...this.pageDetailRepo.setData(pageDetail),
+          module_name: removeMoreThanOneSpace(pageDetail.module_name),
+          page_id,
+        };
+        const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
+
+        if (
+          pageDetail.page_detail_values &&
+          pageDetail.page_detail_values.length
+        ) {
+          for (let pageDetailValue of pageDetail.page_detail_values) {
+            let detailValues = await this.pageDetailValueRepo.find({
+              page_detail_id: newPageDetail.page_detail_id,
+            });
+            if (
+              detailValues.length &&
+              detailValues.some(
+                ({ name }) =>
+                  name.toLowerCase().trim() ==
+                  removeMoreThanOneSpace(pageDetailValue.name)
+                    .toLowerCase()
+                    .trim(),
+              )
+            ) {
+              pageDetailValue['name'] = `${
+                pageDetailValue['name']
+              }-${genRandomString(6)}`;
+            }
+            const pageDetailValueData = {
+              ...new PageDetailValueEntity(),
+              ...this.pageDetailValueRepo.setData(pageDetailValue),
+              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_id: newPageDetail.page_detail_id,
+            };
+            await this.pageDetailValueRepo.create(pageDetailValueData);
+          }
+        }
+      }
+    }
+  }
+  async createPageDetail(page_id: number, data: CreatePageDetailDto) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+
+    if (!currentPage) {
+      throw new HttpException('Không tìm thấy trang.', 404);
+    }
+
+    const updatedPageData = {
+      updated_at: formatStandardTimeStamp(),
+    };
+    await this.pageRepo.update({ page_id }, updatedPageData);
+
+    const pageDetails = await this.pageDetailRepo.find({
+      page_id,
+    });
+    if (
+      pageDetails.length &&
+      pageDetails.some(
+        ({ module_name }) =>
+          module_name.toLowerCase().trim() ==
+          removeMoreThanOneSpace(data.module_name).toLowerCase().trim(),
+      )
+    ) {
+      throw new HttpException('Tên Module trong trang đã tồn tại', 409);
+    }
+
+    const pageDetailData = {
+      ...new PageDetailEntity(),
+      ...this.pageDetailRepo.setData(data),
+      module_name: removeMoreThanOneSpace(data.module_name),
+      page_id,
+    };
+    const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
+
+    if (data.page_detail_values && data.page_detail_values.length) {
+      for (let pageDetailValue of data.page_detail_values) {
+        let detailValues = await this.pageDetailValueRepo.find({
+          page_detail_id: newPageDetail.page_detail_id,
+        });
+        if (
+          detailValues.length &&
+          detailValues.some(
+            ({ name }) =>
+              name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(pageDetailValue.name).toLowerCase().trim(),
+          )
+        ) {
+          pageDetailValue['name'] = `${
+            pageDetailValue['name']
+          }-${genRandomString(6)}`;
+        }
+        const pageDetailValueData = {
+          ...new PageDetailValueEntity(),
+          ...this.pageDetailValueRepo.setData(pageDetailValue),
+          name: removeMoreThanOneSpace(pageDetailValue.name),
+          page_detail_id: newPageDetail.page_detail_id,
+        };
+        await this.pageDetailValueRepo.create(pageDetailValueData);
+      }
+    }
+  }
+
+  async updatePageDetail(page_detail_id: number, data: UpdatePageDetailDto) {
+    const currentPageDetail = await this.pageDetailRepo.findOne({
+      page_detail_id,
+    });
+    if (currentPageDetail) {
+      throw new HttpException('Không tìm thấy module.', 404);
+    }
+
+    if (data.module_name) {
+      const pageDetails = await this.pageDetailRepo.find({
+        page_id: currentPageDetail.page_id,
+      });
+      if (
+        pageDetails.length &&
+        pageDetails.some(
+          ({ page_detail_id: pageDetailId, module_name }) =>
+            module_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(data.module_name).toLowerCase().trim() &&
+            page_detail_id !== pageDetailId,
+        )
+      ) {
+        throw new HttpException('Tên Module trong trang đã tồn tại', 409);
+      }
+    }
+
+    let pageDetailData = {
+      ...this.pageDetailValueRepo.setData(data),
+      module_name: data.module_name
+        ? removeMoreThanOneSpace(data.module_name)
+        : currentPageDetail.module_name,
+    };
+
+    await this.pageDetailRepo.update({ page_detail_id }, pageDetailData);
+
+    await this.pageRepo.update(
+      { page_id: currentPageDetail.page_id },
+      { updated_at: formatStandardTimeStamp() },
+    );
+
+    if (data.page_detail_values && data.page_detail_values.length) {
+      await this.pageDetailValueRepo.delete({ page_detail_id });
+      for (let pageDetailValue of data.page_detail_values) {
+        let detailValues = await this.pageDetailValueRepo.find({
+          page_detail_id,
+        });
+        if (
+          detailValues.length &&
+          detailValues.some(
+            ({ name }) =>
+              name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(pageDetailValue.name).toLowerCase().trim(),
+          )
+        ) {
+          pageDetailValue['name'] = `${
+            pageDetailValue['name']
+          }-${genRandomString(6)}`;
+        }
+        const pageDetailValueData = {
+          ...new PageDetailValueEntity(),
+          ...this.pageDetailValueRepo.setData(pageDetailValue),
+          name: removeMoreThanOneSpace(pageDetailValue.name),
+          page_detail_id,
+        };
+        await this.pageDetailValueRepo.create(pageDetailValueData);
+      }
+    }
+  }
+
+  async getPages(params: IGetPagesFilters = {}) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { status, search } = params;
+    let filterConditions = {};
+    if (status) {
+      filterConditions[`${Table.PAGE}.status`] = status;
+    }
+
+    const pages = await this.pageRepo.find({
+      select: '*',
+      where: pagesListSearchFilter(search, filterConditions),
+      orderBy: [{ field: `${Table.PAGE}.updated_at`, sortBy: SortBy.DESC }],
+      skip,
+      limit,
+    });
+    const count = await this.pageRepo.find({
+      select: `COUNT(${Table.PAGE}.page_id) as total`,
+      where: pagesListSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        pageSize: limit,
+        currentPage: page,
+        total: count[0].total,
+      },
+      data: pages,
+    };
+  }
+
+  async getPageDetail(page_id) {
+    const pageDetails = await this.pageDetailRepo.find({
+      select: '*',
+      orderBy: [
+        {
+          field: `CASE WHEN ${Table.PAGE_DETAIL}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PAGE_DETAIL}.position ASC`,
+        },
+      ],
+      where: {
+        [`${Table.PAGE_DETAIL}.page_id`]: page_id,
+      },
+    });
+
+    return pageDetails;
+  }
+
+  async getPageDetailValues(page_detail_id) {
+    const pageDetailValues = await this.pageDetailValueRepo.find({
+      select: '*',
+      orderBy: [
+        {
+          field: `CASE WHEN ${Table.PAGE_DETAIL_VALUE}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PAGE_DETAIL_VALUE}.position ASC`,
+        },
+      ],
+      where: {
+        [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id,
+      },
+    });
+    return pageDetailValues;
+  }
+}
