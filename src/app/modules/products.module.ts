@@ -43,6 +43,7 @@ import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { LogRepository } from '../repositories/log.repository';
+import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { LogRepository } from '../repositories/log.repository';
     ReviewRepository,
     ReviewCommentItemRepository,
     LogRepository,
+    CategoryFeaturesRepository,
   ],
   exports: [
     ProductService,
@@ -102,6 +104,7 @@ import { LogRepository } from '../repositories/log.repository';
     ProductStoreHistoryRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
+    CategoryFeaturesRepository,
   ],
   controllers: [
     ProductsControllerBE,

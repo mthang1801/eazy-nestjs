@@ -1,8 +1,13 @@
+import {
+  processGetTextDataFromMysql,
+  preprocessAddTextDataToMysql,
+} from '../../base/base.helper';
 export function Like<T>(value: T): {
   operator: string;
   value: T;
 } {
-  return { operator: 'LIKE', value };
+  let _value = processGetTextDataFromMysql(value);
+  return { operator: 'LIKE', value: _value };
 }
 
 export function LessThanOrEqual<T>(value: T): {

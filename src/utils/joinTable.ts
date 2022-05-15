@@ -89,6 +89,24 @@ export const productFeaturesJoiner = {
   },
 };
 
+export const categoryFeaturesSetJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+      fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+      rootJoin: `${Table.CATEGORY_FEATURES}.feature_id`,
+    },
+  },
+};
+
+export const featureVariantJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+      fieldJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+      rootJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+    },
+  },
+};
+
 export const productPriceJoiner = {
   [JoinTable.innerJoin]: {
     [Table.PRODUCT_PRICES]: {
@@ -920,6 +938,15 @@ export const userRoleFunctJoiner = {
     [Table.FUNC]: {
       fieldJoin: `${Table.FUNC}.funct_id`,
       rootJoin: `${Table.ROLE_FUNC}.funct_id`,
+    },
+  },
+};
+
+export const tradeinCriteriaJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.TRADEIN_PROGRAM_CRITERIA_DETAIL]: {
+      fieldJoin: `${Table.TRADEIN_PROGRAM_CRITERIA_DETAIL}.criteria_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_CRITERIA}.criteria_id`,
     },
   },
 };
