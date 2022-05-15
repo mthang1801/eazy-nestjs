@@ -12,6 +12,6 @@ export const momoOrderInfo = 'pay with MoMo';
 export const momoRedirectUrl = (callbackUrl) =>
   `https://ddv-fe-ecom.vercel.app/${callbackUrl}`;
 export const momoIpnUrl =
-  'https://ddvwsdev.ntlogistics.vn/be/v1/payment/payoo/payment-result';
+  'https://ddvwsdev.ntlogistics.vn/be/v1/payment/momo/payment-result';
 export const momoRequestType = 'captureWallet';
 export const momoExtraData = ''; //pass empty value if your merchant does not have stores

@@ -73,4 +73,10 @@ export class PaymentController extends BaseController {
     await this.service.payooNotify(data);
     return this.responseSuccess(res, null, 'NOTIFY_RECEIVED');
   }
+
+  @Post('/momo/payment-result')
+  async momoNotify(@Res() res: Response, @Body() data) {
+    await this.service.momoNotify(data);
+    return this.responseSuccess(res, null, 'NOTIFY_RECEIVED');
+  }
 }

@@ -496,6 +496,28 @@ export class OrdersService {
       orderData['subtotal'] = +orderData['total'] + +data.shipping_cost;
     }
 
+    //Check order bill info
+    if (!orderData['b_lastname'] && orderData['s_lastname']) {
+      orderData['b_lastname'] = orderData['s_lastname'];
+    }
+
+    if (!orderData['b_city'] && orderData['s_city']) {
+      orderData['b_city'] = orderData['s_city'];
+    }
+
+    if (!orderData['b_district'] && orderData['s_district']) {
+      orderData['b_district'] = orderData['s_district'];
+    }
+
+    if (!orderData['b_ward'] && orderData['s_ward']) {
+      orderData['b_ward'] = orderData['s_ward'];
+    }
+
+    if (!orderData['b_address'] && orderData['s_address']) {
+      orderData['b_address'] = orderData['s_address'];
+    }
+
+    //Create order
     let result = await this.orderRepo.create(orderData);
 
     // create order histories
@@ -564,7 +586,7 @@ export class OrdersService {
       },
       data: convertDataToIntegrate(result),
     };
-
+    console.log(result);
     try {
       const response = await axios(configPushOrderToAppcore);
 
@@ -592,6 +614,11 @@ export class OrdersService {
       await this.orderHistoryRepo.create(updatedOrder, false);
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
+      if (error.response.status == 400 || error.status == 400) {
+        await this.orderRepo.delete({ order_id: result.order_id });
+        await this.orderHistoryRepo.delete({ order_id: result.order_id });
+        await this.orderDetailRepo.delete({ order_id: result.order_id });
+      }
       console.log(error);
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${

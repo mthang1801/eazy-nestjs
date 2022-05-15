@@ -97,6 +97,8 @@ import {
   momoRequestId,
 } from '../../constants/momoPayment';
 import { request } from 'https';
+import { constants } from 'fs';
+import { GatewayName } from '../../constants/paymentGatewayName';
 
 @Injectable()
 export class PaymentService {
@@ -299,7 +301,7 @@ export class PaymentService {
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'HD Saigon';
+          gatewayName = GatewayName.HD_Saigon;
           break; //HD Saigon
         case 2:
           installed_money_account_id = 20574874;
@@ -308,7 +310,7 @@ export class PaymentService {
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'Home Credit';
+          gatewayName = GatewayName.Home_Credit;
           break; // Home Credit
         case 3:
           installed_money_account_id = 100000011;
@@ -317,7 +319,7 @@ export class PaymentService {
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'Shinhan';
+          gatewayName = GatewayName.Shinhan;
           break; //Shinhan
       }
 
@@ -400,170 +402,6 @@ export class PaymentService {
       );
     } catch (error) {
       throw new HttpException(error.message, error.status);
-    }
-  }
-
-  async momoPayment(data: CreateMomoPaymentDto) {
-    //Check user
-    let user;
-
-    if (data.user_id) {
-      user = await this.userRepo.findOne({
-        select: userSelector,
-        join: userJoiner,
-        where: { [`${Table.USERS}.user_id`]: data.user_id },
-      });
-    }
-
-    if (!user) {
-      user = await this.userRepo.findOne({
-        select: userSelector,
-        join: userJoiner,
-        where: {
-          [`${Table.USERS}.phone`]: data['s_phone'],
-        },
-      });
-      if (!user) {
-        await this.customerService.createCustomerFromWebPayment(data);
-        user = await this.userRepo.findOne({
-          select: userSelector,
-          join: userJoiner,
-          where: {
-            [`${Table.USERS}.phone`]: data['s_phone'],
-          },
-        });
-      }
-    }
-
-    let cartItems = [];
-    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
-
-    if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng', 404);
-    }
-    cartItems = await this.cartItemRepo.find({
-      select: `*, ${Table.CART_ITEMS}.amount`,
-      join: cartPaymentJoiner,
-      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-    });
-
-    let totalPrice = cartItems.reduce(
-      (acc, ele) => acc + ele.price * ele.amount,
-      0,
-    );
-
-    let ref_order_id = generateRandomString();
-    let payCreditType = 2;
-
-    let sendData: any = {
-      user_id: user.user_id,
-      user_appcore_id: user.user_appcore_id,
-      s_phone: data.s_phone,
-      s_lastname: data.s_lastname,
-      s_city: data.s_city,
-      s_district: data.s_district,
-      s_ward: data.s_ward,
-      s_address: data.s_address,
-      order_items: cartItems,
-      ref_order_id,
-      pay_credit_type: payCreditType,
-      coupon_code: data.coupon_code ? data.coupon_code : null,
-      order_type: OrderType.online,
-    };
-
-    //Check coupon if it exist
-    if (data.coupon_code) {
-      let checkCouponData = {
-        store_id: 67107,
-        coupon_code: data['coupon_code'],
-        coupon_programing_id: 'HELLO_123',
-        phone: data.s_phone,
-        products: cartItems.map(({ product_id, amount }) => ({
-          product_id,
-          amount,
-        })),
-      };
-
-      let checkResult = await this.promotionService.checkCoupon(
-        checkCouponData,
-      );
-
-      if (checkResult['isValid']) {
-        // totalPrice -= checkResult['discountMoney'];
-      }
-    }
-
-    //Check shipping fee
-    if (data.shipping_fee_location_id) {
-      let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
-        select: '*',
-        join: shippingFeeLocationsJoiner,
-        where: {
-          [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
-            data.shipping_fee_location_id,
-        },
-      });
-
-      if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
-        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
-        sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
-        sendData['transfer_amount'] =
-          +totalPrice + +shippingFeeLocation.value_fee;
-        totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
-      }
-    }
-
-    sendData['transfer_amount'] = +totalPrice;
-    const cryptography = new Cryptography();
-    let extraData = cryptography.encodeBase64(
-      JSON.stringify({
-        s_lastname: data.s_lastname,
-        s_phone: data.s_phone,
-        s_city: data.s_city,
-        s_ward: data.s_ward,
-        s_district: data.s_district,
-        s_address: data.s_address,
-      }),
-    );
-
-    let rawSignature = `accessKey=${MOMO_ACCESS_KEY}&amount=${+totalPrice}&extraData=${extraData}&ipnUrl=${momoIpnUrl}&orderId=${ref_order_id}&orderInfo=${momoOrderInfo}&partnerCode=${MOMO_PARTNER_CODE}&redirectUrl=${momoRedirectUrl(
-      data.callback_url,
-    )}&requestId=${momoRequestId}&requestType=${momoRequestType}`;
-    console.log(rawSignature);
-    const signature = crypto
-      .createHmac('sha256', MOMO_SECRET_KEY)
-      .update(rawSignature)
-      .digest('hex');
-
-    const requestBody: any = {
-      partnerCode: MOMO_PARTNER_CODE,
-      partnerName: MOMO_PARTNER_NAME,
-      accessKey: MOMO_ACCESS_KEY,
-      requestId: ref_order_id,
-      amount: totalPrice,
-      orderId: ref_order_id,
-      orderInfo: momoOrderInfo,
-      redirectUrl: momoRedirectUrl(data.callback_url),
-      ipnUrl: momoIpnUrl,
-      extraData,
-      requestType: momoRequestType,
-      signature,
-      lang: 'vi',
-    };
-    console.log(requestBody);
-    try {
-      const response = await axios({
-        url: 'https://test-payment.momo.vn/v2/gateway/api/create',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        data: requestBody,
-      });
-
-      console.log(response);
-    } catch (error) {
-      console.log(error.response.data);
     }
   }
 
@@ -831,7 +669,7 @@ export class PaymentService {
       const currentOrder = await this.orderRepo.findOne({ ref_order_id });
       let orderPaymentData = {
         ...orderDataResponse,
-        gateway_name: 'Payoo',
+        gateway_name: GatewayName.Payoo,
         order_gateway_id: orderDataResponse?.order_id || null,
         checksum: response.data.checksum,
         expiry_date: orderDataResponse?.expire_date
@@ -940,6 +778,10 @@ export class PaymentService {
     }
   }
 
+  async momoNotify(data) {
+    console.log(data);
+  }
+
   async getProductInstallment(params) {
     let { product_id, prepaid_percentage, company_id } = params;
 
@@ -1000,6 +842,217 @@ export class PaymentService {
         }
         return results;
       }
+    }
+  }
+
+  async momoPayment(data: CreateMomoPaymentDto) {
+    //Check user
+    let user;
+    if (data.user_id) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+    }
+    if (!user) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: {
+          [`${Table.USERS}.phone`]: data['s_phone'],
+        },
+      });
+      if (!user) {
+        await this.customerService.createCustomerFromWebPayment(data);
+        user = await this.userRepo.findOne({
+          select: userSelector,
+          join: userJoiner,
+          where: {
+            [`${Table.USERS}.phone`]: data['s_phone'],
+          },
+        });
+      }
+    }
+    let cartItems = [];
+    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+    if (!cart) {
+      throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    }
+    cartItems = await this.cartItemRepo.find({
+      select: `*, ${Table.CART_ITEMS}.amount`,
+      join: cartPaymentJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    });
+    let totalPrice = cartItems.reduce(
+      (acc, ele) => acc + ele.price * ele.amount,
+      0,
+    );
+    let ref_order_id = generateRandomString();
+    let payCreditType = 2;
+    let sendData: any = {
+      user_id: user.user_id,
+      user_appcore_id: user.user_appcore_id,
+      s_phone: data.s_phone,
+      s_lastname: data.s_lastname,
+      s_city: data.s_city,
+      s_district: data.s_district,
+      s_ward: data.s_ward,
+      s_address: data.s_address,
+      order_items: cartItems,
+      ref_order_id,
+      pay_credit_type: payCreditType,
+      coupon_code: data.coupon_code ? data.coupon_code : null,
+      order_type: OrderType.online,
+      callback_url: data.callback_url,
+    };
+    //Check coupon if it exist
+    if (data.coupon_code) {
+      let checkCouponData = {
+        store_id: 67107,
+        coupon_code: data['coupon_code'],
+        coupon_programing_id: 'HELLO_123',
+        phone: data.s_phone,
+        products: cartItems.map(({ product_id, amount }) => ({
+          product_id,
+          amount,
+        })),
+      };
+      let checkResult = await this.promotionService.checkCoupon(
+        checkCouponData,
+      );
+      if (checkResult['isValid']) {
+        // totalPrice -= checkResult['discountMoney'];
+      }
+    }
+    //Check shipping fee
+    if (data.shipping_fee_location_id) {
+      let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+        select: '*',
+        join: shippingFeeLocationsJoiner,
+        where: {
+          [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
+            data.shipping_fee_location_id,
+        },
+      });
+      if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
+        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+        sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
+        sendData['transfer_amount'] =
+          +totalPrice + +shippingFeeLocation.value_fee;
+        totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
+      }
+    }
+    sendData['transfer_amount'] = +totalPrice;
+
+    const responseData = await this.requestPaymentMomo(sendData);
+
+    sendData['paymentStatus'] = PaymentStatus.new;
+
+    const newOrder = await this.orderService.createOrder(user, sendData);
+
+    await this.orderPaymentRepo.create({
+      order_id: newOrder['order_id'],
+      order_gateway_id: responseData['orderId'],
+      order_no: responseData['orderId'],
+      gateway_name: GatewayName.Momo,
+      amount: +totalPrice,
+      payment_code: responseData.resultCode,
+      errormsg: responseData.message,
+      payment_url: responseData.payUrl,
+    });
+    return responseData;
+  }
+
+  async requestPaymentMomo(data) {
+    const partnerCode = MOMO_PARTNER_CODE;
+    const accessKey = MOMO_ACCESS_KEY;
+    const secretkey = MOMO_SECRET_KEY;
+    const requestId = data['ref_order_id'];
+    const orderId = data['ref_order_id'];
+    const orderInfo = 'Pay with MoMo';
+    const redirectUrl = momoRedirectUrl(data['callback_url']);
+    const ipnUrl = momoIpnUrl;
+    const amount = data['transfer_amount'];
+    const requestType = 'captureWallet';
+    const cryptography = new Cryptography();
+    const extraData = cryptography.encodeBase64(
+      JSON.stringify({
+        s_lastname: data['s_lastname'],
+        s_phone: data['s_phone'],
+        s_city: data['s_city'],
+        s_district: data['s_district'],
+        s_ward: data['s_ward'],
+        s_address: data['s_address'],
+      }),
+    );
+
+    //before sign HMAC SHA256 with format
+    //accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
+    var rawSignature =
+      'accessKey=' +
+      accessKey +
+      '&amount=' +
+      amount +
+      '&extraData=' +
+      extraData +
+      '&ipnUrl=' +
+      ipnUrl +
+      '&orderId=' +
+      orderId +
+      '&orderInfo=' +
+      orderInfo +
+      '&partnerCode=' +
+      partnerCode +
+      '&redirectUrl=' +
+      redirectUrl +
+      '&requestId=' +
+      requestId +
+      '&requestType=' +
+      requestType;
+
+    var signature = cryptography.generateSHA512(rawSignature, secretkey);
+
+    //json object send to MoMo endpoint
+    const requestBody = {
+      partnerCode,
+      accessKey,
+      requestId,
+      amount,
+      orderId,
+      orderInfo,
+      redirectUrl,
+      ipnUrl,
+      extraData,
+      requestType,
+      signature,
+      lang: 'vi',
+    };
+    try {
+      console.log('4');
+      const response = await axios({
+        url: 'https://test-payment.momo.vn/v2/gateway/api/create',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        data: requestBody,
+      });
+
+      if (!response?.data) {
+        throw new HttpException(
+          'Kết nối thanh toán đến ví momo không thành công.',
+          404,
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error?.response?.data?.message || error.response,
+        error?.response?.status || error.status,
+      );
     }
   }
 }
