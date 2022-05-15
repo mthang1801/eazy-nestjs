@@ -139,6 +139,7 @@ import {
   userPaymentJoiner,
 } from '../../utils/joinTable';
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
+import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 
 @Injectable()
 export class OrdersService {
@@ -647,7 +648,7 @@ export class OrdersService {
     }
   }
 
-  async updateAppcoreOrderPayment(order_id) {
+  async updateAppcoreOrderPayment(order_id, gateway = GatewayName.Payoo) {
     try {
       let orderPayment = await this.orderPaymentRepo.findOne({
         order_id,
@@ -656,15 +657,23 @@ export class OrdersService {
       if (!order) {
         throw new HttpException('Không tìm thấy đơn hàng', 404);
       }
-      let installed_money_account_id = 20630206;
+
+      let installed_money_account_id;
+      switch (gateway) {
+        case GatewayName.Momo:
+          installed_money_account_id = GatewayAppcoreId.Momo;
+          break;
+        default:
+          installed_money_account_id = GatewayAppcoreId.Payoo;
+      }
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,
-        installmentCode: orderPayment['order_no'],
+        installmentCode: orderPayment['order_gateway_id'],
         paymentStatus: 'success',
         totalAmount: +orderPayment['amount'],
       };
 
-      const response = await axios({
+      await axios({
         method: 'PUT',
         url: UPDATE_ORDER_PAYMENT(order.order_code),
         data: paymentAppcoreData,
@@ -674,7 +683,7 @@ export class OrdersService {
         { order_id },
         {
           installed_money_account_id,
-          installed_money_code: orderPayment['order_no'],
+          installed_money_code: orderPayment['order_gateway_id'],
           status: OrderStatus.purchased,
           payment_status: PaymentStatus.success,
           updated_at: formatStandardTimeStamp(),

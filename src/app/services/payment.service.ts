@@ -98,7 +98,7 @@ import {
 } from '../../constants/momoPayment';
 import { request } from 'https';
 import { constants } from 'fs';
-import { GatewayName } from '../../constants/paymentGatewayName';
+import { GatewayName } from '../../constants/paymentGateway';
 
 @Injectable()
 export class PaymentService {
@@ -772,14 +772,40 @@ export class PaymentService {
         orderPayment = await this.orderPaymentRepo.create(newOrderPaymentData);
       }
 
-      await this.orderService.updateAppcoreOrderPayment(order.order_id);
+      await this.orderService.updateAppcoreOrderPayment(
+        order.order_id,
+        GatewayName.Payoo,
+      );
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
   }
 
   async momoNotify(data) {
-    console.log(data);
+    const updatedOrderPayment = await this.orderPaymentRepo.update(
+      { order_no: data['orderId'] },
+      {
+        order_gateway_id: data['transId'],
+        payment_code: data['transId'],
+        errormsg: data['message'],
+        checksum: data['signature'],
+        amount: data['amount'],
+        expiry_date: new Date(data['responseTime'] + 30 * 86400 * 1000),
+        payment_type: data['payType'],
+      },
+      true,
+    );
+    if (!updatedOrderPayment['order_id']) {
+      return;
+    }
+    try {
+      await this.orderService.updateAppcoreOrderPayment(
+        updatedOrderPayment.order_id,
+        GatewayName.Momo,
+      );
+    } catch (error) {
+      throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
+    }
   }
 
   async getProductInstallment(params) {
@@ -953,7 +979,6 @@ export class PaymentService {
 
     await this.orderPaymentRepo.create({
       order_id: newOrder['order_id'],
-      order_gateway_id: responseData['orderId'],
       order_no: responseData['orderId'],
       gateway_name: GatewayName.Momo,
       amount: +totalPrice,
