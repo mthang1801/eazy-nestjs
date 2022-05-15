@@ -398,12 +398,10 @@ export class OrdersService {
       }
     }
 
-    console.log(sendData);
-
     const result = await this.createOrder(user, sendData);
 
-    // await this.cartRepo.delete({ cart_id: cart.cart_id });
-    // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    await this.cartRepo.delete({ cart_id: cart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
     return result;
   }
 
@@ -493,6 +491,7 @@ export class OrdersService {
       }
     }
 
+    orderData['subtotal'] = +orderData['total'];
     if (data.shipping_cost) {
       orderData['subtotal'] = +orderData['total'] + +data.shipping_cost;
     }
@@ -1058,6 +1057,7 @@ export class OrdersService {
       orderData['user_id'] = user.user_id;
     }
 
+    orderData['subtotal'] = orderData['total'];
     let result = await this.orderRepo.create(orderData);
     // create order histories
 
@@ -1227,9 +1227,14 @@ export class OrdersService {
         0,
       );
 
+      let subtotal = total;
+      if (order.shipping_cost) {
+        subtotal += order.shipping_cost;
+      }
+
       await this.orderRepo.update(
         { order_code },
-        { total, updated_date: formatStandardTimeStamp() },
+        { total, subtotal, updated_date: formatStandardTimeStamp() },
       );
     }
   }

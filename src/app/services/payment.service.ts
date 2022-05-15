@@ -368,9 +368,6 @@ export class PaymentService {
         payment_status: PaymentStatus.success,
       };
 
-      delete sendData['created_at'];
-      delete sendData['updated_at'];
-
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({
@@ -387,7 +384,7 @@ export class PaymentService {
         totalAmount: +totalPrice,
       };
 
-      const response = await axios({
+      await axios({
         method: 'PUT',
         url: UPDATE_ORDER_PAYMENT(result['order_code']),
         data: paymentAppcoreData,
