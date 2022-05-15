@@ -1057,7 +1057,7 @@ export class OrdersService {
       orderData['user_id'] = user.user_id;
     }
 
-    orderData['subtotal'] = orderData['total'];
+    orderData['subtotal'] = +orderData['total'];
     let result = await this.orderRepo.create(orderData);
     // create order histories
 
