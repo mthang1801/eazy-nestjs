@@ -1229,7 +1229,7 @@ export class OrdersService {
 
       let subtotal = total;
       if (order.shipping_cost) {
-        subtotal += order.shipping_cost;
+        subtotal += +order.shipping_cost;
       }
 
       await this.orderRepo.update(
