@@ -6,7 +6,8 @@ export function Like<T>(value: T): {
   operator: string;
   value: T;
 } {
-  let _value = processGetTextDataFromMysql(value);
+  let _value = preprocessAddTextDataToMysql(value);
+
   return { operator: 'LIKE', value: _value };
 }
 
