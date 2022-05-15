@@ -98,7 +98,7 @@ import {
 } from '../../constants/momoPayment';
 import { request } from 'https';
 import { constants } from 'fs';
-import { GatewayName } from '../../constants/paymentGateway';
+import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 
 @Injectable()
 export class PaymentService {
@@ -285,17 +285,17 @@ export class PaymentService {
           throw new HttpException('Tạo đơn thất bại', 401);
         }
       }
-      console.log(user);
+
       let totalPrice = product['price'];
       let cartItems = [{ ...product, amount: 1 }];
 
       let responseData;
 
-      let gatewayName = '';
-      let installed_money_account_id = 20574861;
+      let gatewayName = GatewayName.HD_Saigon;
+      let installed_money_account_id = GatewayAppcoreId.HD_Saigon;
       switch (+data.company_id) {
         case 1:
-          installed_money_account_id = 20574861;
+          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
           responseData = calculateInstallmentInterestRateHDSaiGon(
             totalPrice,
             data.prepaid_percentage,
@@ -304,7 +304,7 @@ export class PaymentService {
           gatewayName = GatewayName.HD_Saigon;
           break; //HD Saigon
         case 2:
-          installed_money_account_id = 20574874;
+          installed_money_account_id = GatewayAppcoreId.Home_Credit;
           responseData = calculateInstallmentInterestRateHomeCredit(
             totalPrice,
             data.prepaid_percentage,
@@ -313,7 +313,7 @@ export class PaymentService {
           gatewayName = GatewayName.Home_Credit;
           break; // Home Credit
         case 3:
-          installed_money_account_id = 100000011;
+          installed_money_account_id = GatewayAppcoreId.Shinhan;
           responseData = calculateInstallmentInterestRateHDSaiGon(
             totalPrice,
             data.prepaid_percentage,
@@ -327,9 +327,6 @@ export class PaymentService {
       let totalInterest = responseData.totalInterest;
       let interestPerMonth = responseData.interestPerMonth;
       let prepaidAmount = responseData.prepaidAmount;
-      //20574874 Home credit
-      //20630206 payoo
-      //100000011 Shinhan
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
@@ -790,7 +787,9 @@ export class PaymentService {
         errormsg: data['message'],
         checksum: data['signature'],
         amount: data['amount'],
-        expiry_date: new Date(data['responseTime'] + 30 * 86400 * 1000),
+        expiry_date: formatStandardTimeStamp(
+          new Date(data['responseTime'] + 30 * 86400 * 1000),
+        ),
         payment_type: data['payType'],
       },
       true,
