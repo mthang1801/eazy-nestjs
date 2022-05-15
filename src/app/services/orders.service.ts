@@ -1229,7 +1229,7 @@ export class OrdersService {
 
       await this.orderRepo.update(
         { order_code },
-        { total, udpated_date: formatStandardTimeStamp() },
+        { total, updated_date: formatStandardTimeStamp() },
       );
     }
   }
