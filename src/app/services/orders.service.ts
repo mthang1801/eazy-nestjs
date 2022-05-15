@@ -690,6 +690,7 @@ export class OrdersService {
         },
       );
     } catch (error) {
+      console.log(error);
       throw new HttpException('Something went wrong', 409);
     }
   }
