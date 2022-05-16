@@ -212,6 +212,8 @@ import { LogEntity } from '../entities/logs.entity';
 import { LogRepository } from '../repositories/log.repository';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
+import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
+import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
 import {
   categoryFeatureJoiner,
   categoryFeaturesSetJoiner,
@@ -1416,7 +1418,7 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
-    let { search } = params;
+    let { search, variant_ids } = params;
 
     let { page, skip, limit } = getPageSkipLimit(params);
 
@@ -1427,35 +1429,59 @@ export class ProductService {
       },
     ];
 
-    const productsList = await this.productCategoryRepo.find({
-      select: [
-        ...getDetailProductsListSelectorFE,
-        `${Table.PRODUCTS_CATEGORIES}.position as position`,
-      ],
-      join: productsListByCategoryJoiner(),
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-      orderBy: filterOrder,
-      skip,
-      limit,
-    });
+    let productsList = [];
+    let count;
+    if (variant_ids) {
+      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
+        variant_ids.split(','),
+      );
 
-    const count = await this.productCategoryRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: productsListByCategoryJoiner(),
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-    });
+      productsList = await this.productFeatureValueRepo.find({
+        select: getProductListByVariantsInCategory,
+        join: productFeatureVariantByCategoryJoiner,
+
+        where: productsListsSearchFilter(search, filterCondition),
+        orderBy: filterOrder,
+        skip,
+        limit,
+      });
+
+      count = await this.productFeatureValueRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
+        join: productFeatureVariantByCategoryJoiner,
+        where: productsListsSearchFilter(search, filterCondition),
+      });
+    } else {
+      productsList = await this.productCategoryRepo.find({
+        select: [
+          ...getDetailProductsListSelectorFE,
+          `${Table.PRODUCTS_CATEGORIES}.position as position`,
+        ],
+        join: productsListByCategoryJoiner(),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
+        orderBy: filterOrder,
+        skip,
+        limit,
+      });
+
+      count = await this.productCategoryRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productsListByCategoryJoiner(),
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterCondition,
+            )
+          : productsListsSearchFilter(search, filterCondition),
+      });
+    }
 
     for (let productItem of productsList) {
       // get images

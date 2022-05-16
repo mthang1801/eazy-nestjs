@@ -255,21 +255,6 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
-  // @Delete('/:id')
-  // @UseGuards(AuthGuard)
-  // async delete(
-  //   @Param('id') id: number,
-  //   @Res() res: Response,
-  // ): Promise<IResponse> {
-  //   const boolRes = await this.service.delete(id);
-  //   return boolRes
-  //     ? this.responseSuccess(res, null, 'Xoá thành công')
-  //     : this.responseNotFound(
-  //         res,
-  //         `Xoá không thành công, không tìm thấy id ${id}.`,
-  //       );
-  // }
-
   @Get(':id/products')
   @UseGuards(AuthGuard)
   async getProductsList(

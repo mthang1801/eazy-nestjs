@@ -66,6 +66,27 @@ export const getDetailProductsListSelectorFE = [
   ...getProductsListSelectorBE,
   `${Table.CATEGORIES}.slug`,
 ];
+export const getProductListByVariantsInCategory = [
+  `DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)`,
+  `${Table.PRODUCT_PRICES}.price`,
+  `${Table.PRODUCTS}.product_type`,
+  `${Table.PRODUCTS}.barcode`,
+  `${Table.PRODUCTS}.amount`,
+  `${Table.PRODUCTS}.thumbnail`,
+  `${Table.PRODUCTS}.product_function`,
+  `${Table.PRODUCT_DESCRIPTION}.*`,
+  `${Table.PRODUCT_PRICES}.*`,
+  `${Table.PRODUCTS}.product_code`,
+  `${Table.PRODUCTS}.slug as productSlug`,
+  `${Table.PRODUCTS}.status`,
+  `${Table.PRODUCTS}.parent_product_id`,
+  `${Table.PRODUCTS}.parent_product_appcore_id`,
+  `${Table.PRODUCTS}.product_appcore_id`,
+  `${Table.PRODUCTS}.product_status`,
+  `${Table.PRODUCTS}.is_installment`,
+  `${Table.PRODUCTS_CATEGORIES}.position`,
+  `${Table.CATEGORIES}.slug`,
+];
 
 export const getTradeinDetailProductsListSelectorBE = [
   ...getProductsListSelectorBE,
