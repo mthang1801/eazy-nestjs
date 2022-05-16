@@ -68,6 +68,7 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Put(':tradein_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('tradein_id') tradein_id: number,

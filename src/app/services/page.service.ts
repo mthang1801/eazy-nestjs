@@ -319,7 +319,19 @@ export class PageService {
   async createPageDetailValues(
     page_detail_id: number,
     data: CreatePageDetailValueDto,
-  ) {}
+  ) {
+    if (data.page_detail_values && data.page_detail_values.length) {
+      await this.pageDetailValueRepo.delete({ page_detail_id });
+      for (let pageDetailValue of data.page_detail_values) {
+        const newPageDetailData = {
+          ...new PageDetailValueEntity(),
+          ...this.pageDetailValueRepo.setData(pageDetailValue),
+          page_detail_id,
+        };
+        await await this.pageDetailRepo.create(newPageDetailData);
+      }
+    }
+  }
 
   async getPages(params: IGetPagesFilters = {}) {
     let { page, skip, limit } = getPageSkipLimit(params);
