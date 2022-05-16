@@ -826,5 +826,6 @@ export class PromotionAccessoryService {
         await this.promoAccessoryDetailRepo.create(newProgramDetailData);
       }
     }
+    return this.get(discountProgram.accessory_id);
   }
 }
