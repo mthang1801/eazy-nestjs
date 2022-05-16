@@ -133,8 +133,8 @@ import { StickerEntity } from '../entities/sticker.entity';
 import * as moment from 'moment';
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
-import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
-import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
+import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import {
   productCategoryJoiner,
   productByCategoryIdJoiner,
@@ -250,7 +250,7 @@ export class ProductService {
     private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
-    private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
+    private productPromoAccessoryRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
     private accessoryService: PromotionAccessoryService,
     private categoryService: CategoryService,
@@ -4075,7 +4075,7 @@ export class ProductService {
   async getAccessoriesByProductId(accessory_id: number, source = 0) {
     // source = 0 : CMS, 1 : FE
     let condition: any = {
-      [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+      [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]: accessory_id,
     };
     console.log();
     if (source == 1) {
@@ -4088,7 +4088,7 @@ export class ProductService {
           formatStandardTimeStamp(new Date()),
         ),
         [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.status`]: 'A',
+        [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
       };
     }
     return this.productPromoAccessoryRepo.find({

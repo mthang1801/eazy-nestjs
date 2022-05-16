@@ -1,8 +1,8 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
-import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
-import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
+import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import { CreatePromotionAccessoryDto } from '../dto/promotionAccessories/create-promotionAccessory.dto';
 import {
   productLeftJoiner,
@@ -23,17 +23,20 @@ import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableCondi
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
 import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
 import { In } from '../../database/operators/operators';
+import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import {
   getProductsListSelectorBE,
   getDetailProductsListSelectorFE,
 } from '../../utils/tableSelector';
+import { ProductPricesEntity } from '../entities/productPrices.entity';
 
 @Injectable()
 export class PromotionAccessoryService {
   constructor(
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
-    private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
+    private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
   ) {}
 
   async create(data: CreatePromotionAccessoryDto, user) {
@@ -102,14 +105,14 @@ export class PromotionAccessoryService {
         });
 
         const newProductData = {
-          ...new ProductPromotionAccessoryEntity(),
-          ...this.productPromoAccessoryRepo.setData(productItem),
+          ...new PromotionAccessoryDetailEntity(),
+          ...this.promoAccessoryDetailRepo.setData(productItem),
           sale_price: product['price'],
           created_by: user.user_id,
           updated_by: user.user_id,
           accessory_id: newPromotionAccessory.accessory_id,
         };
-        await this.productPromoAccessoryRepo.create(newProductData, false);
+        await this.promoAccessoryDetailRepo.create(newProductData, false);
       }
     }
   }
@@ -144,7 +147,8 @@ export class PromotionAccessoryService {
       select: getProductAccessorySelector,
       join: productPromotionAccessoryJoiner,
       where: {
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+        [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
+          accessory_id,
       },
     });
 
@@ -209,7 +213,7 @@ export class PromotionAccessoryService {
     }
 
     if (data.products && data.products.length) {
-      await this.productPromoAccessoryRepo.delete({ accessory_id });
+      await this.promoAccessoryDetailRepo.delete({ accessory_id });
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
@@ -218,14 +222,14 @@ export class PromotionAccessoryService {
         });
 
         const newProductData = {
-          ...new ProductPromotionAccessoryEntity(),
-          ...this.productPromoAccessoryRepo.setData(productItem),
+          ...new PromotionAccessoryDetailEntity(),
+          ...this.promoAccessoryDetailRepo.setData(productItem),
           sale_price: product['price'],
           created_by: user.user_id,
           updated_by: user.user_id,
           accessory_id: accessory_id,
         };
-        await this.productPromoAccessoryRepo.create(newProductData, false);
+        await this.promoAccessoryDetailRepo.create(newProductData, false);
       }
     }
 
@@ -281,8 +285,8 @@ export class PromotionAccessoryService {
     });
 
     for (let accessoryItem of accessoriesList) {
-      const productsCount = await this.productPromoAccessoryRepo.find({
-        select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id) as total `,
+      const productsCount = await this.promoAccessoryDetailRepo.find({
+        select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id) as total `,
         where: { accessory_id: accessoryItem.accessory_id },
       });
       accessoryItem['display_at'] = moment(accessoryItem['display_at']).format(
@@ -310,7 +314,7 @@ export class PromotionAccessoryService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
-    const accessoriesProducts = await this.productPromoAccessoryRepo.find({
+    const accessoriesProducts = await this.promoAccessoryDetailRepo.find({
       select: '*',
       join: {
         [JoinTable.innerJoin]: {
@@ -320,12 +324,12 @@ export class PromotionAccessoryService {
           },
           [Table.PRODUCTS]: {
             fieldJoin: `${Table.PRODUCTS}.product_id`,
-            rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+            rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
           },
         },
       },
       where: {
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`]: product_id,
+        [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`]: product_id,
       },
     });
 
@@ -340,8 +344,6 @@ export class PromotionAccessoryService {
     if (accessory) {
       return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
-    console.log(convertedData);
-    // await this.itgCheckConstraint(convertedData);
 
     const accessoryData = {
       ...new PromotionAccessoryEntity(),
@@ -363,13 +365,29 @@ export class PromotionAccessoryService {
         // Tạm thời ignore SP chưa tồn tại
         if (product) {
           let newAccessoryItemData = {
-            ...new ProductPromotionAccessoryEntity(),
-            ...this.productPromoAccessoryRepo.setData(accessoryItem),
+            ...new PromotionAccessoryDetailEntity(),
+            ...this.promoAccessoryDetailRepo.setData(accessoryItem),
             accessory_id: newAccessory['accessory_id'],
             product_id: product['product_id'] || 0,
             sale_price: product['price'] || 0,
           };
-          await this.productPromoAccessoryRepo.create(
+
+          if (type == 4 && accessoryItem['promotion_price']) {
+            const productPriceData = {
+              promotion_price: accessoryItem['promotion_price'],
+              promotion_discount: accessoryItem['promotion_discount'] || 0,
+              promotion_discount_type:
+                accessoryItem['promotion_discount_type'] || 0,
+              promotion_start_at: newAccessory['display_at'],
+              promotion_end_at: newAccessory['end_at'],
+            };
+            await this.productPriceRepo.update(
+              { product_id: product.product_id },
+              productPriceData,
+            );
+          }
+
+          await this.promoAccessoryDetailRepo.create(
             newAccessoryItemData,
             false,
           );
@@ -434,7 +452,7 @@ export class PromotionAccessoryService {
     let skip = (page - 1) * limit;
 
     let filterCondition = {};
-    // filterCondition[`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`] =
+    // filterCondition[`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`] =
     //   accessory_id;
 
     if (category_id) {
@@ -509,7 +527,7 @@ export class PromotionAccessoryService {
       Array.isArray(convertedData['accessory_items']) &&
       convertedData['accessory_items'].length
     ) {
-      await this.productPromoAccessoryRepo.delete({
+      await this.promoAccessoryDetailRepo.delete({
         accessory_id: accessory['accessory_id'],
       });
       for (let accessoryItem of convertedData['accessory_items']) {
@@ -521,14 +539,14 @@ export class PromotionAccessoryService {
         // Tạm thời ignore SP chưa tồn tại
         if (product) {
           let newAccessoryItemData = {
-            ...new ProductPromotionAccessoryEntity(),
-            ...this.productPromoAccessoryRepo.setData(accessoryItem),
+            ...new PromotionAccessoryDetailEntity(),
+            ...this.promoAccessoryDetailRepo.setData(accessoryItem),
             accessory_id: accessory['accessory_id'],
             product_id: product['product_id'] || 0,
             sale_price: product['price'] || 0,
           };
 
-          await this.productPromoAccessoryRepo.create(
+          await this.promoAccessoryDetailRepo.create(
             newAccessoryItemData,
             false,
           );
