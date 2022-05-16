@@ -20,9 +20,6 @@ export class UpdatePageDto {
   status: string = 'A';
 
   @IsOptional()
-  device_type: string = 'D';
-
-  @IsOptional()
   link_url: string;
 
   @IsOptional()
@@ -49,6 +46,9 @@ class PageDetail {
 
   @IsOptional()
   status: string;
+
+  @IsOptional()
+  device_type: string;
 
   @IsOptional()
   @ValidateNested()

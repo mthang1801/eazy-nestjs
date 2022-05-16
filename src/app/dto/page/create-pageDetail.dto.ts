@@ -27,6 +27,9 @@ export class CreatePageDetailDto {
   status: string;
 
   @IsOptional()
+  device_type: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => PageDetailValue)
   page_detail_values: PageDetailValue[];

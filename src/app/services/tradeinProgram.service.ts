@@ -1131,8 +1131,8 @@ export class TradeinProgramService {
 
       tradeinProgram['criteria_set'] = [];
 
-      if (data.applied_criteria_set && data.applied_criteria_set.length) {
-        for (let criteriaSelectionItem of data.applied_criteria_set) {
+      if (data.criteria_set && data.criteria_set.length) {
+        for (let criteriaSelectionItem of data.criteria_set) {
           const _criteriaSelection =
             await this.tradeinProgramCriteriaRepo.findOne({
               select: '*',

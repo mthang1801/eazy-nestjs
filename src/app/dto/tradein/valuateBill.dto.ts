@@ -8,7 +8,7 @@ export class ValuateBillDto {
   @ArrayNotEmpty()
   @ValidateNested()
   @Type(() => CriteriaSelection)
-  applied_criteria_set: CriteriaSelection[];
+  criteria_set: CriteriaSelection[];
 }
 
 class CriteriaSelection {

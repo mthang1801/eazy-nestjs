@@ -3,7 +3,6 @@ export class PageEntity {
   page_id: number = 0;
   page_name: string = '';
   page_type: number = 1;
-  device_type: string = 'D';
   status: string = 'A';
   link_url: string = '';
   created_at: string = formatStandardTimeStamp();
