@@ -51,3 +51,5 @@ export const IMPORT_ACCESSORY_CATEGORIES_API = `${TESTER_API}/productComponentCa
 
 export const FIND_TRADEIN_PROGRAM = (product_appcore_id) =>
   `${CORE_API}/trade-in/find-program-cms?productId=${product_appcore_id}`;
+
+export const CREATE_VALUATION_BILL_TO_APPCORE = `${CORE_API}/trade-in/evaluation`;

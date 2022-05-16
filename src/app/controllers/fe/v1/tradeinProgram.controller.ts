@@ -31,8 +31,8 @@ export class TradeinProgramController extends BaseController {
     @Res() res: Response,
     @Body() data,
   ): Promise<IResponse> {
-    await this.service.createValuationBill(data);
-    return this.responseSuccess(res);
+    const result = await this.service.createValuationBill(data);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/old-receipts/:user_id')
@@ -51,6 +51,15 @@ export class TradeinProgramController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.getValuationBill(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/valuation-bill/:id')
+  async getValuationBillById(
+    @Res() res,
+    @Param('id') id,
+  ): Promise<IResponse> {
+    const result = await this.service.getValuationBillById(id);
     return this.responseSuccess(res, result);
   }
 }

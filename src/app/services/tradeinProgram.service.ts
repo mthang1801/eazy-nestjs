@@ -47,6 +47,7 @@ import { ProductPricesEntity } from '../entities/productPrices.entity';
 import {
   convertTradeinProgramFromAppcore,
   convertTradeinProgramOldReceiptFromAppcore,
+  convertValuationBillFromCms,
 } from '../../utils/integrateFunctions';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
@@ -59,14 +60,23 @@ import { ProductsCategoriesRepository } from '../repositories/productsCategories
 import { tradeinOldReceiptSearchFilter } from '../../utils/tableConditioner';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
-import { FIND_TRADEIN_PROGRAM } from '../../constants/api.appcore';
+import { FIND_TRADEIN_PROGRAM, CREATE_VALUATION_BILL_TO_APPCORE } from '../../constants/api.appcore';
 import axios from 'axios';
 import { ValuateBillDto } from '../dto/tradein/valuateBill.dto';
 import { productPriceJoiner } from '../../utils/joinTable';
+import { defaultPassword } from '../../constants/defaultPassword';
+import { saltHashPassword } from '../../utils/cipherHelper';
+import { UserProfileEntity } from '../entities/userProfile.entity';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import {
   tradeinCriteriaJoiner,
   tradeinProgrameDetailJoiner,
 } from '../../utils/joinTable';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserDataEntity } from '../entities/userData.entity';
+import { CustomerService } from './customer.service';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -80,10 +90,14 @@ export class TradeinProgramService {
     private valuationBillCriteriaDetailRepo: ValuationBillCriteriaDetailRepository<ValuationBillCriteriaDetailEntity>,
     private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
     private userRepo: UserRepository<UserEntity>,
+    private userProfileRepo: UserProfileRepository<UserProfileEntity>,
+    private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
     private tradeinOldReceiptRepo: TradeinOldReceiptRepository<TradeinOldReceiptEntity>,
     private tradeinOldReceiptDetailRepo: TradeinOldReceiptDetailRepository<TradeinOldReceiptDetailEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
+    private customerService: CustomerService,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -325,11 +339,14 @@ export class TradeinProgramService {
   }
 
   async createValuationBill(data) {
-    //const check = await this.tradeinProgramCriteriaRepo.findOne();
-    //console.log(data);
+    let tempData = {product_id: data.product_id, criteria_set: data.criteria_set};
+    const vBill = await this.getValuationBill(tempData);
+    // console.log(vBill);
+    // console.log("============+++++++++++++++++============");
+    // console.log(data);
     const temp: any[] = [];
-    if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
-      for (let valuation_criteria of data.valuation_criteria_list) {
+    if (data.criteria_set && data.criteria_set.length) {
+      for (let valuation_criteria of data.criteria_set) {
         const checkCriteriaId = await this.tradeinProgramCriteriaRepo.findOne({
           criteria_id: valuation_criteria.criteria_id,
         });
@@ -343,40 +360,55 @@ export class TradeinProgramService {
             400,
           );
         }
-        // console.log(checkCriteriaId.criteria_appcore_id);
-        // console.log(checkCriteriaDetailId.criteria_detail_appcore_id);
         let criteria = {
           criteria_appcore_id: checkCriteriaId.criteria_appcore_id,
           criteria_detail_appcore_id:
-            checkCriteriaDetailId.criteria_detail_appcore_id,
+          checkCriteriaDetailId.criteria_detail_appcore_id,
         };
         temp.push(criteria);
       }
     }
 
-    let checkTradeinId = await this.tradeinProgramRepo.findOne({
-      tradein_id: data.tradein_id,
+    let checkProductId = await this.productRepo.findOne({
+      product_id: data.product_id,
     });
-    if (!checkTradeinId) {
-      throw new HttpException('Không tìm thấy tradein id.', 400);
+    if (!checkProductId) {
+      throw new HttpException('Không tìm thấy product id.', 400);
+    }
+    
+    //add user
+    let checkUserByPhone = await this.userRepo.findOne({phone: data.customer_phone})
+    let createCustomer: any;
+    if (!checkUserByPhone){
+      console.log("********************Create customer********************");
+      let customerInfo = {
+        s_phone: data.customer_phone,
+        s_lastname: data.customer_name,
+      }
+      createCustomer = await this.customerService.createCustomerFromWebPayment(customerInfo);
     }
 
+    //add bill
     let valuationBillData = {
       ...new ValuationBillEntity(),
       ...this.valuationBillRepo.setData(data),
-      tradein_appcore_id: checkTradeinId.tradein_appcore_id,
+      product_appcore_id: checkProductId.product_appcore_id,
+      user_id: (checkUserByPhone) ? checkUserByPhone.user_id : createCustomer.user_id,
+      tradein_id: vBill.tradeinProgram.tradein_id,
+      tradein_appcore_id: vBill.tradeinProgram.tradein_appcore_id,
+      collect_price: vBill.tradeinProgram.collect_price,
+      criteria_price: vBill.totalCriteriaPrice,
+      estimate_price: vBill.tradeinProgram.price - vBill.totalCriteriaPrice,
     };
 
     const newValuationBill = await this.valuationBillRepo.create(
       valuationBillData,
     );
 
-    console.log(newValuationBill);
-
     let i = 0;
 
-    if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
-      for (let valuation_criteria of data.valuation_criteria_list) {
+    if (data.criteria_set && data.criteria_set.length) {
+      for (let valuation_criteria of data.criteria_set) {
         const valuationBillCriteriaDetailData = {
           ...new ValuationBillCriteriaDetailEntity(),
           ...this.valuationBillCriteriaDetailRepo.setData(data),
@@ -387,12 +419,36 @@ export class TradeinProgramService {
           criteria_detail_appcore_id: temp[i].criteria_detail_appcore_id,
         };
         i++;
-        console.log(valuationBillCriteriaDetailData);
+        //console.log(valuationBillCriteriaDetailData);
         await this.valuationBillCriteriaDetailRepo.create(
           valuationBillCriteriaDetailData,
         );
       }
     }
+    const valuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
+    let core = convertValuationBillFromCms(valuationBill);
+    try {
+      const response = await axios({
+        url: CREATE_VALUATION_BILL_TO_APPCORE, data: core,
+        method: 'POST',
+      })
+      console.log(response);
+    }
+    catch(error){
+      console.log(error);
+    }
+    return valuationBill;
+  }
+
+  async getValuationBillById(id){
+    const valuationBill = await this.valuationBillRepo.findOne({"valuation_bill_id": id})
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: valuationBill.product_id },
+    });
+    const criteriaSet = await this.valuationBillCriteriaDetailRepo.find({"valuation_bill_id": id});
+    return {valuationBill, product, criteriaSet};
   }
 
   async get(tradein_id: number, params: any = {}) {
@@ -1187,7 +1243,7 @@ export class TradeinProgramService {
       }
 
       return {
-        totalCriteriaPrice,
+        totalCriteriaPrice: Math.abs(totalCriteriaPrice),
         tradeinProgram,
         applied_product: product,
       };

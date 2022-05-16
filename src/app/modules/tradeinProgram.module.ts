@@ -14,6 +14,7 @@ import { UsersModule } from './users.module';
 import { TradeinProgramControllerItg } from '../controllers/integration/v1/tradeinProgram.controller';
 import { TradeinOldReceiptRepository } from '../repositories/tradeinOldReceipt.repository';
 import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldReceiptDetail.repository';
+import { CustomerService } from '../services/customer.service';
 
 @Module({
   imports: [ProductsModule, UsersModule],
@@ -27,6 +28,7 @@ import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldRec
     ValuationBillCriteriaDetailRepository,
     TradeinOldReceiptRepository,
     TradeinOldReceiptDetailRepository,
+    CustomerService,
   ],
   exports: [
     TradeinProgramService,
