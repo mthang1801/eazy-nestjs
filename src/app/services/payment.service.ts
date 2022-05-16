@@ -262,7 +262,7 @@ export class PaymentService {
           throw new HttpException('Tạo đơn thất bại', 401);
         }
       }
-
+      console.log(user);
       let totalPrice = product['price'];
       let cartItems = [{ ...product, amount: 1 }];
 

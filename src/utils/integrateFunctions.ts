@@ -315,11 +315,11 @@ export const itgCustomerToAppcore = (data) => {
       continue;
     }
     if (app === 'b_district') {
-      cData[core] = +data[app] || 329;
+      cData[core] = +data[app] || 330;
       continue;
     }
     if (app === 'b_ward') {
-      cData[core] = +data[app] || 10266;
+      cData[core] = +data[app] || 10390;
       continue;
     }
     if (app === 'email') {
@@ -329,14 +329,20 @@ export const itgCustomerToAppcore = (data) => {
       continue;
     }
     if (app === 'birthday') {
-      if (checkValidTimestamp(data[app])) {
+      if (moment(data[app]).isValid()) {
         cData[core] = moment(data[app]).format('YYYY-MM-DD');
+      } else {
+        cData[core] = moment('1970-01-01').format('YYYY-MM-DD');
       }
+      continue;
+    }
+    if (app === 'note') {
+      cData[core] = data[app] || '';
       continue;
     }
     cData[core] = data[app];
   }
-
+  console.log(cData);
   return cData;
 };
 

@@ -74,7 +74,10 @@ import { CreateCustomerPaymentDto } from '../dto/customer/create-customerPayment
 import { DatabaseService } from '../../database/database.service';
 import { userSelector } from '../../utils/tableSelector';
 import { LogsService } from './logs.service';
-import { LoggerSuccessBetweenCMSAndAppCore, LoggerFailBetweenCMSAndAppCore } from '../../utils/helper';
+import {
+  LoggerSuccessBetweenCMSAndAppCore,
+  LoggerFailBetweenCMSAndAppCore,
+} from '../../utils/helper';
 import { logModules, logSources, logThreads } from '../../constants/logs';
 import { Response } from 'express';
 
@@ -187,9 +190,8 @@ export class CustomerService {
         method: 'POST',
         data: customerAppcoreData,
       });
-
+      console.log(response);
       if (!response?.data) {
-        console.log(response);
         return;
       }
 
@@ -206,20 +208,42 @@ export class CustomerService {
         true,
       );
       const module_id: number = 3;
-      const module_name: string = logModules["3"];
+      const module_name: string = logModules['3'];
       const source_id: number = 1;
-      const source_name: string = logSources["1"];
-      const thread: string = logThreads["2"];
-      await this.logService.create(LoggerSuccessBetweenCMSAndAppCore(response, module_id, module_name, source_id, source_name, thread));
+      const source_name: string = logSources['1'];
+      const thread: string = logThreads['2'];
+      await this.logService.create(
+        LoggerSuccessBetweenCMSAndAppCore(
+          response,
+          module_id,
+          module_name,
+          source_id,
+          source_name,
+          thread,
+        ),
+      );
       return updatedUser;
     } catch (error) {
+      if (error.response.data.statusCode == 400) {
+        this.userRepo.delete({ user_id: user['user_id'] });
+        this.userProfileRepo.delete({ user_id: user['user_id'] });
+      }
       console.log(error.response);
       const module_id: number = 3;
-      const module_name: string = logModules["3"];
+      const module_name: string = logModules['3'];
       const source_id: number = 1;
-      const source_name: string = logSources["1"];
-      const thread: string = logThreads["2"];
-      await this.logService.create(LoggerFailBetweenCMSAndAppCore(error.response, module_id, module_name, source_id, source_name, thread));
+      const source_name: string = logSources['1'];
+      const thread: string = logThreads['2'];
+      await this.logService.create(
+        LoggerFailBetweenCMSAndAppCore(
+          error.response,
+          module_id,
+          module_name,
+          source_id,
+          source_name,
+          thread,
+        ),
+      );
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -238,28 +262,27 @@ export class CustomerService {
       s_lastname: data.s_lastname || null,
       phone: data.b_phone || data.s_phone || null,
       b_phone: data.b_phone || data.s_phone || null,
-      s_phone: data.s_phone || null,
+      s_phone: data.s_phone || data.b_phone || null,
       b_city: data.b_city || data.s_city || null,
-      s_city: data.s_city || null,
+      s_city: data.s_city || data.b_city || null,
       b_district: data.b_district || data.s_district || null,
-      s_district: data.s_district || null,
+      s_district: data.s_district || data.b_district || null,
       b_ward: data.b_ward || data.s_ward || null,
-      s_ward: data.s_ward || null,
+      s_ward: data.s_ward || data.b_ward || null,
       b_address: data.b_address || data.s_address || null,
-      s_address: data.s_address || null,
+      s_address: data.s_address || data.b_address || null,
       id_card: data.id_card || null,
     };
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
+    const userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(customerData),
+      password: passwordHash,
+      salt,
+    };
+
+    const user = await this.userRepo.create(userData);
     try {
-      const { passwordHash, salt } = saltHashPassword(defaultPassword);
-      const userData = {
-        ...new UserEntity(),
-        ...this.userRepo.setData(customerData),
-        password: passwordHash,
-        salt,
-      };
-
-      const user = await this.userRepo.create(userData);
-
       let result = { ...user };
 
       const userProfileData = {
@@ -605,19 +628,37 @@ export class CustomerService {
       });
       console.log(response);
       const module_id: number = 4;
-      const module_name: string = logModules["4"];
+      const module_name: string = logModules['4'];
       const source_id: number = 1;
-      const source_name: string = logSources["1"];
-      const thread: string = logThreads["2"];
-      await this.logService.create(LoggerSuccessBetweenCMSAndAppCore(response, module_id, module_name, source_id, source_name, thread));
+      const source_name: string = logSources['1'];
+      const thread: string = logThreads['2'];
+      await this.logService.create(
+        LoggerSuccessBetweenCMSAndAppCore(
+          response,
+          module_id,
+          module_name,
+          source_id,
+          source_name,
+          thread,
+        ),
+      );
     } catch (error) {
       console.log(error.response);
       const module_id: number = 4;
-      const module_name: string = logModules["4"];
+      const module_name: string = logModules['4'];
       const source_id: number = 1;
-      const source_name: string = logSources["1"];
-      const thread: string = logThreads["2"];
-      await this.logService.create(LoggerFailBetweenCMSAndAppCore(error.response, module_id, module_name, source_id, source_name, thread));
+      const source_name: string = logSources['1'];
+      const thread: string = logThreads['2'];
+      await this.logService.create(
+        LoggerFailBetweenCMSAndAppCore(
+          error.response,
+          module_id,
+          module_name,
+          source_id,
+          source_name,
+          thread,
+        ),
+      );
       throw new HttpException('Cập nhật tới Appcore không thành công', 400);
     }
   }

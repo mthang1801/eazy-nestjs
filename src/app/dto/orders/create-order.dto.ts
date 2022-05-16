@@ -13,9 +13,6 @@ export class CreateOrderDto {
   user_id: number;
 
   @IsNotEmpty()
-  b_firstname: string;
-
-  @IsNotEmpty()
   b_lastname: string;
 
   @IsNotEmpty()
@@ -143,9 +140,6 @@ export class CreateOrderDto {
 
   @IsOptional()
   is_sent_customer_address: number = 1;
-
-  @IsOptional()
-  s_firstname: string = '';
 
   @IsOptional()
   s_lastname: string = '';

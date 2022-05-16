@@ -49,14 +49,16 @@ export class AuthGuard implements CanActivate {
       throw new HttpException('Token đã hết hạn 3.', 408);
     }
 
+    console.log(user['user_id']);
     const cryptography = new Cryptography();
-    const decryptedData = cryptography.decrypt(user['user_id']);
+    let decryptedData = cryptography.decrypt(user['user_id']);
 
     if (user['user_id'] !== authorizationUUID) {
       throw new HttpException('Yêu cầu truy cập bị từ chối 4.', 401);
     }
 
-    const userId = decryptedData;
+    let userId = decryptedData.split('-')[5];
+
     user['user_id'] = userId;
 
     let {

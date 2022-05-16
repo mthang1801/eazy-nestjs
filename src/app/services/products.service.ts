@@ -1531,8 +1531,6 @@ export class ProductService {
       updated_at: formatStandardTimeStamp(),
     });
 
-    console.log(productData);
-
     if (Object.entries(productData).length) {
       const updatedProduct = await this.productRepo.update(
         { product_id: result.product_id },
@@ -1541,6 +1539,10 @@ export class ProductService {
       );
 
       result = { ...result, ...updatedProduct };
+    }
+
+    if (data.status && Object.entries(data).length == 1) {
+      return;
     }
 
     // Update product description
