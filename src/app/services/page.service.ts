@@ -360,6 +360,11 @@ export class PageService {
     });
 
     if (pageDetails) {
+      for (let pageDetail of pageDetails) {
+        pageDetail['page_detail_values'] = await this.getPageDetailValues(
+          pageDetail.page_detail_id,
+        );
+      }
     }
 
     return pageDetails;

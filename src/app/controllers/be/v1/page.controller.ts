@@ -51,7 +51,7 @@ export class PageController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Put('/:page_id/page-detail')
+  @Put('/:page_id/page-details')
   async updatePageDetail(
     @Res() res: Response,
     @Body() data: UpdatePageDetailDto,
@@ -61,7 +61,7 @@ export class PageController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Put('/page-detail/:page_detail_id/update-status')
+  @Put('/page-details/:page_detail_id/update-status')
   async updatePageDetailStatus(
     @Res() res: Response,
     @Param('page_detail_id') page_detail_id: number,
