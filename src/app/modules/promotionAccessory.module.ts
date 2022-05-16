@@ -6,6 +6,7 @@ import { PromotionAccessoriesController } from '../controllers/be/v1/promotionAc
 import { ProductsRepository } from '../repositories/products.repository';
 import { PromotionAccessoryItgController } from '../controllers/integration/v1/promotionAccessory.controller';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
+import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 @Global()
 @Module({
   providers: [
@@ -14,6 +15,7 @@ import { ProductPricesRepository } from '../repositories/productPrices.repositor
     PromotionAccessoryDetailRepository,
     ProductsRepository,
     ProductPricesRepository,
+    ProductDescriptionsRepository,
   ],
   exports: [
     PromotionAccessoryService,

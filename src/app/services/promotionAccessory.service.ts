@@ -10,7 +10,7 @@ import {
 } from 'src/utils/joinTable';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdatePromotionAccessoryDto } from '../dto/promotionAccessories/update-promotionAccessory.dto';
-import { formatStandardTimeStamp } from '../../utils/helper';
+import { formatStandardTimeStamp, convertToSlug } from '../../utils/helper';
 import { promotionAccessoriesSearchFilter } from 'src/utils/tableConditioner';
 import { Table } from 'src/database/enums';
 import { ProductsRepository } from '../repositories/products.repository';
@@ -18,7 +18,10 @@ import { ProductsEntity } from '../entities/products.entity';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import * as moment from 'moment';
 import { getProductAccessorySelector } from 'src/utils/tableSelector';
-import { itgConvertGiftAccessoriesFromAppcore } from '../../utils/integrateFunctions';
+import {
+  itgConvertGiftAccessoriesFromAppcore,
+  convertDiscountProgramFromAppcore,
+} from '../../utils/integrateFunctions';
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
 import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
@@ -29,6 +32,8 @@ import {
   getDetailProductsListSelectorFE,
 } from '../../utils/tableSelector';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
+import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
+import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -37,6 +42,7 @@ export class PromotionAccessoryService {
     private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
+    private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
   ) {}
 
   async create(data: CreatePromotionAccessoryDto, user) {
@@ -658,6 +664,166 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [typeNameOfAccessory]: accessory_id },
         );
+      }
+    }
+  }
+
+  async itgCreateDiscountPrograms(data) {
+    const cvtData = convertDiscountProgramFromAppcore(data);
+    const discountProgram = await this.promoAccessoryRepo.findOne({
+      app_core_id: cvtData.app_core_id,
+    });
+    if (discountProgram) {
+      throw new HttpException('Chương trình đã tồn tại.', 409);
+    }
+    const newProgramDiscountData = {
+      ...new PromotionAccessoryEntity(),
+      ...this.promoAccessoryRepo.setData(cvtData),
+    };
+    const newProgramDiscount = await this.promoAccessoryRepo.create(
+      newProgramDiscountData,
+    );
+
+    if (cvtData['details'] && cvtData['details'].length) {
+      for (let programDetail of cvtData['details']) {
+        let product = await this.productRepo.findOne({
+          product_appcore_id: programDetail['product_appcore_id'],
+        });
+        const updatedProductPriceData = {
+          price: programDetail['sale_price'],
+          promotion_price: programDetail['promotion_price'],
+          promotion_discount_amount: programDetail['discount_amount'],
+          promotion_discount_type: programDetail['discount_type'],
+          promotion_start_at: cvtData['time_start_at'],
+          promotion_end_at: cvtData['time_end_at'],
+        };
+        if (!product) {
+          const productData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(programDetail),
+          };
+          product = await this.productRepo.create(productData);
+          const productPriceData = {
+            ...new ProductPricesEntity(),
+            ...this.productPriceRepo.setData(programDetail),
+            ...updatedProductPriceData,
+            product_id: product.product_id,
+          };
+          await this.productPriceRepo.create(productPriceData, false);
+          const productDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(programDetail),
+            product_id: product.product_id,
+            slug: convertToSlug(programDetail.product, true),
+          };
+          await this.productDescRepo.create(productDescData);
+        } else {
+          await this.productPriceRepo.update(
+            { product_id: product.product_id },
+            { ...updatedProductPriceData },
+          );
+        }
+
+        const newProgramDetail = {
+          ...new PromotionAccessoryDetailEntity(),
+          ...this.promoAccessoryDetailRepo.setData(programDetail),
+          accessory_id: newProgramDiscount.accessory_id,
+          product_id: product.product_id,
+        };
+        await this.promoAccessoryDetailRepo.create(newProgramDetail);
+      }
+    }
+    return this.get(newProgramDiscount.accessory_id);
+  }
+
+  async itgUpdateDiscountPrograms(data) {
+    const cvtData = convertDiscountProgramFromAppcore(data);
+    const discountProgram = await this.promoAccessoryRepo.findOne({
+      app_core_id: cvtData.app_core_id,
+    });
+
+    if (!discountProgram) {
+      return this.itgCreateDiscountPrograms(data);
+    }
+
+    const programDiscountData = {
+      ...this.promoAccessoryRepo.setData(cvtData),
+      updated_at: formatStandardTimeStamp(),
+    };
+    await this.promoAccessoryRepo.update(
+      { accessory_id: discountProgram.accessory_id },
+      programDiscountData,
+    );
+
+    if (cvtData['details'] && cvtData['details'].length) {
+      let oldProgramDetails = await this.promoAccessoryDetailRepo.find({
+        accessory_id: discountProgram.accessory_id,
+      });
+      if (oldProgramDetails.length) {
+        for (let oldProgramDetail of oldProgramDetails) {
+          if (oldProgramDetail.product_id) {
+            await this.productPriceRepo.update(
+              { product_id: oldProgramDetail.product_id },
+              {
+                promotion_price: 0,
+                promotion_start_at: null,
+                promotion_end_at: null,
+                promotion_discount_amount: 0,
+              },
+            );
+          }
+          await this.promoAccessoryDetailRepo.delete({
+            accessory_id: discountProgram.accessory_id,
+          });
+        }
+      }
+
+      for (let programDetail of cvtData['details']) {
+        let product = await this.productRepo.findOne({
+          product_appcore_id: programDetail['product_appcore_id'],
+        });
+        const updatedProductPriceData = {
+          price: programDetail['sale_price'],
+          promotion_price: programDetail['promotion_price'],
+          promotion_discount_amount: programDetail['discount_amount'],
+          promotion_discount_type: programDetail['discount_type'],
+          promotion_start_at: cvtData['time_start_at'],
+          promotion_end_at: cvtData['time_end_at'],
+        };
+        if (!product) {
+          const productData = {
+            ...new ProductsEntity(),
+            ...this.productRepo.setData(programDetail),
+          };
+          product = await this.productRepo.create(productData);
+          const productPriceData = {
+            ...new ProductPricesEntity(),
+            ...this.productPriceRepo.setData(programDetail),
+            ...updatedProductPriceData,
+            product_id: product.product_id,
+          };
+          await this.productPriceRepo.create(productPriceData, false);
+          const productDescData = {
+            ...new ProductDescriptionsEntity(),
+            ...this.productDescRepo.setData(programDetail),
+            product_id: product.product_id,
+            slug: convertToSlug(programDetail.product, true),
+          };
+          await this.productDescRepo.create(productDescData);
+        } else {
+          await this.productPriceRepo.update(
+            { product_id: product.product_id },
+            { ...updatedProductPriceData },
+          );
+        }
+
+        const newProgramDetailData = {
+          ...new PromotionAccessoryDetailEntity(),
+          ...this.promoAccessoryDetailRepo.setData(programDetail),
+          accessory_id: discountProgram.accessory_id,
+          product_id: product.product_id,
+        };
+        await this.promoAccessoryDetailRepo.create(newProgramDetailData);
       }
     }
   }

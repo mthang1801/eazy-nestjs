@@ -61,7 +61,16 @@ export class PromotionAccessoryItgController extends BaseController {
     @Res() res: Response,
     @Body() data,
   ): Promise<IResponse> {
-    await this.service.itgCreate(data, 4);
-    return this.responseSuccess(res);
+    const result = await this.service.itgCreateDiscountPrograms(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Put('discount-programs')
+  async updateDiscountPrograms(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    const result = await this.service.itgUpdateDiscountPrograms(data);
+    return this.responseSuccess(res, result);
   }
 }

@@ -37,6 +37,12 @@ export class UploadService {
       for (let file of files) {
         await fsExtra.unlink(file.path);
       }
+      if (error.response.status == 413) {
+        throw new HttpException(
+          'Upload không thành công, kích thước file quá lớn.',
+          413,
+        );
+      }
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||

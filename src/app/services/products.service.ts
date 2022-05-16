@@ -2626,12 +2626,16 @@ export class ProductService {
       }
       return results;
     } catch (error) {
-      console.log(error);
       // delete files
       for (let image of images) {
         await fsExtra.unlink(image.path);
       }
-
+      if (error.response.status == 413) {
+        throw new HttpException(
+          'Upload không thành công, kích thước file quá lớn.',
+          413,
+        );
+      }
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||
@@ -2683,6 +2687,12 @@ export class ProductService {
     } catch (error) {
       console.log(error);
       await fsExtra.unlink(file.path);
+      if (error.response.status == 413) {
+        throw new HttpException(
+          'Upload không thành công, kích thước file quá lớn.',
+          413,
+        );
+      }
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||
@@ -2724,6 +2734,12 @@ export class ProductService {
     } catch (error) {
       console.log(error);
       await fsExtra.unlink(file.path);
+      if (error.response.status == 413) {
+        throw new HttpException(
+          'Upload không thành công, kích thước file quá lớn.',
+          413,
+        );
+      }
       throw new HttpException(
         `Có lỗi xảy ra : ${
           error?.response?.data?.message ||

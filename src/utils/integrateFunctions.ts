@@ -343,7 +343,7 @@ export const itgCustomerToAppcore = (data) => {
     if (app === 'b_address') {
       cData[core] = data[app] || '123 quang trung';
       continue;
-    } 
+    }
     cData[core] = data[app];
   }
   console.log(cData);
@@ -962,7 +962,7 @@ export const convertValuationBillFromCms = (cmsData) => {
   coreData['customerPhone'] = cmsData['valuationBill']['customer_phone'];
   coreData['customerName'] = cmsData['valuationBill']['customer_name'];
   coreData['options'] = [];
-  if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length){
+  if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length) {
     for (let detailItem of cmsData['criteriaSet']) {
       let detailItemData = {};
       detailItemData['optionId'] = detailItem['criteria_detail_id'];
@@ -972,4 +972,48 @@ export const convertValuationBillFromCms = (cmsData) => {
   }
   console.log(coreData);
   return coreData;
+};
+
+export const convertDiscountProgramFromAppcore = (coreData) => {
+  let cmsData = {
+    app_core_id: coreData['id'],
+    accessory_name: coreData['name'],
+    accessory_type: 4,
+    description: coreData['description'],
+    accessory_status:
+      coreData['status'] == 'true' || !coreData['status'] ? 'A' : 'D',
+    time_start_at: coreData['startTime'] || null,
+    time_end_at: coreData['endTime'] || null,
+    used: coreData['used'],
+    max_use: coreData['maxUse'],
+    created_at: checkValidTimestamp(coreData['createdAt'])
+      ? formatStandardTimeStamp(coreData['createdAt'])
+      : null,
+    updated_at: checkValidTimestamp(coreData['updatedAt'])
+      ? formatStandardTimeStamp(coreData['updatedAt'])
+      : null,
+    display_at: null,
+    end_at: null,
+    details: [],
+  };
+
+  if (coreData['details'] && coreData['details'].length) {
+    for (let coreDetail of coreData['details']) {
+      let cmsDetail = {
+        app_core_id: coreDetail['id'],
+        product_appcore_id: coreDetail['productId'],
+        product_code: coreDetail['productCode'],
+        status: coreDetail['deleted'] == 'true' ? 'D' : 'A',
+        discount_amount: coreDetail['discountAmount'],
+        discount_type: coreDetail['discountType'],
+        product: coreDetail['productName'],
+        promotion_price: coreDetail['sellingPrice'],
+        sale_price: coreDetail['originalPrice'],
+      };
+      cmsData['details'].push(cmsDetail);
+    }
+  }
+
+  console.log(cmsData);
+  return cmsData;
 };
