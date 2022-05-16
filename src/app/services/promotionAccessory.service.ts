@@ -701,6 +701,7 @@ export class PromotionAccessoryService {
           const productData = {
             ...new ProductsEntity(),
             ...this.productRepo.setData(programDetail),
+            slug: convertToSlug(programDetail.product, true),
           };
           product = await this.productRepo.create(productData);
           const productPriceData = {
@@ -714,7 +715,6 @@ export class PromotionAccessoryService {
             ...new ProductDescriptionsEntity(),
             ...this.productDescRepo.setData(programDetail),
             product_id: product.product_id,
-            slug: convertToSlug(programDetail.product, true),
           };
           await this.productDescRepo.create(productDescData);
         } else {
@@ -794,6 +794,7 @@ export class PromotionAccessoryService {
           const productData = {
             ...new ProductsEntity(),
             ...this.productRepo.setData(programDetail),
+            slug: convertToSlug(programDetail.product, true),
           };
           product = await this.productRepo.create(productData);
           const productPriceData = {
@@ -807,7 +808,6 @@ export class PromotionAccessoryService {
             ...new ProductDescriptionsEntity(),
             ...this.productDescRepo.setData(programDetail),
             product_id: product.product_id,
-            slug: convertToSlug(programDetail.product, true),
           };
           await this.productDescRepo.create(productDescData);
         } else {
