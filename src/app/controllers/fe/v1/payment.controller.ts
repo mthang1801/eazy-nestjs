@@ -9,6 +9,7 @@ import { CreatePayooInstallmentDto } from '../../../dto/orders/create-payooInsta
 import { CreateInstallmentDto } from '../../../dto/payment/create-installment.dto';
 import { CreatePaymentSelfTransportDto } from '../../../dto/orders/create-paymentSelfTransport.dto';
 import { CreateMomoPaymentDto } from '../../../dto/orders/create-momoPayment.dto';
+import { CreateMomoPaymentSelfTransportDto } from '../../../dto/orders/create-momoSelfTransport.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
@@ -55,6 +56,15 @@ export class PaymentControllerFE extends BaseController {
   @Post('momo')
   async momoPayment(@Res() res: Response, @Body() data: CreateMomoPaymentDto) {
     const result = await this.service.momoPayment(data);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('momo/self-transport')
+  async momoPaymentSelfTransport(
+    @Res() res: Response,
+    @Body() data: CreateMomoPaymentSelfTransportDto,
+  ): Promise<IResponse> {
+    const result = await this.service.momoPaymentSelftransport(data);
     return this.responseSuccess(res, result);
   }
 

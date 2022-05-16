@@ -79,12 +79,11 @@ import { userSelector } from '../../utils/tableSelector';
 import { CreateMomoPaymentDto } from '../dto/orders/create-momoPayment.dto';
 import { Cryptography } from '../../utils/cryptography';
 import * as crypto from 'crypto';
-import { MOMO_PARTNER_NAME } from '../../constants/momoPayment';
+import { MOMO_PARTNER_NAME, MOMO_PAYMENT } from '../../constants/momoPayment';
 
 import {
   MOMO_SECRET_KEY,
   MOMO_API_ENPOINT,
-  MOMO_PAYMENT,
   MOMO_PARTNER_CODE,
 } from '../../constants/momoPayment';
 import {
@@ -99,6 +98,7 @@ import {
 import { request } from 'https';
 import { constants } from 'fs';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
+import { CreateMomoPaymentSelfTransportDto } from '../dto/orders/create-momoSelfTransport.dto';
 
 @Injectable()
 export class PaymentService {
@@ -989,6 +989,103 @@ export class PaymentService {
     return responseData;
   }
 
+  async momoPaymentSelftransport(data: CreateMomoPaymentSelfTransportDto) {
+    //Check user
+    let user;
+    if (data.user_id) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+    }
+    if (!user) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: {
+          [`${Table.USERS}.phone`]: data['b_phone'],
+        },
+      });
+      if (!user) {
+        await this.customerService.createCustomerFromWebPayment(data);
+        user = await this.userRepo.findOne({
+          select: userSelector,
+          join: userJoiner,
+          where: {
+            [`${Table.USERS}.phone`]: data['b_phone'],
+          },
+        });
+      }
+    }
+    let cartItems = [];
+    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+    if (!cart) {
+      throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    }
+    cartItems = await this.cartItemRepo.find({
+      select: `*, ${Table.CART_ITEMS}.amount`,
+      join: cartPaymentJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    });
+    let totalPrice = cartItems.reduce(
+      (acc, ele) => acc + ele.price * ele.amount,
+      0,
+    );
+    let ref_order_id = generateRandomString();
+    let payCreditType = 2;
+    let sendData: any = {
+      user_id: user.user_id,
+      user_appcore_id: user.user_appcore_id,
+      b_phone: data.b_phone,
+      b_lastname: data.b_lastname,
+      order_type: OrderType.buyAtStore,
+      order_items: cartItems,
+      ref_order_id,
+      pay_credit_type: payCreditType,
+      coupon_code: data.coupon_code ? data.coupon_code : null,
+      callback_url: data.callback_url,
+    };
+    //Check coupon if it exist
+    if (data.coupon_code) {
+      let checkCouponData = {
+        store_id: 67107,
+        coupon_code: data['coupon_code'],
+        coupon_programing_id: 'HELLO_123',
+        phone: data['b_phone'],
+        products: cartItems.map(({ product_id, amount }) => ({
+          product_id,
+          amount,
+        })),
+      };
+      let checkResult = await this.promotionService.checkCoupon(
+        checkCouponData,
+      );
+      if (checkResult['isValid']) {
+        // totalPrice -= checkResult['discountMoney'];
+      }
+    }
+
+    sendData['transfer_amount'] = +totalPrice;
+
+    const responseData = await this.requestPaymentMomo(sendData);
+
+    sendData['paymentStatus'] = PaymentStatus.new;
+
+    const newOrder = await this.orderService.createOrder(user, sendData);
+
+    await this.orderPaymentRepo.create({
+      order_id: newOrder['order_id'],
+      order_no: responseData['orderId'],
+      gateway_name: GatewayName.Momo,
+      amount: +totalPrice,
+      payment_code: responseData.resultCode,
+      errormsg: responseData.message,
+      payment_url: responseData.payUrl,
+    });
+    return responseData;
+  }
+
   async requestPaymentMomo(data) {
     const partnerCode = MOMO_PARTNER_CODE;
     const accessKey = MOMO_ACCESS_KEY;
@@ -1003,12 +1100,8 @@ export class PaymentService {
     const cryptography = new Cryptography();
     const extraData = cryptography.encodeBase64(
       JSON.stringify({
-        s_lastname: data['s_lastname'],
-        s_phone: data['s_phone'],
-        s_city: data['s_city'],
-        s_district: data['s_district'],
-        s_ward: data['s_ward'],
-        s_address: data['s_address'],
+        b_lastname: data['b_lastname'],
+        b_phone: data['b_phone'],
       }),
     );
 
@@ -1056,7 +1149,7 @@ export class PaymentService {
     try {
       console.log('4');
       const response = await axios({
-        url: 'https://test-payment.momo.vn/v2/gateway/api/create',
+        url: MOMO_PAYMENT,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
