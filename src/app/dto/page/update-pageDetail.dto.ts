@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 
 export class UpdatePageDetailDto {
-  @IsNotEmpty()
+  @IsOptional()
   module_name: string;
 
   @IsOptional()

@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 
 export class UpdatePageDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   page_name: string;
 
@@ -29,7 +29,7 @@ export class UpdatePageDto {
 }
 
 class PageDetail {
-  @IsNotEmpty()
+  @IsOptional()
   module_name: string;
 
   @IsOptional()
