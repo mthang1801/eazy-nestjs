@@ -12,7 +12,7 @@ export class UpdatePageDto {
   @IsString()
   page_name: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   page_type: number = 1;
 

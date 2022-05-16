@@ -174,10 +174,12 @@ export class CustomerService {
     };
 
     const newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
-
     result = { ...result, ...newUserLoyalty };
-
-    return this.createCustomerToAppcore(result);
+    try {
+      return this.createCustomerToAppcore(result);
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
+    }
   }
 
   async createCustomerToAppcore(user) {
