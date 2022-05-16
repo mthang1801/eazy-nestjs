@@ -308,7 +308,7 @@ export class CustomerService {
       };
       await this.userDataRepo.create(userDataData, false);
 
-      await this.createCustomerToAppcore(result);
+      return this.createCustomerToAppcore(result);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
@@ -1226,5 +1226,54 @@ export class CustomerService {
         error?.response?.status || error.status,
       );
     }
+  }
+
+  async createCustomerFromValuationBill(data){
+    let generatePassword = saltHashPassword(defaultPassword);
+    let userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(data),
+      phone: data.customer_phone,
+      lastname: data.customer_name,
+      password: generatePassword.passwordHash,
+      salt: generatePassword.salt,
+    }
+    let user = await this.userRepo.create(userData);
+
+    let userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(user),
+      b_lastname: user.lastname,
+      b_phone: user.phone,
+    }
+    await this.userProfileRepo.create(userProfileData);
+
+    let userLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalRepo.setData(user),
+    }
+    await this.userLoyalRepo.create(userLoyaltyData);
+
+    let userDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(user),
+    }
+    await this.userDataRepo.create(userDataData);
+
+    user = await this.userRepo.findOne({
+      select: userSelector,
+      join: userJoiner,
+      where: { [`${Table.USERS}.user_id`]: user.user_id },
+    });
+    console.log(user);
+    console.log("====================abc==============");
+    try{
+      const res = await this.createCustomerToAppcore(user);
+      console.log(res);
+    }
+    catch (error){
+      throw new HttpException(error.response,  error.status);
+    }
+    //return res;
   }
 }

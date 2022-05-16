@@ -340,6 +340,10 @@ export const itgCustomerToAppcore = (data) => {
       cData[core] = data[app] || '';
       continue;
     }
+    if (app === 'b_address') {
+      cData[core] = data[app] || '123 quang trung';
+      continue;
+    } 
     cData[core] = data[app];
   }
   console.log(cData);
@@ -945,4 +949,27 @@ export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
     }
   }
   return cmsData;
+};
+
+export const convertValuationBillFromCms = (cmsData) => {
+  let coreData = {};
+  coreData['tradeInProgramId'] = cmsData['valuationBill']['tradein_appcore_id'];
+  coreData['imei'] = cmsData['valuationBill']['imei'];
+  coreData['productId'] = cmsData['valuationBill']['product_appcore_id'];
+  coreData['productBuyingPrice'] = cmsData['valuationBill']['collect_price'];
+  coreData['totalCriteriaPrice'] = cmsData['valuationBill']['criteria_price'];
+  coreData['finalBuyingPrice'] = cmsData['valuationBill']['final_price'];
+  coreData['customerPhone'] = cmsData['valuationBill']['customer_phone'];
+  coreData['customerName'] = cmsData['valuationBill']['customer_name'];
+  coreData['options'] = [];
+  if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length){
+    for (let detailItem of cmsData['criteriaSet']) {
+      let detailItemData = {};
+      detailItemData['optionId'] = detailItem['criteria_detail_id'];
+      detailItemData['criteriaId'] = detailItem['criteria_id'];
+      coreData['options'].push(detailItemData);
+    }
+  }
+  console.log(coreData);
+  return coreData;
 };
