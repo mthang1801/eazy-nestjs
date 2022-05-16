@@ -29,7 +29,8 @@ export const preprocessAddTextDataToMysql = (data: any) => {
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(quotation, 'g'), replaceQuotation)
-      .replace(new RegExp(apostrophe, 'g'), replaceApostrophe);
+      .replace(new RegExp(apostrophe, 'g'), replaceApostrophe)
+      .trim();
   }
   return data;
 };
@@ -41,7 +42,8 @@ export const processGetTextDataFromMysql = (data) => {
   if (data && typeof data == 'string') {
     return data
       .replace(new RegExp(replaceQuotation, 'g'), quotation)
-      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe);
+      .replace(new RegExp(replaceApostrophe, 'g'), apostrophe)
+      .trim();
   }
   return data;
 };

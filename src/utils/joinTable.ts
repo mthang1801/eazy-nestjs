@@ -89,6 +89,24 @@ export const productFeaturesJoiner = {
   },
 };
 
+export const categoryFeaturesSetJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
+      fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+      rootJoin: `${Table.CATEGORY_FEATURES}.feature_id`,
+    },
+  },
+};
+
+export const featureVariantJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+      fieldJoin: `${Table.PRODUCT_FEATURES_VARIANTS}.variant_id`,
+      rootJoin: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.variant_id`,
+    },
+  },
+};
+
 export const productPriceJoiner = {
   [JoinTable.innerJoin]: {
     [Table.PRODUCT_PRICES]: {
@@ -381,7 +399,7 @@ export const productPromotionAccessorytLeftJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,
-      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
     },
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
@@ -408,8 +426,8 @@ export const productPromotionAccessoryJoiner = {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,
     },
-    [Table.PRODUCT_PROMOTION_ACCESSORY]: {
-      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+    [Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL]: {
+      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,
     },
     [Table.PRODUCT_PRICES]: {
@@ -790,12 +808,12 @@ export const storeLocationJoiner = {
 export const productPromotionAccessoriesJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PROMOTION_ACCESSORY]: {
-      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`,
+      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`,
       rootJoin: `${Table.PROMOTION_ACCESSORY}.accessory_id`,
     },
     [Table.PRODUCTS]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,
-      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSORY}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
     },
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,
@@ -920,6 +938,24 @@ export const userRoleFunctJoiner = {
     [Table.FUNC]: {
       fieldJoin: `${Table.FUNC}.funct_id`,
       rootJoin: `${Table.ROLE_FUNC}.funct_id`,
+    },
+  },
+};
+
+export const tradeinCriteriaJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.TRADEIN_PROGRAM_CRITERIA_DETAIL]: {
+      fieldJoin: `${Table.TRADEIN_PROGRAM_CRITERIA_DETAIL}.criteria_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_CRITERIA}.criteria_id`,
+    },
+  },
+};
+
+export const tradeinProgrameDetailJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.TRADEIN_PROGRAM]: {
+      fieldJoin: `${Table.TRADEIN_PROGRAM}.tradein_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`,
     },
   },
 };

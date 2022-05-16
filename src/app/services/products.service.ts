@@ -133,8 +133,8 @@ import { StickerEntity } from '../entities/sticker.entity';
 import * as moment from 'moment';
 import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
-import { ProductPromotionAccessoryRepository } from '../repositories/productPromotionAccessory.repository';
-import { ProductPromotionAccessoryEntity } from '../entities/productPromotionAccessory.entity';
+import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
+import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import {
   productCategoryJoiner,
   productByCategoryIdJoiner,
@@ -210,6 +210,12 @@ import { Cryptography } from '../../utils/cryptography';
 import { Response } from 'express';
 import { LogEntity } from '../entities/logs.entity';
 import { LogRepository } from '../repositories/log.repository';
+import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
+import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
+import {
+  categoryFeatureJoiner,
+  categoryFeaturesSetJoiner,
+} from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -244,7 +250,7 @@ export class ProductService {
     private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
-    private productPromoAccessoryRepo: ProductPromotionAccessoryRepository<ProductPromotionAccessoryEntity>,
+    private productPromoAccessoryRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
     private accessoryService: PromotionAccessoryService,
     private categoryService: CategoryService,
@@ -253,6 +259,7 @@ export class ProductService {
     private reviewCommentService: ReviewsCommentService,
     private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
     private logRepo: LogRepository<LogEntity>,
+    private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -355,6 +362,70 @@ export class ProductService {
               );
             }
           }
+        }
+      }
+    }
+  }
+
+  async standardizeProducts() {
+    let childrenProducts = await this.productRepo.find({
+      parent_product_id: '0',
+      parent_product_appcore_id: Not(IsNull()),
+    });
+
+    for (let childProduct of childrenProducts) {
+      let parentProduct = await this.productRepo.update(
+        { product_appcore_id: childProduct.parent_product_appcore_id },
+        { product_function: 1 },
+        true,
+      );
+      if (parentProduct) {
+        await this.productRepo.update(
+          { product_id: childProduct.product_id },
+          {
+            parent_product_id: parentProduct['product_id'],
+            product_function: 2,
+          },
+        );
+      }
+    }
+
+    let parentProducts = await this.productRepo.find({
+      parent_product_appcore_id: IsNull(),
+      product_function: 1,
+    });
+
+    if (parentProducts.length) {
+      for (let parentProduct of parentProducts) {
+        let childProduct = await this.productRepo.findOne({
+          select: '*',
+          join: productPriceJoiner,
+          orderBy: [
+            { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+          ],
+          where: {
+            [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+              parentProduct.product_appcore_id,
+            [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+          },
+        });
+        if (childProduct) {
+          let productPriceData = {
+            price: childProduct.price,
+            list_price: childProduct.list_price,
+            buy_price: childProduct.buy_price,
+            collect_price: childProduct.collect_price,
+            whole_price: childProduct.whole_price,
+            percentage_discount: childProduct.percentage_discount,
+            price_program: childProduct.price_program,
+            price_discount: childProduct.price_discount,
+            program_start_at: childProduct.program_start_at,
+            program_end_at: childProduct.program_start_at,
+          };
+          await this.productPriceRepo.update(
+            { product_id: parentProduct.product_id },
+            productPriceData,
+          );
         }
       }
     }
@@ -1407,6 +1478,10 @@ export class ProductService {
       });
     }
 
+    let features = await this.getFeaturesSetByCategoryId(
+      category['category_id'],
+    );
+
     return {
       paging: {
         currentPage: page,
@@ -1416,7 +1491,27 @@ export class ProductService {
       currentCategory: category,
       childrenCategories: categoriesListByLevel,
       products: productsList,
+      features,
     };
+  }
+
+  async getFeaturesSetByCategoryId(category_id) {
+    const featuresSet = await this.categoryFeatureRepo.find({
+      select: '*',
+      join: categoryFeaturesSetJoiner,
+      where: { [`${Table.CATEGORY_FEATURES}.category_id`]: category_id },
+    });
+
+    if (featuresSet.length) {
+      for (let featureItem of featuresSet) {
+        const variants = await this.productFeatureVariantRepo.find({
+          feature_id: featureItem.feature_id,
+        });
+        featureItem['variants_set'] = variants;
+      }
+    }
+
+    return featuresSet;
   }
 
   async updateProductIntoCategory(
@@ -3593,6 +3688,11 @@ export class ProductService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
+    this.productRepo.update(
+      { product_id: product.product_id },
+      { view_count: product.view_count + 1 },
+    );
+
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
         select: productDetailSelector,
@@ -3975,7 +4075,7 @@ export class ProductService {
   async getAccessoriesByProductId(accessory_id: number, source = 0) {
     // source = 0 : CMS, 1 : FE
     let condition: any = {
-      [`${Table.PRODUCT_PROMOTION_ACCESSORY}.accessory_id`]: accessory_id,
+      [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]: accessory_id,
     };
     console.log();
     if (source == 1) {
@@ -3988,7 +4088,7 @@ export class ProductService {
           formatStandardTimeStamp(new Date()),
         ),
         [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-        [`${Table.PRODUCT_PROMOTION_ACCESSORY}.status`]: 'A',
+        [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
       };
     }
     return this.productPromoAccessoryRepo.find({

@@ -3,7 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  Optional,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -78,6 +80,12 @@ export class ProductsController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.getCommentReviewResponse(item_id);
     return this.responseSuccess(res, result);
+  }
+
+  @Put('/standard')
+  async standardizeProducts(@Res() res: Response): Promise<IResponse> {
+    await this.service.standardizeProducts();
+    return this.responseSuccess(res);
   }
 
   @Post('grouping-products/:start_product_id')

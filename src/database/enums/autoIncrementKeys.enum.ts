@@ -63,7 +63,7 @@ export enum AutoIncrementKeys {
 
   //============== Promotion Accessories =============
   ddv_promotion_accessories = 'accessory_id',
-  ddv_product_promotion_accessories = 'id',
+  ddv_promotion_accessory_details = 'id',
 
   //============== Products ==============
   ddv_products_categories = 'list_id',
@@ -132,6 +132,11 @@ export enum AutoIncrementKeys {
   //============ Homepage COnfig ===============
   ddv_homepage_modules = 'module_id',
   ddv_homepage_modules_items = 'item_id',
+
+  //============ Page config =============
+  ddv_pages = 'page_id',
+  ddv_page_details = 'page_detail_id',
+  ddv_page_detail_values = 'value_id',
 
   //============ LOG =============
   ddv_logs = 'log_id',

@@ -19,7 +19,7 @@ import { PaymentCreateDTO } from 'src/app/dto/payment/create-payment.dto';
 import { PaymentUpdateDTO } from 'src/app/dto/payment/update-payment.dto';
 import { Query } from '@nestjs/common';
 import { Response } from 'express';
-import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../../../dto/orders/create-payooPaynow.dto';
 /**
  * Controller for Category
  * @Author TrinhLong
@@ -71,6 +71,12 @@ export class PaymentController extends BaseController {
   @Post('/payoo/payment-result')
   async payooNotify(@Res() res: Response, @Body() data) {
     await this.service.payooNotify(data);
+    return this.responseSuccess(res, null, 'NOTIFY_RECEIVED');
+  }
+
+  @Post('/momo/payment-result')
+  async momoNotify(@Res() res: Response, @Body() data) {
+    await this.service.momoNotify(data);
     return this.responseSuccess(res, null, 'NOTIFY_RECEIVED');
   }
 }

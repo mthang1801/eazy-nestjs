@@ -9,7 +9,7 @@ import { IPayment } from '../interfaces/payment.interface';
 import { Like } from 'src/database/operators/operators';
 import { paymentFilter } from 'src/utils/tableConditioner';
 import axios from 'axios';
-import { CreatePaynowDto } from '../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../dto/orders/create-payooPaynow.dto';
 import { CartRepository } from '../repositories/cart.repository';
 import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
@@ -38,7 +38,7 @@ import {
   webDomain,
   payooPaymentNotifyURL,
   validTime,
-} from '../../constants/payment';
+} from '../../constants/payooPayment';
 import { UserRepository } from '../repositories/user.repository';
 
 import { UserEntity } from '../entities/user.entity';
@@ -53,7 +53,7 @@ import {
   shippingDate,
   payooPaynowURL,
   payooInstallmentURL,
-} from '../../constants/payment';
+} from '../../constants/payooPayment';
 import { OrderStatus, OrderType } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
@@ -76,6 +76,29 @@ import {
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
 import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
 import { userSelector } from '../../utils/tableSelector';
+import { CreateMomoPaymentDto } from '../dto/orders/create-momoPayment.dto';
+import { Cryptography } from '../../utils/cryptography';
+import * as crypto from 'crypto';
+import { MOMO_PARTNER_NAME } from '../../constants/momoPayment';
+
+import {
+  MOMO_SECRET_KEY,
+  MOMO_API_ENPOINT,
+  MOMO_PAYMENT,
+  MOMO_PARTNER_CODE,
+} from '../../constants/momoPayment';
+import {
+  MOMO_ACCESS_KEY,
+  momoOrderInfo,
+  momoRedirectUrl,
+  momoIpnUrl,
+  momoExtraData,
+  momoRequestType,
+  momoRequestId,
+} from '../../constants/momoPayment';
+import { request } from 'https';
+import { constants } from 'fs';
+import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 
 @Injectable()
 export class PaymentService {
@@ -262,41 +285,41 @@ export class PaymentService {
           throw new HttpException('Tạo đơn thất bại', 401);
         }
       }
-      console.log(user);
+
       let totalPrice = product['price'];
       let cartItems = [{ ...product, amount: 1 }];
 
       let responseData;
 
-      let gatewayName = '';
-      let installed_money_account_id = 20574861;
+      let gatewayName = GatewayName.HD_Saigon;
+      let installed_money_account_id = GatewayAppcoreId.HD_Saigon;
       switch (+data.company_id) {
         case 1:
-          installed_money_account_id = 20574861;
+          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
           responseData = calculateInstallmentInterestRateHDSaiGon(
             totalPrice,
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'HD Saigon';
+          gatewayName = GatewayName.HD_Saigon;
           break; //HD Saigon
         case 2:
-          installed_money_account_id = 20574874;
+          installed_money_account_id = GatewayAppcoreId.Home_Credit;
           responseData = calculateInstallmentInterestRateHomeCredit(
             totalPrice,
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'Home Credit';
+          gatewayName = GatewayName.Home_Credit;
           break; // Home Credit
         case 3:
-          installed_money_account_id = 100000011;
+          installed_money_account_id = GatewayAppcoreId.Shinhan;
           responseData = calculateInstallmentInterestRateHDSaiGon(
             totalPrice,
             data.prepaid_percentage,
             data.tenor,
           );
-          gatewayName = 'Shinhan';
+          gatewayName = GatewayName.Shinhan;
           break; //Shinhan
       }
 
@@ -304,9 +327,6 @@ export class PaymentService {
       let totalInterest = responseData.totalInterest;
       let interestPerMonth = responseData.interestPerMonth;
       let prepaidAmount = responseData.prepaidAmount;
-      //20574874 Home credit
-      //20630206 payoo
-      //100000011 Shinhan
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
@@ -348,9 +368,6 @@ export class PaymentService {
         payment_status: PaymentStatus.success,
       };
 
-      delete sendData['created_at'];
-      delete sendData['updated_at'];
-
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({
@@ -367,7 +384,7 @@ export class PaymentService {
         totalAmount: +totalPrice,
       };
 
-      const response = await axios({
+      await axios({
         method: 'PUT',
         url: UPDATE_ORDER_PAYMENT(result['order_code']),
         data: paymentAppcoreData,
@@ -375,14 +392,17 @@ export class PaymentService {
 
       await this.orderRepo.update(
         { order_id: result['order_id'] },
-        { status: OrderStatus.purchased },
+        {
+          status: OrderStatus.purchased,
+          updated_date: formatStandardTimeStamp(),
+        },
       );
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
   }
 
-  async payooPaymentPaynow(data: CreatePaynowDto) {
+  async payooPaymentPaynow(data: CreatePayooPaynowDto) {
     return this.payooPayment(data, 'paynow');
   }
 
@@ -427,6 +447,7 @@ export class PaymentService {
         0,
       );
 
+      // Check coupon if it exist
       if (data.coupon_code) {
         let checkCouponData = {
           store_id: method === 'selfTransport' ? data['store_id'] : 67107,
@@ -645,15 +666,13 @@ export class PaymentService {
       const currentOrder = await this.orderRepo.findOne({ ref_order_id });
       let orderPaymentData = {
         ...orderDataResponse,
-        gateway_name: 'Payoo',
+        gateway_name: GatewayName.Payoo,
         order_gateway_id: orderDataResponse?.order_id || null,
         checksum: response.data.checksum,
         expiry_date: orderDataResponse?.expire_date
           ? formatStandardTimeStamp(response.data.order.expiry_date)
           : null,
       };
-
-      console.log(654, orderPaymentData);
 
       await this.orderService.updateOrderPayment(
         currentOrder.order_id,
@@ -731,6 +750,7 @@ export class PaymentService {
       const updateOrderData = {
         payment_status: PaymentStatus.success,
         status: OrderStatus.purchased,
+        updated_date: formatStandardTimeStamp(),
       };
       await this.orderRepo.update(
         { order_id: order.order_id },
@@ -750,7 +770,39 @@ export class PaymentService {
         orderPayment = await this.orderPaymentRepo.create(newOrderPaymentData);
       }
 
-      await this.orderService.updateAppcoreOrderPayment(order.order_id);
+      await this.orderService.updateAppcoreOrderPayment(
+        order.order_id,
+        GatewayName.Payoo,
+      );
+    } catch (error) {
+      throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
+    }
+  }
+
+  async momoNotify(data) {
+    const updatedOrderPayment = await this.orderPaymentRepo.update(
+      { order_no: data['orderId'] },
+      {
+        order_gateway_id: data['transId'],
+        payment_code: data['transId'],
+        errormsg: data['message'],
+        checksum: data['signature'],
+        amount: data['amount'],
+        expiry_date: formatStandardTimeStamp(
+          new Date(data['responseTime'] + 30 * 86400 * 1000),
+        ),
+        payment_type: data['payType'],
+      },
+      true,
+    );
+    if (!updatedOrderPayment['order_id']) {
+      return;
+    }
+    try {
+      await this.orderService.updateAppcoreOrderPayment(
+        updatedOrderPayment.order_id,
+        GatewayName.Momo,
+      );
     } catch (error) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
@@ -816,6 +868,216 @@ export class PaymentService {
         }
         return results;
       }
+    }
+  }
+
+  async momoPayment(data: CreateMomoPaymentDto) {
+    //Check user
+    let user;
+    if (data.user_id) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: { [`${Table.USERS}.user_id`]: data.user_id },
+      });
+    }
+    if (!user) {
+      user = await this.userRepo.findOne({
+        select: userSelector,
+        join: userJoiner,
+        where: {
+          [`${Table.USERS}.phone`]: data['s_phone'],
+        },
+      });
+      if (!user) {
+        await this.customerService.createCustomerFromWebPayment(data);
+        user = await this.userRepo.findOne({
+          select: userSelector,
+          join: userJoiner,
+          where: {
+            [`${Table.USERS}.phone`]: data['s_phone'],
+          },
+        });
+      }
+    }
+    let cartItems = [];
+    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+    if (!cart) {
+      throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    }
+    cartItems = await this.cartItemRepo.find({
+      select: `*, ${Table.CART_ITEMS}.amount`,
+      join: cartPaymentJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    });
+    let totalPrice = cartItems.reduce(
+      (acc, ele) => acc + ele.price * ele.amount,
+      0,
+    );
+    let ref_order_id = generateRandomString();
+    let payCreditType = 2;
+    let sendData: any = {
+      user_id: user.user_id,
+      user_appcore_id: user.user_appcore_id,
+      s_phone: data.s_phone,
+      s_lastname: data.s_lastname,
+      s_city: data.s_city,
+      s_district: data.s_district,
+      s_ward: data.s_ward,
+      s_address: data.s_address,
+      order_items: cartItems,
+      ref_order_id,
+      pay_credit_type: payCreditType,
+      coupon_code: data.coupon_code ? data.coupon_code : null,
+      order_type: OrderType.online,
+      callback_url: data.callback_url,
+    };
+    //Check coupon if it exist
+    if (data.coupon_code) {
+      let checkCouponData = {
+        store_id: 67107,
+        coupon_code: data['coupon_code'],
+        coupon_programing_id: 'HELLO_123',
+        phone: data.s_phone,
+        products: cartItems.map(({ product_id, amount }) => ({
+          product_id,
+          amount,
+        })),
+      };
+      let checkResult = await this.promotionService.checkCoupon(
+        checkCouponData,
+      );
+      if (checkResult['isValid']) {
+        // totalPrice -= checkResult['discountMoney'];
+      }
+    }
+    //Check shipping fee
+    if (data.shipping_fee_location_id) {
+      let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+        select: '*',
+        join: shippingFeeLocationsJoiner,
+        where: {
+          [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
+            data.shipping_fee_location_id,
+        },
+      });
+      if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
+        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+        sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
+        sendData['transfer_amount'] =
+          +totalPrice + +shippingFeeLocation.value_fee;
+        totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
+      }
+    }
+    sendData['transfer_amount'] = +totalPrice;
+
+    const responseData = await this.requestPaymentMomo(sendData);
+
+    sendData['paymentStatus'] = PaymentStatus.new;
+
+    const newOrder = await this.orderService.createOrder(user, sendData);
+
+    await this.orderPaymentRepo.create({
+      order_id: newOrder['order_id'],
+      order_no: responseData['orderId'],
+      gateway_name: GatewayName.Momo,
+      amount: +totalPrice,
+      payment_code: responseData.resultCode,
+      errormsg: responseData.message,
+      payment_url: responseData.payUrl,
+    });
+    return responseData;
+  }
+
+  async requestPaymentMomo(data) {
+    const partnerCode = MOMO_PARTNER_CODE;
+    const accessKey = MOMO_ACCESS_KEY;
+    const secretkey = MOMO_SECRET_KEY;
+    const requestId = data['ref_order_id'];
+    const orderId = data['ref_order_id'];
+    const orderInfo = 'Pay with MoMo';
+    const redirectUrl = momoRedirectUrl(data['callback_url']);
+    const ipnUrl = momoIpnUrl;
+    const amount = data['transfer_amount'];
+    const requestType = 'captureWallet';
+    const cryptography = new Cryptography();
+    const extraData = cryptography.encodeBase64(
+      JSON.stringify({
+        s_lastname: data['s_lastname'],
+        s_phone: data['s_phone'],
+        s_city: data['s_city'],
+        s_district: data['s_district'],
+        s_ward: data['s_ward'],
+        s_address: data['s_address'],
+      }),
+    );
+
+    //before sign HMAC SHA256 with format
+    //accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
+    var rawSignature =
+      'accessKey=' +
+      accessKey +
+      '&amount=' +
+      amount +
+      '&extraData=' +
+      extraData +
+      '&ipnUrl=' +
+      ipnUrl +
+      '&orderId=' +
+      orderId +
+      '&orderInfo=' +
+      orderInfo +
+      '&partnerCode=' +
+      partnerCode +
+      '&redirectUrl=' +
+      redirectUrl +
+      '&requestId=' +
+      requestId +
+      '&requestType=' +
+      requestType;
+
+    var signature = cryptography.generateSHA512(rawSignature, secretkey);
+
+    //json object send to MoMo endpoint
+    const requestBody = {
+      partnerCode,
+      accessKey,
+      requestId,
+      amount,
+      orderId,
+      orderInfo,
+      redirectUrl,
+      ipnUrl,
+      extraData,
+      requestType,
+      signature,
+      lang: 'vi',
+    };
+    try {
+      console.log('4');
+      const response = await axios({
+        url: 'https://test-payment.momo.vn/v2/gateway/api/create',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        data: requestBody,
+      });
+
+      if (!response?.data) {
+        throw new HttpException(
+          'Kết nối thanh toán đến ví momo không thành công.',
+          404,
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error?.response?.data?.message || error.response,
+        error?.response?.status || error.status,
+      );
     }
   }
 }

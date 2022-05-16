@@ -469,3 +469,13 @@ export const groupListSearchFilter = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const pagesListSearchFilter = (search = '', filterConditions = {}) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.ROLE}.page_name`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

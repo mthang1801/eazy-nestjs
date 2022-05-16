@@ -1,6 +1,6 @@
 import { formatStandardTimeStamp } from 'src/utils/helper';
 
-export class ProductPromotionAccessoryEntity {
+export class PromotionAccessoryDetailEntity {
   product_id: number = 0;
   product_appcore_id: string = '';
   app_core_id: string = '';
@@ -11,6 +11,8 @@ export class ProductPromotionAccessoryEntity {
   sale_price_from: number = 0;
   sale_price_to: number = 0;
   collect_price: number = 0;
+  discount_amount: number = 0;
+  discount_type: number = 1;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
   created_by: number = 0;

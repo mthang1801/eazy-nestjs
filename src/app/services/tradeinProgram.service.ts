@@ -59,6 +59,14 @@ import { ProductsCategoriesRepository } from '../repositories/productsCategories
 import { tradeinOldReceiptSearchFilter } from '../../utils/tableConditioner';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
+import { FIND_TRADEIN_PROGRAM } from '../../constants/api.appcore';
+import axios from 'axios';
+import { ValuateBillDto } from '../dto/tradein/valuateBill.dto';
+import { productPriceJoiner } from '../../utils/joinTable';
+import {
+  tradeinCriteriaJoiner,
+  tradeinProgrameDetailJoiner,
+} from '../../utils/joinTable';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -322,24 +330,35 @@ export class TradeinProgramService {
     const temp: any[] = [];
     if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
       for (let valuation_criteria of data.valuation_criteria_list) {
-        const checkCriteriaId = await this.tradeinProgramCriteriaRepo.findOne({criteria_id: valuation_criteria.criteria_id});
-        const checkCriteriaDetailId = await this.tradeinProgramCriteriaDetailRepo.findOne({criteria_detail_id: valuation_criteria.criteria_detail_id});
-        if (!checkCriteriaId || !checkCriteriaDetailId){
-          throw new HttpException("Không tìm thấy criteria id hoặc criteria detail id.", 400);
+        const checkCriteriaId = await this.tradeinProgramCriteriaRepo.findOne({
+          criteria_id: valuation_criteria.criteria_id,
+        });
+        const checkCriteriaDetailId =
+          await this.tradeinProgramCriteriaDetailRepo.findOne({
+            criteria_detail_id: valuation_criteria.criteria_detail_id,
+          });
+        if (!checkCriteriaId || !checkCriteriaDetailId) {
+          throw new HttpException(
+            'Không tìm thấy criteria id hoặc criteria detail id.',
+            400,
+          );
         }
         // console.log(checkCriteriaId.criteria_appcore_id);
         // console.log(checkCriteriaDetailId.criteria_detail_appcore_id);
-        let criteria = {  
-          criteria_appcore_id : checkCriteriaId.criteria_appcore_id, 
-          criteria_detail_appcore_id : checkCriteriaDetailId.criteria_detail_appcore_id
-        }
+        let criteria = {
+          criteria_appcore_id: checkCriteriaId.criteria_appcore_id,
+          criteria_detail_appcore_id:
+            checkCriteriaDetailId.criteria_detail_appcore_id,
+        };
         temp.push(criteria);
       }
     }
 
-    let checkTradeinId = await this.tradeinProgramRepo.findOne({tradein_id: data.tradein_id})
-    if (!checkTradeinId){
-      throw new HttpException("Không tìm thấy tradein id.", 400);
+    let checkTradeinId = await this.tradeinProgramRepo.findOne({
+      tradein_id: data.tradein_id,
+    });
+    if (!checkTradeinId) {
+      throw new HttpException('Không tìm thấy tradein id.', 400);
     }
 
     let valuationBillData = {
@@ -353,11 +372,11 @@ export class TradeinProgramService {
     );
 
     console.log(newValuationBill);
-      
+
     let i = 0;
 
     if (data.valuation_criteria_list && data.valuation_criteria_list.length) {
-      for (let valuation_criteria of data.valuation_criteria_list) { 
+      for (let valuation_criteria of data.valuation_criteria_list) {
         const valuationBillCriteriaDetailData = {
           ...new ValuationBillCriteriaDetailEntity(),
           ...this.valuationBillCriteriaDetailRepo.setData(data),
@@ -1063,5 +1082,120 @@ export class TradeinProgramService {
       paging: { pageSize: limit, currentPage: page, total: count[0].total },
       data: tradeinOldReceipts,
     };
+  }
+
+  async getValuationBill(data: ValuateBillDto) {
+    const product = await this.productRepo.findOne({
+      join: productPriceJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
+    });
+    if (!product) {
+      throw new HttpException('Không tìm thấy sản phẩm áp dụng.', 404);
+    }
+
+    try {
+      const responseAppliedTradeinProgram = await axios({
+        url: FIND_TRADEIN_PROGRAM(product['product_appcore_id']),
+      });
+
+      if (!responseAppliedTradeinProgram.data.data) {
+        throw new HttpException(
+          'Không tìm thấy chương trình áp dụng cho sản phẩm này.',
+          404,
+        );
+      }
+
+      const tradeinProgramAppcoreId = responseAppliedTradeinProgram.data.data;
+      let tradeinProgram = await this.tradeinProgramDetailRepo.findOne({
+        select: '*',
+        join: tradeinProgrameDetailJoiner,
+        where: {
+          [`${Table.TRADEIN_PROGRAM}.tradein_appcore_id`]:
+            tradeinProgramAppcoreId,
+          [`${Table.TRADEIN_PROGRAM_DETAIL}.product_id`]: data.product_id,
+        },
+      });
+
+      tradeinProgram['price'] = product['price'];
+      tradeinProgram['collect_price'] = product['collect_price'];
+
+      if (!tradeinProgram) {
+        throw new HttpException(
+          'Không tìm thấy chương trình áp dụng cho sản phẩm này.',
+          404,
+        );
+      }
+
+      let totalCriteriaPrice = 0;
+      let criteria_ids = [];
+
+      tradeinProgram['criteria_set'] = [];
+
+      if (data.applied_criteria_set && data.applied_criteria_set.length) {
+        for (let criteriaSelectionItem of data.applied_criteria_set) {
+          const _criteriaSelection =
+            await this.tradeinProgramCriteriaRepo.findOne({
+              select: '*',
+              join: tradeinCriteriaJoiner,
+              where: {
+                [`${Table.TRADEIN_PROGRAM_CRITERIA}.criteria_id`]:
+                  criteriaSelectionItem.criteria_id,
+                [`${Table.TRADEIN_PROGRAM_CRITERIA_DETAIL}.criteria_detail_id`]:
+                  criteriaSelectionItem.criteria_detail_id,
+              },
+            });
+          if (!_criteriaSelection) {
+            throw new HttpException(
+              'Không tìm thấy tiêu chí áp dụng cho chương trình',
+              404,
+            );
+          }
+
+          if (
+            _criteriaSelection.criteria_style == 2 &&
+            criteria_ids.includes(_criteriaSelection.criteria_id)
+          ) {
+            throw new HttpException(
+              `Tiêu chí ${_criteriaSelection.criteria_name} chỉ được chọn 1, không thể chọn nhiều`,
+              400,
+            );
+          }
+
+          if (_criteriaSelection.criteria_type == 1) {
+            totalCriteriaPrice =
+              _criteriaSelection.operator_type == 'A'
+                ? +totalCriteriaPrice + +_criteriaSelection.value
+                : +totalCriteriaPrice - +_criteriaSelection.value;
+          } else {
+            totalCriteriaPrice =
+              _criteriaSelection.operator_type == 'A'
+                ? totalCriteriaPrice +
+                  (+totalCriteriaPrice * (100 - +_criteriaSelection.value)) /
+                    100
+                : totalCriteriaPrice -
+                  (+totalCriteriaPrice * (100 - +_criteriaSelection.value)) /
+                    100;
+          }
+
+          criteria_ids.push(_criteriaSelection.criteria_id);
+
+          tradeinProgram['criteria_set'] = [
+            ...tradeinProgram['criteria_set'],
+            _criteriaSelection,
+          ];
+        }
+      }
+
+      return {
+        totalCriteriaPrice,
+        tradeinProgram,
+        applied_product: product,
+      };
+    } catch (error) {
+      throw new HttpException(
+        error?.response?.data?.message || error.response,
+        error?.response?.status || error.status,
+      );
+    }
   }
 }

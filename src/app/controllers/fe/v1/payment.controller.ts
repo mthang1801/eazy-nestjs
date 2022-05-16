@@ -2,12 +2,13 @@ import { Controller, Post, Body, Res, Req, Get, Query } from '@nestjs/common';
 import { BaseController } from '../../../../base/base.controllers';
 import { PaymentService } from '../../../services/payment.service';
 
-import { CreatePaynowDto } from '../../../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../../../dto/orders/create-payooPaynow.dto';
 import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { CreatePayooInstallmentDto } from '../../../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../../../dto/payment/create-installment.dto';
 import { CreatePaymentSelfTransportDto } from '../../../dto/orders/create-paymentSelfTransport.dto';
+import { CreateMomoPaymentDto } from '../../../dto/orders/create-momoPayment.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
@@ -16,7 +17,7 @@ export class PaymentControllerFE extends BaseController {
   @Post('payoo/paynow')
   async payooPaymentPaynow(
     @Res() res: Response,
-    @Body() data: CreatePaynowDto,
+    @Body() data: CreatePayooPaynowDto,
   ): Promise<IResponse> {
     const result = await this.service.payooPaymentPaynow(data);
     return this.responseSuccess(res, result);
@@ -49,6 +50,12 @@ export class PaymentControllerFE extends BaseController {
   ) {
     await this.service.paymentInstallment(data, req.user);
     return this.responseSuccess(res);
+  }
+
+  @Post('momo')
+  async momoPayment(@Res() res: Response, @Body() data: CreateMomoPaymentDto) {
+    const result = await this.service.momoPayment(data);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/installment/')

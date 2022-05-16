@@ -14,6 +14,7 @@ import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { TradeinProgramService } from '../../../services/tradeinProgram.service';
 import { AuthGuard } from '../../../../middlewares/be.auth';
+import { ValuateBillDto } from '../../../dto/tradein/valuateBill.dto';
 @Controller('fe/v1/tradein-programs')
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
@@ -41,6 +42,15 @@ export class TradeinProgramController extends BaseController {
     @Query() params,
   ): Promise<IResponse> {
     const result = await this.service.getOldReceiptByUserId(user_id, params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('/valuation-bill/valuation')
+  async getValuationBill(
+    @Body() data: ValuateBillDto,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getValuationBill(data);
     return this.responseSuccess(res, result);
   }
 }

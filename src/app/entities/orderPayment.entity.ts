@@ -5,6 +5,7 @@ export class OrderPaymentEntity {
   gateway_name: string = '';
   order_no: string = '';
   amount: number = 0;
+  payment_type: string = '';
   payment_code: string = '';
   errorcode: number = null;
   errormsg: string = '';

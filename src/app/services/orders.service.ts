@@ -93,7 +93,7 @@ import { formatOrderTimestamp } from 'src/utils/services/order.helper';
 import { CityService } from './city.service';
 import { DistrictService } from './district.service';
 import { WardService } from './ward.service';
-import { CreatePaynowDto } from '../dto/orders/create-paynow.dto';
+import { CreatePayooPaynowDto } from '../dto/orders/create-payooPaynow.dto';
 import { DatabaseService } from '../../database/database.service';
 import {
   payooAPIUserName,
@@ -104,9 +104,9 @@ import {
   payooShopId,
   payooBusinessName,
   payooShopTitle,
-} from '../../constants/payment';
+} from '../../constants/payooPayment';
 import * as moment from 'moment';
-import { payooChecksum } from '../../constants/payment';
+import { payooChecksum } from '../../constants/payooPayment';
 import {
   userJoiner,
   cartPaymentJoiner,
@@ -139,6 +139,7 @@ import {
   userPaymentJoiner,
 } from '../../utils/joinTable';
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
+import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 
 @Injectable()
 export class OrdersService {
@@ -397,12 +398,10 @@ export class OrdersService {
       }
     }
 
-    console.log(sendData);
-
     const result = await this.createOrder(user, sendData);
 
-    // await this.cartRepo.delete({ cart_id: cart.cart_id });
-    // await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    await this.cartRepo.delete({ cart_id: cart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
     return result;
   }
 
@@ -492,10 +491,33 @@ export class OrdersService {
       }
     }
 
+    orderData['subtotal'] = +orderData['total'];
     if (data.shipping_cost) {
       orderData['subtotal'] = +orderData['total'] + +data.shipping_cost;
     }
 
+    //Check order bill info
+    if (!orderData['b_lastname'] && orderData['s_lastname']) {
+      orderData['b_lastname'] = orderData['s_lastname'];
+    }
+
+    if (!orderData['b_city'] && orderData['s_city']) {
+      orderData['b_city'] = orderData['s_city'];
+    }
+
+    if (!orderData['b_district'] && orderData['s_district']) {
+      orderData['b_district'] = orderData['s_district'];
+    }
+
+    if (!orderData['b_ward'] && orderData['s_ward']) {
+      orderData['b_ward'] = orderData['s_ward'];
+    }
+
+    if (!orderData['b_address'] && orderData['s_address']) {
+      orderData['b_address'] = orderData['s_address'];
+    }
+
+    //Create order
     let result = await this.orderRepo.create(orderData);
 
     // create order histories
@@ -564,7 +586,7 @@ export class OrdersService {
       },
       data: convertDataToIntegrate(result),
     };
-
+    console.log(result);
     try {
       const response = await axios(configPushOrderToAppcore);
 
@@ -592,6 +614,11 @@ export class OrdersService {
       await this.orderHistoryRepo.create(updatedOrder, false);
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
+      if (error.response.status == 400 || error.status == 400) {
+        await this.orderRepo.delete({ order_id: result.order_id });
+        await this.orderHistoryRepo.delete({ order_id: result.order_id });
+        await this.orderDetailRepo.delete({ order_id: result.order_id });
+      }
       console.log(error);
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
@@ -620,7 +647,7 @@ export class OrdersService {
     }
   }
 
-  async updateAppcoreOrderPayment(order_id) {
+  async updateAppcoreOrderPayment(order_id, gateway = GatewayName.Payoo) {
     try {
       let orderPayment = await this.orderPaymentRepo.findOne({
         order_id,
@@ -629,15 +656,23 @@ export class OrdersService {
       if (!order) {
         throw new HttpException('Không tìm thấy đơn hàng', 404);
       }
-      let installed_money_account_id = 20630206;
+
+      let installed_money_account_id;
+      switch (gateway) {
+        case GatewayName.Momo:
+          installed_money_account_id = GatewayAppcoreId.Momo;
+          break;
+        default:
+          installed_money_account_id = GatewayAppcoreId.Payoo;
+      }
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,
-        installmentCode: orderPayment['order_no'],
+        installmentCode: orderPayment['order_gateway_id'],
         paymentStatus: 'success',
         totalAmount: +orderPayment['amount'],
       };
 
-      const response = await axios({
+      await axios({
         method: 'PUT',
         url: UPDATE_ORDER_PAYMENT(order.order_code),
         data: paymentAppcoreData,
@@ -647,13 +682,14 @@ export class OrdersService {
         { order_id },
         {
           installed_money_account_id,
-          installed_money_code: orderPayment['order_no'],
+          installed_money_code: orderPayment['order_gateway_id'],
           status: OrderStatus.purchased,
           payment_status: PaymentStatus.success,
-          updated_at: formatStandardTimeStamp(),
+          updated_date: formatStandardTimeStamp(),
         },
       );
     } catch (error) {
+      console.log(error);
       throw new HttpException('Something went wrong', 409);
     }
   }
@@ -714,6 +750,7 @@ export class OrdersService {
         {
           status: OrderStatus.invalid,
           reason_fail: error?.response?.data?.message,
+          updated_date: formatStandardTimeStamp(),
         },
         true,
       );
@@ -786,7 +823,10 @@ export class OrdersService {
     }
 
     let result = { ...order };
-    const orderData = this.orderRepo.setData(data);
+    const orderData = {
+      ...this.orderRepo.setData(data),
+      updated_date: formatStandardTimeStamp(),
+    };
 
     if (Object.entries(orderData).length) {
       const updatedOrder = await this.orderRepo.update(
@@ -968,6 +1008,22 @@ export class OrdersService {
       }
     }
 
+    if (convertedData['s_lastname'] && !convertedData['s_lastname']) {
+      convertedData['s_lastname'] = convertedData['s_lastname'];
+    }
+    if (convertedData['b_city'] && !convertedData['s_city']) {
+      convertedData['s_city'] = convertedData['b_city'];
+    }
+    if (convertedData['b_district'] && !convertedData['s_district']) {
+      convertedData['s_district'] = convertedData['b_district'];
+    }
+    if (convertedData['b_ward'] && !convertedData['s_ward']) {
+      convertedData['s_ward'] = convertedData['b_ward'];
+    }
+    if (convertedData['b_address'] && !convertedData['s_address']) {
+      convertedData['s_address'] = convertedData['b_address'];
+    }
+
     const orderData = {
       ...new OrderEntity(),
       ...this.orderRepo.setData(convertedData),
@@ -1001,6 +1057,7 @@ export class OrdersService {
       orderData['user_id'] = user.user_id;
     }
 
+    orderData['subtotal'] = +orderData['total'];
     let result = await this.orderRepo.create(orderData);
     // create order histories
 
@@ -1052,6 +1109,24 @@ export class OrdersService {
         )
       ) {
         convertedData['payment_status'] = 1;
+      }
+    }
+
+    if (order['order_type'] != 2) {
+      if (convertedData['s_lastname'] && !order['s_lastname']) {
+        convertedData['s_lastname'] = convertedData['s_lastname'];
+      }
+      if (convertedData['b_city'] && !order['s_city']) {
+        convertedData['s_city'] = convertedData['b_city'];
+      }
+      if (convertedData['b_district'] && !order['s_district']) {
+        convertedData['s_district'] = convertedData['b_district'];
+      }
+      if (convertedData['b_ward'] && !order['s_ward']) {
+        convertedData['s_ward'] = convertedData['b_ward'];
+      }
+      if (convertedData['b_address'] && !order['s_address']) {
+        convertedData['s_address'] = convertedData['b_address'];
       }
     }
 
@@ -1152,7 +1227,15 @@ export class OrdersService {
         0,
       );
 
-      await this.orderRepo.update({ order_code }, { total });
+      let subtotal = +total;
+      if (order.shipping_cost != 0) {
+        subtotal = +subtotal + +order.shipping_cost;
+      }
+
+      await this.orderRepo.update(
+        { order_code },
+        { total, subtotal, updated_date: formatStandardTimeStamp() },
+      );
     }
   }
 
@@ -1447,7 +1530,10 @@ export class OrdersService {
         404,
       );
     }
-    await this.orderRepo.update({ order_code }, { status: order_status });
+    await this.orderRepo.update(
+      { order_code },
+      { status: order_status, updated_date: formatStandardTimeStamp() },
+    );
   }
 
   async getHistory(order_id: number) {
@@ -1510,6 +1596,7 @@ export class OrdersService {
               {
                 status: OrderStatus.invalid,
                 reason_fail: error.response,
+                updated_date: formatStandardTimeStamp(),
               },
               true,
             );
@@ -1525,7 +1612,7 @@ export class OrdersService {
       }
       await this.orderRepo.update(
         { order_code: Not(IsNull()) },
-        { is_sync: 'N' },
+        { is_sync: 'N', updated_date: formatStandardTimeStamp() },
       );
     } catch (error) {
       throw new HttpException(
