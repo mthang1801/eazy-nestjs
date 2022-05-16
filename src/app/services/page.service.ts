@@ -20,6 +20,7 @@ import { pagesListSearchFilter } from '../../utils/tableConditioner';
 import { IGetPagesFilters } from '../interfaces/pages/getPagesFitlers.interface';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { CreatePageDetailValueDto } from '../dto/page/create-pageDetailValue.entity';
 
 @Injectable()
 export class PageService {
@@ -315,6 +316,11 @@ export class PageService {
     }
   }
 
+  async createPageDetailValues(
+    page_detail_id: number,
+    data: CreatePageDetailValueDto,
+  ) {}
+
   async getPages(params: IGetPagesFilters = {}) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { status, search } = params;
@@ -346,6 +352,8 @@ export class PageService {
   }
 
   async getPageDetail(page_id) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+
     const pageDetails = await this.pageDetailRepo.find({
       select: '*',
       orderBy: [
@@ -359,15 +367,9 @@ export class PageService {
       },
     });
 
-    if (pageDetails) {
-      for (let pageDetail of pageDetails) {
-        pageDetail['page_detail_values'] = await this.getPageDetailValues(
-          pageDetail.page_detail_id,
-        );
-      }
-    }
+    currentPage['page_details'] = pageDetails;
 
-    return pageDetails;
+    return currentPage;
   }
 
   async getPageDetailValues(page_detail_id) {
