@@ -16,6 +16,7 @@ import { UpdatePageDto } from '../../../dto/page/update-page.dto';
 import { CreatePageDetailDto } from '../../../dto/page/create-pageDetail.dto';
 import { UpdatePageDetailDto } from '../../../dto/page/update-pageDetail.dto';
 import { Response } from 'express';
+import { UpdatePageDetailStatus } from '../../../dto/page/update-pageDetailStatus.dto';
 @Controller('be/v1/pages')
 export class PageController extends BaseController {
   constructor(private service: PageService) {
@@ -40,7 +41,7 @@ export class PageController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Post('/:page_id/page_detail')
+  @Post('/:page_id/page-details')
   async createPageDetail(
     @Res() res: Response,
     @Body() data: CreatePageDetailDto,
@@ -50,14 +51,24 @@ export class PageController extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Put('/page_detail/:page_detail_id')
+  @Put('/:page_id/page-detail')
   async updatePageDetail(
     @Res() res: Response,
     @Body() data: UpdatePageDetailDto,
-    @Param('page_detail_id') page_detail_id: number,
+    @Param('page_id') page_id: number,
   ): Promise<IResponse> {
-    await this.service.updatePageDetail(page_detail_id, data);
+    await this.service.updatePageDetail(page_id, data);
     return this.responseSuccess(res);
+  }
+
+  @Put('/page-detail/:page_detail_id/update-status')
+  async updatePageDetailStatus(
+    @Res() res: Response,
+    @Param('page_detail_id') page_detail_id: number,
+    @Body('status') status: string,
+  ) {
+    await this.service.updatePageDetailStatus(page_detail_id, status);
+    await this.responseSuccess(res);
   }
 
   @Get()
@@ -75,7 +86,7 @@ export class PageController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('page_detail/:page_detail_id')
+  @Get('page-detail/:page_detail_id')
   async getPageDetailValues(
     @Res() res: Response,
     @Param('page_detail_id') page_detail_id: number,

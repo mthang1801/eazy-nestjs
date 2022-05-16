@@ -30,7 +30,7 @@ export class UploadController extends BaseController {
           return cb(null, filename);
         },
       }),
-      limits: { fileSize: 50000 },
+      limits: { fileSize: 5000000 },
     }),
   )
   async upload(

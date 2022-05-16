@@ -216,121 +216,102 @@ export class PageService {
     };
     await this.pageRepo.update({ page_id }, updatedPageData);
 
-    const pageDetails = await this.pageDetailRepo.find({
-      page_id,
-    });
-    if (
-      pageDetails.length &&
-      pageDetails.some(
-        ({ module_name }) =>
-          module_name.toLowerCase().trim() ==
-          removeMoreThanOneSpace(data.module_name).toLowerCase().trim(),
-      )
-    ) {
-      throw new HttpException('Tên Module trong trang đã tồn tại', 409);
-    }
-
-    const pageDetailData = {
-      ...new PageDetailEntity(),
-      ...this.pageDetailRepo.setData(data),
-      module_name: removeMoreThanOneSpace(data.module_name),
-      page_id,
-    };
-    const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
-
-    if (data.page_detail_values && data.page_detail_values.length) {
-      for (let pageDetailValue of data.page_detail_values) {
-        let detailValues = await this.pageDetailValueRepo.find({
-          page_detail_id: newPageDetail.page_detail_id,
+    if (data.page_details && data.page_details.length) {
+      await this.pageDetailRepo.delete({ page_id });
+      for (let pageDetailItem of data.page_details) {
+        const pageDetails = await this.pageDetailRepo.find({
+          page_id,
         });
         if (
-          detailValues.length &&
-          detailValues.some(
-            ({ name }) =>
-              name.toLowerCase().trim() ==
-              removeMoreThanOneSpace(pageDetailValue.name).toLowerCase().trim(),
+          pageDetails.length &&
+          pageDetails.some(
+            ({ module_name }) =>
+              module_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(pageDetailItem.module_name)
+                .toLowerCase()
+                .trim(),
           )
         ) {
-          pageDetailValue['name'] = `${
-            pageDetailValue['name']
-          }-${genRandomString(6)}`;
+          throw new HttpException('Tên Module trong trang đã tồn tại', 409);
         }
-        const pageDetailValueData = {
-          ...new PageDetailValueEntity(),
-          ...this.pageDetailValueRepo.setData(pageDetailValue),
-          name: removeMoreThanOneSpace(pageDetailValue.name),
-          page_detail_id: newPageDetail.page_detail_id,
+
+        const pageDetailData = {
+          ...new PageDetailEntity(),
+          ...this.pageDetailRepo.setData(pageDetailItem),
+          module_name: removeMoreThanOneSpace(pageDetailItem.module_name),
+          page_id,
         };
-        await this.pageDetailValueRepo.create(pageDetailValueData);
+        const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
+
+        if (
+          pageDetailItem.page_detail_values &&
+          pageDetailItem.page_detail_values.length
+        ) {
+          for (let pageDetailValue of pageDetailItem.page_detail_values) {
+            let detailValues = await this.pageDetailValueRepo.find({
+              page_detail_id: newPageDetail.page_detail_id,
+            });
+            if (
+              detailValues.length &&
+              detailValues.some(
+                ({ name }) =>
+                  name.toLowerCase().trim() ==
+                  removeMoreThanOneSpace(pageDetailValue.name)
+                    .toLowerCase()
+                    .trim(),
+              )
+            ) {
+              pageDetailValue['name'] = `${
+                pageDetailValue['name']
+              }-${genRandomString(6)}`;
+            }
+            const pageDetailValueData = {
+              ...new PageDetailValueEntity(),
+              ...this.pageDetailValueRepo.setData(pageDetailValue),
+              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_id: newPageDetail.page_detail_id,
+            };
+            await this.pageDetailValueRepo.create(pageDetailValueData);
+          }
+        }
       }
     }
   }
 
-  async updatePageDetail(page_detail_id: number, data: UpdatePageDetailDto) {
-    const currentPageDetail = await this.pageDetailRepo.findOne({
-      page_detail_id,
-    });
-    if (currentPageDetail) {
-      throw new HttpException('Không tìm thấy module.', 404);
+  async updatePageDetail(page_id: number, data: UpdatePageDetailDto) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+
+    if (!currentPage) {
+      throw new HttpException('Không tìm thấy trang.', 404);
     }
 
-    if (data.module_name) {
-      const pageDetails = await this.pageDetailRepo.find({
-        page_id: currentPageDetail.page_id,
-      });
-      if (
-        pageDetails.length &&
-        pageDetails.some(
-          ({ page_detail_id: pageDetailId, module_name }) =>
-            module_name.toLowerCase().trim() ==
-              removeMoreThanOneSpace(data.module_name).toLowerCase().trim() &&
-            page_detail_id !== pageDetailId,
-        )
-      ) {
-        throw new HttpException('Tên Module trong trang đã tồn tại', 409);
+    const updatedPageData = {
+      updated_at: formatStandardTimeStamp(),
+    };
+    await this.pageRepo.update({ page_id }, updatedPageData);
+
+    if (data.page_details && data.page_details.length) {
+      for (let pageDetailItem of data.page_details) {
+        await this.pageDetailRepo.update(
+          { page_detail_id: pageDetailItem.page_detail_id },
+          { position: pageDetailItem.position },
+        );
       }
     }
+  }
 
-    let pageDetailData = {
-      ...this.pageDetailValueRepo.setData(data),
-      module_name: data.module_name
-        ? removeMoreThanOneSpace(data.module_name)
-        : currentPageDetail.module_name,
-    };
-
-    await this.pageDetailRepo.update({ page_detail_id }, pageDetailData);
-
-    await this.pageRepo.update(
-      { page_id: currentPageDetail.page_id },
-      { updated_at: formatStandardTimeStamp() },
+  async updatePageDetailStatus(page_detail_id, status: string) {
+    const updatedPageDetail = await this.pageDetailRepo.update(
+      { page_detail_id },
+      { status },
+      true,
     );
 
-    if (data.page_detail_values && data.page_detail_values.length) {
-      await this.pageDetailValueRepo.delete({ page_detail_id });
-      for (let pageDetailValue of data.page_detail_values) {
-        let detailValues = await this.pageDetailValueRepo.find({
-          page_detail_id,
-        });
-        if (
-          detailValues.length &&
-          detailValues.some(
-            ({ name }) =>
-              name.toLowerCase().trim() ==
-              removeMoreThanOneSpace(pageDetailValue.name).toLowerCase().trim(),
-          )
-        ) {
-          pageDetailValue['name'] = `${
-            pageDetailValue['name']
-          }-${genRandomString(6)}`;
-        }
-        const pageDetailValueData = {
-          ...new PageDetailValueEntity(),
-          ...this.pageDetailValueRepo.setData(pageDetailValue),
-          name: removeMoreThanOneSpace(pageDetailValue.name),
-          page_detail_id,
-        };
-        await this.pageDetailValueRepo.create(pageDetailValueData);
-      }
+    if (updatedPageDetail) {
+      await this.pageRepo.update(
+        { page_id: updatedPageDetail.page_id },
+        { updated_at: formatStandardTimeStamp() },
+      );
     }
   }
 

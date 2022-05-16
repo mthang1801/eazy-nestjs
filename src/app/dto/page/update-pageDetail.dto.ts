@@ -1,50 +1,25 @@
 import { Type } from 'class-transformer';
+
 import {
   IsOptional,
   IsNotEmpty,
   IsString,
   IsNumber,
+  ArrayNotEmpty,
   ValidateNested,
 } from 'class-validator';
 
 export class UpdatePageDetailDto {
-  @IsOptional()
-  module_name: string;
-
-  @IsOptional()
-  description: string;
-
-  @IsOptional()
-  position: number;
-
-  @IsOptional()
-  url: string;
-
-  @IsOptional()
-  image: string;
-
-  @IsOptional()
-  status: string;
-
-  @IsOptional()
-  device_type: string;
-
-  @IsOptional()
+  @ArrayNotEmpty()
   @ValidateNested()
-  @Type(() => PageDetailValue)
-  page_detail_values: PageDetailValue[];
+  @Type(() => PageDetail)
+  page_details: PageDetail[];
 }
 
-class PageDetailValue {
+class PageDetail {
   @IsOptional()
-  name: string;
-
-  @IsOptional()
-  data_value: string;
+  page_detail_id: number;
 
   @IsOptional()
   position: number;
-
-  @IsOptional()
-  detail_status: string;
 }

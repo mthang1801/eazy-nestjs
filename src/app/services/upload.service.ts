@@ -14,8 +14,6 @@ export class UploadService {
       data.append('files', fs.createReadStream(file.path));
     }
 
-    console.log(files);
-
     let config: any = {
       method: 'post',
       url: UPLOAD_IMAGE_API,

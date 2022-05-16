@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { ArrayNotEmpty } from 'class-validator';
 import {
   IsOptional,
   IsNotEmpty,
@@ -8,6 +9,13 @@ import {
 } from 'class-validator';
 
 export class CreatePageDetailDto {
+  @ArrayNotEmpty()
+  @ValidateNested()
+  @Type(() => PageDetail)
+  page_details: PageDetail[];
+}
+
+class PageDetail {
   @IsNotEmpty()
   module_name: string;
 
