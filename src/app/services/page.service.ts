@@ -20,7 +20,8 @@ import { pagesListSearchFilter } from '../../utils/tableConditioner';
 import { IGetPagesFilters } from '../interfaces/pages/getPagesFitlers.interface';
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
-import { CreatePageDetailValueDto } from '../dto/page/create-pageDetailValue.entity';
+import { CreatePageDetailValueDto } from '../dto/page/create-pageDetailValue.dto';
+import { UpdatePageDetailValueDto } from '../dto/page/update-pageDetailValue.dto';
 
 @Injectable()
 export class PageService {
@@ -328,7 +329,29 @@ export class PageService {
           ...this.pageDetailValueRepo.setData(pageDetailValue),
           page_detail_id,
         };
-        await await this.pageDetailRepo.create(newPageDetailData);
+        await await this.pageDetailRepo.create(newPageDetailData, false);
+      }
+    }
+  }
+
+  async updatePageDetailValueStatus(value_id, status) {
+    return this.pageDetailValueRepo.update({ value_id }, { status });
+  }
+
+  async updatePageDetailValues(
+    page_detail_id: number,
+    data: UpdatePageDetailValueDto,
+  ) {
+    if (data.page_detail_values && data.page_detail_values.length) {
+      await this.pageDetailValueRepo.delete({ page_detail_id });
+      for (let pageDetailValue of data.page_detail_values) {
+        const newPageDetailValueData = {
+          ...new PageDetailValueEntity(),
+          ...this.pageDetailValueRepo.setData(pageDetailValue),
+          page_detail_id,
+        };
+
+        await this.pageDetailRepo.create(newPageDetailValueData, false);
       }
     }
   }
