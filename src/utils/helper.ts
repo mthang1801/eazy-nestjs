@@ -280,7 +280,7 @@ export const convertIntoCacheString = (params) => {
   let result = '';
   if (Object.entries(params).length) {
     for (let [i, [key, val]] of Object.entries(params).entries()) {
-      result += `_${key}_${val}`;
+      result += `-${key}-${val}`;
     }
   }
 

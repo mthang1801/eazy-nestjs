@@ -218,6 +218,8 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
+import { cacheKeys } from '../../constants/cache';
+import { convertIntoCacheString } from '../../utils/helper';
 import {
   categoryFeatureJoiner,
   categoryFeaturesSetJoiner,
@@ -1421,6 +1423,10 @@ export class ProductService {
   }
 
   async getProductsListByCategorySlug(slug: string, params) {
+    const categoryCacheKey = `${slug}${convertIntoCacheString(params)}`;
+    console.log(categoryCacheKey);
+    const cacheKey = cacheKeys.productByCategorySlug(categoryCacheKey);
+    console.log(cacheKey);
     const category = await this.categoryRepo.findOne({
       select: categorySelector,
       join: {

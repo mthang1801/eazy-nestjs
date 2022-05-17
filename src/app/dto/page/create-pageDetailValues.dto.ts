@@ -1,9 +1,13 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, ValidateNested, IsOptional } from 'class-validator';
-export class CreatePageDetailValueDto {
-  @IsOptional()
-  value_id: number;
+export class CreatePageDetailValuesDto {
+  @ArrayNotEmpty()
+  @ValidateNested()
+  @Type(() => PageDetailValue)
+  page_detail_values: PageDetailValue[];
+}
 
+class PageDetailValue {
   @IsOptional()
   name: string;
 
