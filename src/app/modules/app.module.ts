@@ -54,6 +54,7 @@ import { HomepageConfigModule } from './homepageConfig.module';
 import { LogsModule } from './logs.module';
 import { PageModule } from './page.module';
 import { RedisCacheModule } from './redisCache.module';
+import { DiscountProgramModule } from './discountProgram.module';
 
 @Module({
   imports: [
@@ -101,6 +102,7 @@ import { RedisCacheModule } from './redisCache.module';
     CartModule,
     StickerModule,
     PromotionAccessoryModule,
+    DiscountProgramModule,
     IndexModule,
     PromotionModule,
     FlashSaleModule,

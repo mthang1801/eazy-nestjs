@@ -1,12 +1,11 @@
 import { formatStandardTimeStamp } from '../../utils/helper';
 export class ValuationBillEntity {
-  valuation_bill_id: number = 0;
   appcore_id: number = null;
   status: string = 'A';
   type: number = 1;
   store_id: number = null;
   store_name: string = null;
-  is_sync: string = 'Y';
+  is_sync: string = 'N';
   customer_phone: string = '';
   customer_name: string = '';
   tradein_appcore_id: number = null;
@@ -17,7 +16,7 @@ export class ValuationBillEntity {
   final_price: number = 0;
   product_id: number = null;
   product_appcore_id: number = null;
-  imei: number = null;
+  imei: string = null;
   note: string = '';
   handle_by: number = null;
   created_at: string = formatStandardTimeStamp();
