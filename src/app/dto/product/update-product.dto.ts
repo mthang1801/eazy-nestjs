@@ -152,6 +152,9 @@ export class UpdateProductDto {
   @ValidateNested()
   @Type(() => JoinedProduct)
   joined_products: JoinedProduct[];
+
+  @IsOptional()
+  category_feature_id: number;
 }
 
 class ProductFeatureDto {

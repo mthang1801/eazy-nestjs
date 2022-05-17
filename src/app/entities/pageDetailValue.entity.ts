@@ -6,4 +6,5 @@ export class PageDetailValueEntity {
   position: number = null;
   detail_status: string = 'A';
   router: string = '';
+  image: string = '';
 }
