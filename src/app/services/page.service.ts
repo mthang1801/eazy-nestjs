@@ -97,8 +97,8 @@ export class PageService {
                     .trim(),
               )
             ) {
-              pageDetailValue['name'] = `${
-                pageDetailValue['name']
+              pageDetailValue['page_detail_name'] = `${
+                pageDetailValue['page_detail_name']
               }-${genRandomString(6)}`;
             }
             const pageDetailValueData = {
@@ -193,8 +193,8 @@ export class PageService {
                     .trim(),
               )
             ) {
-              pageDetailValue['name'] = `${
-                pageDetailValue['name']
+              pageDetailValue['page_detail_name'] = `${
+                pageDetailValue['page_detail_name']
               }-${genRandomString(6)}`;
             }
             const pageDetailValueData = {
@@ -261,15 +261,15 @@ export class PageService {
             if (
               detailValues.length &&
               detailValues.some(
-                ({ name }) =>
+                ({ page_detail_name: name }) =>
                   name.toLowerCase().trim() ==
                   removeMoreThanOneSpace(pageDetailValue.page_detail_name)
                     .toLowerCase()
                     .trim(),
               )
             ) {
-              pageDetailValue['name'] = `${
-                pageDetailValue['name']
+              pageDetailValue['page_detail_name'] = `${
+                pageDetailValue['page_detail_name']
               }-${genRandomString(6)}`;
             }
             const pageDetailValueData = {
