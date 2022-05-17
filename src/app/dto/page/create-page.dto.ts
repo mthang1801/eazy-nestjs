@@ -54,6 +54,9 @@ class PageDetail {
   @ValidateNested()
   @Type(() => PageDetailValue)
   page_detail_values: PageDetailValue[];
+
+  @IsOptional()
+  router: string = '';
 }
 
 class PageDetailValue {
@@ -68,9 +71,6 @@ class PageDetailValue {
 
   @IsOptional()
   detail_status: string;
-
-  @IsOptional()
-  router: string = '';
 
   @IsOptional()
   image: string = '';

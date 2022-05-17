@@ -21,8 +21,5 @@ class PageDetailValue {
   status: string;
 
   @IsOptional()
-  router: string = '';
-
-  @IsOptional()
   image: string = '';
 }

@@ -51,6 +51,9 @@ class PageDetail {
   device_type: string;
 
   @IsOptional()
+  router: string = '';
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => PageDetailValue)
   page_detail_values: PageDetailValue[];
@@ -68,9 +71,6 @@ class PageDetailValue {
 
   @IsOptional()
   detail_status: string;
-
-  @IsOptional()
-  router: string = '';
 
   @IsOptional()
   image: string = '';

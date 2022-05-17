@@ -7,4 +7,5 @@ export class PageDetailEntity {
   url: string = '';
   image: string = '';
   status: string = 'A';
+  router: string = '';
 }
