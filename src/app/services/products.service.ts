@@ -70,7 +70,11 @@ import {
   MoreThanOrEqual,
 } from '../../database/operators/operators';
 
-import { convertToSlug, getPageSkipLimit } from '../../utils/helper';
+import {
+  convertToSlug,
+  getPageSkipLimit,
+  removeMoreThanOneSpace,
+} from '../../utils/helper';
 
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
@@ -1294,21 +1298,58 @@ export class ProductService {
   }
 
   async joinParentProducts(joined_products: JoinedProduct[]) {
-    if (joined_products.length < 2) return;
+    if (joined_products.length < 2) {
+      throw new HttpException(
+        'Cập nhật nhóm SP không thành công, vui lòng chọn nhiều SP cùng loại',
+        400,
+      );
+    }
 
     let groupsList = [];
 
     for (let { product_id, name } of joined_products) {
+      if (!name) {
+        throw new HttpException('Nhóm SP cần có tên cụ thể', 400);
+      }
+      if (
+        name &&
+        groupsList.some(
+          ({ group_name }) =>
+            group_name.toLowerCase().trim() ==
+            removeMoreThanOneSpace(name).toLowerCase().trim(),
+        )
+      ) {
+        throw new HttpException('Tên SP trong nhóm bị trùng', 400);
+      }
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: product_id,
       });
-      if (group) {
-        group['group_name'] = name;
-        groupsList = [...groupsList, group];
+
+      if (!group) {
+        const checkProduct = await this.productRepo.findOne({ product_id });
+        if (checkProduct.product_function != 1) {
+          throw new HttpException(
+            `Sản phẩm có id ${product_id} không phải là sản phẩm cha`,
+            400,
+          );
+        }
+        const newGroupData = {
+          ...new ProductVariationGroupsEntity(),
+          product_root_id: product_id,
+        };
+        group = await this.productVariationGroupRepo.create(newGroupData);
       }
+
+      group['group_name'] = name;
+      groupsList = [...groupsList, group];
     }
 
-    if (groupsList.length != joined_products.length) return;
+    if (groupsList.length != joined_products.length) {
+      throw new HttpException(
+        'Cập nhật không thành công, SP trong nhóm đầy đủ',
+        404,
+      );
+    }
 
     let groupIndexData = {
       ...new ProductVariationGroupIndexEntity(),
@@ -1635,7 +1676,7 @@ export class ProductService {
     // Kiểm tra slug đã tồn tại hay chưa
     if (data.slug) {
       const product = await this.productRepo.findOne({
-        slug: data.slug,
+        slug: data.slug.trim(),
         product_id: Not(Equal(result.product_id)),
       });
 
@@ -1649,6 +1690,7 @@ export class ProductService {
     // Update product
     const productData = this.productRepo.setData({
       ...data,
+      slug: data.slug ? data.slug.trim() : currentProduct.slug,
       updated_at: formatStandardTimeStamp(),
     });
 
