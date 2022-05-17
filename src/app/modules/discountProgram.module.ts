@@ -1,6 +1,6 @@
 import { Module, Global } from '@nestjs/common';
-import { DiscountProgramRepository } from '../repositories/DiscountProgram.repository';
-import { DiscountProgramDetailRepository } from '../repositories/DiscountProgramDetail.repository';
+import { DiscountProgramRepository } from '../repositories/discountProgram.repository';
+import { DiscountProgramDetailRepository } from '../repositories/discountProgramDetail.repository';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
@@ -21,8 +21,6 @@ import { DiscountProgramService } from '../services/discountProgram.service';
     DiscountProgramRepository,
     DiscountProgramDetailRepository,
   ],
-  controllers: [
-    DiscountProgramItgController,
-  ],
+  controllers: [DiscountProgramItgController],
 })
 export class DiscountProgramModule {}

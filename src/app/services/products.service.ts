@@ -1480,6 +1480,10 @@ export class ProductService {
         field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
         sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
       },
+      {
+        field: `${Table.PRODUCTS_CATEGORIES}.updated_at`,
+        sortBy: SortBy.DESC,
+      },
     ];
 
     let productsList = [];

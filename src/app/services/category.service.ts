@@ -771,8 +771,8 @@ export class CategoryService {
         join: categoryJoiner,
         orderBy: [
           {
-            field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
-            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position ASC`,
+            field: `CASE WHEN ${Table.CATEGORIES}.position`,
+            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.CATEGORIES}.position ASC`,
           },
         ],
         where: categoriesSearchFilter(search, filterCondition),
