@@ -329,7 +329,7 @@ export class PageService {
           ...this.pageDetailValueRepo.setData(pageDetailValue),
           page_detail_id,
         };
-        await await this.pageDetailRepo.create(newPageDetailData, false);
+        await this.pageDetailValueRepo.create(newPageDetailData, false);
       }
     }
   }
