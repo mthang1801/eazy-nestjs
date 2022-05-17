@@ -12,6 +12,7 @@ import {
   databaseConfig,
   authConfig,
   mailConfig,
+  redisConfig,
 } from '../../config/index.config';
 import { LoggerModule } from '../../logger/logger.module';
 import { StringModule } from './string.module';
@@ -52,15 +53,16 @@ import { TradeinProgramModule } from './tradeinProgram.module';
 import { HomepageConfigModule } from './homepageConfig.module';
 import { LogsModule } from './logs.module';
 import { PageModule } from './page.module';
+import { RedisCacheModule } from './redisCache.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfig, databaseConfig, authConfig, mailConfig],
+      load: [appConfig, databaseConfig, authConfig, mailConfig, redisConfig],
     }),
-
+    RedisCacheModule,
     MulterModule.registerAsync({
       useFactory: () => ({
         dest: './uploads',

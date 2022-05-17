@@ -3,7 +3,11 @@ import { CatalogCategoryItemRepository } from './../repositories/catalogCategory
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from '../repositories/category.repository';
 import { Table } from '../../database/enums/tables.enum';
-import { formatStandardTimeStamp, convertToSlug } from '../../utils/helper';
+import {
+  formatStandardTimeStamp,
+  convertToSlug,
+  convertIntoQueryParams,
+} from '../../utils/helper';
 import { CreateCategoryDto } from '../dto/category/create-category.dto';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { UpdateCategoryDto } from '../dto/category/update-category.dto';
@@ -77,6 +81,8 @@ import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entit
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { categoryFeatureJoiner } from '../../utils/joinTable';
+import { RedisCacheService } from './redisCache.service';
+import { cacheKeys } from '../../constants/cache';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -92,6 +98,7 @@ export class CategoryService {
     private accessoryCategoryRepo: AccessoryCategoryRepository<AccessoryCategoryEntity>,
     private catalogCategoryItemRepo: CatalogCategoryItemRepository<CatalogCategoryItemEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
@@ -1301,6 +1308,14 @@ export class CategoryService {
         : null;
     page = +page || 1;
     limit = +limit || 10;
+    let cacheKey = cacheKeys.catalog(convertIntoQueryParams(params));
+
+    let cacheResult = await this.cache.get(cacheKey);
+
+    if (cacheResult) {
+      return cacheResult;
+    }
+
     let skip = (page - 1) * limit;
     if (all) {
       let catalogsList = await this.catalogCategoryRepo.find({
@@ -1336,7 +1351,7 @@ export class CategoryService {
       where: { level },
     });
 
-    return {
+    let resultData = {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -1344,6 +1359,10 @@ export class CategoryService {
       },
       categories: catalogsList,
     };
+
+    await this.cache.set(cacheKey, resultData);
+
+    return resultData;
   }
 
   async getAccessories(params) {
@@ -1362,7 +1381,7 @@ export class CategoryService {
       where: accessoryCategorySearchFilter(search, filterConditions),
     });
 
-    return {
+    let resultData = {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -1370,6 +1389,8 @@ export class CategoryService {
       },
       accessoryCategories,
     };
+
+    return resultData;
   }
 
   async syncImports() {

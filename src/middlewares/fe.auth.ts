@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import * as jwt from 'jsonwebtoken';
 import { Reflector } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { decodeBase64String } from '../utils/cipherHelper';
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(

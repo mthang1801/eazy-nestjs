@@ -2,8 +2,8 @@ import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class ProductsEntity {
   product_appcore_id: string = '';
-  parent_product_id: null | number = 0;
-  parent_product_appcore_id: null | string = '';
+  parent_product_id: number = 0;
+  parent_product_appcore_id: string = null;
   product_code: string = '';
   barcode: string = '';
   product_type: number = 1;
