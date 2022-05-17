@@ -64,8 +64,8 @@ export enum AutoIncrementKeys {
   //============== Promotion Accessories =============
   ddv_promotion_accessories = 'accessory_id',
   ddv_promotion_accessory_details = 'id',
-  ddv_discount_program = 'accessory_id',
-  ddv_discount_program_details = 'id',
+  ddv_discount_programs = 'discount_id',
+  ddv_discount_program_details = 'detail_id',
 
   //============== Products ==============
   ddv_products_categories = 'list_id',

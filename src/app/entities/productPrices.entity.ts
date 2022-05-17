@@ -7,10 +7,11 @@ export class ProductPricesEntity {
   percentage_discount: number = 0;
   lower_limit: number = 0;
   list_price: number = 0;
-  promotion_price: number = 0;
-  promotion_discount_amount: number = 0;
-  promotion_status: string = 'A';
-  promotion_discount_type: number = 1;
-  promotion_start_at: string = null;
-  promotion_end_at: string = null;
+  selling_price_program: number = 0;
+  original_price_program: number = 0;
+  discount_amount_program: number = 0;
+  status_program: string = 'A';
+  discount_type: number = 1;
+  time_start_at: string = null;
+  time_end_at: string = null;
 }

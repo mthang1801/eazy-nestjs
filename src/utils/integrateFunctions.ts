@@ -955,10 +955,18 @@ export const convertValuationBillFromCms = (cmsData) => {
   let coreData = {};
   coreData['tradeInProgramId'] = cmsData['valuationBill']['tradein_appcore_id'];
   coreData['imei'] = String(cmsData['valuationBill']['imei']);
-  coreData['productId'] = String(cmsData['valuationBill']['product_appcore_id']);
-  coreData['productBuyingPrice'] = Number(cmsData['valuationBill']['collect_price']);
-  coreData['totalCriteriaPrice'] = Number(cmsData['valuationBill']['criteria_price']);
-  coreData['finalBuyingPrice'] = Number(cmsData['valuationBill']['final_price']);
+  coreData['productId'] = String(
+    cmsData['valuationBill']['product_appcore_id'],
+  );
+  coreData['productBuyingPrice'] = Number(
+    cmsData['valuationBill']['collect_price'],
+  );
+  coreData['totalCriteriaPrice'] = Number(
+    cmsData['valuationBill']['criteria_price'],
+  );
+  coreData['finalBuyingPrice'] = Number(
+    cmsData['valuationBill']['final_price'],
+  );
   coreData['customerPhone'] = cmsData['valuationBill']['customer_phone'];
   coreData['customerName'] = cmsData['valuationBill']['customer_name'];
   coreData['options'] = [];
@@ -976,9 +984,8 @@ export const convertValuationBillFromCms = (cmsData) => {
 
 export const convertDiscountProgramFromAppcore = (coreData) => {
   let cmsData = {
-    app_core_id: coreData['id'],
-    accessory_name: coreData['name'],
-    accessory_type: 4,
+    appcore_id: coreData['id'],
+    discount_name: coreData['name'],
     description: coreData['description'],
     accessory_status: coreData['status'] === true ? 'A' : 'D',
     time_start_at: coreData['startTime'] || null,
@@ -998,15 +1005,15 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
   if (coreData['details'] && coreData['details'].length) {
     for (let coreDetail of coreData['details']) {
       let cmsDetail = {
-        app_core_id: coreDetail['id'],
+        detail_appcore_id: coreDetail['id'],
         product_appcore_id: coreDetail['productId'],
         product_code: coreDetail['productCode'],
         status: coreDetail['deleted'] == 'true' ? 'D' : 'A',
         discount_amount: coreDetail['discountAmount'],
         discount_type: coreDetail['discountType'],
         product: coreDetail['productName'],
-        promotion_price: coreDetail['sellingPrice'],
-        sale_price: coreDetail['originalPrice'],
+        selling_price: coreDetail['sellingPrice'],
+        original_price: coreDetail['originalPrice'],
         promotion_status: coreData['status'] === true ? 'A' : 'D',
       };
       cmsData['details'].push(cmsDetail);

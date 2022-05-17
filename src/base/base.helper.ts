@@ -10,6 +10,8 @@ export const datetimeFieldsList = [
   'end_date',
   'start_at',
   'end_at',
+  'time_start_at',
+  'time_end_at',
   'birthday',
   'imported_at',
   'last_comment',
