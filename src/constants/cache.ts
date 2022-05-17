@@ -1,4 +1,6 @@
 export const cacheKeys = {
-  catalog: (queryParameters = '') =>
-    `/be/v1/category/catalog${queryParameters}`,
+  catalog: (queryParameters = '') => `catalog${queryParameters}`,
+  categoryFE: `category_fe`,
+  bannerFE: (subString) => `banner_fe${subString}`,
+  productByCategorySlug: (categorySlug) => `cat_${categorySlug}`,
 };

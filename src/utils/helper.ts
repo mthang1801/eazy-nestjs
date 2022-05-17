@@ -2,7 +2,6 @@ import { v4 as uuid } from 'uuid';
 import * as moment from 'moment';
 
 import * as crypto from 'crypto';
-import { url } from 'inspector';
 
 export function genRandomString(length: number): string {
   return crypto
@@ -275,4 +274,21 @@ export const convertIntoQueryParams = (params = {}) => {
   }
 
   return result;
+};
+
+export const convertIntoCacheString = (params) => {
+  let result = '';
+  if (Object.entries(params).length) {
+    for (let [i, [key, val]] of Object.entries(params).entries()) {
+      result += `_${key}_${val}`;
+    }
+  }
+
+  return result;
+};
+
+export const stringShortener = (longString = '') => {
+  let shortString = longString.replace(/[^a-z]/g, '').slice(-4);
+
+  return shortString;
 };

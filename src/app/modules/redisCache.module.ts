@@ -13,7 +13,7 @@ import { RedisCacheService } from '../services/redisCache.service';
         store: redisStore,
         host: configService.get<string>('redisHost'),
         port: configService.get<number>('redisPort'),
-        ttl: configService.get<number>('redisTTL'),
+        ttl: +configService.get<number>('redisTTL'),
         password: configService.get<string>('redisPass'),
       }),
     }),

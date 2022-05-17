@@ -34,8 +34,10 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
 import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 
-import { getPageSkipLimit } from '../../utils/helper';
+import { getPageSkipLimit, convertIntoCacheString } from '../../utils/helper';
 import { MoreThan } from '../../database/operators/operators';
+import { cacheKeys } from '../../constants/cache';
+import { RedisCacheService } from './redisCache.service';
 import {
   Between,
   MoreThanOrEqual,
@@ -52,6 +54,7 @@ export class bannerService {
     private bannerLocationsDescRepo: BannerLocationDescriptionRepository<BannerLocationDescriptionEntity>,
     private bannerTargetDescRepo: BannerTargetDescriptionRepository<BannerTargetDescriptionEntity>,
     private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
+    private cache: RedisCacheService,
   ) {}
   async getList(params) {
     let {
@@ -148,7 +151,20 @@ export class bannerService {
 
   async getListFE(params) {
     let { slug, device_type } = params;
+    slug = slug || '/';
     device_type = device_type || 'D';
+
+    const subString = convertIntoCacheString({
+      slug,
+      device_type,
+    });
+
+    let cacheKey = cacheKeys.bannerFE(subString);
+
+    let bannerResult = await this.cache.get(cacheKey);
+    if (bannerResult) {
+      return bannerResult;
+    }
 
     let banners = await this.bannerRepo.find({
       select: '*',
@@ -159,7 +175,7 @@ export class bannerService {
         [`${Table.BANNER_TARGET_DESCRIPTION}.url`]: slug,
       },
     });
-    console.log(banners);
+
     let _banners = [...banners];
 
     if (banners.length) {
@@ -201,6 +217,8 @@ export class bannerService {
         _banners = [..._banners, { ...banner }];
       }
     }
+
+    await this.cache.set(cacheKey, _banners);
     return _banners;
   }
 

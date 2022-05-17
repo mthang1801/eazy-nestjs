@@ -180,6 +180,10 @@ export class CategoryService {
         await this.categoryFeatureRepo.create(categoryFeature);
       }
     }
+
+    const categoryCacheKey = cacheKeys.categoryFE;
+    await this.cache.delete(categoryCacheKey);
+
     return result;
   }
 
@@ -571,6 +575,9 @@ export class CategoryService {
         await this.categoryFeatureRepo.create(categoryFeature);
       }
     }
+
+    const categoryCacheKey = cacheKeys.categoryFE;
+    await this.cache.delete(categoryCacheKey);
   }
   // async testCate(id: number, data: UpdateCategoryDto) {
   //   if (data.category_features && data.category_features.length) {
@@ -731,11 +738,21 @@ export class CategoryService {
     );
   }
 
-  async getListFE(params: any = {}) {
-    return this.categoryRepository.find({
+  async getListFE() {
+    const cacheKey = cacheKeys.categoryFE;
+    const cacheResult = await this.cache.get(cacheKey);
+
+    if (cacheResult) {
+      return cacheResult;
+    }
+
+    const result = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
     });
+    console.log(result);
+    await this.cache.set(cacheKey, result);
+    return result;
   }
 
   async getList(params) {

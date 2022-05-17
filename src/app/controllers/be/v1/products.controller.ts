@@ -28,7 +28,6 @@ import { CreateCommentDto } from '../../../dto/reviewComment/create-comment.dto'
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateCommentReviewCMSDto } from '../../../dto/reviewComment/create-commentReview.cms.dto';
 @Controller('be/v1/products')
-@UseGuards(AuthGuard)
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
     super();
@@ -59,12 +58,14 @@ export class ProductsController extends BaseController {
    * @returns
    */
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.getListBE(params);
     return this.responseSuccess(res, result);
   }
 
   @Get('/reviews-comments')
+  @UseGuards(AuthGuard)
   async getCommentsReviewsList(
     @Query() params,
     @Res() res: Response,
@@ -74,6 +75,7 @@ export class ProductsController extends BaseController {
   }
 
   @Get('/response-reviews-comments/:item_id')
+  @UseGuards(AuthGuard)
   async getCommentReviewResponse(
     @Param('item_id') item_id: number,
     @Res() res: Response,
@@ -83,12 +85,14 @@ export class ProductsController extends BaseController {
   }
 
   @Put('/standard')
+  @UseGuards(AuthGuard)
   async standardizeProducts(@Res() res: Response): Promise<IResponse> {
     await this.service.standardizeProducts();
     return this.responseSuccess(res);
   }
 
   @Post('grouping-products/:start_product_id')
+  @UseGuards(AuthGuard)
   async groupingProducts(
     @Res() res: Response,
     @Param('start_product_id') start_product_id: number,
@@ -99,6 +103,7 @@ export class ProductsController extends BaseController {
   }
 
   @Get('/parents')
+  @UseGuards(AuthGuard)
   async getParentsList(
     @Res() res: Response,
     @Query() params,
@@ -108,6 +113,7 @@ export class ProductsController extends BaseController {
   }
 
   @Get(':product_id')
+  @UseGuards(AuthGuard)
   async get(
     @Param('product_id') product_id: number | string,
     @Res() res: Response,
@@ -117,6 +123,7 @@ export class ProductsController extends BaseController {
   }
 
   @Get('/:product_id/products-stores')
+  @UseGuards(AuthGuard)
   async getProductsStores(
     @Param('product_id') product_id: string,
     @Res() res: Response,
@@ -126,6 +133,7 @@ export class ProductsController extends BaseController {
   }
 
   @Put('/reviews-comments/:item_id')
+  @UseGuards(AuthGuard)
   async updateReviewComment(
     @Param('item_id') item_id: string,
     @Body() data,
@@ -136,6 +144,7 @@ export class ProductsController extends BaseController {
   }
 
   @Post('/:product_id/reviews-comments/')
+  @UseGuards(AuthGuard)
   async createReviewComment(
     @Body() data: CreateCommentReviewCMSDto,
     @Res() res,
@@ -147,6 +156,7 @@ export class ProductsController extends BaseController {
   }
 
   @Put(':identifier')
+  @UseGuards(AuthGuard)
   async update(
     @Param('identifier') identifier: string | number,
     @Body() data: UpdateProductDto,
@@ -164,6 +174,7 @@ export class ProductsController extends BaseController {
    * @returns
    */
   @Post('upload-images/:sku')
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: multer.diskStorage({
