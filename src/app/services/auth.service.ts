@@ -266,9 +266,7 @@ export class AuthService {
       }
     }
     const cryptography = new Cryptography();
-    const encryptedData = cryptography.encrypt(
-      `${uuid()}-${user['user_id']}-${uuid()}`,
-    );
+    const encryptedData = cryptography.encrypt(`${uuid()}-${user['user_id']}}`);
 
     const dataResult = {
       token: this.generateToken(user, encryptedData),

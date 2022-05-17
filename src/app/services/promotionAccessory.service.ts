@@ -687,6 +687,16 @@ export class PromotionAccessoryService {
 
     if (cvtData['details'] && cvtData['details'].length) {
       for (let programDetail of cvtData['details']) {
+        const checkDiscountProgramDetailExist =
+          await this.promoAccessoryDetailRepo.findOne({
+            accessory_id: newProgramDiscount.accessory_id,
+            product_appcore_id: programDetail['product_appcore_id'],
+          });
+
+        if (checkDiscountProgramDetailExist) {
+          continue;
+        }
+
         let product = await this.productRepo.findOne({
           product_appcore_id: programDetail['product_appcore_id'],
         });
@@ -782,6 +792,16 @@ export class PromotionAccessoryService {
       }
 
       for (let programDetail of cvtData['details']) {
+        const checkDiscountProgramDetailExist =
+          await this.promoAccessoryDetailRepo.findOne({
+            accessory_id: discountProgram.accessory_id,
+            product_appcore_id: programDetail['product_appcore_id'],
+          });
+
+        if (checkDiscountProgramDetailExist) {
+          continue;
+        }
+
         let product = await this.productRepo.findOne({
           product_appcore_id: programDetail['product_appcore_id'],
         });

@@ -2800,7 +2800,6 @@ export class ProductService {
   }
 
   async getProductDetails(product, showListCategories = false) {
-    console.log(27, product);
     try {
       let status = product['status'];
 
@@ -3126,7 +3125,6 @@ export class ProductService {
           if (relevantGroups.length) {
             for (let relevantGroupItem of relevantGroups) {
               if (relevantGroupItem.product_root_id) {
-                console.log(relevantGroupItem);
                 let productRoot = await this.productVariationGroupRepo.findOne({
                   select: [
                     ...getDetailProductsListSelectorFE,
@@ -3156,9 +3154,16 @@ export class ProductService {
     result['images'] = await this.getProductImages(result.product_id);
 
     //Get Features
-    result['product_features'] = await this.getProductFeatures(
-      result.product_id,
-    );
+    if (result['category_feature_id'] !== 0) {
+      result['productFeatures'] = await this.getProductFeaturesByCategoryId(
+        result['category_feature_id'],
+        result.product_id,
+      );
+    } else {
+      result['productFeatures'] = await this.getProductFeatures(
+        result.product_id,
+      );
+    }
 
     // Get accessory
     if (result['promotion_accessory_id']) {
@@ -3860,9 +3865,16 @@ export class ProductService {
     result['images'] = await this.getProductImages(result.product_id);
 
     //Get Features
-    result['productFeatures'] = await this.getProductFeatures(
-      result.product_id,
-    );
+    if (result['category_feature_id'] !== 0) {
+      result['productFeatures'] = await this.getProductFeaturesByCategoryId(
+        result['category_feature_id'],
+        result.product_id,
+      );
+    } else {
+      result['productFeatures'] = await this.getProductFeatures(
+        result.product_id,
+      );
+    }
 
     // Get accessory
     result['promotion_accessory_products'] = [];
@@ -3992,6 +4004,24 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFeaturesJoiner },
       where: { [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product_id },
     });
+
+    return productFeatures;
+  }
+  async getProductFeaturesByCategoryId(category_id, product_id) {
+    const features = await this.categoryFeatureRepo.find({ category_id });
+    let productFeatures = [];
+    if (features.length) {
+      productFeatures = await this.productFeatureValueRepo.find({
+        select: '*',
+        join: { [JoinTable.leftJoin]: productFeaturesJoiner },
+        where: {
+          [`${Table.PRODUCT_FEATURE_VALUES}.product_id`]: product_id,
+          [`${Table.PRODUCT_FEATURE_VALUES}.feature_id`]: In(
+            features.map(({ feature_id }) => feature_id),
+          ),
+        },
+      });
+    }
 
     return productFeatures;
   }
