@@ -220,6 +220,7 @@ import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
 import { cacheKeys } from '../../constants/cache';
 import { convertIntoCacheString } from '../../utils/helper';
+import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
   categoryFeaturesSetJoiner,
@@ -268,6 +269,7 @@ export class ProductService {
     private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
     private logRepo: LogRepository<LogEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -1424,9 +1426,12 @@ export class ProductService {
 
   async getProductsListByCategorySlug(slug: string, params) {
     const categoryCacheKey = `${slug}${convertIntoCacheString(params)}`;
-    console.log(categoryCacheKey);
+
     const cacheKey = cacheKeys.productByCategorySlug(categoryCacheKey);
-    console.log(cacheKey);
+    let categoryResult = await this.cache.get(cacheKey);
+    if (categoryResult) {
+      return categoryResult;
+    }
     const category = await this.categoryRepo.findOne({
       select: categorySelector,
       join: {
@@ -1555,7 +1560,7 @@ export class ProductService {
       category['category_id'],
     );
 
-    return {
+    categoryResult = {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -1566,6 +1571,10 @@ export class ProductService {
       products: productsList,
       features,
     };
+
+    await this.cache.set(cacheKey, categoryResult);
+
+    return categoryResult;
   }
 
   async getFeaturesSetByCategoryId(category_id) {

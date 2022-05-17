@@ -28,6 +28,8 @@ import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
 import { formatStandardTimeStamp } from '../../utils/helper';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewEntity } from '../entities/review.entity';
+import { cacheKeys } from '../../constants/cache';
+import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
 export class FlashSalesService {
@@ -38,6 +40,7 @@ export class FlashSalesService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
     private reviewRepo: ReviewRepository<ReviewEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async CMScreate(data: CreateFlashSaleDto, user) {
@@ -100,6 +103,11 @@ export class FlashSalesService {
   }
 
   async FEget() {
+    let cacheKey = cacheKeys.flashSaleFE;
+    let flashSaleResult = await this.cache.get(cacheKey);
+    if (flashSaleResult) {
+      return flashSaleResult;
+    }
     let flashSale = await this.flashSaleRepo.findOne({
       status: 'A',
       end_at: MoreThanOrEqual(formatStandardTimeStamp()),
@@ -160,6 +168,9 @@ export class FlashSalesService {
           : [flashSaleDetailItem];
       }
     }
+
+    flashSaleResult = flashSale;
+    await this.cache.set(cacheKey, flashSaleResult);
 
     return flashSale;
   }
