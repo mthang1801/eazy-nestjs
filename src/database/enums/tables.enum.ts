@@ -148,4 +148,7 @@ export enum Table {
   LOG = 'ddv_logs',
   LOG_MODULE = 'ddv_log_modules',
   LOG_SOURCE = 'ddv_log_sources',
+
+  //=========== Tunning System ==========
+  CACHE = 'ddv_cache_handlers',
 }

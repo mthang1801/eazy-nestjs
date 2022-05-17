@@ -144,4 +144,7 @@ export enum AutoIncrementKeys {
   ddv_logs = 'log_id',
   ddv_log_modules = 'module_id',
   ddv_log_sources = 'source_id',
+
+  //=========== Tunning System =============
+  ddv_cache_handlers = 'id',
 }

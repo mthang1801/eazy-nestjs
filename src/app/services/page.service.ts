@@ -90,9 +90,9 @@ export class PageService {
             if (
               detailValues.length &&
               detailValues.some(
-                ({ name }) =>
+                ({ page_detail_name: name }) =>
                   name.toLowerCase().trim() ==
-                  removeMoreThanOneSpace(pageDetailValue.name)
+                  removeMoreThanOneSpace(pageDetailValue.page_detail_name)
                     .toLowerCase()
                     .trim(),
               )
@@ -104,7 +104,9 @@ export class PageService {
             const pageDetailValueData = {
               ...new PageDetailValueEntity(),
               ...this.pageDetailValueRepo.setData(pageDetailValue),
-              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_name: removeMoreThanOneSpace(
+                pageDetailValue.page_detail_name,
+              ),
               page_detail_id: newPageDetail.page_detail_id,
             };
             await this.pageDetailValueRepo.create(pageDetailValueData);
@@ -184,9 +186,9 @@ export class PageService {
             if (
               detailValues.length &&
               detailValues.some(
-                ({ name }) =>
+                ({ page_detail_name: name }) =>
                   name.toLowerCase().trim() ==
-                  removeMoreThanOneSpace(pageDetailValue.name)
+                  removeMoreThanOneSpace(pageDetailValue.page_detail_name)
                     .toLowerCase()
                     .trim(),
               )
@@ -198,7 +200,9 @@ export class PageService {
             const pageDetailValueData = {
               ...new PageDetailValueEntity(),
               ...this.pageDetailValueRepo.setData(pageDetailValue),
-              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_name: removeMoreThanOneSpace(
+                pageDetailValue.page_detail_name,
+              ),
               page_detail_id: newPageDetail.page_detail_id,
             };
             await this.pageDetailValueRepo.create(pageDetailValueData);
@@ -259,7 +263,7 @@ export class PageService {
               detailValues.some(
                 ({ name }) =>
                   name.toLowerCase().trim() ==
-                  removeMoreThanOneSpace(pageDetailValue.name)
+                  removeMoreThanOneSpace(pageDetailValue.page_detail_name)
                     .toLowerCase()
                     .trim(),
               )
@@ -271,7 +275,9 @@ export class PageService {
             const pageDetailValueData = {
               ...new PageDetailValueEntity(),
               ...this.pageDetailValueRepo.setData(pageDetailValue),
-              name: removeMoreThanOneSpace(pageDetailValue.name),
+              page_detail_name: removeMoreThanOneSpace(
+                pageDetailValue.page_detail_name,
+              ),
               page_detail_id: newPageDetail.page_detail_id,
             };
             await this.pageDetailValueRepo.create(pageDetailValueData);

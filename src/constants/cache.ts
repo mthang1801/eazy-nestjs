@@ -5,3 +5,5 @@ export const cacheKeys = {
   productByCategorySlug: (categorySlug) => `cat-${categorySlug}`,
   flashSaleFE: `flash-sale-fe`,
 };
+
+export const cacheModules = {};

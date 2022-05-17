@@ -9,7 +9,7 @@ export class UpdatePageDetailValueDto {
 
 class PageDetailValue {
   @IsOptional()
-  name: string;
+  page_detail_name: string;
 
   @IsOptional()
   data_value: string;
