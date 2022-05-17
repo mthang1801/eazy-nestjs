@@ -680,6 +680,7 @@ export class PromotionAccessoryService {
       ...new PromotionAccessoryEntity(),
       ...this.promoAccessoryRepo.setData(cvtData),
     };
+
     const newProgramDiscount = await this.promoAccessoryRepo.create(
       newProgramDiscountData,
     );
@@ -694,6 +695,7 @@ export class PromotionAccessoryService {
           promotion_price: programDetail['promotion_price'],
           promotion_discount_amount: programDetail['discount_amount'],
           promotion_discount_type: programDetail['discount_type'],
+          promotion_status: programDetail['promotion_status'],
           promotion_start_at: cvtData['time_start_at'],
           promotion_end_at: cvtData['time_end_at'],
         };
@@ -769,6 +771,7 @@ export class PromotionAccessoryService {
                 promotion_start_at: null,
                 promotion_end_at: null,
                 promotion_discount_amount: 0,
+                status: 'D',
               },
             );
           }
@@ -789,6 +792,7 @@ export class PromotionAccessoryService {
           promotion_discount_type: programDetail['discount_type'],
           promotion_start_at: cvtData['time_start_at'],
           promotion_end_at: cvtData['time_end_at'],
+          promotion_status: programDetail['promotion_status'],
         };
         if (!product) {
           const productData = {

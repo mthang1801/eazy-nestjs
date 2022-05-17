@@ -9,6 +9,7 @@ export class ProductPricesEntity {
   list_price: number = 0;
   promotion_price: number = 0;
   promotion_discount_amount: number = 0;
+  promotion_status: string = 'A';
   promotion_discount_type: number = 1;
   promotion_start_at: string = null;
   promotion_end_at: string = null;

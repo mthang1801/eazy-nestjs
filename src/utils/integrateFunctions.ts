@@ -980,8 +980,7 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
     accessory_name: coreData['name'],
     accessory_type: 4,
     description: coreData['description'],
-    accessory_status:
-      coreData['status'] == 'true' || !coreData['status'] ? 'A' : 'D',
+    accessory_status: coreData['status'] === true ? 'A' : 'D',
     time_start_at: coreData['startTime'] || null,
     time_end_at: coreData['endTime'] || null,
     used: coreData['used'],
@@ -992,8 +991,7 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
     updated_at: checkValidTimestamp(coreData['updatedAt'])
       ? formatStandardTimeStamp(coreData['updatedAt'])
       : null,
-    display_at: null,
-    end_at: null,
+
     details: [],
   };
 
@@ -1009,6 +1007,7 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
         product: coreDetail['productName'],
         promotion_price: coreDetail['sellingPrice'],
         sale_price: coreDetail['originalPrice'],
+        promotion_status: coreData['status'] === true ? 'A' : 'D',
       };
       cmsData['details'].push(cmsDetail);
     }
