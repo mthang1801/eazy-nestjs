@@ -771,7 +771,7 @@ export class PromotionAccessoryService {
                 promotion_start_at: null,
                 promotion_end_at: null,
                 promotion_discount_amount: 0,
-                status: 'D',
+                promotion_status: 'D',
               },
             );
           }
