@@ -378,11 +378,20 @@ export class RoleService {
     const rootFunctions = await this.functRepo.find({ level: 0 });
 
     if (rootFunctions && rootFunctions.length) {
-      for (let functItem of rootFunctions) {
-        const childrenFuncts = await this.functRepo.find({
-          parent_id: functItem['funct_id'],
+      for (let functItemLv0 of rootFunctions) {
+        const childrenFunctsLv1 = await this.functRepo.find({
+          parent_id: functItemLv0['funct_id'],
+          level: 1,
         });
-        functItem['children'] = childrenFuncts;
+
+        for (let functItemLv1 of childrenFunctsLv1) {
+          const childrenFunctsLv2 = await this.functRepo.find({
+            parent_id: functItemLv1['funct_id'],
+            level: 2,
+          });
+          functItemLv1['children'] = childrenFunctsLv2;
+        }
+        functItemLv0['children'] = childrenFunctsLv1;
       }
     }
 

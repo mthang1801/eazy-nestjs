@@ -5,4 +5,5 @@ export class PageDetailValueEntity {
   data_value: string = '';
   position: number = null;
   detail_status: string = 'A';
+  router: string = '';
 }

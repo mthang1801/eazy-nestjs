@@ -19,4 +19,7 @@ class PageDetailValue {
 
   @IsOptional()
   status: string;
+
+  @IsOptional()
+  router: string = '';
 }
