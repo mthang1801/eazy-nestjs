@@ -46,4 +46,14 @@ export class TradeinProgramControllerItg extends BaseController {
     const result = await this.service.getOldReceiptById(old_receipt_id);
     return this.responseSuccess(res, result);
   }
+
+  @Put('/valuation-bill/:id')
+  async updateValuationBillStatus(
+    @Res() res: Response,
+    @Param('id') id: number,
+    @Body() data,
+  ): Promise<IResponse> {
+    const result = await this.service.updateValuationBillStatus(id, data);
+    return this.responseSuccess(res, result);
+  }
 }

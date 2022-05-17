@@ -35,6 +35,8 @@ export enum Table {
   //============== Promotion Accessory ==============
   PROMOTION_ACCESSORY = 'ddv_promotion_accessories',
   PRODUCT_PROMOTION_ACCESSOR_DETAIL = 'ddv_promotion_accessory_details',
+  DISCOUNT_PROGRAM = 'ddv_discount_programs',
+  DISCOUNT_PROGRAM_DETAIL = 'ddv_discount_program_details',
 
   //============== Flash sale =============
   FLASH_SALES = 'ddv_flash_sales',

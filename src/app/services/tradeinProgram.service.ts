@@ -77,6 +77,7 @@ import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { CustomerService } from './customer.service';
+import { statusC, statusB, statusA } from '../../constants/valuationBill';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -425,19 +426,27 @@ export class TradeinProgramService {
         );
       }
     }
-    const valuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
+    let valuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
     let core = convertValuationBillFromCms(valuationBill);
     try {
       const response = await axios({
         url: CREATE_VALUATION_BILL_TO_APPCORE, data: core,
         method: 'POST',
       })
-      console.log(response);
+      //console.log(response.data.data);
+      await this.valuationBillRepo.update(
+        {valuation_bill_id: valuationBill.valuationBill.valuation_bill_id}, 
+        {
+          appcore_id: response.data.data,
+          is_sync: "Y"
+        },
+      )
     }
     catch(error){
       console.log(error);
     }
-    return valuationBill;
+    const finalValuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
+    return finalValuationBill;
   }
 
   async getValuationBillById(id){
@@ -1253,5 +1262,26 @@ export class TradeinProgramService {
         error?.response?.status || error.status,
       );
     }
+  }
+
+  async updateValuationBillStatus(appcore_id, status) {
+    let newStatus;
+    console.log(status.status);
+    switch (Number(status.status)){
+      case 1:
+        newStatus = statusA;
+        break;
+      case 2:
+        newStatus = statusB;
+        break;
+      case 3:
+        newStatus = statusC;
+        break;
+      default:
+        newStatus = statusA;
+        break;
+    }
+    let valuationBill = await this.valuationBillRepo.update({appcore_id: appcore_id}, {status: newStatus}, true);
+    return valuationBill;
   }
 }
