@@ -3152,7 +3152,7 @@ export class ProductService {
 
     // get Image
     result['images'] = await this.getProductImages(result.product_id);
-
+    console.log(result);
     //Get Features
     if (result['category_feature_id'] !== 0) {
       result['productFeatures'] = await this.getProductFeaturesByCategoryId(
