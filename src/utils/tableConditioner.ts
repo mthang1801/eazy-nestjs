@@ -261,7 +261,6 @@ export const categoriesSearchFilter = (search = '', filterConditions = {}) => {
   if (search) {
     arraySearch = [
       { [`${Table.CATEGORY_DESCRIPTIONS}.category`]: Like(search) },
-      { [`${Table.CATEGORY_DESCRIPTIONS}.category_appcore`]: Like(search) },
     ];
   }
   return searchFilterTemplate(filterConditions, arraySearch);

@@ -1429,6 +1429,7 @@ export class ProductService {
 
     const cacheKey = cacheKeys.productByCategorySlug(categoryCacheKey);
     let categoryResult = await this.cache.get(cacheKey);
+    await this.cache.delete(cacheKey);
     if (categoryResult) {
       return categoryResult;
     }
