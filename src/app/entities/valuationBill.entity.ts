@@ -17,7 +17,7 @@ export class ValuationBillEntity {
   final_price: number = 0;
   product_id: number = null;
   product_appcore_id: number = null;
-  imei: string = null;
+  imei: number = null;
   note: string = '';
   handle_by: number = null;
   created_at: string = formatStandardTimeStamp();

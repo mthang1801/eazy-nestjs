@@ -954,19 +954,19 @@ export const convertTradeinProgramOldReceiptFromAppcore = (coreData) => {
 export const convertValuationBillFromCms = (cmsData) => {
   let coreData = {};
   coreData['tradeInProgramId'] = cmsData['valuationBill']['tradein_appcore_id'];
-  coreData['imei'] = cmsData['valuationBill']['imei'];
-  coreData['productId'] = cmsData['valuationBill']['product_appcore_id'];
-  coreData['productBuyingPrice'] = cmsData['valuationBill']['collect_price'];
-  coreData['totalCriteriaPrice'] = cmsData['valuationBill']['criteria_price'];
-  coreData['finalBuyingPrice'] = cmsData['valuationBill']['final_price'];
+  coreData['imei'] = String(cmsData['valuationBill']['imei']);
+  coreData['productId'] = String(cmsData['valuationBill']['product_appcore_id']);
+  coreData['productBuyingPrice'] = Number(cmsData['valuationBill']['collect_price']);
+  coreData['totalCriteriaPrice'] = Number(cmsData['valuationBill']['criteria_price']);
+  coreData['finalBuyingPrice'] = Number(cmsData['valuationBill']['final_price']);
   coreData['customerPhone'] = cmsData['valuationBill']['customer_phone'];
   coreData['customerName'] = cmsData['valuationBill']['customer_name'];
   coreData['options'] = [];
   if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length) {
     for (let detailItem of cmsData['criteriaSet']) {
       let detailItemData = {};
-      detailItemData['optionId'] = detailItem['criteria_detail_id'];
-      detailItemData['criteriaId'] = detailItem['criteria_id'];
+      detailItemData['optionId'] = detailItem['criteria_detail_appcore_id'];
+      detailItemData['criteriaId'] = detailItem['criteria_appcore_id'];
       coreData['options'].push(detailItemData);
     }
   }
