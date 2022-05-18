@@ -354,7 +354,7 @@ export class TradeinProgramService {
         criteria_set: data.criteria_set,
       };
       const vBill = await this.getValuationBill(tempData);
-      console.log(vBill);
+
       // console.log(vBill);
       // console.log("============+++++++++++++++++============");
       // console.log(data);
@@ -448,6 +448,8 @@ export class TradeinProgramService {
       let valuationBill = await this.getValuationBillById(
         newValuationBill.valuation_bill_id,
       );
+
+      console.log(valuationBill);
       let core = convertValuationBillFromCms(valuationBill);
       try {
         const response = await axios({
@@ -1417,6 +1419,7 @@ export class TradeinProgramService {
         applied_product: product,
       };
     } catch (error) {
+      console.log(1420, error);
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,

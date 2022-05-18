@@ -103,7 +103,6 @@ export class ProductsController extends BaseController {
   }
 
   @Get('/parents')
-  @UseGuards(AuthGuard)
   async getParentsList(
     @Res() res: Response,
     @Query() params,

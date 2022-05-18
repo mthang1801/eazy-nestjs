@@ -958,9 +958,7 @@ export const convertValuationBillFromCms = (cmsData) => {
   coreData['productId'] = String(
     cmsData['valuationBill']['product_appcore_id'],
   );
-  coreData['productBuyingPrice'] = Number(
-    cmsData['valuationBill']['collect_price'],
-  );
+  coreData['productBuyingPrice'] = Number(cmsData['product']['price']);
   coreData['totalCriteriaPrice'] = Number(
     cmsData['valuationBill']['criteria_price'],
   );

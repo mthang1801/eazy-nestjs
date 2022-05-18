@@ -21,7 +21,10 @@ export class RedisCacheService {
         .map((key) => key)
         .join(',')}] ==========`,
     );
-    let results = keys.map((key) => this.cache.get(key));
+    let results = keys.map(async (key) => {
+      await this.cache.get(key);
+      return key;
+    });
     return Promise.all(results);
   }
 

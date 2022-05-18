@@ -296,7 +296,7 @@ export class FlashSalesService {
     if (!flashSale) {
       throw new HttpException('Không tìm thấy flash sale', 404);
     }
-
+    console.log(user);
     const flashSaleData = {
       ...this.flashSaleRepo.setData(data),
       updated_at: formatStandardTimeStamp(),
