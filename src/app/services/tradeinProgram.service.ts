@@ -1237,6 +1237,43 @@ export class TradeinProgramService {
         ),
       },
     });
+
+    let criteriaSet = [];
+    for (let tradeinCriteria of tradeinCriteriaList) {
+      let tradeinCriteriaDetails =
+        await this.tradeinProgramCriteriaDetailRepo.find({
+          criteria_id: tradeinCriteria.criteria_id,
+        });
+      let selectedCriteriaList =
+        await this.valuationBillCriteriaDetailRepo.find({
+          valuation_bill_id,
+        });
+
+      tradeinCriteria['criterial_details'] = [];
+
+      for (let tradeinCriteriaDetail of tradeinCriteriaDetails) {
+        tradeinCriteriaDetail['selected'] = false;
+        if (
+          selectedCriteriaList.some(
+            ({ criteria_detail_id }) =>
+              criteria_detail_id == tradeinCriteriaDetail.criteria_detail_id,
+          )
+        ) {
+          tradeinCriteriaDetail['selected'] = true;
+        }
+        tradeinCriteria['criterial_details'].push(tradeinCriteriaDetail);
+      }
+
+      criteriaSet = [...criteriaSet, tradeinCriteria];
+    }
+
+    let result = {
+      valuationBill,
+      product,
+      criteriaSet,
+    };
+
+    return result;
   }
 
   async getOldReceiptByUserId(user_id, params) {
