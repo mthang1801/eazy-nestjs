@@ -1052,3 +1052,31 @@ export const convertProductDataFromMagentor = (data) => {
   };
   return cmsData;
 };
+
+export const ConverValuationBillDataFromAppcore = (coreData) => {
+  let cmsData = {
+    appcore_id: coreData['id'],
+    tradein_appcore_id: coreData['tradeInProgramId'],
+    user_appcore_id: coreData['customerId'],
+    imei: coreData['productIMEI'],
+    product_id: coreData['productId'],
+    collect_price: coreData['productBuyingPrice'],
+    criteria_price: coreData['totalCriteriaPrice'],
+    estimate-price: coreData['estimationBuyingPrice'],
+    final_price: coreData['finalBuyingPrice'],
+    store_id: coreData['storeId'],
+    status: coreData['status'],
+    note: coreData['note'],
+    created_at:       
+      coreData['createdAt'] && checkValidTimestamp(coreData['createdAt'])
+        ? formatStandardTimeStamp(coreData['createdAt'])
+        : null,
+    updated_at:
+      coreData['updatedAt'] && checkValidTimestamp(coreData['updatedAt'])
+        ? formatStandardTimeStamp(coreData['updatedAt'])
+        : null,
+    type: coreData['typeTradeIn'],
+  };
+
+  return cmsData;
+};
