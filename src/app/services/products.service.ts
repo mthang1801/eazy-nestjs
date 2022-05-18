@@ -1443,15 +1443,17 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    let cacheKey = cacheKeys.category(category.category_id);
+    let cacheKey = cacheKeys.category(41);
+
     let categoryResult = await this.cache.get(cacheKey);
+    console.log(categoryResult);
+    // await this.cache.removeCache(cacheTables.category);
+    // categoryResult = await this.cache.get(cacheKey);
+    // categoryResult;
 
-    await this.cache.removeCache(cacheTables.category);
-    categoryResult = await this.cache.get(cacheKey);
-
-    if (categoryResult) {
-      return categoryResult;
-    }
+    // if (categoryResult) {
+    //   return categoryResult;
+    // }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
@@ -1580,12 +1582,12 @@ export class ProductService {
       features,
     };
 
-    await this.cache.set(cacheKey, categoryResult);
-    await this.cache.saveCache(
-      cacheTables.category,
-      cacheModules.categorySlug,
-      cacheKey,
-    );
+    // await this.cache.set(cacheKey, categoryResult);
+    // await this.cache.saveCache(
+    //   cacheTables.category,
+    //   cacheModules.categorySlug,
+    //   cacheKey,
+    // );
     return categoryResult;
   }
 
