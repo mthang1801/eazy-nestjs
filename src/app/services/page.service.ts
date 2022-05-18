@@ -448,4 +448,32 @@ export class PageService {
     });
     return pageDetailValues;
   }
+
+  async getPageDetailCms(page_id) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+
+    const pageDetails = await this.pageDetailRepo.find({
+      select: '*',
+      orderBy: [
+        {
+          field: `CASE WHEN ${Table.PAGE_DETAIL}.position`,
+          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PAGE_DETAIL}.position ASC`,
+        },
+      ],
+      where: {
+        [`${Table.PAGE_DETAIL}.page_id`]: page_id,
+      },
+    });
+
+    for (let pageDetail of pageDetails){
+      let tempValue = await this.getPageDetailValues(pageDetail.page_detail_id);
+      pageDetail['page_detail_values'] = tempValue;
+      // console.log(pageDetail)
+      // console.log("================//================");
+    }
+
+    currentPage['page_details'] = pageDetails;
+
+    return currentPage;
+  }
 }

@@ -56,6 +56,15 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Post('/valuation-bill')
+  async createValuationBill(
+    @Res() res: Response,
+    @Body() data,
+  ): Promise<IResponse> {
+    const result = await this.service.createValuationBill(data);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('valuation-bills')
   async getValuationBillsList(
     @Res() res: Response,
@@ -98,5 +107,4 @@ export class TradeinProgramController extends BaseController {
     const result = await this.service.update(tradein_id, data, req.user);
     return this.responseSuccess(res, result);
   }
-  abstract;
 }
