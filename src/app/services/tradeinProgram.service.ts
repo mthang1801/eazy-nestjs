@@ -1418,10 +1418,10 @@ export class TradeinProgramService {
     }
   }
 
-  async updateValuationBillStatus(appcore_id, status) {
+  async updateValuationBillStatus(appcore_id, data) {
     let newStatus;
-    console.log(status.status);
-    switch (Number(status.status)) {
+
+    switch (Number(data.status)) {
       case 1:
         newStatus = statusA;
         break;
@@ -1435,11 +1435,14 @@ export class TradeinProgramService {
         newStatus = statusA;
         break;
     }
-    let valuationBill = await this.valuationBillRepo.update(
+
+    let valuationBillData = {
+      ...this.valuationBillRepo.setData(data),
+      status: newStatus,
+    };
+    await this.valuationBillRepo.update(
       { appcore_id: appcore_id },
-      { status: newStatus },
-      true,
+      valuationBillData,
     );
-    return valuationBill;
   }
 }
