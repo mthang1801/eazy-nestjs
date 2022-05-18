@@ -3545,25 +3545,14 @@ export class ProductService {
     });
 
     const productsInStocks = await this.productStoreRepo.find({
-      product_id: product.product_id,
+      select: 'SUM(amount) as total',
+      where: { product_id: product.product_id },
     });
 
-    if (productsInStocks.length) {
-      let currentProduct = await this.productRepo.findOne({
-        product_id: product.product_id,
-      });
-      if (!currentProduct) {
-        return;
-      }
-      let totalAmount = 0;
-      for (let productStockItem of productsInStocks) {
-        totalAmount += productStockItem.amount;
-      }
-      await this.productRepo.update(
-        { product_id: product.product_id },
-        { amount: totalAmount },
-      );
-    }
+    await this.productRepo.update(
+      { product_id: product.product_id },
+      { amount: productsInStocks[0].total },
+    );
   }
 
   async clearStore() {
