@@ -1062,12 +1062,12 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
     product_id: coreData['productId'],
     collect_price: coreData['productBuyingPrice'],
     criteria_price: coreData['totalCriteriaPrice'],
-    estimate-price: coreData['estimationBuyingPrice'],
+    estimate_price: coreData['estimationBuyingPrice'],
     final_price: coreData['finalBuyingPrice'],
     store_id: coreData['storeId'],
     status: coreData['status'],
     note: coreData['note'],
-    created_at:       
+    created_at:
       coreData['createdAt'] && checkValidTimestamp(coreData['createdAt'])
         ? formatStandardTimeStamp(coreData['createdAt'])
         : null,

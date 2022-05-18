@@ -26,7 +26,7 @@ export class IndexService {
     // // Import Customers
     // await this.customerService.importCustomers();
     // // Import Products
-    await this.productService.importProducts();
+    // await this.productService.importProducts();
     // await this.productService.requestIntegrateParentProduct();
     // // // Report Product Amount In Stocks
     // await this.productService.reportTotalProductsInStores();

@@ -411,6 +411,7 @@ export class TradeinProgramService {
       user_id: checkUserByPhone
         ? checkUserByPhone.user_id
         : createCustomer.user_id,
+      user_appcore_id: createCustomer.user_appcore_id,
       tradein_id: vBill.tradeinProgram.tradein_id,
       tradein_appcore_id: vBill.tradeinProgram.tradein_appcore_id,
       collect_price: vBill.tradeinProgram.collect_price,

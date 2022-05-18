@@ -8,6 +8,8 @@ export class ValuationBillEntity {
   is_sync: string = 'N';
   customer_phone: string = '';
   customer_name: string = '';
+  user_appcore_id: number = null;
+  user_id: number = null;
   tradein_appcore_id: number = null;
   tradein_id: number = null;
   collect_price: number = 0;
