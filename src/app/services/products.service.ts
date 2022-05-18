@@ -3519,7 +3519,7 @@ export class ProductService {
     if (productStore) {
       // Update product store
       await this.productStoreRepo.update(
-        { product_id, store_location_id },
+        { product_id: product.product_id, store_location_id },
         {
           amount,
           updated_at: formatStandardTimeStamp(),
@@ -3528,7 +3528,7 @@ export class ProductService {
     } else {
       // Create new product store
       await this.productStoreRepo.create({
-        product_id,
+        product_id: product.product_id,
         store_location_id,
         amount,
         created_at: formatStandardTimeStamp(),
@@ -3537,7 +3537,7 @@ export class ProductService {
     }
     // Create new product store history
     await this.productStoreHistoryRepo.create({
-      product_id,
+      product_id: product.product_id,
       store_location_id,
       amount,
       created_at: formatStandardTimeStamp(),
