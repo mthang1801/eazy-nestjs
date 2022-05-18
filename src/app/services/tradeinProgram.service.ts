@@ -180,6 +180,52 @@ export class TradeinProgramService {
     return this.get(newTradeinProgram.tradein_id);
   }
 
+  async getCriteriaList(product_id) {
+    const product = await this.productRepo.findOne({ product_id });
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP trong hệ thống.', 404);
+    }
+    try {
+      const responseTradeinId: any = await axios({
+        url: FIND_TRADEIN_PROGRAM(product.product_appcore_id),
+      });
+
+      const tradeinAppcoreId = responseTradeinId.data.data;
+      if (!tradeinAppcoreId) {
+        throw new HttpException('Không tìm thấy chương trình', 404);
+      }
+      const tradeinProgram = await this.tradeinProgramRepo.findOne({
+        tradein_appcore_id: tradeinAppcoreId,
+      });
+      if (!tradeinProgram) {
+        throw new HttpException('Không tìm thấy chương trình', 404);
+      }
+      const tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+        tradein_id: tradeinProgram.tradein_id,
+      });
+
+      if (!tradeinCriteriaList.length) {
+        throw new HttpException('Chương trình chưa có bộ tiêu chí.', 404);
+      }
+      console.log(tradeinCriteriaList);
+      for (let tradeinCriteriaItem of tradeinCriteriaList) {
+        const tradeinCriteriaDetails =
+          await this.tradeinProgramCriteriaDetailRepo.find({
+            criteria_id: tradeinCriteriaItem.criteria_id,
+          });
+
+        tradeinCriteriaItem['criteria_details'] = tradeinCriteriaDetails;
+      }
+      return tradeinCriteriaList;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
+    }
+  }
+
   async getList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search } = params;
@@ -449,7 +495,6 @@ export class TradeinProgramService {
         newValuationBill.valuation_bill_id,
       );
 
-      console.log(valuationBill);
       let core = convertValuationBillFromCms(valuationBill);
       try {
         const response = await axios({
