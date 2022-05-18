@@ -405,7 +405,7 @@ export class CategoryService {
     if (Object.entries(updatedCategoryDescriptionData).length) {
       const updatedCategoryDescription =
         await this.categoryDescriptionRepo.update(
-          result.category_id,
+          { category_id: result.category_id },
           updatedCategoryDescriptionData,
         );
 

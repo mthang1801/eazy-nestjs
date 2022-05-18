@@ -1794,6 +1794,13 @@ export class ProductService {
 
     if (oldCategories.length) {
       for (let oldCategoryItem of oldCategories) {
+        let cacheKey = cacheKeys.category(oldCategoryItem.category_id);
+        await this.cache.removeCache(
+          cacheTables.category,
+          cacheModules.categoryList,
+          cacheKey,
+        );
+
         let category = await this.categoryRepo.findOne({
           category_id: oldCategoryItem.category_id,
         });
