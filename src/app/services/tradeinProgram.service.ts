@@ -1432,23 +1432,9 @@ export class TradeinProgramService {
     }
 
     const cvtData = ConverValuationBillDataFromAppcore(data);
-    let newStatus;
-    switch (Number(cvtData.status)) {
-      case 1:
-        newStatus = statusA;
-        break;
-      case 2:
-        newStatus = statusB;
-        break;
-      case 3:
-        newStatus = statusC;
-        break;
-      default:
-        newStatus = statusA;
-        break;
-    }
+
     const valuationBillData = this.valuationBillRepo.setData(cvtData);
-    console.log(valuationBillData);
+
     if (Object.entries(valuationBillData).length) {
       await this.valuationBillRepo.update(
         { appcore_id: appcore_id },
