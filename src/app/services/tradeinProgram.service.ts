@@ -207,7 +207,7 @@ export class TradeinProgramService {
       if (!tradeinCriteriaList.length) {
         throw new HttpException('Chương trình chưa có bộ tiêu chí.', 404);
       }
-      console.log(tradeinCriteriaList);
+      
       for (let tradeinCriteriaItem of tradeinCriteriaList) {
         const tradeinCriteriaDetails =
           await this.tradeinProgramCriteriaDetailRepo.find({
