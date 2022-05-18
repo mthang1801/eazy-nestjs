@@ -55,10 +55,7 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Get('/valuation-bill/:id')
-  async getValuationBillById(
-    @Res() res,
-    @Param('id') id,
-  ): Promise<IResponse> {
+  async getValuationBillById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getValuationBillById(id);
     return this.responseSuccess(res, result);
   }

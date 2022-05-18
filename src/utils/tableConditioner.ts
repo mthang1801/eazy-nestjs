@@ -478,3 +478,19 @@ export const pagesListSearchFilter = (search = '', filterConditions = {}) => {
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const valuationBillsSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
+      { [`${Table.VALUATION_BILL}.customer_name`]: Like(search) },
+      { [`${Table.VALUATION_BILL}.customer_phone`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

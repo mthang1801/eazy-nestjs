@@ -82,7 +82,9 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { categoryFeatureJoiner } from '../../utils/joinTable';
 import { RedisCacheService } from './redisCache.service';
-import { cacheKeys } from '../../constants/cache';
+import { cacheKeys, cacheModules, cacheTables } from '../../constants/cache';
+import { CacheRepository } from '../repositories/cache.repository';
+import { CacheEntity } from '../entities/cache.entity';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -99,6 +101,7 @@ export class CategoryService {
     private catalogCategoryItemRepo: CatalogCategoryItemRepository<CatalogCategoryItemEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
     private cache: RedisCacheService,
+    private cacheRepo: CacheRepository<CacheEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
@@ -576,8 +579,7 @@ export class CategoryService {
       }
     }
 
-    const categoryCacheKey = cacheKeys.categoryFE;
-    await this.cache.delete(categoryCacheKey);
+    await this.cache.removeCache(null, null, cacheKeys.category(id));
   }
   // async testCate(id: number, data: UpdateCategoryDto) {
   //   if (data.category_features && data.category_features.length) {
@@ -750,8 +752,13 @@ export class CategoryService {
       select: '*',
       join: categoryJoiner,
     });
-    console.log(result);
+
     await this.cache.set(cacheKey, result);
+    await this.cache.saveCache(
+      cacheTables.category,
+      cacheModules.categoryList,
+      cacheKey,
+    );
     return result;
   }
 

@@ -57,10 +57,16 @@ import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldRec
 import { TradeinOldReceiptDetailEntity } from '../entities/tradeinOldReceiptDetail.entity';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
-import { tradeinOldReceiptSearchFilter } from '../../utils/tableConditioner';
+import {
+  tradeinOldReceiptSearchFilter,
+  valuationBillsSearchFilter,
+} from '../../utils/tableConditioner';
 import { StoreLocationRepository } from '../repositories/storeLocation.repository';
 import { StoreLocationEntity } from '../entities/storeLocation.entity';
-import { FIND_TRADEIN_PROGRAM, CREATE_VALUATION_BILL_TO_APPCORE } from '../../constants/api.appcore';
+import {
+  FIND_TRADEIN_PROGRAM,
+  CREATE_VALUATION_BILL_TO_APPCORE,
+} from '../../constants/api.appcore';
 import axios from 'axios';
 import { ValuateBillDto } from '../dto/tradein/valuateBill.dto';
 import { productPriceJoiner } from '../../utils/joinTable';
@@ -78,6 +84,7 @@ import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import { CustomerService } from './customer.service';
 import { statusC, statusB, statusA } from '../../constants/valuationBill';
+import { Between, In } from '../../database/operators/operators';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -340,7 +347,10 @@ export class TradeinProgramService {
   }
 
   async createValuationBill(data) {
-    let tempData = {product_id: data.product_id, criteria_set: data.criteria_set};
+    let tempData = {
+      product_id: data.product_id,
+      criteria_set: data.criteria_set,
+    };
     const vBill = await this.getValuationBill(tempData);
     // console.log(vBill);
     // console.log("============+++++++++++++++++============");
@@ -364,7 +374,7 @@ export class TradeinProgramService {
         let criteria = {
           criteria_appcore_id: checkCriteriaId.criteria_appcore_id,
           criteria_detail_appcore_id:
-          checkCriteriaDetailId.criteria_detail_appcore_id,
+            checkCriteriaDetailId.criteria_detail_appcore_id,
         };
         temp.push(criteria);
       }
@@ -376,17 +386,21 @@ export class TradeinProgramService {
     if (!checkProductId) {
       throw new HttpException('Không tìm thấy product id.', 400);
     }
-    
+
     //add user
-    let checkUserByPhone = await this.userRepo.findOne({phone: data.customer_phone})
+    let checkUserByPhone = await this.userRepo.findOne({
+      phone: data.customer_phone,
+    });
     let createCustomer: any;
-    if (!checkUserByPhone){
-      console.log("********************Create customer********************");
+    if (!checkUserByPhone) {
+      console.log('********************Create customer********************');
       let customerInfo = {
         s_phone: data.customer_phone,
         s_lastname: data.customer_name,
-      }
-      createCustomer = await this.customerService.createCustomerFromWebPayment(customerInfo);
+      };
+      createCustomer = await this.customerService.createCustomerFromWebPayment(
+        customerInfo,
+      );
     }
 
     //add bill
@@ -394,7 +408,9 @@ export class TradeinProgramService {
       ...new ValuationBillEntity(),
       ...this.valuationBillRepo.setData(data),
       product_appcore_id: checkProductId.product_appcore_id,
-      user_id: (checkUserByPhone) ? checkUserByPhone.user_id : createCustomer.user_id,
+      user_id: checkUserByPhone
+        ? checkUserByPhone.user_id
+        : createCustomer.user_id,
       tradein_id: vBill.tradeinProgram.tradein_id,
       tradein_appcore_id: vBill.tradeinProgram.tradein_appcore_id,
       collect_price: vBill.tradeinProgram.collect_price,
@@ -426,38 +442,46 @@ export class TradeinProgramService {
         );
       }
     }
-    let valuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
+    let valuationBill = await this.getValuationBillById(
+      newValuationBill.valuation_bill_id,
+    );
     let core = convertValuationBillFromCms(valuationBill);
     try {
       const response = await axios({
-        url: CREATE_VALUATION_BILL_TO_APPCORE, data: core,
+        url: CREATE_VALUATION_BILL_TO_APPCORE,
+        data: core,
         method: 'POST',
-      })
+      });
       //console.log(response.data.data);
       await this.valuationBillRepo.update(
-        {valuation_bill_id: valuationBill.valuationBill.valuation_bill_id}, 
+        { valuation_bill_id: valuationBill.valuationBill.valuation_bill_id },
         {
           appcore_id: response.data.data,
-          is_sync: "Y"
+          is_sync: 'Y',
         },
-      )
-    }
-    catch(error){
+      );
+    } catch (error) {
       console.log(error);
     }
-    const finalValuationBill = await this.getValuationBillById(newValuationBill.valuation_bill_id);
+    const finalValuationBill = await this.getValuationBillById(
+      newValuationBill.valuation_bill_id,
+    );
     return finalValuationBill;
   }
 
-  async getValuationBillById(id){
-    const valuationBill = await this.valuationBillRepo.findOne({"valuation_bill_id": id})
+  async getValuationBillById(id) {
+    const valuationBill = await this.valuationBillRepo.findOne({
+      valuation_bill_id: id,
+    });
     const product = await this.productRepo.findOne({
       select: '*',
       join: productLeftJoiner,
       where: { [`${Table.PRODUCTS}.product_id`]: valuationBill.product_id },
     });
-    const criteriaSet = await this.valuationBillCriteriaDetailRepo.find({"valuation_bill_id": id});
-    return {valuationBill, product, criteriaSet};
+    const criteriaSet = await this.valuationBillCriteriaDetailRepo.find({
+      valuation_bill_id: id,
+    });
+    return { valuationBill, product, criteriaSet };
   }
 
   async get(tradein_id: number, params: any = {}) {
@@ -1122,6 +1146,99 @@ export class TradeinProgramService {
     return oldReceipt;
   }
 
+  async getValuationBillsList(params: any = {}) {
+    const { page, skip, limit } = getPageSkipLimit(params);
+    let { status, is_sync, created_at_start, created_at_end, search } = params;
+
+    let filterConditions = {};
+
+    if (status) {
+      filterConditions[`${Table.VALUATION_BILL}.status`] = status;
+    }
+
+    if (is_sync) {
+      filterConditions[`${Table.VALUATION_BILL}.is_sync`] = is_sync;
+    }
+
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.VALUATION_BILL}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
+      filterConditions[`${Table.VALUATION_BILL}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    } else if (created_at_end) {
+      filterConditions[`${Table.VALUATION_BILL}.created_at`] =
+        LessThanOrEqual(created_at_start);
+    }
+
+    let filterOrders = {
+      field: `${Table.VALUATION_BILL}.updated_at`,
+      sortBy: SortBy.DESC,
+    };
+
+    const valuationBillsList = await this.valuationBillRepo.find({
+      select: '*',
+      where: valuationBillsSearchFilter(search, filterConditions),
+      orderBy: filterOrders,
+      skip,
+      limit,
+    });
+
+    const count = await this.valuationBillRepo.find({
+      select: `COUNT(${Table.VALUATION_BILL}.valuation_bill_id) as total`,
+      where: valuationBillsSearchFilter(search, filterConditions),
+    });
+
+    let result = {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: valuationBillsList,
+    };
+
+    return result;
+  }
+
+  async CMSgetValuationBillById(valuation_bill_id) {
+    const valuationBill = await this.valuationBillRepo.findOne({
+      valuation_bill_id,
+    });
+    if (!valuationBill) {
+      throw new HttpException('Không tìm thấy phiếu định giá', 404);
+    }
+
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: valuationBill.product_id },
+    });
+
+    const billCriteriaUniqueList =
+      await this.valuationBillCriteriaDetailRepo.find({
+        select: `DISTINCT(${Table.VALUATION_BILL_CRITERIA_DETAIL}.criteria_id), criteria_id`,
+        where: { valuation_bill_id },
+      });
+
+    if (!billCriteriaUniqueList.length) {
+      throw new HttpException(
+        'Không tìm thấy bộ tiêu chí áp dụng cho phiếu định giá',
+        404,
+      );
+    }
+    const tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+      select: '*',
+      where: {
+        criteria_id: In(
+          billCriteriaUniqueList.map(({ criteria_id }) => criteria_id),
+        ),
+      },
+    });
+  }
+
   async getOldReceiptByUserId(user_id, params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     const tradeinOldReceipts = await this.tradeinOldReceiptRepo.find({
@@ -1267,7 +1384,7 @@ export class TradeinProgramService {
   async updateValuationBillStatus(appcore_id, status) {
     let newStatus;
     console.log(status.status);
-    switch (Number(status.status)){
+    switch (Number(status.status)) {
       case 1:
         newStatus = statusA;
         break;
@@ -1281,7 +1398,11 @@ export class TradeinProgramService {
         newStatus = statusA;
         break;
     }
-    let valuationBill = await this.valuationBillRepo.update({appcore_id: appcore_id}, {status: newStatus}, true);
+    let valuationBill = await this.valuationBillRepo.update(
+      { appcore_id: appcore_id },
+      { status: newStatus },
+      true,
+    );
     return valuationBill;
   }
 }

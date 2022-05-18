@@ -218,13 +218,14 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
-import { cacheKeys } from '../../constants/cache';
+import { cacheKeys, cacheTables, cacheModules } from '../../constants/cache';
 import { convertIntoCacheString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
   categoryFeaturesSetJoiner,
 } from '../../utils/joinTable';
+import { table } from 'console';
 
 @Injectable()
 export class ProductService {
@@ -1425,14 +1426,6 @@ export class ProductService {
   }
 
   async getProductsListByCategorySlug(slug: string, params) {
-    const categoryCacheKey = `${slug}${convertIntoCacheString(params)}`;
-
-    const cacheKey = cacheKeys.productByCategorySlug(categoryCacheKey);
-    let categoryResult = await this.cache.get(cacheKey);
-    await this.cache.delete(cacheKey);
-    if (categoryResult) {
-      return categoryResult;
-    }
     const category = await this.categoryRepo.findOne({
       select: categorySelector,
       join: {
@@ -1448,6 +1441,16 @@ export class ProductService {
 
     if (!category) {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
+    }
+
+    let cacheKey = cacheKeys.category(category.category_id);
+    let categoryResult = await this.cache.get(cacheKey);
+
+    await this.cache.removeCache(cacheTables.category);
+    categoryResult = await this.cache.get(cacheKey);
+
+    if (categoryResult) {
+      return categoryResult;
     }
 
     let categoryId = category.category_id;
@@ -1481,7 +1484,7 @@ export class ProductService {
         sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
       },
       {
-        field: `${Table.PRODUCTS_CATEGORIES}.updated_at`,
+        field: `${Table.PRODUCTS}.updated_at`,
         sortBy: SortBy.DESC,
       },
     ];
@@ -1578,7 +1581,11 @@ export class ProductService {
     };
 
     await this.cache.set(cacheKey, categoryResult);
-
+    await this.cache.saveCache(
+      cacheTables.category,
+      cacheModules.categorySlug,
+      cacheKey,
+    );
     return categoryResult;
   }
 

@@ -56,6 +56,26 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('valuation-bills')
+  async getValuationBillsList(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getValuationBillsList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('valuation-bills/:valuation_bill_id')
+  async getValuationBillById(
+    @Res() res: Response,
+    @Param('valuation_bill_id') valuation_bill_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.CMSgetValuationBillById(
+      valuation_bill_id,
+    );
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':tradein_id')
   @UseGuards(AuthGuard)
   async get(
@@ -78,4 +98,5 @@ export class TradeinProgramController extends BaseController {
     const result = await this.service.update(tradein_id, data, req.user);
     return this.responseSuccess(res, result);
   }
+  abstract;
 }
