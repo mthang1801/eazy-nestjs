@@ -226,6 +226,7 @@ import {
   categoryFeaturesSetJoiner,
 } from '../../utils/joinTable';
 import { table } from 'console';
+import { convertProductDataFromMagentor } from '../../utils/integrateFunctions';
 
 @Injectable()
 export class ProductService {
@@ -428,10 +429,10 @@ export class ProductService {
             collect_price: childProduct.collect_price,
             whole_price: childProduct.whole_price,
             percentage_discount: childProduct.percentage_discount,
-            price_program: childProduct.price_program,
-            price_discount: childProduct.price_discount,
-            program_start_at: childProduct.program_start_at,
-            program_end_at: childProduct.program_start_at,
+            selling_price_program: childProduct.selling_price_program,
+            original_price_program: childProduct.price_discount,
+            time_start_at: childProduct.time_start_at,
+            time_end_at: childProduct.time_end_at,
           };
           await this.productPriceRepo.update(
             { product_id: parentProduct.product_id },
@@ -2295,7 +2296,7 @@ export class ProductService {
 
   async getFromAppcore() {
     const totalPage = 500;
-    await this.clearAll();
+    // await this.clearAll();
     for (let currentPage = 1; currentPage <= totalPage; currentPage++) {
       try {
         const response = await axios.get(
@@ -2621,31 +2622,31 @@ export class ProductService {
   }
 
   async clearAll() {
-    await this.productRepo.writeExec(`TRUNCATE TABLE ${Table.PRODUCTS}`);
-    await this.productCategoryRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCTS_CATEGORIES}`,
-    );
-    await this.productDescriptionsRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_DESCRIPTION}`,
-    );
-    await this.productPriceRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_PRICES}`,
-    );
-    await this.productFeatureValueRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_FEATURE_VALUES}`,
-    );
-    await this.productVariationGroupRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUPS}`,
-    );
-    await this.productVariationGroupProductsRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
-    );
-    await this.productVariationGroupFeatureRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
-    );
-    await this.productVariationGroupFeatureRepo.writeExec(
-      `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_INDEX}`,
-    );
+    // await this.productRepo.writeExec(`TRUNCATE TABLE ${Table.PRODUCTS}`);
+    // await this.productCategoryRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCTS_CATEGORIES}`,
+    // );
+    // await this.productDescriptionsRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_DESCRIPTION}`,
+    // );
+    // await this.productPriceRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_PRICES}`,
+    // );
+    // await this.productFeatureValueRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_FEATURE_VALUES}`,
+    // );
+    // await this.productVariationGroupRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUPS}`,
+    // );
+    // await this.productVariationGroupProductsRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
+    // );
+    // await this.productVariationGroupFeatureRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
+    // );
+    // await this.productVariationGroupFeatureRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_INDEX}`,
+    // );
   }
 
   async uploadImages(images, sku) {
@@ -4246,10 +4247,10 @@ export class ProductService {
   }
 
   async importProducts() {
-    this.clearAll();
+    // this.clearAll();
     const totalProducts = 17643;
     const limit = 30;
-    let currentPage = 30;
+    let currentPage = 310;
     let destPage = Math.ceil(totalProducts / limit - currentPage) + 200;
 
     let headers = {
@@ -4696,6 +4697,65 @@ export class ProductService {
           });
         }
       }
+    }
+  }
+
+  async migrateProductFromMagentor() {
+    try {
+      const responseData: any = await this.databaseService.executeMagentoPool(
+        'select * from ddv_catalog_product_flat_1',
+      );
+
+      if (responseData && responseData?.length) {
+        for (let data of responseData[0]) {
+          try {
+            if (!data) {
+              continue;
+            }
+            const cmsData = convertProductDataFromMagentor(data);
+
+            const product = await this.productRepo.findOne({
+              product_code: cmsData['product_code'],
+            });
+            if (product) {
+              const productData = this.productRepo.setData(cmsData);
+              if (Object.entries(productData).length) {
+                await this.productRepo.update(
+                  { product_id: product.product_id },
+                  productData,
+                );
+              }
+              const productDesc = await this.productDescriptionsRepo.findOne({
+                product_id: product.product_id,
+              });
+              if (productDesc) {
+                const productDescData =
+                  this.productDescriptionsRepo.setData(cmsData);
+                if (Object.entries(productDescData).length) {
+                  await this.productDescriptionsRepo.update(
+                    { product_id: product.product_id },
+                    productDescData,
+                  );
+                }
+              } else {
+                const productDescData = {
+                  ...new ProductDescriptionsEntity(),
+                  ...this.productDescriptionsRepo.setData(cmsData),
+                  product_id: product['product_id'],
+                };
+                await this.productDescriptionsRepo.create(productDescData);
+              }
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+      }
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
     }
   }
 }

@@ -1023,3 +1023,32 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
   console.log(cmsData);
   return cmsData;
 };
+
+export const convertProductDataFromMagentor = (data) => {
+  if (!data) {
+    return;
+  }
+  let cmsData = {
+    description: data['description'],
+    created_at:
+      data['created_at'] && checkValidTimestamp(data['created_at'])
+        ? formatStandardTimeStamp(data['created_at'])
+        : null,
+    updated_at:
+      data['updated_at'] && checkValidTimestamp(data['updated_at'])
+        ? formatStandardTimeStamp(data['updated_at'])
+        : null,
+    thumbnail: data['thumbnail'],
+    product: data['name'],
+    price: data['price'],
+    short_description: data['short_description'],
+    full_description: data['description'],
+    promo_text: data['description'],
+    product_code: data['sku'],
+    product_hover: data['sp_hover'],
+    online_gifts: data['sp_giftcustom'],
+    promotion_info: data['sp_khuyenmai'],
+    slug: data['url_key'],
+  };
+  return cmsData;
+};

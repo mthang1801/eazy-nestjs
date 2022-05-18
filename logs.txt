@@ -1,1 +1,1 @@
-Cannot read properties of null (reading 'operator')
+Request failed with status code 502
