@@ -1059,13 +1059,13 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
     tradein_appcore_id: coreData['tradeInProgramId'],
     user_appcore_id: coreData['customerId'],
     imei: coreData['productIMEI'],
-    product_id: coreData['productId'],
+    product_appcore_id: coreData['productId'],
     collect_price: coreData['productBuyingPrice'],
     criteria_price: coreData['totalCriteriaPrice'],
     estimate_price: coreData['estimationBuyingPrice'],
     final_price: coreData['finalBuyingPrice'],
     store_id: coreData['storeId'],
-    status: coreData['status'],
+    status: coreData['status'] == 3 ? 'C' : coreData['status'] == 2 ? 'B' : 'A',
     note: coreData['note'],
     created_at:
       coreData['createdAt'] && checkValidTimestamp(coreData['createdAt'])
