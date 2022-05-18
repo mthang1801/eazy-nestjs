@@ -1381,10 +1381,10 @@ export class TradeinProgramService {
     }
   }
 
-  async updateValuationBillStatus(appcore_id, status) {
+  async updateValuationBillStatus(appcore_id, data) {
     let newStatus;
-    console.log(status.status);
-    switch (Number(status.status)) {
+    console.log(data.status);
+    switch (Number(data.status)) {
       case 1:
         newStatus = statusA;
         break;
@@ -1400,7 +1400,10 @@ export class TradeinProgramService {
     }
     let valuationBill = await this.valuationBillRepo.update(
       { appcore_id: appcore_id },
-      { status: newStatus },
+      { 
+        status: newStatus,
+        store_id: data.store_id,
+      },
       true,
     );
     return valuationBill;
