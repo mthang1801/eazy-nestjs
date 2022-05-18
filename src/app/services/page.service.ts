@@ -471,7 +471,7 @@ export class PageService {
       // console.log(pageDetail)
       // console.log("================//================");
     }
-
+    
     currentPage['page_details'] = pageDetails;
 
     return currentPage;

@@ -64,11 +64,13 @@ export class RedisCacheService {
 
   async removeCache(tableName, moduleName = '', cacheKey = '') {
     if (cacheKey) {
-      console.log('remove Cache Key');
+      this.logger.error(`======= REMOVE CAHCE KEY [${cacheKey}]========`);
       return this.delete(cacheKey);
     }
     if (moduleName && !tableName) {
-      console.log('remove Cache Name');
+      this.logger.error(
+        `======= REMOVE KEYS CACHE IN TABLE [${tableName}]========`,
+      );
       const cacheTables = await this.cacheRepo.find({ table_name: tableName });
       for (let cache of cacheTables) {
         await this.delete(cache.cache_key);

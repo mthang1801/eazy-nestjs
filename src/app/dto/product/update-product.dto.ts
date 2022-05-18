@@ -70,6 +70,9 @@ export class UpdateProductDto {
   short_description: string;
 
   @IsOptional()
+  full_description: string;
+
+  @IsOptional()
   page_title: string;
 
   @IsOptional()

@@ -26,16 +26,17 @@ export class IndexService {
     // // Import Customers
     // await this.customerService.importCustomers();
     // // Import Products
-    // await this.productService.importProducts();
+    await this.productService.importProducts();
     // await this.productService.requestIntegrateParentProduct();
-    // // Report Product Amount In Stocks
-    await this.productService.reportTotalProductsInStores();
-    // // Report count total amount from all stores
-    await this.productService.reportCountTotalFromStores();
-    // // Report Product In Category
-    await this.productService.reportCountTotalFromCategories();
-    // Determin product functions
+    // // // Report Product Amount In Stocks
+    // await this.productService.reportTotalProductsInStores();
+    // // // Report count total amount from all stores
+    // await this.productService.reportCountTotalFromStores();
+    // // // Report Product In Category
+    // await this.productService.reportCountTotalFromCategories();
+    // // Determine product functions
     // await this.productService.determineProductFunction();
+    // await this.productService.standardizeProducts();
     // await this.productService.syncProductsIntoGroup();
   }
 }
