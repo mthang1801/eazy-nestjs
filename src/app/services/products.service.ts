@@ -3897,6 +3897,22 @@ export class ProductService {
   }
 
   async getBySlug(slug) {
+    let checkProductExist = await this.productRepo.findOne({
+      slug: slug.trim(),
+    });
+    let cacheKey;
+    if (checkProductExist) {
+      cacheKey = cacheKeys.product(checkProductExist.product_id);
+      let cacheResult = await this.cache.get(cacheKey);
+      if (cacheResult) {
+        this.productRepo.update(
+          { product_id: checkProductExist.product_id },
+          { view_count: checkProductExist.view_count + 1 },
+        );
+        return cacheResult;
+      }
+    }
+
     let product = await this.productRepo.findOne({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
@@ -3911,12 +3927,6 @@ export class ProductService {
       { product_id: product.product_id },
       { view_count: product.view_count + 1 },
     );
-
-    let cacheKey = cacheKeys.product(product.product_id);
-    let cacheResult = await this.cache.get(cacheKey);
-    if (cacheResult) {
-      return cacheResult;
-    }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
