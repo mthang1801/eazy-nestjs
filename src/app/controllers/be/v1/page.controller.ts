@@ -136,4 +136,22 @@ export class PageController extends BaseController {
     const result = await this.service.getPageDetailValues(page_detail_id);
     return this.responseSuccess(res, result);
   }
+
+  @Post('page-details/values')
+  async createPageDetailValueItem(
+    @Res() res,
+    @Body() data: CreatePageDetailValueDto,
+  ): Promise<IResponse> {
+    await this.service.createPageDetailValueItem(data);
+    return this.responseSuccess(res);
+  }
+
+  @Get('page-details/values/:value_id')
+  async getPageDetailValueItem(
+    @Res() res,
+    @Param() value_id: number,
+  ): Promise<IResponse> {
+    let result = await this.service.getPageDetailValueItem(value_id);
+    return this.responseSuccess(res, result);
+  }
 }

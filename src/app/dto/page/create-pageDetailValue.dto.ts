@@ -5,6 +5,9 @@ export class CreatePageDetailValueDto {
   value_id: number;
 
   @IsOptional()
+  page_detail_id: number;
+
+  @IsOptional()
   page_detail_name: string;
 
   @IsOptional()

@@ -449,6 +449,36 @@ export class PageService {
     return pageDetailValues;
   }
 
+  async createPageDetailValueItem(data: CreatePageDetailValueDto) {
+    let result;
+    if (data.value_id) {
+      const pageDetailValueData = this.pageDetailValueRepo.setData(data);
+      result = await this.pageDetailValueRepo.update(
+        { value_id: data.value_id },
+        pageDetailValueData,
+        true,
+      );
+    } else {
+      if (data.page_detail_id) {
+        throw new HttpException('Cần trang chi tiết để tạo value', 400);
+      }
+      const pageDetailValueData = {
+        ...new PageDetailValueEntity(),
+        ...this.pageDetailValueRepo.setData(data),
+      };
+      result = await this.pageDetailValueRepo.create(pageDetailValueData);
+    }
+    return this.getPageDetailValueItem(result.value_id);
+  }
+
+  async getPageDetailValueItem(value_id) {
+    const result = this.pageDetailValueRepo.findOne({ value_id });
+    if (!result) {
+      throw new HttpException('Không tìm thấy.', 404);
+    }
+    return result;
+  }
+
   async getPageDetailCms(page_id) {
     const currentPage = await this.pageRepo.findOne({ page_id });
 
@@ -465,13 +495,13 @@ export class PageService {
       },
     });
 
-    for (let pageDetail of pageDetails){
+    for (let pageDetail of pageDetails) {
       let tempValue = await this.getPageDetailValues(pageDetail.page_detail_id);
       pageDetail['page_detail_values'] = tempValue;
       // console.log(pageDetail)
       // console.log("================//================");
     }
-    
+
     currentPage['page_details'] = pageDetails;
 
     return currentPage;
