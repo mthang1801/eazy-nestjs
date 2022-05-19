@@ -184,8 +184,7 @@ export class CategoryService {
       }
     }
 
-    const categoryCacheKey = cacheKeys.categoryFE;
-    await this.cache.delete(categoryCacheKey);
+    await this.cache.removeManyCachedModule(cacheModules.categoryList);
 
     return result;
   }
@@ -333,6 +332,21 @@ export class CategoryService {
 
     if (!oldCategoryData) {
       throw new HttpException(`Không tìm thấy category với id là ${id}`, 404);
+    }
+
+    //======== remove cached category table ==============
+    let relevantTCachedTables = [cacheTables.category];
+    await this.cache.removeManyCachedTables(relevantTCachedTables);
+
+    //======== remove cached product item which it belongs this category ==========
+    const products = await this.productCategoryRepository.find({
+      category_id: id,
+    });
+    if (products.length) {
+      for (let product of products) {
+        let productCacheKey = cacheKeys.product(product.product_id);
+        await this.cache.delete(productCacheKey);
+      }
     }
 
     if (data.slug) {
@@ -741,23 +755,21 @@ export class CategoryService {
   }
 
   async getListFE() {
-    const cacheKey = cacheKeys.categoryFE;
-    const cacheResult = await this.cache.get(cacheKey);
-
+    const categoryCacheKey = cacheKeys.categories;
+    let cacheResult = await this.cache.get(categoryCacheKey);
     if (cacheResult) {
       return cacheResult;
     }
-
     const result = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
     });
 
-    await this.cache.set(cacheKey, result);
+    await this.cache.set(categoryCacheKey, result);
     await this.cache.saveCache(
       cacheTables.category,
       cacheModules.categoryList,
-      cacheKey,
+      categoryCacheKey,
     );
     return result;
   }
@@ -1224,6 +1236,9 @@ export class CategoryService {
   }
 
   async updateList(data: UpDateCategoriesListDto) {
+    //============== remove cached category list  =================
+    await this.cache.removeManyCachedModule(cacheModules.categoryList);
+
     if (data.categories && data.categories.length) {
       for (let { category_id, position } of data.categories) {
         await this.categoryRepository.update({ category_id }, { position });

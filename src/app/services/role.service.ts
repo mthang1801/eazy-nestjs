@@ -429,61 +429,66 @@ export class RoleService {
     }
 
     await this.roleRepo.update({ role_id: id }, newGroupData);
-
+    await this.roleFunctRepo.delete({ role_id: id });
     if (data.funct_ids && data.funct_ids.length) {
-      await this.roleFunctRepo.delete({ role_id: id });
       for (let functId of data.funct_ids) {
-        const functItem = await this.functRepo.findOne({ funct_id: functId });
-        if (functItem) {
-          let checkFunctExist = await this.roleFunctRepo.findOne({
-            role_id: id,
-            funct_id: functId,
-          });
-          if (checkFunctExist) continue;
-          await this.roleFunctRepo.create({
-            role_id: id,
-            funct_id: functId,
-            updated_by: user.user_id,
-            created_by: user.user_id,
-          });
-          let childrenFuncts = await this.functRepo.find({
-            parent_id: functId,
-          });
-          if (childrenFuncts) {
-            for (let childFunct of childrenFuncts) {
-              let checkChildFunctExist = await this.roleFunctRepo.findOne({
-                role_id: id,
-                funct_id: childFunct.funct_id,
-              });
-              if (checkChildFunctExist) continue;
-              await this.roleFunctRepo.create({
-                role_id: id,
-                funct_id: childFunct.funct_id,
-                updated_by: user.user_id,
-                created_by: user.user_id,
-              });
-              let grandChildrenFuncts = await this.functRepo.find({
-                parent_id: childFunct.funct_id,
-              });
-              if (grandChildrenFuncts.length) {
-                for (let grandChildFunct of grandChildrenFuncts) {
-                  let checkGrandChildFunctExist =
-                    await this.roleFunctRepo.findOne({
-                      role_id: id,
-                      funct_id: grandChildFunct.funct_id,
-                    });
-                  if (checkGrandChildFunctExist) continue;
-                  await this.roleFunctRepo.create({
-                    role_id: id,
-                    funct_id: grandChildFunct.funct_id,
-                    updated_by: user.user_id,
-                    created_by: user.user_id,
-                  });
-                }
-              }
-            }
-          }
-        }
+        await this.roleFunctRepo.create({
+          role_id: id,
+          funct_id: functId,
+          updated_by: user.user_id,
+          created_by: user.user_id,
+        });
+        // const functItem = await this.functRepo.findOne({ funct_id: functId });
+        // if (functItem) {
+        //   let checkFunctExist = await this.roleFunctRepo.findOne({
+        //     role_id: id,
+        //     funct_id: functId,
+        //   });
+        //   if (checkFunctExist) continue;
+        //   await this.roleFunctRepo.create({
+        //     role_id: id,
+        //     funct_id: functId,
+        //     updated_by: user.user_id,
+        //     created_by: user.user_id,
+        //   });
+        //   let childrenFuncts = await this.functRepo.find({
+        //     parent_id: functId,
+        //   });
+        //   if (childrenFuncts) {
+        //     for (let childFunct of childrenFuncts) {
+        //       let checkChildFunctExist = await this.roleFunctRepo.findOne({
+        //         role_id: id,
+        //         funct_id: childFunct.funct_id,
+        //       });
+        //       if (checkChildFunctExist) continue;
+        //       await this.roleFunctRepo.create({
+        //         role_id: id,
+        //         funct_id: childFunct.funct_id,
+        //         updated_by: user.user_id,
+        //         created_by: user.user_id,
+        //       });
+        //       let grandChildrenFuncts = await this.functRepo.find({
+        //         parent_id: childFunct.funct_id,
+        //       });
+        //       if (grandChildrenFuncts.length) {
+        //         for (let grandChildFunct of grandChildrenFuncts) {
+        //           let checkGrandChildFunctExist =
+        //             await this.roleFunctRepo.findOne({
+        //               role_id: id,
+        //               funct_id: grandChildFunct.funct_id,
+        //             });
+        //           if (checkGrandChildFunctExist) continue;
+        //           await this.roleFunctRepo.create({
+        //             role_id: id,
+        //             funct_id: grandChildFunct.funct_id,
+        //             updated_by: user.user_id,
+        //             created_by: user.user_id,
+        //           });
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
       }
     }
   }

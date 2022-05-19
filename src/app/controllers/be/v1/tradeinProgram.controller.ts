@@ -41,7 +41,7 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/:product_id/criteria')
+  @Get('/:product_id/criteria-set')
   async getListCriteria(
     @Res() res: Response,
     @Param('product_id') product_id: number,

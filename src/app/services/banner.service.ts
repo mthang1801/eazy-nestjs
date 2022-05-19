@@ -36,7 +36,7 @@ import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTar
 
 import { getPageSkipLimit, convertIntoCacheString } from '../../utils/helper';
 import { MoreThan } from '../../database/operators/operators';
-import { cacheKeys } from '../../constants/cache';
+import { cacheKeys, cacheTables, cacheModules } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
 import {
   Between,
@@ -154,14 +154,8 @@ export class bannerService {
     slug = slug || '/';
     device_type = device_type || 'D';
 
-    const subString = convertIntoCacheString({
-      slug,
-      device_type,
-    });
-
-    let cacheKey = cacheKeys.bannerFE(subString);
-
-    let bannerResult = await this.cache.get(cacheKey);
+    let bannerCacheKey = cacheKeys.banner(`${slug}-${device_type}`);
+    let bannerResult = await this.cache.get(bannerCacheKey);
     if (bannerResult) {
       return bannerResult;
     }
@@ -218,7 +212,12 @@ export class bannerService {
       }
     }
 
-    await this.cache.set(cacheKey, _banners);
+    await this.cache.set(bannerCacheKey, _banners);
+    await this.cache.saveCache(
+      cacheTables.banner,
+      cacheModules.bannerId,
+      bannerCacheKey,
+    );
     return _banners;
   }
 
@@ -323,7 +322,8 @@ export class bannerService {
         await this.bannerItemRepo.create(newBannerItemData, false);
       }
     }
-
+    //============== remove cached banner  =================
+    await this.cache.removeCache(cacheTables.banner);
     return this.getById(newBanner.banner_id);
   }
 
@@ -332,6 +332,9 @@ export class bannerService {
     if (!banner) {
       throw new HttpException('Không tìm thấy banner.', 404);
     }
+
+    //============== remove cached banner  =================
+    await this.cache.removeCache(cacheTables.banner);
 
     const bannerData = this.bannerRepo.setData({
       ...data,

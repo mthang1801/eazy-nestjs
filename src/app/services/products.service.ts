@@ -1386,6 +1386,7 @@ export class ProductService {
     let filterCondition = {
       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
     };
+    let categoryCacheKey = cacheKeys.category(`${categoryId}-${page}-${limit}`);
 
     let productsList = await this.productCategoryRepo.find({
       select: '*',
@@ -1444,17 +1445,11 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    let cacheKey = cacheKeys.category(41);
-
-    let categoryResult = await this.cache.get(cacheKey);
-    console.log(categoryResult);
-    // await this.cache.removeCache(cacheTables.category);
-    // categoryResult = await this.cache.get(cacheKey);
-    // categoryResult;
-
-    // if (categoryResult) {
-    //   return categoryResult;
-    // }
+    let categoryCacheKey = cacheKeys.category(category.category_id);
+    let categoryResult = await this.cache.get(categoryCacheKey);
+    if (categoryResult) {
+      return categoryResult;
+    }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
@@ -1583,12 +1578,12 @@ export class ProductService {
       features,
     };
 
-    // await this.cache.set(cacheKey, categoryResult);
-    // await this.cache.saveCache(
-    //   cacheTables.category,
-    //   cacheModules.categorySlug,
-    //   cacheKey,
-    // );
+    await this.cache.set(categoryCacheKey, categoryResult);
+    await this.cache.saveCache(
+      cacheTables.category,
+      cacheModules.categoryId,
+      categoryCacheKey,
+    );
     return categoryResult;
   }
 
@@ -1619,6 +1614,11 @@ export class ProductService {
     if (!category) {
       throw new HttpException(`Không tìm thấy danh mục`, 404);
     }
+
+    //================== remove cached get product by categoryId =====================
+    let cachedCategoryKey = cacheKeys.category(category.category_id);
+    await this.cache.delete(cachedCategoryKey);
+
     if (data.removed_products && data.removed_products.length) {
       for (let productId of data.removed_products) {
         await this.productCategoryRepo.delete({
@@ -1688,6 +1688,9 @@ export class ProductService {
     //     }
     //   }
     // }
+
+    //============ removed cached ==============
+    await this.cache.delete(cacheKeys.product(currentProduct['product_id']));
 
     let result = { ...currentProduct };
 
@@ -1815,7 +1818,7 @@ export class ProductService {
         }
       }
     }
-    //delete all old product categories
+
     await this.productCategoryRepo.delete({ product_id: result.product_id });
 
     // Update product category
@@ -3583,7 +3586,7 @@ export class ProductService {
     }
 
     const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCT_PRICES}.*`,
+      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
       join: productSearchJoiner,
       where: productSearch(q, filterConditions),
       skip,

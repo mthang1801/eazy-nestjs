@@ -2,6 +2,7 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { CacheEntity } from '../entities/cache.entity';
 import { CacheRepository } from '../repositories/cache.repository';
+import { cacheModules } from '../../constants/cache';
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
@@ -21,11 +22,12 @@ export class RedisCacheService {
         .map((key) => key)
         .join(',')}] ==========`,
     );
-    let results = keys.map(async (key) => {
-      await this.cache.get(key);
-      return key;
-    });
-    return Promise.all(results);
+    let results = [];
+    for (let key of keys) {
+      let keyItem = await this.cache.get(key);
+      results.push(keyItem);
+    }
+    return results;
   }
 
   async set(key, value) {
@@ -88,6 +90,25 @@ export class RedisCacheService {
 
     for (let cache of caches) {
       await this.delete(cache.cache_key);
+    }
+  }
+
+  async removeManyCachedTables(tables: string[] = []) {
+    if (tables.length) {
+      for (let table of tables) {
+        await this.removeCache(table);
+      }
+    }
+  }
+  async removeManyCachedModule(modules: string[] | string = []) {
+    if (typeof modules == 'string') modules = [modules];
+    if (modules.length) {
+      for (let module of modules) {
+        let moduleItem = await this.cacheRepo.findOne({ module_name: module });
+        if (moduleItem) {
+          await this.delete(moduleItem.cache_key);
+        }
+      }
     }
   }
 }

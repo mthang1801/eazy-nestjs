@@ -91,7 +91,7 @@ export class CategoryController extends BaseController {
     @Body() data: UpdateCatalogCategoryItemDto,
   ): Promise<IResponse> {
     await this.service.updateCatalogCategoryItem(id, data);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   @Get('catalog/item')
@@ -210,7 +210,7 @@ export class CategoryController extends BaseController {
     @Param('category_id') category_id: string,
   ) {
     await this.service.uploadMetaImage(file, category_id);
-    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+    return this.responseSuccess(res);
   }
 
   @Post(':category_id/upload-icon')
@@ -233,7 +233,7 @@ export class CategoryController extends BaseController {
     @Param('category_id') category_id: string,
   ) {
     await this.service.uploadIcon(file, category_id);
-    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+    return this.responseSuccess(res);
   }
 
   @Delete(':category_id/meta-image/')
@@ -242,7 +242,7 @@ export class CategoryController extends BaseController {
     @Param('category_id') category_id: string,
   ) {
     await this.service.deleteMetaImage(category_id);
-    return this.responseSuccess(res, null, 'Xoá thành công.');
+    return this.responseSuccess(res);
   }
 
   @Delete(':category_id/icon/')

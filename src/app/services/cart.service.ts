@@ -60,7 +60,7 @@ export class CartService {
     let result = { ...cart };
 
     const cartItems = await this.cartRepo.find({
-      select: `*, ${Table.CATEGORIES}.slug as categorySlug, ${Table.PRODUCTS}.slug as productSlug, ${Table.CART_ITEMS}.amount`,
+      select: `*, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCTS}.slug as productSlug, ${Table.CART_ITEMS}.amount`,
       join: cartJoiner,
       where: { [`${Table.CART}.cart_id`]: result.cart_id },
     });
