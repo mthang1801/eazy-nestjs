@@ -41,6 +41,15 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/current-program')
+  async getAppliedProgram(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getListFE(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/:product_id/criteria-set')
   async getListCriteria(
     @Res() res: Response,

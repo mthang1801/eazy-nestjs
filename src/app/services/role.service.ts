@@ -431,6 +431,7 @@ export class RoleService {
     await this.roleRepo.update({ role_id: id }, newGroupData);
     await this.roleFunctRepo.delete({ role_id: id });
     if (data.funct_ids && data.funct_ids.length) {
+      data.funct_ids = data.funct_ids.sort((a, b) => a - b);
       for (let functId of data.funct_ids) {
         const roleFunct = await this.functRepo.findOne({ funct_id: functId });
         if (roleFunct) {
