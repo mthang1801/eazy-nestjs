@@ -47,7 +47,7 @@ export class ProductIntegrationController extends BaseController {
     @Body() data: CreateProductStoreDto,
   ) {
     await this.service.itgCreateProductStores(data);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   /**

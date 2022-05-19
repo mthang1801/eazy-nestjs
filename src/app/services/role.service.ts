@@ -432,12 +432,16 @@ export class RoleService {
     await this.roleFunctRepo.delete({ role_id: id });
     if (data.funct_ids && data.funct_ids.length) {
       for (let functId of data.funct_ids) {
-        await this.roleFunctRepo.create({
-          role_id: id,
-          funct_id: functId,
-          updated_by: user.user_id,
-          created_by: user.user_id,
-        });
+        const roleFunct = await this.functRepo.findOne({ funct_id: functId });
+        if (roleFunct) {
+          await this.roleFunctRepo.create({
+            role_id: id,
+            funct_id: functId,
+            updated_by: user.user_id,
+            created_by: user.user_id,
+          });
+        }
+
         // const functItem = await this.functRepo.findOne({ funct_id: functId });
         // if (functItem) {
         //   let checkFunctExist = await this.roleFunctRepo.findOne({

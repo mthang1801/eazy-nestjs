@@ -626,6 +626,8 @@ export class ProductService {
       variant_ids,
       product_function,
       order_amount,
+      stickers,
+      ratings,
     } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
 
@@ -805,6 +807,16 @@ export class ProductService {
             productItem['product_id'],
         },
       });
+
+      if (stickers) {
+        productItem['stickers'] = await this.getProductStickers(productItem);
+      }
+
+      if (ratings) {
+        productItem['ratings'] = await this.reviewRepo.findOne({
+          product_id: productItem['product_id'],
+        });
+      }
       productItem['currentCategory'] = currentCategory;
     }
 
