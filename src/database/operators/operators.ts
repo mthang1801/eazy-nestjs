@@ -43,6 +43,11 @@ export function Equal(value): {
   operator: string;
   value;
 } {
+  if (typeof value == 'object') {
+    if (value.hasOwnProperty('operator') && value.hasOwnProperty('value')) {
+      value = `${value['operator']} ${value['value']}`;
+    }
+  }
   return { operator: '=', value };
 }
 
@@ -63,6 +68,16 @@ export function In<T>(arr: T[]): {
 } {
   return {
     operator: 'IN',
+    value: `(${arr.map((item) => `'${item}'`).join()})`,
+  };
+}
+
+export function All<T>(arr: T[]): {
+  operator: string;
+  value: string;
+} {
+  return {
+    operator: 'ALL',
     value: `(${arr.map((item) => `'${item}'`).join()})`,
   };
 }

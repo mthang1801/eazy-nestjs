@@ -4,7 +4,10 @@ export const formatStringCondition = (position, existsItem) => {
       ? `WHERE ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `
       : ` ${existsItem['connect']} ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `;
 
-  formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
+  formatStringCond = formatStringCond
+    .replace(/'\(/g, '(')
+    .replace(/\)'/g, ')')
+    .replace(/'ALL/g, 'ALL');
 
   return formatStringCond;
 };
@@ -15,7 +18,10 @@ export const formatHavingCondition = (position, existsItem) => {
       ? `HAVING ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `
       : ` ${existsItem['connect']} ${existsItem['field']} ${existsItem['operation']} ${existsItem['value']} `;
 
-  formatStringCond = formatStringCond.replace(/'\(/g, '(').replace(/\)'/g, ')');
+  formatStringCond = formatStringCond
+    .replace(/'\(/g, '(')
+    .replace(/\)'/g, ')')
+    .replace(/'ALL/g, 'ALL');
 
   return formatStringCond;
 };

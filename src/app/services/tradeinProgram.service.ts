@@ -207,7 +207,7 @@ export class TradeinProgramService {
       if (!tradeinCriteriaList.length) {
         throw new HttpException('Chương trình chưa có bộ tiêu chí.', 404);
       }
-      
+
       for (let tradeinCriteriaItem of tradeinCriteriaList) {
         const tradeinCriteriaDetails =
           await this.tradeinProgramCriteriaDetailRepo.find({
@@ -216,12 +216,14 @@ export class TradeinProgramService {
 
         tradeinCriteriaItem['criteria_details'] = tradeinCriteriaDetails;
       }
-      return tradeinCriteriaList;
+      tradeinProgram['criteria_set'] = tradeinCriteriaList;
+
+      return tradeinProgram;
     } catch (error) {
       console.log(error);
       throw new HttpException(
-        error.response.data.message,
-        error.response.status,
+        error?.response?.data?.message || error.message,
+        error?.response?.status || error.status,
       );
     }
   }

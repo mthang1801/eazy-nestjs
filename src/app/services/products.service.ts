@@ -151,7 +151,11 @@ import {
   productDetailSelector,
   getDetailProductsListSelectorFE,
 } from '../../utils/tableSelector';
-import { LessThanOrEqual, Between } from '../../database/operators/operators';
+import {
+  LessThanOrEqual,
+  Between,
+  All,
+} from '../../database/operators/operators';
 import {
   sqlReportTotalProductAmountFromStores,
   sqlReportTotalProductAmountInStores,
@@ -1445,11 +1449,12 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    let categoryCacheKey = cacheKeys.category(category.category_id);
-    let categoryResult = await this.cache.get(categoryCacheKey);
-    if (categoryResult) {
-      return categoryResult;
-    }
+    // let categoryCacheKey = cacheKeys.category(category.category_id);
+    // let categoryResult = await this.cache.get(categoryCacheKey);
+    let categoryResult = null;
+    // if (categoryResult) {
+    //   return categoryResult;
+    // }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
@@ -1490,8 +1495,8 @@ export class ProductService {
     let productsList = [];
     let count;
     if (variant_ids) {
-      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
-        variant_ids.split(','),
+      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = Equal(
+        All(variant_ids.split(',')),
       );
 
       productsList = await this.productFeatureValueRepo.find({
@@ -1578,12 +1583,12 @@ export class ProductService {
       features,
     };
 
-    await this.cache.set(categoryCacheKey, categoryResult);
-    await this.cache.saveCache(
-      cacheTables.category,
-      cacheModules.categoryId,
-      categoryCacheKey,
-    );
+    // await this.cache.set(categoryCacheKey, categoryResult);
+    // await this.cache.saveCache(
+    //   cacheTables.category,
+    //   cacheModules.categoryId,
+    //   categoryCacheKey,
+    // );
     return categoryResult;
   }
 
