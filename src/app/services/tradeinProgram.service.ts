@@ -225,6 +225,12 @@ export class TradeinProgramService {
       return tradeinProgram;
     } catch (error) {
       console.log(error);
+      if (error?.response?.status == 500 || error?.status == 500) {
+        throw new HttpException(
+          'Sản phẩm hiện tại không còn được áp dụng trong chương trình.',
+          409,
+        );
+      }
       throw new HttpException(
         error?.response?.data?.message || error.message,
         error?.response?.status || error.status,
