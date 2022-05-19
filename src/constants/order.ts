@@ -94,7 +94,7 @@ export const convertDataToIntegrate = (data) => {
   itgData['orderSource'] = data['utm_source']; //Kênh đặt *
 
   if (data['order_type']) {
-    itgData['orderType'] = data['order_type']; //Loại đơn
+    itgData['orderType'] = data['order_type'] == 1 ? 1 : 5; //Loại đơn
   }
 
   if (data['installed_money_account_id']) {

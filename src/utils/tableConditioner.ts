@@ -401,6 +401,22 @@ export const tradeinProgramSearchFilter = (
   return searchFilterTemplate(filterConditions, arraySearch);
 };
 
+export const appliedProductsTradeinProgramSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
 export const tradeinProgramDetailSearchFilter = (
   search = '',
   filterConditions = {},

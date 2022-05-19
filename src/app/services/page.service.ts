@@ -23,6 +23,7 @@ import { SortBy } from '../../database/enums/sortBy.enum';
 import { CreatePageDetailValuesDto } from '../dto/page/create-pageDetailValues.dto';
 import { UpdatePageDetailValueDto } from '../dto/page/update-pageDetailValue.dto';
 import { CreatePageDetailValueDto } from '../dto/page/create-pageDetailValue.dto';
+import { CreatePageDetailItemDto } from '../dto/page/create-pageDetailItem.dto';
 
 @Injectable()
 export class PageService {
@@ -449,30 +450,30 @@ export class PageService {
     return pageDetailValues;
   }
 
-  async createPageDetailValueItem(data: CreatePageDetailValueDto) {
+  async createPageDetailItem(data: CreatePageDetailItemDto) {
     let result;
-    if (data.value_id) {
-      const pageDetailValueData = this.pageDetailValueRepo.setData(data);
-      result = await this.pageDetailValueRepo.update(
-        { value_id: data.value_id },
-        pageDetailValueData,
+    if (data.page_detail_id) {
+      const pageDetailData = this.pageDetailRepo.setData(data);
+      result = await this.pageDetailRepo.update(
+        { page_detail_id: data.page_detail_id },
+        pageDetailData,
         true,
       );
     } else {
-      if (data.page_detail_id) {
+      if (data.page_id) {
         throw new HttpException('Cần trang chi tiết để tạo value', 400);
       }
-      const pageDetailValueData = {
-        ...new PageDetailValueEntity(),
-        ...this.pageDetailValueRepo.setData(data),
+      const pageDetailData = {
+        ...new PageDetailEntity(),
+        ...this.pageDetailRepo.setData(data),
       };
-      result = await this.pageDetailValueRepo.create(pageDetailValueData);
+      result = await this.pageDetailRepo.create(pageDetailData);
     }
-    return this.getPageDetailValueItem(result.value_id);
+    return this.getPageDetailItem(result.page_detail_id);
   }
 
-  async getPageDetailValueItem(value_id) {
-    const result = this.pageDetailValueRepo.findOne({ value_id });
+  async getPageDetailItem(page_detail_id) {
+    const result = this.pageDetailRepo.findOne({ page_detail_id });
     if (!result) {
       throw new HttpException('Không tìm thấy.', 404);
     }

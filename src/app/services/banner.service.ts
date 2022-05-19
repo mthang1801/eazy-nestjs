@@ -150,25 +150,37 @@ export class bannerService {
   }
 
   async getListFE(params) {
-    let { slug, device_type } = params;
+    let { slug, device_type, target_id, location_id } = params;
     slug = slug || '/';
     device_type = device_type || 'D';
 
-    let bannerCacheKey = cacheKeys.banner(`${slug}-${device_type}`);
-    let bannerResult = await this.cache.get(bannerCacheKey);
-    if (bannerResult) {
-      return bannerResult;
+    // let bannerCacheKey = cacheKeys.banner(`${slug}-${device_type}`);
+    // let bannerResult = await this.cache.get(bannerCacheKey);
+    // if (bannerResult) {
+    //   return bannerResult;
+    // }
+    let banners;
+    if (target_id && location_id) {
+      banners = await this.bannerRepo.find({
+        select: '*',
+        join: bannerJoiner,
+        where: {
+          [`${Table.BANNER}.status`]: 'A',
+          [`${Table.BANNER_LOCATION_DESCRIPTION}.location_id`]: location_id,
+          [`${Table.BANNER_TARGET_DESCRIPTION}.target_id`]: target_id,
+        },
+      });
+    } else {
+      banners = await this.bannerRepo.find({
+        select: '*',
+        join: bannerJoiner,
+        where: {
+          [`${Table.BANNER}.status`]: 'A',
+          [`${Table.BANNER}.device_type`]: device_type,
+          [`${Table.BANNER_TARGET_DESCRIPTION}.url`]: slug,
+        },
+      });
     }
-
-    let banners = await this.bannerRepo.find({
-      select: '*',
-      join: bannerJoiner,
-      where: {
-        [`${Table.BANNER}.status`]: 'A',
-        [`${Table.BANNER}.device_type`]: device_type,
-        [`${Table.BANNER_TARGET_DESCRIPTION}.url`]: slug,
-      },
-    });
 
     let _banners = [...banners];
 
@@ -212,12 +224,12 @@ export class bannerService {
       }
     }
 
-    await this.cache.set(bannerCacheKey, _banners);
-    await this.cache.saveCache(
-      cacheTables.banner,
-      prefixCacheKey.bannerId,
-      bannerCacheKey,
-    );
+    // await this.cache.set(bannerCacheKey, _banners);
+    // await this.cache.saveCache(
+    //   cacheTables.banner,
+    //   prefixCacheKey.bannerId,
+    //   bannerCacheKey,
+    // );
     return _banners;
   }
 

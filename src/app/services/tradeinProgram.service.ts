@@ -69,7 +69,10 @@ import {
 } from '../../constants/api.appcore';
 import axios from 'axios';
 import { ValuateBillDto } from '../dto/tradein/valuateBill.dto';
-import { productPriceJoiner, valuationBillLeftJoiner } from '../../utils/joinTable';
+import {
+  productPriceJoiner,
+  valuationBillLeftJoiner,
+} from '../../utils/joinTable';
 import { defaultPassword } from '../../constants/defaultPassword';
 import { saltHashPassword } from '../../utils/cipherHelper';
 import { UserProfileEntity } from '../entities/userProfile.entity';
@@ -86,6 +89,7 @@ import { CustomerService } from './customer.service';
 import { statusC, statusB, statusA } from '../../constants/valuationBill';
 import { Between, In } from '../../database/operators/operators';
 import { ConverValuationBillDataFromAppcore } from '../../utils/integrateFunctions';
+import { appliedProductsTradeinProgramSearchFilter } from '../../utils/tableConditioner';
 @Injectable()
 export class TradeinProgramService {
   constructor(
@@ -353,9 +357,9 @@ export class TradeinProgramService {
 
     let tradeinProgram = await this.tradeinProgramRepo.findOne({
       select: '*',
-      where: tradeinProgramSearchFilter(search, filterCondition),
+      where: tradeinProgramSearchFilter((search = ''), filterCondition),
       orderBy: [
-        { field: `${Table.TRADEIN_PROGRAM}.updated_at`, sortBy: SortBy.DESC },
+        { field: `${Table.TRADEIN_PROGRAM}.created_at`, sortBy: SortBy.DESC },
       ],
       skip,
       limit,
@@ -365,14 +369,18 @@ export class TradeinProgramService {
     let appliedCriteriaList = [];
     let count = 0;
     if (tradeinProgram) {
+      let appliedProductFilterConditions = {
+        [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
+          tradeinProgram.tradein_id,
+        [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
+      };
       appliedProducts = await this.tradeinProgramDetailRepo.find({
         select: '*',
         join: tradeinDetailLeftJoiner,
-        where: {
-          [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
-            tradeinProgram.tradein_id,
-          [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
-        },
+        where: appliedProductsTradeinProgramSearchFilter(
+          search,
+          appliedProductFilterConditions,
+        ),
         skip,
         limit,
       });
@@ -380,11 +388,10 @@ export class TradeinProgramService {
       let _count = await this.tradeinProgramDetailRepo.find({
         select: `COUNT(${Table.TRADEIN_PROGRAM_DETAIL}.product_id) as total`,
         join: tradeinDetailLeftJoiner,
-        where: {
-          [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
-            tradeinProgram.tradein_id,
-          [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
-        },
+        where: appliedProductsTradeinProgramSearchFilter(
+          search,
+          appliedProductFilterConditions,
+        ),
       });
 
       if (_count[0].total) {
@@ -497,7 +504,7 @@ export class TradeinProgramService {
       const newValuationBill = await this.valuationBillRepo.create(
         valuationBillData,
       );
-      tempValuationBill = {...newValuationBill};
+      tempValuationBill = { ...newValuationBill };
 
       let i = 0;
 
@@ -531,7 +538,7 @@ export class TradeinProgramService {
           method: 'POST',
         });
         let isSync = 'Y';
-        if (!response.data){
+        if (!response.data) {
           isSync = 'N';
         }
         //console.log(response.data.data);
@@ -544,11 +551,13 @@ export class TradeinProgramService {
         );
       } catch (error) {
         console.log(error);
-        console.log("test==============================================");
+        console.log('test==============================================');
         console.log(error.response.status);
-        if (error?.response?.status == 400 || error.status == 400){
-          if (tempValuationBill.valuation_bill_id){
-            await this.valuationBillRepo.delete({valuation_bill_id: tempValuationBill.valuation_bill_id});
+        if (error?.response?.status == 400 || error.status == 400) {
+          if (tempValuationBill.valuation_bill_id) {
+            await this.valuationBillRepo.delete({
+              valuation_bill_id: tempValuationBill.valuation_bill_id,
+            });
           }
         }
       }
@@ -557,11 +566,13 @@ export class TradeinProgramService {
       );
       return finalValuationBill;
     } catch (error) {
-      console.log("test==============================================");
+      console.log('test==============================================');
       console.log(error.response.status);
-      if (error?.response?.status == 400 || error.status == 400){
-        if (tempValuationBill.valuation_bill_id){
-          await this.valuationBillRepo.delete({valuation_bill_id: tempValuationBill.valuation_bill_id});
+      if (error?.response?.status == 400 || error.status == 400) {
+        if (tempValuationBill.valuation_bill_id) {
+          await this.valuationBillRepo.delete({
+            valuation_bill_id: tempValuationBill.valuation_bill_id,
+          });
         }
       }
       throw new HttpException(error.message, error.status);
@@ -647,7 +658,7 @@ export class TradeinProgramService {
       const newValuationBill = await this.valuationBillRepo.create(
         valuationBillData,
       );
-      tempValuationBill = {...newValuationBill};
+      tempValuationBill = { ...newValuationBill };
 
       let i = 0;
 
@@ -682,7 +693,7 @@ export class TradeinProgramService {
         });
         //console.log(response.data.data);
         let isSync = 'Y';
-        if (!response.data){
+        if (!response.data) {
           isSync = 'N';
         }
         await this.valuationBillRepo.update(
@@ -694,9 +705,11 @@ export class TradeinProgramService {
         );
       } catch (error) {
         //console.log(error.response.response);
-        if (error?.response?.status == 400 || error.status == 400){
-          if (tempValuationBill.valuation_bill_id){
-            await this.valuationBillRepo.delete({valuation_bill_id: tempValuationBill.valuation_bill_id});
+        if (error?.response?.status == 400 || error.status == 400) {
+          if (tempValuationBill.valuation_bill_id) {
+            await this.valuationBillRepo.delete({
+              valuation_bill_id: tempValuationBill.valuation_bill_id,
+            });
           }
         }
       }
@@ -705,11 +718,13 @@ export class TradeinProgramService {
       );
       return finalValuationBill;
     } catch (error) {
-      console.log("test==============================================");
+      console.log('test==============================================');
       console.log(error.response.status);
-      if (error?.response?.status == 400 || error.status == 400){
-        if (tempValuationBill.valuation_bill_id){
-          await this.valuationBillRepo.delete({valuation_bill_id: tempValuationBill.valuation_bill_id});
+      if (error?.response?.status == 400 || error.status == 400) {
+        if (tempValuationBill.valuation_bill_id) {
+          await this.valuationBillRepo.delete({
+            valuation_bill_id: tempValuationBill.valuation_bill_id,
+          });
         }
       }
       throw new HttpException(error.message, error.status);
@@ -1458,7 +1473,9 @@ export class TradeinProgramService {
     const valuationBill = await this.valuationBillRepo.findOne({
       select: `*,${Table.VALUATION_BILL}.user_id`,
       join: valuationBillLeftJoiner,
-      where: {[`${Table.VALUATION_BILL}.valuation_bill_id`]: valuation_bill_id},
+      where: {
+        [`${Table.VALUATION_BILL}.valuation_bill_id`]: valuation_bill_id,
+      },
     });
 
     if (!valuationBill) {
