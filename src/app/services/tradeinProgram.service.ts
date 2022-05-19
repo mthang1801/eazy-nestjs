@@ -282,8 +282,22 @@ export class TradeinProgramService {
 
   async getOldReceiptsList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
-    let { search } = params;
+    let { search, created_at_start, created_at_end } = params;
     let filterConditions = {};
+
+    if (created_at_start && created_at_end) {
+      filterConditions[`${Table.TRADEIN_OLD_RECEIPT}.created_at`] = Between(
+        created_at_start,
+        created_at_end,
+      );
+    } else if (created_at_start) {
+      filterConditions[`${Table.TRADEIN_OLD_RECEIPT}.created_at`] =
+        MoreThanOrEqual(created_at_start);
+    } else if (created_at_end) {
+      filterConditions[`${Table.TRADEIN_OLD_RECEIPT}.created_at`] =
+        LessThanOrEqual(created_at_end);
+    }
+
     let oldReceiptsList = await this.tradeinOldReceiptRepo.find({
       select: `DISTINCT(${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id), code, store_id, description, created_at, created_by`,
       join: tradeinOldReceiptJoiner,
