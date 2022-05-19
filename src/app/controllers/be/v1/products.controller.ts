@@ -99,7 +99,7 @@ export class ProductsController extends BaseController {
     @Body('dest_product_id') dest_product_id: number,
   ): Promise<IResponse> {
     await this.service.groupingProducts(start_product_id, dest_product_id);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   @Get('/parents')
@@ -193,7 +193,7 @@ export class ProductsController extends BaseController {
     @Param('sku') sku: string,
   ) {
     const result = await this.service.uploadImages(files, sku);
-    return this.responseSuccess(res, result, 'Cập nhật hình ảnh thành công.');
+    return this.responseSuccess(res, result);
   }
 
   @Post(':product_id/upload-meta-image')
@@ -216,7 +216,7 @@ export class ProductsController extends BaseController {
     @Param('product_id') product_id: string,
   ) {
     await this.service.uploadMetaImage(file, product_id);
-    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+    return this.responseSuccess(res);
   }
 
   @Post(':product_id/upload-thumbnail')
@@ -239,7 +239,7 @@ export class ProductsController extends BaseController {
     @Param('product_id') product_id: string,
   ) {
     await this.service.uploadThumbnail(file, product_id);
-    return this.responseSuccess(res, null, 'Cập nhật hình ảnh thành công.');
+    return this.responseSuccess(res);
   }
 
   @Delete(':product_id/meta-image')

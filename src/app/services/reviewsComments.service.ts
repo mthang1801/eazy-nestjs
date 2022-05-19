@@ -33,6 +33,8 @@ import { CreateCommentCMSDto } from '../dto/reviewComment/create-comment.cms.dto
 import { DatabaseService } from '../../database/database.service';
 import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
 import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
+import { RedisCacheService } from './redisCache.service';
+import { cacheKeys } from '../../constants/cache';
 
 @Injectable()
 export class ReviewsCommentService {
@@ -45,6 +47,7 @@ export class ReviewsCommentService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private db: DatabaseService,
     private reviewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
+    private cache: RedisCacheService,
   ) {}
   async createRestrictedCommentsKeywords(data) {
     const currentResitrictedComments = await this.restrictedCommentRepo.find();
@@ -441,6 +444,11 @@ export class ReviewsCommentService {
       });
     }
 
+    //=========== Remove product cache ==============
+    if (type === 1) {
+      let productCacheKey = cacheKeys.product(product_id);
+      this.cache.delete(productCacheKey);
+    }
     if (type !== 1 || !data.point) return;
 
     const review = await this.reviewRepo.findOne({ product_id });

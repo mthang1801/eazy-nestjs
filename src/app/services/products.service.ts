@@ -1461,13 +1461,6 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    // let categoryCacheKey = cacheKeys.category(category.category_id);
-    // let categoryResult = await this.cache.get(categoryCacheKey);
-    let categoryResult = null;
-    // if (categoryResult) {
-    //   return categoryResult;
-    // }
-
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
       categoryId,
@@ -1506,64 +1499,26 @@ export class ProductService {
 
     let productsList = [];
     let count;
-
     if (variant_ids) {
-      let arrVariantIds = variant_ids.split(',');
-      let productFilterConditions = {};
-      if (arrVariantIds.length) {
-        for (let [i, variantId] of arrVariantIds.entries()) {
-          if (arrVariantIds.length == 1) {
-            productFilterConditions[
-              `${Table.PRODUCT_FEATURE_VALUES}.variant_id`
-            ] = variantId;
-          }
-          if (i == arrVariantIds.length - 1) {
-            productsList = await this.productFeatureValueRepo.find({
-              select: getProductListByVariantsInCategory,
-              join: productFeatureVariantByCategoryJoiner,
-              where: productsListsSearchFilter(
-                (search = ''),
-                productFilterConditions,
-              ),
-              orderBy: filterOrder,
-              skip,
-              limit,
-            });
+      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
+        variant_ids.split(','),
+      );
 
-            count = await this.productFeatureValueRepo.find({
-              select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
-              join: productFeatureVariantByCategoryJoiner,
-              where: productsListsSearchFilter(
-                (search = ''),
-                productFilterConditions,
-              ),
-            });
-          } else {
-            productFilterConditions[
-              `${Table.PRODUCT_FEATURE_VALUES}.variant_id`
-            ] = variantId;
-            if (productsList.length) {
-              productFilterConditions[
-                `${Table.PRODUCT_FEATURE_VALUES}.product_id`
-              ] = In(productsList.map(({ product_id }) => product_id));
-            }
-            let _productsList = await this.productFeatureValueRepo.find({
-              select: getProductListByVariantsInCategory,
-              join: productFeatureVariantByCategoryJoiner,
-              where: productsListsSearchFilter(
-                (search = ''),
-                productFilterConditions,
-              ),
-            });
+      productsList = await this.productFeatureValueRepo.find({
+        select: getProductListByVariantsInCategory,
+        join: productFeatureVariantByCategoryJoiner,
 
-            productsList = productsList.filter((productItem) =>
-              _productsList.some(
-                ({ product_id }) => product_id == productItem.product_id,
-              ),
-            );
-          }
-        }
-      }
+        where: productsListsSearchFilter(search, filterCondition),
+        orderBy: filterOrder,
+        skip,
+        limit,
+      });
+
+      count = await this.productFeatureValueRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
+        join: productFeatureVariantByCategoryJoiner,
+        where: productsListsSearchFilter(search, filterCondition),
+      });
     } else {
       productsList = await this.productCategoryRepo.find({
         select: [
@@ -1621,7 +1576,7 @@ export class ProductService {
       category['category_id'],
     );
 
-    categoryResult = {
+    let categoryResult = {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -1633,12 +1588,6 @@ export class ProductService {
       features,
     };
 
-    // await this.cache.set(categoryCacheKey, categoryResult);
-    // await this.cache.saveCache(
-    //   cacheTables.category,
-    //   prefixCacheKey.categoryId,
-    //   categoryCacheKey,
-    // );
     return categoryResult;
   }
 
@@ -1745,7 +1694,30 @@ export class ProductService {
     // }
 
     //============ removed cached ==============
-    await this.cache.delete(cacheKeys.product(currentProduct['product_id']));
+    let cacheKey = cacheKeys.product(currentProduct.product_id);
+    await this.cache.delete(cacheKey);
+
+    if (currentProduct['parent_product_appcore_id']) {
+      let parentProduct = await this.productRepo.findOne({
+        product_appcore_id: currentProduct['parent_product_appcore_id'],
+      });
+      if (parentProduct) {
+        let parentCacheKey = cacheKeys.product(parentProduct.product_id);
+        await this.cache.delete(parentCacheKey);
+      }
+    }
+
+    if (currentProduct['product_function'] == 1) {
+      let childrenProducts = await this.productRepo.find({
+        parent_product_appcore_id: currentProduct['product_appcore_id'],
+      });
+      if (childrenProducts.length) {
+        for (let childProduct of childrenProducts) {
+          let childCacheKey = cacheKeys.product(childProduct.product_id);
+          await this.cache.delete(childProduct.product_id);
+        }
+      }
+    }
 
     let result = { ...currentProduct };
 
@@ -1870,6 +1842,10 @@ export class ProductService {
             { category_id: category.category_id },
             { product_count: category.product_count - 1 },
           );
+
+          //========== Remove cache in category containing product ==========
+          let categoryCacheKey = cacheKeys.category(category.category_id);
+          await this.cache.delete(categoryCacheKey);
         }
       }
     }
@@ -2761,6 +2737,11 @@ export class ProductService {
       for (let image of images) {
         await fsExtra.unlink(image.path);
       }
+
+      //============ remove cache ============
+      let productCacheKey = cacheKeys.product(product.product_id);
+      await this.cache.delete(productCacheKey);
+
       return results;
     } catch (error) {
       // delete files
@@ -2868,6 +2849,10 @@ export class ProductService {
         );
       }
       await fsExtra.unlink(file.path);
+
+      //=========== remove product cache =============
+      let productCacheKey = cacheKeys.product(product_id);
+      await this.cache.delete(productCacheKey);
     } catch (error) {
       console.log(error);
       await fsExtra.unlink(file.path);
@@ -3606,6 +3591,11 @@ export class ProductService {
     let product = await this.productRepo.findOne({
       product_appcore_id: product_id,
     });
+
+    //========= remove product cache ============
+    let cacheKey = cacheKeys.product(product.product_id);
+    await this.cache.delete(cacheKey);
+
     if (!product) {
       const newProductData = {
         ...new ProductsEntity(),
@@ -3923,6 +3913,10 @@ export class ProductService {
     );
 
     let cacheKey = cacheKeys.product(product.product_id);
+    let cacheResult = await this.cache.get(cacheKey);
+    if (cacheResult) {
+      return cacheResult;
+    }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
@@ -4048,7 +4042,7 @@ export class ProductService {
     // get Image
     result['images'] = await this.getProductImages(result.product_id);
 
-    //Get Features
+    //============= Get Features ===============
     if (result['category_feature_id'] !== 0) {
       result['productFeatures'] = await this.getProductFeaturesByCategoryId(
         result['category_feature_id'],
@@ -4060,7 +4054,7 @@ export class ProductService {
       );
     }
 
-    // Get accessory
+    //=========== Get accessory ============
     result['promotion_accessory_products'] = [];
     if (result['promotion_accessory_id']) {
       result['promotion_accessory_products'] =
@@ -4084,7 +4078,7 @@ export class ProductService {
         await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
     }
 
-    //Get ratings
+    //============== Get ratings ================
     result['ratings'] = await this.reviewRepo.findOne({
       product_id: result.product_id,
     });
@@ -4109,6 +4103,13 @@ export class ProductService {
         product,
       );
     }
+
+    await this.cache.set(cacheKey, result);
+    await this.cache.saveCache(
+      cacheTables.product,
+      prefixCacheKey.productId,
+      cacheKey,
+    );
 
     return result;
   }

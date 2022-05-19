@@ -319,6 +319,10 @@ export const productsListByCategoryJoiner = (params = {}) => {
       fieldJoin: `${Table.PRODUCTS_CATEGORIES}.category_id`,
       rootJoin: `${Table.CATEGORIES}.category_id`,
     },
+    [Table.PRODUCT_FEATURE_VALUES]: {
+      fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id]`,
+      rootJoin: `${Table.PRODUCTS}.product_id]`,
+    },
   };
 
   return { [JoinTable.innerJoin]: result };

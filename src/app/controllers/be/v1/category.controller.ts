@@ -76,11 +76,7 @@ export class CategoryController extends BaseController {
     @Body() data: CreateCatalogCategoryItemDto,
   ) {
     await this.service.createCatalogCategoryItem(data);
-    return this.responseSuccess(
-      res,
-      null,
-      'Tạo catalog category item thành công.',
-    );
+    return this.responseSuccess(res);
   }
 
   @Put('/catalog/item/:id')

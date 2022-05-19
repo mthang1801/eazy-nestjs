@@ -34,6 +34,8 @@ import {
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
+import { cacheKeys } from '../../constants/cache';
+import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
 export class PromotionAccessoryService {
@@ -43,6 +45,7 @@ export class PromotionAccessoryService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async create(data: CreatePromotionAccessoryDto, user) {
@@ -109,6 +112,10 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
+
+        //======= remove promotion cache product ==========
+        let productCacheKey = cacheKeys.product(product.product_id);
+        await this.cache.delete(productCacheKey);
 
         const newProductData = {
           ...new PromotionAccessoryDetailEntity(),
@@ -179,12 +186,14 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
+
         if (!product) {
           throw new HttpException(
             `Sản phẩm có id ${productItem.product_id} tồn tại`,
             404,
           );
         }
+
         if (
           productItem.promotion_price < 0 ||
           productItem.promotion_price > product['price']
@@ -219,13 +228,25 @@ export class PromotionAccessoryService {
     }
 
     if (data.products && data.products.length) {
-      await this.promoAccessoryDetailRepo.delete({ accessory_id });
+      let oldPromotionProducts = await this.promoAccessoryDetailRepo.delete(
+        { accessory_id },
+        true,
+      );
+      // ======= Remove product cache =========
+      for (let oldPromotionProduct of oldPromotionProducts) {
+        let productCacheKey = cacheKeys.product(oldPromotionProduct.product_id);
+        await this.cache.delete(productCacheKey);
+      }
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
           select: '*',
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
+
+        //============== remove new promotion product cache ==============
+        let productCacheKey = cacheKeys.product(product.product_id);
+        await this.cache.delete(productCacheKey);
 
         const newProductData = {
           ...new PromotionAccessoryDetailEntity(),
@@ -656,6 +677,8 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [typeNameOfAccessory]: 0 },
         );
+        let productCacheKey = cacheKeys.product(productId);
+        await this.cache.delete(productCacheKey);
       }
     }
     if (data.inserted_products && data.inserted_products.length) {
@@ -664,6 +687,8 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [typeNameOfAccessory]: accessory_id },
         );
+        let productCacheKey = cacheKeys.product(productId);
+        await this.cache.delete(productCacheKey);
       }
     }
   }
