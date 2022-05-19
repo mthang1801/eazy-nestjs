@@ -65,12 +65,14 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/valuation-bill')
+  @Post('/valuation-bills')
+  @UseGuards(AuthGuard)
   async createValuationBill(
     @Res() res: Response,
+    @Req() req,
     @Body() data,
   ): Promise<IResponse> {
-    const result = await this.service.createValuationBill(data);
+    const result = await this.service.CMScreateValuationBill(req.user, data);
     return this.responseSuccess(res, result);
   }
 

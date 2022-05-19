@@ -468,8 +468,6 @@ export class PageService {
     for (let pageDetail of pageDetails){
       let tempValue = await this.getPageDetailValues(pageDetail.page_detail_id);
       pageDetail['page_detail_values'] = tempValue;
-      // console.log(pageDetail)
-      // console.log("================//================");
     }
     
     currentPage['page_details'] = pageDetails;

@@ -370,6 +370,19 @@ export const productLeftJoiner = {
   },
 };
 
+export const valuationBillLeftJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.STORE_LOCATION_DESCRIPTIONS]: {
+      fieldJoin: `${Table.STORE_LOCATION_DESCRIPTIONS}.store_location_id`,
+      rootJoin: `${Table.VALUATION_BILL}.store_id`,
+    },
+    [Table.USERS]: {
+      fieldJoin: `${Table.USERS}.user_id`,
+      rootJoin: `${Table.VALUATION_BILL}.created_by`,
+    },
+  },
+};
+
 export const tradeinDetailLeftJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
