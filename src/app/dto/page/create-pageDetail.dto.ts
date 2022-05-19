@@ -29,6 +29,9 @@ class PageDetail {
   url: string;
 
   @IsOptional()
+  page_detail_data: string;
+
+  @IsOptional()
   image: string;
 
   @IsOptional()

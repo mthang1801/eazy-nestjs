@@ -36,6 +36,9 @@ class PageDetail {
   description: string;
 
   @IsOptional()
+  page_detail_data: string;
+
+  @IsOptional()
   position: number;
 
   @IsOptional()
