@@ -452,6 +452,7 @@ export class PageService {
 
   async createPageDetailItem(data: CreatePageDetailItemDto) {
     let result;
+    console.log(data);
     if (data.page_detail_id) {
       const pageDetailData = this.pageDetailRepo.setData(data);
       result = await this.pageDetailRepo.update(
@@ -460,20 +461,21 @@ export class PageService {
         true,
       );
     } else {
-      if (data.page_id) {
+      if (!data.page_id) {
         throw new HttpException('Cần trang chi tiết để tạo value', 400);
       }
       const pageDetailData = {
         ...new PageDetailEntity(),
         ...this.pageDetailRepo.setData(data),
       };
+
       result = await this.pageDetailRepo.create(pageDetailData);
     }
     return this.getPageDetailItem(result.page_detail_id);
   }
 
   async getPageDetailItem(page_detail_id) {
-    const result = this.pageDetailRepo.findOne({ page_detail_id });
+    const result = await this.pageDetailRepo.findOne({ page_detail_id });
     if (!result) {
       throw new HttpException('Không tìm thấy.', 404);
     }

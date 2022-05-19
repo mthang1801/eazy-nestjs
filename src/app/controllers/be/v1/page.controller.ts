@@ -143,14 +143,14 @@ export class PageController extends BaseController {
     @Res() res,
     @Body() data: CreatePageDetailItemDto,
   ): Promise<IResponse> {
-    await this.service.createPageDetailItem(data);
-    return this.responseSuccess(res);
+    const result = await this.service.createPageDetailItem(data);
+    return this.responseSuccess(res, result);
   }
 
-  @Get('page-details/:page_detail_id')
+  @Get('page-details/:page_detail_id/item')
   async getPageDetailItem(
     @Res() res,
-    @Param() page_detail_id: number,
+    @Param('page_detail_id') page_detail_id: number,
   ): Promise<IResponse> {
     let result = await this.service.getPageDetailItem(page_detail_id);
     return this.responseSuccess(res, result);
