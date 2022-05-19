@@ -21,7 +21,7 @@ export class ProductSyncController extends BaseController {
 
   @Get('/stocks-amount')
   async importProductStocksAmount(@Res() res) {
-    await this.service.itgGetProductsStores();
+    await this.service.syncGetProductsStores();
     return this.responseSuccess(res);
   }
 

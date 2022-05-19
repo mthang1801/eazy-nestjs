@@ -65,7 +65,7 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/valuation-bill')
+  @Post('/valuation-bills')
   async createValuationBill(
     @Res() res: Response,
     @Body() data,

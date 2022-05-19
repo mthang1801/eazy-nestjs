@@ -17,7 +17,7 @@ export const cacheTables = {
 };
 
 export const cacheModules = {
-  categoryList: 'Category List',
+  categoryList: 'categories',
   categoryId: 'Category Id',
   banner: 'Banner',
   bannerId: 'Banner Id',

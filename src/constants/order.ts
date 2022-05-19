@@ -86,6 +86,8 @@ const orderSampleData = {
 
 export const convertDataToIntegrate = (data) => {
   let itgData = {};
+  itgData['loanInformation'] = {};
+  let loanInformation = itgData['loanInformation'];
 
   itgData['storeId'] = data['store_id']; //Mã cửa hàng *
 
@@ -253,14 +255,18 @@ export const convertDataToIntegrate = (data) => {
     itgData['customerGender'] = data['gender']; //Giới tính khách hàng
   }
 
-  // if (data['id_card']) {
-  //   itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
-  // }
+  if (data['id_card']) {
+    itgData['customerIdCard'] = data['id_card']; // CMND khách hàng
+  }
 
   itgData['refOrderId'] = data['ref_order_id']; //Mã đơn hàng của đối tác *
 
   if (data['discount_type']) {
     itgData['discountType'] = data['discount_type']; //Kiểu chiết khấu
+  }
+
+  if (data['installment_tenor_code']) {
+    itgData['installmentInterestRateValue'] = data['installment_interest_rate'];
   }
 
   if (data['discount']) {

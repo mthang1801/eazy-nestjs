@@ -38,5 +38,7 @@ export class IndexService {
     // await this.productService.determineProductFunction();
     // await this.productService.standardizeProducts();
     // await this.productService.syncProductsIntoGroup();
+
+    await this.productService.syncGetProductsStores();
   }
 }

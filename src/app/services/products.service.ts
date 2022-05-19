@@ -3468,8 +3468,7 @@ export class ProductService {
     }
   }
 
-  async itgGetProductsStores() {
-    await this.clearStore();
+  async syncGetProductsStores() {
     const productsList = await this.productRepo.find();
 
     if (productsList.length) {
@@ -3492,17 +3491,37 @@ export class ProductService {
           if (!response?.data?.data) {
             continue;
           }
-          const data = response.data.data;
+          const { data } = response.data;
 
           if (data && Object.entries(data).length) {
             for (let dataItem of Object.values(data)) {
-              await this.productStoreRepo.create({
-                store_location_id: dataItem['storeId'],
-                product_id: product.product_id,
-                amount: dataItem['inStockQuantity'],
-                created_at: formatStandardTimeStamp(),
-                updated_at: formatStandardTimeStamp(),
-              });
+              const checkProductStoreExist =
+                await this.productStoreRepo.findOne({
+                  product_id: product.product_id,
+                  store_location_id: dataItem['storeId'],
+                });
+              if (checkProductStoreExist) {
+                await this.productStoreRepo.update(
+                  {
+                    product_id: product.product_id,
+                    store_location_id: dataItem['storeId'],
+                  },
+                  {
+                    store_location_id: dataItem['storeId'],
+                    product_id: product.product_id,
+                    amount: dataItem['inStockQuantity'],
+                    updated_at: formatStandardTimeStamp(),
+                  },
+                );
+              } else {
+                await this.productStoreRepo.create({
+                  store_location_id: dataItem['storeId'],
+                  product_id: product.product_id,
+                  amount: dataItem['inStockQuantity'],
+                  created_at: formatStandardTimeStamp(),
+                  updated_at: formatStandardTimeStamp(),
+                });
+              }
               await this.productStoreHistoryRepo.create({
                 store_location_id: dataItem['storeId'],
                 product_id: product.product_id,
@@ -3512,9 +3531,32 @@ export class ProductService {
               });
             }
           }
+          const productsInStocks = await this.productStoreRepo.find({
+            select: 'SUM(amount) as total',
+            where: { product_id: product.product_id },
+          });
+
+          await this.productRepo.update(
+            { product_id: product.product_id },
+            { amount: productsInStocks[0].total || 0 },
+          );
         } catch (error) {
           console.log(error);
         }
+      }
+    }
+
+    const productAmountInStores = await this.productStoreRepo.find({
+      select: 'store_location_id, SUM(amount) as total',
+      groupBy: 'store_location_id',
+    });
+
+    if (productAmountInStores) {
+      for (let productAmountInStore of productAmountInStores) {
+        await this.storeRepo.update(
+          { store_location_id: productAmountInStore.store_location_id },
+          { product_count: productAmountInStore.total || 0 },
+        );
       }
     }
   }
@@ -3576,6 +3618,20 @@ export class ProductService {
       { product_id: product.product_id },
       { amount: productsInStocks[0].total },
     );
+
+    const productAmountInStores = await this.productStoreRepo.find({
+      select: 'store_location_id, SUM(amount) as total',
+      groupBy: 'store_location_id',
+    });
+
+    if (productAmountInStores) {
+      for (let productAmountInStore of productAmountInStores) {
+        await this.storeRepo.update(
+          { store_location_id: productAmountInStore.store_location_id },
+          { product_count: productAmountInStore.total },
+        );
+      }
+    }
   }
 
   async clearStore() {
