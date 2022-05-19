@@ -222,7 +222,7 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
-import { cacheKeys, cacheTables, cacheModules } from '../../constants/cache';
+import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { convertIntoCacheString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
@@ -1506,15 +1506,24 @@ export class ProductService {
 
     let productsList = [];
     let count;
+
     if (variant_ids) {
-      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = Equal(
-        All(variant_ids.split(',')),
-      );
+      let filtersVariants = '';
+      variant_ids = variant_ids.split(',');
+      for (let [i, variant_id] of variant_ids.entries()) {
+        if (i == 0) {
+          filtersVariants += variant_id;
+          continue;
+        }
+        filtersVariants += ` AND ${Table.PRODUCT_FEATURE_VALUES}.variant_id = ${variant_id}`;
+      }
+
+      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] =
+        Equal(filtersVariants);
 
       productsList = await this.productFeatureValueRepo.find({
         select: getProductListByVariantsInCategory,
         join: productFeatureVariantByCategoryJoiner,
-
         where: productsListsSearchFilter(search, filterCondition),
         orderBy: filterOrder,
         skip,
@@ -1598,7 +1607,7 @@ export class ProductService {
     // await this.cache.set(categoryCacheKey, categoryResult);
     // await this.cache.saveCache(
     //   cacheTables.category,
-    //   cacheModules.categoryId,
+    //   prefixCacheKey.categoryId,
     //   categoryCacheKey,
     // );
     return categoryResult;
@@ -1820,7 +1829,7 @@ export class ProductService {
         let cacheKey = cacheKeys.category(oldCategoryItem.category_id);
         await this.cache.removeCache(
           cacheTables.category,
-          cacheModules.categoryList,
+          prefixCacheKey.categories,
           cacheKey,
         );
 
@@ -3883,6 +3892,8 @@ export class ProductService {
       { product_id: product.product_id },
       { view_count: product.view_count + 1 },
     );
+
+    let cacheKey = cacheKeys.product(product.product_id);
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({

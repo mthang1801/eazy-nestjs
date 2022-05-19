@@ -36,7 +36,7 @@ import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTar
 
 import { getPageSkipLimit, convertIntoCacheString } from '../../utils/helper';
 import { MoreThan } from '../../database/operators/operators';
-import { cacheKeys, cacheTables, cacheModules } from '../../constants/cache';
+import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
 import {
   Between,
@@ -215,7 +215,7 @@ export class bannerService {
     await this.cache.set(bannerCacheKey, _banners);
     await this.cache.saveCache(
       cacheTables.banner,
-      cacheModules.bannerId,
+      prefixCacheKey.bannerId,
       bannerCacheKey,
     );
     return _banners;

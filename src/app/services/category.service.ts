@@ -82,7 +82,7 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { categoryFeatureJoiner } from '../../utils/joinTable';
 import { RedisCacheService } from './redisCache.service';
-import { cacheKeys, cacheModules, cacheTables } from '../../constants/cache';
+import { cacheKeys, prefixCacheKey, cacheTables } from '../../constants/cache';
 import { CacheRepository } from '../repositories/cache.repository';
 import { CacheEntity } from '../entities/cache.entity';
 @Injectable()
@@ -184,7 +184,7 @@ export class CategoryService {
       }
     }
 
-    await this.cache.removeManyCachedModule(cacheModules.categoryList);
+    await this.cache.removeManyCachedModule(prefixCacheKey.categories);
 
     return result;
   }
@@ -768,7 +768,7 @@ export class CategoryService {
     await this.cache.set(categoryCacheKey, result);
     await this.cache.saveCache(
       cacheTables.category,
-      cacheModules.categoryList,
+      prefixCacheKey.categories,
       categoryCacheKey,
     );
     return result;
@@ -1237,7 +1237,7 @@ export class CategoryService {
 
   async updateList(data: UpDateCategoriesListDto) {
     //============== remove cached category list  =================
-    await this.cache.removeManyCachedModule(cacheModules.categoryList);
+    await this.cache.removeManyCachedModule(prefixCacheKey.categories);
 
     if (data.categories && data.categories.length) {
       for (let { category_id, position } of data.categories) {

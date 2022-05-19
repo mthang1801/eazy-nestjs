@@ -230,8 +230,18 @@ export class TradeinProgramService {
 
   async getList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
-    let { search } = params;
+    let { search, start_at, end_at, status } = params;
     let filterCondition = {};
+
+    if (start_at) {
+      filterCondition[`${Table.TRADEIN_PROGRAM}.start_at`] = start_at;
+    }
+    if (end_at) {
+      filterCondition[`${Table.TRADEIN_PROGRAM}.end_at`] = end_at;
+    }
+    if (status) {
+      filterCondition[`${Table.TRADEIN_PROGRAM}.status`] = status;
+    }
 
     let tradeinProgramsList = await this.tradeinProgramRepo.find({
       select: `*`,

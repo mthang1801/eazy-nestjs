@@ -16,8 +16,9 @@ export const cacheTables = {
   banner: 'Banner',
 };
 
-export const cacheModules = {
-  categoryList: 'categories',
+export const prefixCacheKey = {
+  categories: 'categories',
+  products: 'products',
   categoryId: 'Category Id',
   banner: 'Banner',
   bannerId: 'Banner Id',
