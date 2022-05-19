@@ -40,10 +40,10 @@ export class RedisCacheService {
     return this.cache.del(key);
   }
 
-  async saveCache(tableName, moduleName, cacheKey) {
+  async saveCache(tableName, prefixCacheKey, cacheKey) {
     const cacheTable = await this.cacheRepo.findOne({
       table_name: tableName,
-      module_name: moduleName,
+      prefix_cache_key: prefixCacheKey,
     });
 
     if (cacheTable) {
@@ -51,7 +51,7 @@ export class RedisCacheService {
         { id: cacheTable.id },
         {
           table_name: tableName,
-          module_name: moduleName,
+          prefix_cache_key: prefixCacheKey,
           cache_key: cacheKey,
         },
       );
@@ -59,7 +59,7 @@ export class RedisCacheService {
       await this.cacheRepo.create(
         {
           table_name: tableName,
-          module_name: moduleName,
+          prefix_cache_key: prefixCacheKey,
           cache_key: cacheKey,
         },
         false,
@@ -67,12 +67,12 @@ export class RedisCacheService {
     }
   }
 
-  async removeCache(tableName, moduleName = '', cacheKey = '') {
+  async removeCache(tableName, prefixCacheKey = '', cacheKey = '') {
     if (cacheKey) {
       this.logger.error(`======= REMOVE CAHCE KEY [${cacheKey}]========`);
       return this.delete(cacheKey);
     }
-    if (moduleName && !tableName) {
+    if (prefixCacheKey && !tableName) {
       this.logger.error(
         `======= REMOVE KEYS CACHE IN TABLE [${tableName}]========`,
       );
@@ -85,7 +85,7 @@ export class RedisCacheService {
 
     const caches = await this.cacheRepo.find({
       table_name: tableName,
-      module_name: moduleName,
+      prefix_cache_key: prefixCacheKey,
     });
 
     for (let cache of caches) {
@@ -100,13 +100,16 @@ export class RedisCacheService {
       }
     }
   }
-  async removeManyCachedModule(modules: string[] | string = []) {
-    if (typeof modules == 'string') modules = [modules];
-    if (modules.length) {
-      for (let module of modules) {
-        let moduleItem = await this.cacheRepo.findOne({ module_name: module });
-        if (moduleItem) {
-          await this.delete(moduleItem.cache_key);
+  async removeManyCachedModule(prefix_cache_key: string[] | string = []) {
+    if (typeof prefix_cache_key == 'string')
+      prefix_cache_key = [prefix_cache_key];
+    if (prefix_cache_key.length) {
+      for (let prefixCacheKey of prefix_cache_key) {
+        let prefixCacheKeyItem = await this.cacheRepo.findOne({
+          prefix_cache_key: prefixCacheKey,
+        });
+        if (prefixCacheKeyItem) {
+          await this.delete(prefixCacheKeyItem.cache_key);
         }
       }
     }
