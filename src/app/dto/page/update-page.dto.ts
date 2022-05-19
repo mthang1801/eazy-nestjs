@@ -14,10 +14,13 @@ export class UpdatePageDto {
 
   @IsOptional()
   @IsNumber()
-  page_type: number = 1;
+  page_type: number;
 
   @IsOptional()
-  status: string = 'A';
+  page_data: string;
+
+  @IsOptional()
+  status: string;
 
   @IsOptional()
   link_url: string;
@@ -54,7 +57,7 @@ class PageDetail {
   device_type: string;
 
   @IsOptional()
-  router: string = '';
+  router: string;
 
   @IsOptional()
   @ValidateNested()
@@ -76,5 +79,5 @@ class PageDetailValue {
   detail_status: string;
 
   @IsOptional()
-  image: string = '';
+  image: string;
 }

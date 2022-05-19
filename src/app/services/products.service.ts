@@ -1508,33 +1508,62 @@ export class ProductService {
     let count;
 
     if (variant_ids) {
-      let filtersVariants = '';
-      variant_ids = variant_ids.split(',');
-      for (let [i, variant_id] of variant_ids.entries()) {
-        if (i == 0) {
-          filtersVariants += variant_id;
-          continue;
+      let arrVariantIds = variant_ids.split(',');
+      let productFilterConditions = {};
+      if (arrVariantIds.length) {
+        for (let [i, variantId] of arrVariantIds.entries()) {
+          if (arrVariantIds.length == 1) {
+            productFilterConditions[
+              `${Table.PRODUCT_FEATURE_VALUES}.variant_id`
+            ] = variantId;
+          }
+          if (i == arrVariantIds.length - 1) {
+            productsList = await this.productFeatureValueRepo.find({
+              select: getProductListByVariantsInCategory,
+              join: productFeatureVariantByCategoryJoiner,
+              where: productsListsSearchFilter(
+                (search = ''),
+                productFilterConditions,
+              ),
+              orderBy: filterOrder,
+              skip,
+              limit,
+            });
+
+            count = await this.productFeatureValueRepo.find({
+              select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
+              join: productFeatureVariantByCategoryJoiner,
+              where: productsListsSearchFilter(
+                (search = ''),
+                productFilterConditions,
+              ),
+            });
+          } else {
+            productFilterConditions[
+              `${Table.PRODUCT_FEATURE_VALUES}.variant_id`
+            ] = variantId;
+            if (productsList.length) {
+              productFilterConditions[
+                `${Table.PRODUCT_FEATURE_VALUES}.product_id`
+              ] = In(productsList.map(({ product_id }) => product_id));
+            }
+            let _productsList = await this.productFeatureValueRepo.find({
+              select: getProductListByVariantsInCategory,
+              join: productFeatureVariantByCategoryJoiner,
+              where: productsListsSearchFilter(
+                (search = ''),
+                productFilterConditions,
+              ),
+            });
+
+            productsList = productsList.filter((productItem) =>
+              _productsList.some(
+                ({ product_id }) => product_id == productItem.product_id,
+              ),
+            );
+          }
         }
-        filtersVariants += ` AND ${Table.PRODUCT_FEATURE_VALUES}.variant_id = ${variant_id}`;
       }
-
-      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] =
-        Equal(filtersVariants);
-
-      productsList = await this.productFeatureValueRepo.find({
-        select: getProductListByVariantsInCategory,
-        join: productFeatureVariantByCategoryJoiner,
-        where: productsListsSearchFilter(search, filterCondition),
-        orderBy: filterOrder,
-        skip,
-        limit,
-      });
-
-      count = await this.productFeatureValueRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
-        join: productFeatureVariantByCategoryJoiner,
-        where: productsListsSearchFilter(search, filterCondition),
-      });
     } else {
       productsList = await this.productCategoryRepo.find({
         select: [
@@ -4438,27 +4467,32 @@ export class ProductService {
   }
 
   async reportCountTotalFromCategories() {
-    const categoriesList = await this.categoryRepo.find();
-    for (let { category_id } of categoriesList) {
-      let childrenCategories = await this.categoryService.childrenCategories(
+    const productCategoriesCounter = await this.productCategoryRepo.find({
+      select: `category_id, category_appcore_id, COUNT(product_id) as total`,
+      groupBy: 'category_id',
+    });
+    if (productCategoriesCounter.length) {
+      for (let {
         category_id,
-      );
-
-      let categories = [
-        ...new Set([
-          category_id,
-          ...childrenCategories.map(({ category_id }) => category_id),
-        ]),
-      ];
-      if (!categories.length) {
-        continue;
+        category_appcore_id,
+        total,
+      } of productCategoriesCounter) {
+        if (category_id === category_appcore_id) {
+          let category = await this.categoryRepo.findOne({
+            category_appcore_id,
+          });
+          if (category) {
+            await this.productCategoryRepo.update(
+              { category_id: category_appcore_id },
+              { category_id: category.category_id },
+            );
+          }
+        }
+        await this.categoryRepo.update(
+          { category_id },
+          { product_count: total },
+        );
       }
-
-      const response = await this.databaseService.executeQueryReadPool(
-        sqlReportTotalProductsInCategories(categories),
-      );
-      const total = await response[0][0].total;
-      await this.categoryRepo.update({ category_id }, { product_count: total });
     }
   }
 

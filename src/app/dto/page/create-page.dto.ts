@@ -17,6 +17,9 @@ export class CreatePageDto {
   page_type: number = 1;
 
   @IsOptional()
+  page_data: string;
+
+  @IsOptional()
   status: string = 'A';
 
   @IsOptional()
