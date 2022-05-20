@@ -35,7 +35,7 @@ import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTar
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 
 import { getPageSkipLimit, convertIntoCacheString } from '../../utils/helper';
-import { MoreThan } from '../../database/operators/operators';
+import { MoreThan, Not, Equal } from '../../database/operators/operators';
 import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
 import {
@@ -345,6 +345,15 @@ export class bannerService {
       throw new HttpException('Không tìm thấy banner.', 404);
     }
 
+    const checkDuplicatePosition = await this.bannerRepo.findOne({
+      page_target_id: data.page_target_id,
+      page_location_id: data.page_location_id,
+      device_type: data.device_type,
+      baner_id: Not(Equal(banner.banner_id)),
+    });
+    if (checkDuplicatePosition) {
+      throw new HttpException('Vị trí bị trùng trên trang', 400);
+    }
     //============== remove cached banner  =================
     await this.cache.removeCache(cacheTables.banner);
 

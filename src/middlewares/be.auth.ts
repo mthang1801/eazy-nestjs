@@ -24,13 +24,13 @@ export class AuthGuard implements CanActivate {
     const authorizationUUID = req.headers['x-auth-uuid'];
 
     if (!authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối 1.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
     }
 
     const authoriazationToken = req.headers?.authorization;
 
     if (!authoriazationToken) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối 2.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
     }
 
     const token = authoriazationToken.split(' ').slice(-1)[0];
@@ -46,14 +46,14 @@ export class AuthGuard implements CanActivate {
     }
 
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
-      throw new HttpException('Token đã hết hạn 3.', 408);
+      throw new HttpException('Token đã hết hạn.', 408);
     }
 
     const cryptography = new Cryptography();
     let decryptedData = cryptography.decrypt(user['user_id']);
 
     if (user['user_id'] !== authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối 4.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
     }
 
     let userId = decryptedData.split('-')[5];
@@ -72,10 +72,10 @@ export class AuthGuard implements CanActivate {
         path,
       );
       if (!result) {
-        throw new HttpException('Yêu cầu truy cập bị từ chối 5.', 401);
+        throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
       }
     } catch (error) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối 6.', 401);
+      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
     }
 
     req.user = user;

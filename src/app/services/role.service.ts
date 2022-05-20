@@ -503,7 +503,7 @@ export class RoleService {
     if (!userRole) {
       return false;
     }
-    const roleGroup = await this.roleFunctRepo.findOne({
+    let roleGroup = await this.roleFunctRepo.findOne({
       select: '*',
       join: roleFunctJoiner,
       where: {
@@ -514,7 +514,21 @@ export class RoleService {
     });
 
     if (!roleGroup) {
-      return false;
+      roleGroup = await this.roleFunctRepo.findOne({
+        select: '*',
+        join: roleFunctJoiner,
+        where: {
+          [`${Table.FUNC}.method`]: method,
+          [`${Table.FUNC}.be_route`]: path,
+        },
+      });
+      if (roleGroup) {
+        throw new HttpException(
+          `Bạn không được cấp quyền truy cập vào ${roleGroup.funct_name}`,
+          401,
+        );
+      }
+      throw new HttpException(`Yêu cầu truy cập bị từ chối.`, 401);
     }
     return true;
   }
