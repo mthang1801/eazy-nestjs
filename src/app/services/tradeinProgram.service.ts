@@ -1592,13 +1592,15 @@ export class TradeinProgramService {
 
   async FEgetValuationBillById(user, valuation_bill_id) {
     const valuationBill = await this.valuationBillRepo.findOne({
-      select: `*,${Table.VALUATION_BILL}.user_id`,
+      select: `*,${Table.VALUATION_BILL}.* `,
       join: valuationBillLeftJoiner,
       where: {
         [`${Table.VALUATION_BILL}.valuation_bill_id`]: valuation_bill_id,
         [`${Table.VALUATION_BILL}.user_id`]: user.user_id,
       },
     });
+
+    console.log(valuationBill);
 
     if (!valuationBill) {
       throw new HttpException('Không tìm thấy phiếu định giá', 404);

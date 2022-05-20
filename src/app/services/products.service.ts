@@ -1482,6 +1482,7 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
+    console.log('12');
     let { search, variant_ids } = params;
 
     let { page, skip, limit } = getPageSkipLimit(params);
@@ -1501,7 +1502,7 @@ export class ProductService {
     let count;
     if (variant_ids) {
       filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
-        variant_ids.split(','),
+        variant_ids.split(',').map((variant_id) => variant_id),
       );
 
       productsList = await this.productFeatureValueRepo.find({

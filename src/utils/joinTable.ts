@@ -320,8 +320,8 @@ export const productsListByCategoryJoiner = (params = {}) => {
       rootJoin: `${Table.CATEGORIES}.category_id`,
     },
     [Table.PRODUCT_FEATURE_VALUES]: {
-      fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id]`,
-      rootJoin: `${Table.PRODUCTS}.product_id]`,
+      fieldJoin: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
     },
   };
 
