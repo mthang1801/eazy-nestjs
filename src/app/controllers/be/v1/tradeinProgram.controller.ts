@@ -23,6 +23,13 @@ export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
     super();
   }
+  @Post('/valuation-bills/log-request-sync')
+  async testLog(
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.logRequestSyncValuationBillToAppcore();
+    return this.responseSuccess(res, result);
+  }
 
   @Post()
   async cmsCreate(
@@ -127,4 +134,6 @@ export class TradeinProgramController extends BaseController {
     const result = await this.service.update(tradein_id, data, req.user);
     return this.responseSuccess(res, result);
   }
+
+
 }

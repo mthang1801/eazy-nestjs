@@ -17,6 +17,7 @@ import { Req } from '@nestjs/common';
 import { AuthGuard } from '../../../middlewares/be.auth';
 import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 import { CategoryService } from 'src/app/services/category.service';
+import { TradeinProgramService } from '../../services/tradeinProgram.service';
 
 @Controller('/web-tester/v1/products')
 export class ProductTesterController extends BaseController {

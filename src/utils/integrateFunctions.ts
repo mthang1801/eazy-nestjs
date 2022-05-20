@@ -980,6 +980,35 @@ export const convertValuationBillFromCms = (cmsData) => {
   return coreData;
 };
 
+export const syncConvertValuationBillFromCms = (cmsData) => {
+  let coreData = {};
+  coreData['tradeInProgramId'] = cmsData['tradein_appcore_id'];
+  coreData['imei'] = String(cmsData['imei']);
+  coreData['productId'] = String(
+    cmsData['product_appcore_id'],
+  );
+  coreData['productBuyingPrice'] = Number(cmsData['price']);
+  coreData['totalCriteriaPrice'] = Number(
+    cmsData['criteria_price'],
+  );
+  coreData['finalBuyingPrice'] = Number(
+    cmsData['final_price'],
+  );
+  coreData['customerPhone'] = cmsData['customer_phone'];
+  coreData['customerName'] = cmsData['customer_name'];
+  coreData['options'] = [];
+  if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length) {
+    for (let detailItem of cmsData['criteriaSet']) {
+      let detailItemData = {};
+      detailItemData['optionId'] = detailItem['criteria_detail_appcore_id'];
+      detailItemData['criteriaId'] = detailItem['criteria_appcore_id'];
+      coreData['options'].push(detailItemData);
+    }
+  }
+  console.log(coreData);
+  return coreData;
+};
+
 export const convertDiscountProgramFromAppcore = (coreData) => {
   let cmsData = {
     appcore_id: coreData['id'],

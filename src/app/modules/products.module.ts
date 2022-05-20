@@ -44,6 +44,16 @@ import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.r
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { LogRepository } from '../repositories/log.repository';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
+import { TradeinProgramService } from '../services/tradeinProgram.service';
+import { TradeinProgramRepository } from '../repositories/tradeinProgram.repository';
+import { TradeinProgramDetailRepository } from '../repositories/tradeinProgramDetail.repository';
+import { TradeinProgramCriteriaDetailEntity } from '../entities/tradeinProgramCriteriaDetail.entity';
+import { TradeinProgramCriteriaRepository } from '../repositories/tradeinProgramCriteria.repository';
+import { TradeinProgramCriteriaDetailRepository } from '../repositories/tradeinProgramCriteriaDetail.repository';
+import { ValuationBillRepository } from '../repositories/valuationBill.repository';
+import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
+import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
+import { TradeinProgramModule } from './tradeinProgram.module';
 
 @Module({
   imports: [
