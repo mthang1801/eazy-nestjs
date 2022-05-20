@@ -197,6 +197,7 @@ export class ProductsController extends BaseController {
   }
 
   @Post(':product_id/upload-meta-image')
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.diskStorage({
@@ -220,6 +221,7 @@ export class ProductsController extends BaseController {
   }
 
   @Post(':product_id/upload-thumbnail')
+  @UseGuards(AuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.diskStorage({
@@ -243,6 +245,7 @@ export class ProductsController extends BaseController {
   }
 
   @Delete(':product_id/meta-image')
+  @UseGuards(AuthGuard)
   async deleteMetaImage(
     @Res() res: Response,
     @Param('product_id') product_id: string,
@@ -252,6 +255,7 @@ export class ProductsController extends BaseController {
   }
 
   @Delete(':product_id/thumbnail')
+  @UseGuards(AuthGuard)
   async deleteThumbnail(
     @Res() res: Response,
     @Param('product_id') product_id: string,
@@ -261,6 +265,7 @@ export class ProductsController extends BaseController {
   }
 
   @Put('/:identifier/delete-images')
+  @UseGuards(AuthGuard)
   async deleteProductImage(
     @Param('identifier') identifier: string | number,
     @Res() res: Response,
