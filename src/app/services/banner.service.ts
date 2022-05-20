@@ -349,7 +349,7 @@ export class bannerService {
       page_target_id: data.page_target_id,
       page_location_id: data.page_location_id,
       device_type: data.device_type,
-      baner_id: Not(Equal(banner.banner_id)),
+      banner_id: Not(Equal(banner.banner_id)),
     });
     if (checkDuplicatePosition) {
       throw new HttpException('Vị trí bị trùng trên trang', 400);
