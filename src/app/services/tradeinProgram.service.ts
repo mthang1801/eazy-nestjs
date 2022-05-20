@@ -1414,6 +1414,45 @@ export class TradeinProgramService {
     return oldReceipt;
   }
 
+  async FEgetValuationBills(user, params: any = {}) {
+    const { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+
+    let filterConditions = {
+      [`${Table.VALUATION_BILL}.user_id`]: user.user_id,
+    };
+
+    let filterOrders = {
+      field: `${Table.VALUATION_BILL}.created_at`,
+      sortBy: SortBy.DESC,
+    };
+
+    const valuationBillsList = await this.valuationBillRepo.find({
+      select: `${Table.VALUATION_BILL}.*, ${Table.PRODUCT_DESCRIPTION}.product, ${Table.USERS}.lastname as created_by `,
+      join: valuationBillLeftJoiner,
+      where: valuationBillsSearchFilter((search = ''), filterConditions),
+      orderBy: filterOrders,
+      skip,
+      limit,
+    });
+
+    const count = await this.valuationBillRepo.find({
+      select: `COUNT(${Table.VALUATION_BILL}.valuation_bill_id) as total`,
+      join: valuationBillLeftJoiner,
+      where: valuationBillsSearchFilter((search = ''), filterConditions),
+    });
+
+    let result = {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: valuationBillsList,
+    };
+
+    return result;
+  }
   async getValuationBillsList(params: any = {}) {
     const { page, skip, limit } = getPageSkipLimit(params);
     let { status, is_sync, created_at_start, created_at_end, search } = params;
@@ -1447,7 +1486,8 @@ export class TradeinProgramService {
     };
 
     const valuationBillsList = await this.valuationBillRepo.find({
-      select: '*',
+      select: `${Table.VALUATION_BILL}.*, ${Table.PRODUCT_DESCRIPTION}.product, ${Table.USERS}.lastname as created_by `,
+      join: valuationBillLeftJoiner,
       where: valuationBillsSearchFilter(search, filterConditions),
       orderBy: filterOrders,
       skip,
@@ -1456,6 +1496,7 @@ export class TradeinProgramService {
 
     const count = await this.valuationBillRepo.find({
       select: `COUNT(${Table.VALUATION_BILL}.valuation_bill_id) as total`,
+      join: valuationBillLeftJoiner,
       where: valuationBillsSearchFilter(search, filterConditions),
     });
 

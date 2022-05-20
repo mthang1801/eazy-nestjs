@@ -13,8 +13,9 @@ import { BaseController } from '../../../../base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { TradeinProgramService } from '../../../services/tradeinProgram.service';
-import { AuthGuard } from '../../../../middlewares/be.auth';
+import { AuthGuard } from '../../../../middlewares/fe.auth';
 import { ValuateBillDto } from '../../../dto/tradein/valuateBill.dto';
+import { Req } from '@nestjs/common';
 @Controller('fe/v1/tradein-programs')
 export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
@@ -42,6 +43,17 @@ export class TradeinProgramController extends BaseController {
     @Query() params,
   ): Promise<IResponse> {
     const result = await this.service.getOldReceiptByUserId(user_id, params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/valuation-bill')
+  @UseGuards(AuthGuard)
+  async getValuationBills(
+    @Res() res: Response,
+    @Req() req,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.FEgetValuationBills(req.user, params);
     return this.responseSuccess(res, result);
   }
 

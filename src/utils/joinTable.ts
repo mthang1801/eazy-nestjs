@@ -384,6 +384,10 @@ export const valuationBillLeftJoiner = {
       fieldJoin: `${Table.USERS}.user_id`,
       rootJoin: `${Table.VALUATION_BILL}.created_by`,
     },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.VALUATION_BILL}.product_id`,
+      rootJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+    },
   },
 };
 
@@ -1016,6 +1020,15 @@ export const tradeinCriteriaJoiner = {
 };
 
 export const tradeinProgrameDetailJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.TRADEIN_PROGRAM]: {
+      fieldJoin: `${Table.TRADEIN_PROGRAM}.tradein_id`,
+      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`,
+    },
+  },
+};
+
+export const valuat = {
   [JoinTable.innerJoin]: {
     [Table.TRADEIN_PROGRAM]: {
       fieldJoin: `${Table.TRADEIN_PROGRAM}.tradein_id`,
