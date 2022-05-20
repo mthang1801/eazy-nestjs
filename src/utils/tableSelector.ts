@@ -128,7 +128,7 @@ export const productDetailSelector = [
 export const userSelector = ['*', `${Table.USERS}.*`];
 
 export const menuSelector = [
-  `${Table.FUNC}.funct_id`,
+  `DISTINCT(${Table.FUNC}.funct_id)`,
   `parent_id`,
   `funct_code`,
   `funct_name`,
