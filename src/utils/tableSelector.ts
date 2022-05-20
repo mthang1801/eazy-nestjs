@@ -135,4 +135,5 @@ export const menuSelector = [
   `route`,
   `icon`,
   `level`,
+  `position`,
 ];

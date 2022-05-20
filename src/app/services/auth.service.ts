@@ -65,6 +65,7 @@ import { UserRoleEntity } from '../entities/userRole.entity';
 import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
 import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { Cryptography } from '../../utils/cryptography';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class AuthService {
@@ -246,11 +247,19 @@ export class AuthService {
       },
     );
 
+    let sortFilter = [
+      {
+        field: `${Table.FUNC}.position`,
+        sortBy: SortBy.ASC,
+      },
+    ];
+
     // get menu at ddv_roles_functs
     const menuList = await this.roleFunctRepo.find({
       select: menuSelector,
       join: userRoleFunctJoiner,
       where: { level: 0, [`${Table.USER_ROLES}.user_id`]: user['user_id'] },
+      orderBy: sortFilter,
     });
 
     if (menuList.length) {
@@ -261,6 +270,7 @@ export class AuthService {
             level: 1,
             parent_id: menuItem['funct_id'],
           },
+          orderBy: sortFilter,
         });
         menuItem['children'] = menu;
       }
