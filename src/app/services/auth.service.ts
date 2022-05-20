@@ -264,7 +264,7 @@ export class AuthService {
 
     if (menuList.length) {
       for (let menuItem of menuList) {
-        let menu = await this.functRepo.find({
+        let menu = await this.roleFunctRepo.find({
           select: menuSelector,
           join: userRoleFunctJoiner,
           where: {
