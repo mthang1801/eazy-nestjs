@@ -220,7 +220,10 @@ import { LogEntity } from '../entities/logs.entity';
 import { LogRepository } from '../repositories/log.repository';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
-import { productFeatureVariantByCategoryJoiner } from '../../utils/joinTable';
+import {
+  productFeatureVariantByCategoryJoiner,
+  productListInCategoryJoiner,
+} from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
 import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { convertIntoCacheString } from '../../utils/helper';
@@ -1482,7 +1485,8 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
-    console.log('12');
+    console.log(categoriesList);
+
     let { search, variant_ids } = params;
 
     let { page, skip, limit } = getPageSkipLimit(params);
@@ -1526,7 +1530,7 @@ export class ProductService {
           ...getDetailProductsListSelectorFE,
           `${Table.PRODUCTS_CATEGORIES}.position as position`,
         ],
-        join: productsListByCategoryJoiner(),
+        join: productListInCategoryJoiner,
         where: categoriesList.length
           ? productsListCategorySearchFilter(
               categoriesList,
@@ -1541,7 +1545,7 @@ export class ProductService {
 
       count = await this.productCategoryRepo.find({
         select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productsListByCategoryJoiner(),
+        join: productListInCategoryJoiner,
         where: categoriesList.length
           ? productsListCategorySearchFilter(
               categoriesList,
@@ -1554,16 +1558,16 @@ export class ProductService {
 
     for (let productItem of productsList) {
       // get images
-      const productImageLink = await this.imageLinkRepo.findOne({
-        object_id: productItem.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      });
-      if (productImageLink) {
-        const productImage = await this.imageRepo.findOne({
-          image_id: productImageLink.image_id,
-        });
-        productItem['image'] = { ...productImageLink, ...productImage };
-      }
+      // const productImageLink = await this.imageLinkRepo.findOne({
+      //   object_id: productItem.product_id,
+      //   object_type: ImageObjectType.PRODUCT,
+      // });
+      // if (productImageLink) {
+      //   const productImage = await this.imageRepo.findOne({
+      //     image_id: productImageLink.image_id,
+      //   });
+      //   productItem['image'] = { ...productImageLink, ...productImage };
+      // }
 
       //find product Stickers
       productItem['stickers'] = await this.getProductStickers(productItem);

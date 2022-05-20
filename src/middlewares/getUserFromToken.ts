@@ -27,7 +27,7 @@ export const getUserFromToken = (
       req['user'] = null;
     }
 
-    const userId = decodeBase64String(user['user_id']).split('-')[5];
+    const userId = user['user_id'];
     user['user_id'] = userId;
 
     req['user'] = user;
