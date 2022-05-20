@@ -545,7 +545,7 @@ export class TradeinProgramService {
           method: 'POST',
         });
         let isSync = 'Y';
-        if (!response.data) {
+        if (!response?.data?.data) {
           isSync = 'N';
         }
         //console.log(response.data.data);
@@ -582,7 +582,6 @@ export class TradeinProgramService {
           });
         }
       }
-      this.logRequestSyncValuationBillToAppcore();
       throw new HttpException(error.message, error.status);
     }
   }
@@ -701,7 +700,7 @@ export class TradeinProgramService {
         });
         //console.log(response.data.data);
         let isSync = 'Y';
-        if (!response.data) {
+        if (!response?.data?.data) {
           isSync = 'N';
         }
         await this.valuationBillRepo.update(
@@ -709,6 +708,7 @@ export class TradeinProgramService {
           {
             appcore_id: response.data.data,
             is_sync: isSync,
+            updated_at: formatStandardTimeStamp(),
           },
         );
       } catch (error) {
@@ -735,7 +735,6 @@ export class TradeinProgramService {
           });
         }
       }
-      this.logRequestSyncValuationBillToAppcore();
       throw new HttpException(error.message, error.status);
     }
   }
@@ -752,12 +751,13 @@ export class TradeinProgramService {
           let set = {criteria_appcore_id: criteriaSet.criteria_appcore_id, criteria_detail_appcore_id: criteriaSet.criteria_detail_appcore_id};
           criteria_set.push(set);
         }
-        
-        let temp = {...item, criteria_set : [...criteria_set]};
+        let price = await this.productPriceRepo.findOne({product_id: item.product_id});
+
+        let temp = {...item, criteria_set : [...criteria_set], price: price.price,};
         nullValuationBillList.push(temp);
-        console.log(temp);
+        //console.log(temp);
         const core = syncConvertValuationBillFromCms(temp);
-        console.log(core);
+        //console.log(core);
         const response = await axios({
           url: CREATE_VALUATION_BILL_TO_APPCORE,
           data: core,
@@ -767,13 +767,17 @@ export class TradeinProgramService {
           throw new HttpException("Không tìm thấy dữ liệu.", 200);
         }
         console.log(response.data);
+        await this.valuationBillRepo.update(
+          {valuation_bill_id: item.valuation_bill_id},
+          {appcore_id: response.data.data, is_sync: 'Y', updated_at: formatStandardTimeStamp()},
+        );
       }
       catch(error) {
         console.log(error);
         if (error?.response?.status == 400 || error?.status == 400) {
           await this.valuationBillRepo.update(
             {valuation_bill_id: item.valuation_bill_id},
-            {appcore_id: 0, status: 'D', updated_at: formatStandardTimeStamp()},
+            {appcore_id: 0, status: 'D', is_sync: 'Y', updated_at: formatStandardTimeStamp()},
           );
         }
       }

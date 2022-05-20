@@ -997,8 +997,8 @@ export const syncConvertValuationBillFromCms = (cmsData) => {
   coreData['customerPhone'] = cmsData['customer_phone'];
   coreData['customerName'] = cmsData['customer_name'];
   coreData['options'] = [];
-  if (cmsData['criteriaSet'] && cmsData['criteriaSet'].length) {
-    for (let detailItem of cmsData['criteriaSet']) {
+  if (cmsData['criteria_set'] && cmsData['criteria_set'].length) {
+    for (let detailItem of cmsData['criteria_set']) {
       let detailItemData = {};
       detailItemData['optionId'] = detailItem['criteria_detail_appcore_id'];
       detailItemData['criteriaId'] = detailItem['criteria_appcore_id'];
