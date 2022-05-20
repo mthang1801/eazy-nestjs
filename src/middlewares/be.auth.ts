@@ -24,13 +24,13 @@ export class AuthGuard implements CanActivate {
     const authorizationUUID = req.headers['x-auth-uuid'];
 
     if (!authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException(['Yêu cầu truy cập bị từ chối 1.'], 401);
     }
 
     const authoriazationToken = req.headers?.authorization;
 
     if (!authoriazationToken) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException(['Yêu cầu truy cập bị từ chối 2.'], 401);
     }
 
     const token = authoriazationToken.split(' ').slice(-1)[0];
@@ -42,18 +42,21 @@ export class AuthGuard implements CanActivate {
     const user = decoded?.sub;
 
     if (!user || !user['user_id']) {
-      throw new HttpException('Token không hợp lệ.', HttpStatus.UNAUTHORIZED);
+      throw new HttpException(
+        ['Token không hợp lệ 3.'],
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (+decoded['exp'] * 1000 - Date.now() < 0) {
-      throw new HttpException('Token đã hết hạn.', 408);
+      throw new HttpException(['Token đã hết hạn.'], 408);
     }
 
     const cryptography = new Cryptography();
     let decryptedData = cryptography.decrypt(user['user_id']);
 
     if (user['user_id'] !== authorizationUUID) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      throw new HttpException(['Yêu cầu truy cập bị từ chối 4.'], 401);
     }
 
     let userId = decryptedData.split('-')[5];
@@ -66,16 +69,10 @@ export class AuthGuard implements CanActivate {
     } = req;
 
     try {
-      const result: boolean = await this.roleService.checkUserRole(
-        userId,
-        method,
-        path,
-      );
-      if (!result) {
-        throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
-      }
+      await this.roleService.checkUserRole(userId, method, path);
     } catch (error) {
-      throw new HttpException('Yêu cầu truy cập bị từ chối.', 401);
+      console.log(error);
+      throw new HttpException(error.response, error.status);
     }
 
     req.user = user;

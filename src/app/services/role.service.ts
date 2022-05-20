@@ -498,7 +498,7 @@ export class RoleService {
     }
   }
 
-  async checkUserRole(user_id, method, path): Promise<boolean> {
+  async checkUserRole(user_id, method, path) {
     const userRole = await this.userRoleRepo.findOne({ user_id });
     if (!userRole) {
       return false;
@@ -512,7 +512,7 @@ export class RoleService {
         [`${Table.FUNC}.be_route`]: path,
       },
     });
-
+    console.log(roleGroup);
     if (!roleGroup) {
       roleGroup = await this.roleFunctRepo.findOne({
         select: '*',
@@ -524,12 +524,14 @@ export class RoleService {
       });
       if (roleGroup) {
         throw new HttpException(
-          `Bạn không được cấp quyền truy cập vào ${roleGroup.funct_name}`,
+          [
+            `Bạn không được cấp quyền truy cập vào ${roleGroup.funct_name}`,
+            roleGroup.funct_name,
+          ],
           401,
         );
       }
       throw new HttpException(`Yêu cầu truy cập bị từ chối.`, 401);
     }
-    return true;
   }
 }
