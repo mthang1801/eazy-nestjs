@@ -88,7 +88,10 @@ import { UserDataEntity } from '../entities/userData.entity';
 import { CustomerService } from './customer.service';
 import { statusC, statusB, statusA } from '../../constants/valuationBill';
 import { Between, In, IsNull } from '../../database/operators/operators';
-import { ConverValuationBillDataFromAppcore, syncConvertValuationBillFromCms } from '../../utils/integrateFunctions';
+import {
+  ConverValuationBillDataFromAppcore,
+  syncConvertValuationBillFromCms,
+} from '../../utils/integrateFunctions';
 import { appliedProductsTradeinProgramSearchFilter } from '../../utils/tableConditioner';
 import { isNull } from 'lodash';
 @Injectable()
@@ -740,20 +743,27 @@ export class TradeinProgramService {
     }
   }
 
-  async logRequestSyncValuationBillToAppcore(){
-    const findNullAppcore = await this.valuationBillRepo.find({appcore_id: IsNull()});
+  async logRequestSyncValuationBillToAppcore() {
+    const findNullAppcore = await this.valuationBillRepo.find({
+      appcore_id: IsNull(),
+    });
     let nullValuationBillList = [];
     for (let item of findNullAppcore) {
       try {
         //console.log(item.valuation_bill_id);
-        let criteriaSetList = await this.valuationBillCriteriaDetailRepo.find({valuation_bill_id: item.valuation_bill_id});
+        let criteriaSetList = await this.valuationBillCriteriaDetailRepo.find({
+          valuation_bill_id: item.valuation_bill_id,
+        });
         let criteria_set = [];
-        for (let criteriaSet of criteriaSetList){
-          let set = {criteria_appcore_id: criteriaSet.criteria_appcore_id, criteria_detail_appcore_id: criteriaSet.criteria_detail_appcore_id};
+        for (let criteriaSet of criteriaSetList) {
+          let set = {
+            criteria_appcore_id: criteriaSet.criteria_appcore_id,
+            criteria_detail_appcore_id: criteriaSet.criteria_detail_appcore_id,
+          };
           criteria_set.push(set);
         }
-        
-        let temp = {...item, criteria_set : [...criteria_set]};
+
+        let temp = { ...item, criteria_set: [...criteria_set] };
         nullValuationBillList.push(temp);
         console.log(temp);
         const core = syncConvertValuationBillFromCms(temp);
@@ -763,17 +773,20 @@ export class TradeinProgramService {
           data: core,
           method: 'POST',
         });
-        if (!response.data){
-          throw new HttpException("Không tìm thấy dữ liệu.", 200);
+        if (!response.data) {
+          throw new HttpException('Không tìm thấy dữ liệu.', 200);
         }
         console.log(response.data);
-      }
-      catch(error) {
+      } catch (error) {
         console.log(error);
         if (error?.response?.status == 400 || error?.status == 400) {
           await this.valuationBillRepo.update(
-            {valuation_bill_id: item.valuation_bill_id},
-            {appcore_id: 0, status: 'D', updated_at: formatStandardTimeStamp()},
+            { valuation_bill_id: item.valuation_bill_id },
+            {
+              appcore_id: 0,
+              status: 'D',
+              updated_at: formatStandardTimeStamp(),
+            },
           );
         }
       }
@@ -1533,7 +1546,7 @@ export class TradeinProgramService {
       select: `${Table.VALUATION_BILL}.*, ${Table.PRODUCT_DESCRIPTION}.product, ${Table.USERS}.lastname as created_by `,
       join: valuationBillLeftJoiner,
       where: valuationBillsSearchFilter(search, filterConditions),
-      orderBy: filterOrders,
+      orderBy: [filterOrders],
       skip,
       limit,
     });
