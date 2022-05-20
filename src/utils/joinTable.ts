@@ -676,6 +676,10 @@ export const userSystemStoreJoiner = {
       fieldJoin: `${Table.USER_ROLES}.user_id`,
       rootJoin: `${Table.USERS}.user_id`,
     },
+    [Table.ROLE]: {
+      fieldJoin: `${Table.ROLE}.role_id`,
+      rootJoin: `${Table.USER_ROLES}.role_id`,
+    },
     [Table.STORE_LOCATIONS]: {
       fieldJoin: `${Table.STORE_LOCATIONS}.store_location_id`,
       rootJoin: `${Table.USERS}.store_id`,
