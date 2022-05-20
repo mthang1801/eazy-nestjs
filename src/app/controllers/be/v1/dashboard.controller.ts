@@ -8,6 +8,7 @@ export class DashboardController extends BaseController {
   constructor(private service: DashboardService) {
     super();
   }
+
   @Get('overview')
   async getReportOverview(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.getReportOverview();

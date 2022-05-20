@@ -429,6 +429,10 @@ export class RoleService {
     }
 
     await this.roleRepo.update({ role_id: id }, newGroupData);
+
+    if (!data.funct_ids) {
+      return;
+    }
     await this.roleFunctRepo.delete({ role_id: id });
     if (data.funct_ids && data.funct_ids.length) {
       data.funct_ids = data.funct_ids.sort((a, b) => a - b);

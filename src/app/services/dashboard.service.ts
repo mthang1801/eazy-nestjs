@@ -28,6 +28,7 @@ export class DashboardService {
     private userRepo: UserRepository<UserEntity>,
     private db: DatabaseService,
   ) {}
+
   async getReportOverview() {
     let orderRevenueInDay = await this.getRevenueInDay();
     let numberOfCustomersInDay = await this.getCustomersInDay();

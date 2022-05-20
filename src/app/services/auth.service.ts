@@ -66,6 +66,7 @@ import { RoleFunctionRepository } from '../repositories/roleFunction.repository'
 import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { Cryptography } from '../../utils/cryptography';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { Equal, Not } from '../../database/operators/operators';
 
 @Injectable()
 export class AuthService {
@@ -258,7 +259,11 @@ export class AuthService {
     const menuList = await this.roleFunctRepo.find({
       select: menuSelector,
       join: userRoleFunctJoiner,
-      where: { level: 0, [`${Table.USER_ROLES}.user_id`]: user['user_id'] },
+      where: {
+        level: 0,
+        [`${Table.USER_ROLES}.user_id`]: user['user_id'],
+        [`${Table.FUNC}.funct_id`]: Not(Equal('1')),
+      },
       orderBy: sortFilter,
     });
 
