@@ -57,6 +57,20 @@ export class TradeinProgramController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('valuation-bill/:valuation_bill_id')
+  @UseGuards(AuthGuard)
+  async FEgetValuationBillById(
+    @Res() res: Response,
+    @Req() req,
+    @Param('valuation_bill_id') valuation_bill_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.FEgetValuationBillById(
+      req.user,
+      valuation_bill_id,
+    );
+    return this.responseSuccess(res, result);
+  }
+
   @Post('/valuation-bill/valuation')
   async getValuationBill(
     @Body() data: ValuateBillDto,

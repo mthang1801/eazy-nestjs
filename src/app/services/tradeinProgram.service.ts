@@ -1513,15 +1513,90 @@ export class TradeinProgramService {
   }
 
   async CMSgetValuationBillById(valuation_bill_id) {
-    // const valuationBill = await this.valuationBillRepo.findOne({
-    //   valuation_bill_id,
-    // });
-
     const valuationBill = await this.valuationBillRepo.findOne({
       select: `*,${Table.VALUATION_BILL}.user_id`,
       join: valuationBillLeftJoiner,
       where: {
         [`${Table.VALUATION_BILL}.valuation_bill_id`]: valuation_bill_id,
+      },
+    });
+
+    if (!valuationBill) {
+      throw new HttpException('Không tìm thấy phiếu định giá', 404);
+    }
+
+    const product = await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: { [`${Table.PRODUCTS}.product_id`]: valuationBill.product_id },
+    });
+
+    const billCriteriaUniqueList =
+      await this.valuationBillCriteriaDetailRepo.find({
+        select: `DISTINCT(${Table.VALUATION_BILL_CRITERIA_DETAIL}.criteria_id), criteria_id`,
+        where: { valuation_bill_id },
+      });
+
+    if (!billCriteriaUniqueList.length) {
+      throw new HttpException(
+        'Không tìm thấy bộ tiêu chí áp dụng cho phiếu định giá',
+        404,
+      );
+    }
+    const tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+      select: '*',
+      where: {
+        criteria_id: In(
+          billCriteriaUniqueList.map(({ criteria_id }) => criteria_id),
+        ),
+      },
+    });
+
+    let criteriaSet = [];
+    for (let tradeinCriteria of tradeinCriteriaList) {
+      let tradeinCriteriaDetails =
+        await this.tradeinProgramCriteriaDetailRepo.find({
+          criteria_id: tradeinCriteria.criteria_id,
+        });
+      let selectedCriteriaList =
+        await this.valuationBillCriteriaDetailRepo.find({
+          valuation_bill_id,
+        });
+
+      tradeinCriteria['criterial_details'] = [];
+
+      for (let tradeinCriteriaDetail of tradeinCriteriaDetails) {
+        tradeinCriteriaDetail['selected'] = false;
+        if (
+          selectedCriteriaList.some(
+            ({ criteria_detail_id }) =>
+              criteria_detail_id == tradeinCriteriaDetail.criteria_detail_id,
+          )
+        ) {
+          tradeinCriteriaDetail['selected'] = true;
+        }
+        tradeinCriteria['criterial_details'].push(tradeinCriteriaDetail);
+      }
+
+      criteriaSet = [...criteriaSet, tradeinCriteria];
+    }
+
+    let result = {
+      valuationBill,
+      product,
+      criteriaSet,
+    };
+
+    return result;
+  }
+
+  async FEgetValuationBillById(user, valuation_bill_id) {
+    const valuationBill = await this.valuationBillRepo.findOne({
+      select: `*,${Table.VALUATION_BILL}.user_id`,
+      join: valuationBillLeftJoiner,
+      where: {
+        [`${Table.VALUATION_BILL}.valuation_bill_id`]: valuation_bill_id,
+        [`${Table.VALUATION_BILL}.user_id`]: user.user_id,
       },
     });
 
