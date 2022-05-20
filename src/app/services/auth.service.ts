@@ -266,9 +266,11 @@ export class AuthService {
       for (let menuItem of menuList) {
         let menu = await this.functRepo.find({
           select: menuSelector,
+          join: userRoleFunctJoiner,
           where: {
             level: 1,
             parent_id: menuItem['funct_id'],
+            [`${Table.USER_ROLES}.user_id`]: user['user_id'],
           },
           orderBy: sortFilter,
         });
