@@ -435,6 +435,10 @@ export class PageService {
   }
 
   async getPageDetailValues(page_detail_id) {
+    let pageDetail = await this.pageDetailRepo.findOne({ page_detail_id });
+    if (!pageDetail) {
+      throw new HttpException('Không tìm thấy trang chi tiết', 404);
+    }
     const pageDetailValues = await this.pageDetailValueRepo.find({
       select: '*',
       orderBy: [
@@ -447,7 +451,9 @@ export class PageService {
         [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id,
       },
     });
-    return pageDetailValues;
+
+    pageDetail['page_detail_values'] = pageDetailValues;
+    return pageDetail;
   }
 
   async createPageDetailItem(data: CreatePageDetailItemDto) {
