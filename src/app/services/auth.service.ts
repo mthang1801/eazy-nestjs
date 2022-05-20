@@ -2,11 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthCredentialsDto } from '../dto/auth/auth-credential.dto';
 import { UsersService } from './users.service';
 import { JwtService } from '@nestjs/jwt';
-import {
-  saltHashPassword,
-  desaltHashPassword,
-  generateSHA512,
-} from '../../utils/cipherHelper';
+import { desaltHashPassword, generateSHA512 } from '../../utils/cipherHelper';
 import { AuthProviderRepository } from '../repositories/auth.repository';
 import { AuthProviderEntity } from '../entities/authProvider.entity';
 import { Table } from '../../database/enums/tables.enum';
@@ -55,11 +51,19 @@ import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { generateRandomNumber } from '../../utils/helper';
-import { sha512, encodeBase64String } from '../../utils/cipherHelper';
+import {
+  sha512,
+  encodeBase64String,
+  saltHashPassword,
+} from '../../utils/cipherHelper';
 import { FunctRepository } from '../repositories/funct.repository';
 import { FunctEntity } from '../entities/funct.entity';
-import { menuSelector } from '../../utils/tableSelector';
-import { userRoleJoiner, userRoleFunctJoiner } from '../../utils/joinTable';
+import { menuSelector, userSelector } from '../../utils/tableSelector';
+import {
+  userRoleJoiner,
+  userRoleFunctJoiner,
+  userJoiner,
+} from '../../utils/joinTable';
 import { UserRoleRepository } from '../repositories/userRole.repository';
 import { UserRoleEntity } from '../entities/userRole.entity';
 import { RoleFunctionRepository } from '../repositories/roleFunction.repository';
@@ -67,6 +71,7 @@ import { RoleFunctionEntity } from '../entities/roleFunction.entity';
 import { Cryptography } from '../../utils/cryptography';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { Equal, Not } from '../../database/operators/operators';
+import { defaultPassword } from '../../constants/defaultPassword';
 
 @Injectable()
 export class AuthService {
@@ -377,23 +382,28 @@ export class AuthService {
     });
 
     if (!userExists) {
+      let lastname = providerData.familyName + ' ' + providerData.givenName;
+      lastname = lastname.trim();
+      console.log(lastname);
       try {
+        const { passwordHash, salt } = saltHashPassword(defaultPassword);
         const userData = {
           ...new UserEntity(),
           firstname: providerData.givenName,
-          lastname: providerData.familyName,
+          lastname,
           email: providerData.email,
           phone: generateRandomNumber(10),
           account_type: 1,
           avatar: providerData.imageUrl,
+          password: passwordHash,
+          salt,
         };
         userExists = await this.userRepository.create(userData);
 
-        let fullName = userExists.firstname + ' ' + userExists.lastname;
         // Create a new record at ddv_user_profiles
         const userProfile = await this.userProfileRepository.create({
           user_id: userExists.user_id,
-          b_lastname: fullName.trim(),
+          b_lastname: lastname,
         });
 
         // Create a new record at ddv_user_data
@@ -408,7 +418,12 @@ export class AuthService {
           user_id: userExists.user_id,
         });
 
-        await this.customerService.createCustomerToAppcore(userExists);
+        const user = await this.userRepository.findOne({
+          select: userSelector,
+          join: userJoiner,
+          where: { [`${Table.USERS}.user_id`]: userExists.user_id },
+        });
+        await this.customerService.createCustomerToAppcore(user);
 
         userExists = {
           ...userExists,
