@@ -8,6 +8,7 @@ export class FunctEntity {
   be_route: string = '';
   icon: string = '';
   level: number = 0;
+  position: number = 0;
   created_at: string = formatStandardTimeStamp();
   created_by: number = 0;
   updated_at: string = formatStandardTimeStamp();
