@@ -375,7 +375,10 @@ export class RoleService {
   }
 
   async getFunctions() {
-    const rootFunctions = await this.functRepo.find({ level: 0 });
+    const rootFunctions = await this.functRepo.find({
+      level: 0,
+      is_role_display: 'Y',
+    });
 
     if (rootFunctions && rootFunctions.length) {
       for (let functItemLv0 of rootFunctions) {
@@ -435,7 +438,8 @@ export class RoleService {
     }
     await this.roleFunctRepo.delete({ role_id: id });
     if (data.funct_ids && data.funct_ids.length) {
-      data.funct_ids = data.funct_ids.sort((a, b) => a - b);
+      data.funct_ids = _.shuffle([...new Set([1, ...data.funct_ids])]);
+
       for (let functId of data.funct_ids) {
         const roleFunct = await this.functRepo.findOne({ funct_id: functId });
         if (roleFunct) {

@@ -33,17 +33,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     switch (exception.name) {
       case 'TokenExpiredError':
-        message = 'Token đã hết hạn.';
+        message = 'Thời gian truy cập đã hết.';
         break;
       case 'ETIMEDOUT':
         message = 'Thời gian request quá lâu.';
         break;
-      case 'Error':
+      default:
         message =
           exception.response?.message ||
           exception?.response ||
           exception.sqlMessage;
-        break;
     }
 
     const responseBody = {

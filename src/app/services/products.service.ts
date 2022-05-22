@@ -4535,7 +4535,10 @@ export class ProductService {
     //   console.log(error);
     // }
     let cryptography = new Cryptography();
-    const encryptedData = cryptography.encrypt('This is a secret message');
+    let msg = 'This is a secret message';
+    console.log(msg);
+    // console.log(crypto.getRandomValues());
+    let encryptedData = cryptography.encrypt(msg);
     console.log(encryptedData);
     let c1 = new Cryptography();
     let decryptedData = c1.decrypt(encryptedData);

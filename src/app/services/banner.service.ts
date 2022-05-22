@@ -92,12 +92,12 @@ export class bannerService {
         LessThanOrEqual(created_at_start);
     }
 
-    if (start_at) {
-      filterConditions[`${Table.BANNER}.start_at`] = MoreThan(start_at);
-    }
-    if (end_at) {
-      filterConditions[`${Table.BANNER}.end_at`] = LessThanOrEqual(end_at);
-    }
+    // if (start_at) {
+    //   filterConditions[`${Table.BANNER}.start_at`] = MoreThan(start_at);
+    // }
+    // if (end_at) {
+    //   filterConditions[`${Table.BANNER}.end_at`] = LessThanOrEqual(end_at);
+    // }
 
     if (page_location_id) {
       filterConditions['page_location_id'] = page_location_id;

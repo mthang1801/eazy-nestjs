@@ -9,6 +9,8 @@ export class FunctEntity {
   icon: string = '';
   level: number = 0;
   position: number = 0;
+  is_required_access: string = 'Y';
+  is_role_display: string = 'Y';
   created_at: string = formatStandardTimeStamp();
   created_by: number = 0;
   updated_at: string = formatStandardTimeStamp();
