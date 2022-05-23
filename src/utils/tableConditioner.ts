@@ -510,3 +510,35 @@ export const valuationBillsSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const discountProgramsSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
+      { [`${Table.DISCOUNT_PROGRAM}.discount_name`]: Like(search) },
+      { [`${Table.DISCOUNT_PROGRAM}.description`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};
+
+export const discountProgramsDetailSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [
+      { [`${Table.PRODUCT_DESCRIPTION}.product`]: Like(search) },
+      { [`${Table.PRODUCTS}.product_code`]: Like(search) },
+    ];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

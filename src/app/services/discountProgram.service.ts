@@ -11,9 +11,19 @@ import { ProductsEntity } from '../entities/products.entity';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { convertDiscountProgramFromAppcore } from '../../utils/integrateFunctions';
-import { convertToSlug, formatStandardTimeStamp } from '../../utils/helper';
-import { get } from 'lodash';
+import {
+  convertToSlug,
+  formatStandardTimeStamp,
+  getPageSkipLimit,
+} from '../../utils/helper';
+import { get, sortBy } from 'lodash';
 import { getProductAccessorySelector } from '../../utils/tableSelector';
+import {
+  discountProgramsSearchFilter,
+  discountProgramsDetailSearchFilter,
+} from '../../utils/tableConditioner';
+import { UpdateDiscountProgramDto } from '../dto/discountProgram/update-discountProgram.dto';
+import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   productPromotionAccessoryJoiner,
   productDiscountProgramJoiner,
@@ -28,7 +38,46 @@ export class DiscountProgramService {
     private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
   ) {}
 
-  async get(discount_id: number) {
+  async getList(params: any = {}) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search, start_at, end_at, status } = params;
+    let filterConditions = {};
+
+    if (start_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_start_at`] = start_at;
+    }
+
+    if (end_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_end_at`] = end_at;
+    }
+
+    if (status) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.status`] = status;
+    }
+
+    const result = await this.discountProgramRepo.find({
+      select: '*',
+      where: discountProgramsSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    const count = await this.discountProgramRepo.find({
+      select: `COUNT(DISTINCT(${Table.DISCOUNT_PROGRAM}.discount_id)) as total`,
+      where: discountProgramsSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: result,
+    };
+  }
+
+  async getById(discount_id, params: any = {}) {
     const discountProgram = await this.discountProgramRepo.findOne({
       discount_id,
     });
@@ -39,19 +88,96 @@ export class DiscountProgramService {
       );
     }
 
-    discountProgram['products'] = [];
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search, status } = params;
 
-    let productLists = await this.productRepo.find({
-      select: '*',
-      join: productDiscountProgramJoiner,
-      where: {
-        [`${Table.DISCOUNT_PROGRAM_DETAIL}.discount_id`]: discount_id,
+    let filterConditions = {
+      [`${Table.DISCOUNT_PROGRAM_DETAIL}.discount_id`]: discount_id,
+    };
+    if (status) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM_DETAIL}.status`] = status;
+    }
+
+    discountProgram['products'] = [];
+    let orderFilters = [
+      {
+        field: `${Table.DISCOUNT_PROGRAM_DETAIL}.position`,
+        sortBy: SortBy.ASC,
       },
+      {
+        field: `${Table.DISCOUNT_PROGRAM_DETAIL}.updated_at`,
+        sortBy: SortBy.DESC,
+      },
+    ];
+
+    let productLists = await this.discountProgramDetailRepo.find({
+      select: `*, ${Table.DISCOUNT_PROGRAM_DETAIL}.*`,
+      join: productDiscountProgramJoiner,
+      where: discountProgramsDetailSearchFilter(search, filterConditions),
+      orderBy: orderFilters,
+      skip,
+      limit,
     });
 
-    discountProgram['products'] = productLists;
+    let count = await this.discountProgramDetailRepo.find({
+      select: `COUNT(DISTINCT(${Table.DISCOUNT_PROGRAM_DETAIL}.product_id)) as total`,
+      join: productDiscountProgramJoiner,
+      where: discountProgramsDetailSearchFilter(search, filterConditions),
+    });
+
+    discountProgram['products'] = {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: productLists,
+    };
 
     return discountProgram;
+  }
+
+  async update(discount_id, data: UpdateDiscountProgramDto) {
+    const discountProgram = await this.discountProgramRepo.findOne({
+      discount_id,
+    });
+    if (!discountProgram) {
+      throw new HttpException(
+        'Không tìm thấy nhóm SP phụ kiện khuyến mãi',
+        404,
+      );
+    }
+
+    const updateDiscountProgramData = {
+      ...this.discountProgramRepo.setData(data),
+      updated_at: formatStandardTimeStamp(),
+    };
+
+    await this.discountProgramRepo.update(
+      { discount_id },
+      updateDiscountProgramData,
+    );
+
+    if (Object.entries(data).length == 1 && data.status) return;
+    if (data.applied_products && data.applied_products.length) {
+      for (let aplliedProduct of data.applied_products) {
+        const discountProgramDetail =
+          await this.discountProgramDetailRepo.findOne({
+            detail_id: aplliedProduct.detail_id,
+          });
+        if (!discountProgramDetail) {
+          continue;
+        }
+        const discountProgramDetailData = {
+          ...this.discountProgramDetailRepo.setData(aplliedProduct),
+          updated_at: formatStandardTimeStamp(),
+        };
+        await this.discountProgramDetailRepo.update(
+          { detail_id: aplliedProduct.detail_id },
+          discountProgramDetailData,
+        );
+      }
+    }
   }
 
   async itgCreateDiscountPrograms(data) {
@@ -135,7 +261,7 @@ export class DiscountProgramService {
         await this.discountProgramDetailRepo.create(newProgramDetail);
       }
     }
-    return this.get(newProgramDiscount.discount_id);
+    return this.getById(newProgramDiscount.discount_id);
   }
 
   async itgUpdateDiscountPrograms(data) {
@@ -245,6 +371,6 @@ export class DiscountProgramService {
         await this.discountProgramDetailRepo.create(newProgramDetailData);
       }
     }
-    return this.get(discountProgram.discount_id);
+    return this.getById(discountProgram.discount_id);
   }
 }

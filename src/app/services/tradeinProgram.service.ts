@@ -248,11 +248,14 @@ export class TradeinProgramService {
     let filterCondition = {};
 
     if (start_at) {
-      filterCondition[`${Table.TRADEIN_PROGRAM}.start_at`] = start_at;
+      filterCondition[`${Table.TRADEIN_PROGRAM}.start_at`] =
+        MoreThanOrEqual(start_at);
     }
     if (end_at) {
-      filterCondition[`${Table.TRADEIN_PROGRAM}.end_at`] = end_at;
+      filterCondition[`${Table.TRADEIN_PROGRAM}.end_at`] =
+        LessThanOrEqual(end_at);
     }
+
     if (status) {
       filterCondition[`${Table.TRADEIN_PROGRAM}.status`] = status;
     }

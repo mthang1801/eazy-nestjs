@@ -264,14 +264,14 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
-  @Put('/:identifier/delete-images')
+  @Put('/:product_id/delete-images')
   @UseGuards(AuthGuard)
   async deleteProductImage(
-    @Param('identifier') identifier: string | number,
+    @Param('product_id') product_id: number,
     @Res() res: Response,
     @Body() data: DeleteProductImageDto,
   ) {
-    let message = await this.service.deleteProductImage(identifier, data);
+    let message = await this.service.deleteProductImage(product_id, data);
     return this.responseSuccess(res, null, message);
   }
 

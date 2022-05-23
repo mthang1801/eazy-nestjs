@@ -11,6 +11,7 @@ export class DiscountProgramDetailEntity {
   original_price: number = 0;
   discount_amount: number = 0;
   discount_type: number = 1;
+  position: number = 9999;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
 }

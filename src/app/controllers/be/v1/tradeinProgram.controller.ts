@@ -24,9 +24,7 @@ export class TradeinProgramController extends BaseController {
     super();
   }
   @Post('/valuation-bills/log-request-sync')
-  async testLog(
-    @Res() res: Response,
-  ): Promise<IResponse> {
+  async testLog(@Res() res: Response): Promise<IResponse> {
     const result = await this.service.logRequestSyncValuationBillToAppcore();
     return this.responseSuccess(res, result);
   }
@@ -134,6 +132,4 @@ export class TradeinProgramController extends BaseController {
     const result = await this.service.update(tradein_id, data, req.user);
     return this.responseSuccess(res, result);
   }
-
-
 }

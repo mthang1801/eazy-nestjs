@@ -8,9 +8,4 @@ export class DiscountProgramController extends BaseController {
   constructor(private service: DiscountProgramService) {
     super();
   }
-  @Get()
-  async get(@Res() res: Response): Promise<IResponse> {
-    // const result = await this.service.get();
-    return this.responseSuccess(res);
-  }
 }

@@ -2889,14 +2889,10 @@ export class ProductService {
   }
 
   async deleteProductImage(
-    identifier: string | number,
+    product_id: number,
     data: DeleteProductImageDto,
   ): Promise<string> {
-    console.log(identifier);
-    const product = await this.productRepo.findOne({
-      select: '*',
-      where: [{ product_code: identifier }, { product_id: identifier }],
-    });
+    const product = await this.productRepo.findOne({ product_id });
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -3909,6 +3905,7 @@ export class ProductService {
     if (product) {
       cacheKey = cacheKeys.product(product.product_id);
       let cacheResult = await this.cache.get(cacheKey);
+      await this.cache.delete(cacheKey);
       if (cacheResult) {
         this.productRepo.update(
           { product_id: product.product_id },
@@ -4052,61 +4049,64 @@ export class ProductService {
     }
 
     // Get stores
-    result['stores'] = await this.getProductsStores(result.product_id);
+    let stores = this.getProductsStores(result.product_id);
 
     // get Image
-    result['images'] = await this.getProductImages(result.product_id);
+    let images = this.getProductImages(result.product_id);
 
     //============= Get Features ===============
+    let productFeatures;
     if (result['category_feature_id'] !== 0) {
-      result['productFeatures'] = await this.getProductFeaturesByCategoryId(
+      productFeatures = this.getProductFeaturesByCategoryId(
         result['category_feature_id'],
         result.product_id,
       );
     } else {
-      result['productFeatures'] = await this.getProductFeatures(
-        result.product_id,
-      );
+      productFeatures = this.getProductFeatures(result.product_id);
     }
 
     //=========== Get accessory ============
-    result['promotion_accessory_products'] = [];
+    let promotion_accessory_products;
     if (result['promotion_accessory_id']) {
-      result['promotion_accessory_products'] =
-        await this.getAccessoriesByProductId(
-          result['promotion_accessory_id'],
-          1,
-        );
+      promotion_accessory_products = this.getAccessoriesByProductId(
+        result['promotion_accessory_id'],
+        1,
+      );
     }
 
-    result['free_accessory_products'] = [];
+    let free_accessory_products;
     if (result['free_accessory_id']) {
-      result['free_accessory_products'] = await this.getAccessoriesByProductId(
+      free_accessory_products = this.getAccessoriesByProductId(
         result['free_accessory_id'],
         1,
       );
     }
 
-    result['warranty_package_products'] = [];
+    let warranty_package_products;
     if (result['warranty_package_id']) {
-      result['warranty_package_products'] =
-        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
+      warranty_package_products = this.getAccessoriesByProductId(
+        result['warranty_package_id'],
+        1,
+      );
     }
 
     //============== Get ratings ================
-    result['ratings'] = await this.reviewRepo.findOne({
+    let ratings = await this.reviewRepo.findOne({
       product_id: result.product_id,
     });
 
     // Get Current category info
+    let currentCategory = null;
+    let parentCategories;
+    let relative_products;
     if (product['category_id']) {
-      result['currentCategory'] = await this.categoryRepo.findOne({
+      currentCategory = await this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
       // Get parent categories info
-      result['parentCategories'] = await this.categoryService.parentCategories(
+      parentCategories = this.categoryService.parentCategories(
         result['currentCategory'],
       );
       result['parentCategories'] = _.sortBy(result['parentCategories'], [
@@ -4114,10 +4114,21 @@ export class ProductService {
       ]);
 
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-        product,
-      );
+      relative_products = this.getRelativeProductsByCategory(product);
     }
+
+    let results: any = await Promise.all([
+      stores,
+      images,
+      productFeatures,
+      promotion_accessory_products,
+      free_accessory_products,
+      warranty_package_products,
+      ratings,
+      currentCategory,
+      parentCategories,
+      relative_products,
+    ]);
 
     await this.cache.set(cacheKey, result);
     await this.cache.saveCache(
@@ -4145,7 +4156,7 @@ export class ProductService {
           childProduct.product_id,
         );
         // Get stores
-        childProduct['stores'] = await this.getProductsStores(
+        childProduct['stores'] = await this.checkProductsStores(
           childProduct.product_id,
         );
         // Get accessory

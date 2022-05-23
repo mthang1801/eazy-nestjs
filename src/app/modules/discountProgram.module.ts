@@ -6,6 +6,7 @@ import { ProductPricesRepository } from '../repositories/productPrices.repositor
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 import { DiscountProgramItgController } from '../controllers/integration/v1/discountProgram.controller';
 import { DiscountProgramService } from '../services/discountProgram.service';
+import { DiscountProgramController } from '../controllers/be/v1/discountProgram.controller';
 @Global()
 @Module({
   providers: [
@@ -21,6 +22,6 @@ import { DiscountProgramService } from '../services/discountProgram.service';
     DiscountProgramRepository,
     DiscountProgramDetailRepository,
   ],
-  controllers: [DiscountProgramItgController],
+  controllers: [DiscountProgramItgController, DiscountProgramController],
 })
 export class DiscountProgramModule {}
