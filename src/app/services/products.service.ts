@@ -234,6 +234,11 @@ import {
 } from '../../utils/joinTable';
 import { table } from 'console';
 import { convertProductDataFromMagentor } from '../../utils/integrateFunctions';
+import { DiscountProgramRepository } from '../repositories/discountProgram.repository';
+import { DiscountProgramEntity } from '../entities/discountProgram.entity';
+import { DiscountProgramDetailRepository } from '../repositories/discountProgramDetail.repository';
+import { DiscountProgramDetailEntity } from '../entities/discountProgramDetail.entity';
+import { discountProgramDetailJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -278,6 +283,8 @@ export class ProductService {
     private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
     private logRepo: LogRepository<LogEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
+    private discountProgramRepo: DiscountProgramRepository<DiscountProgramEntity>,
+    private discountProgramDetailRepo: DiscountProgramDetailRepository<DiscountProgramDetailEntity>,
     private cache: RedisCacheService,
   ) {}
 
@@ -1449,14 +1456,7 @@ export class ProductService {
   async getProductsListByCategorySlug(slug: string, params) {
     const category = await this.categoryRepo.findOne({
       select: categorySelector,
-      join: {
-        [JoinTable.leftJoin]: {
-          [Table.CATEGORY_DESCRIPTIONS]: {
-            fieldJoin: `${Table.CATEGORIES}.category_id`,
-            rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
-          },
-        },
-      },
+      join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.slug`]: slug },
     });
 
@@ -1505,9 +1505,8 @@ export class ProductService {
     let productsList = [];
     let count;
     if (variant_ids) {
-      filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] = In(
-        variant_ids.split(',').map((variant_id) => variant_id),
-      );
+      variant_ids = variant_ids.split(',');
+      console.log(variant_ids);
 
       productsList = await this.productFeatureValueRepo.find({
         select: getProductListByVariantsInCategory,
@@ -1892,7 +1891,7 @@ export class ProductService {
       product_id: result['product_id'],
     });
     //create new product features
-    if (data?.product_features?.length) {
+    if (data?.product_features?.length && data.category_feature_id) {
       for (let { feature_id, variant_id } of data.product_features) {
         const productFeature = await this.productFeaturesRepo.findOne({
           feature_id,
@@ -1915,6 +1914,7 @@ export class ProductService {
           });
 
         const productFeatureValueData = {
+          category_id: data.category_feature_id,
           feature_id: productFeature ? productFeature.feature_id : null,
           variant_id: productFeatureVariant
             ? productFeatureVariant?.variant_id
@@ -4131,6 +4131,10 @@ export class ProductService {
       );
     }
 
+    result['discount_programs'] = await this.getDiscountProgramApplyProduct(
+      result['product_id'],
+    );
+
     await this.cache.set(cacheKey, result);
     await this.cache.saveCache(
       cacheTables.product,
@@ -4187,6 +4191,9 @@ export class ProductService {
               role,
             );
         }
+
+        childProduct['discount_programs'] =
+          await this.getDiscountProgramApplyProduct(childProduct['product_id']);
       }
     }
 
@@ -4379,6 +4386,17 @@ export class ProductService {
       select: '*',
       join: productPromotionAccessoriesJoiner,
       where: condition,
+    });
+  }
+
+  async getDiscountProgramApplyProduct(product_id) {
+    return this.discountProgramDetailRepo.findOne({
+      select: '*',
+      join: discountProgramDetailJoiner,
+      where: { [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]: product_id },
+      orderBy: [
+        { field: `${Table.DISCOUNT_PROGRAM}.created_at`, sortBy: SortBy.DESC },
+      ],
     });
   }
 

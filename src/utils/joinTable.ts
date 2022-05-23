@@ -374,6 +374,15 @@ export const productLeftJoiner = {
   },
 };
 
+export const categoryJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.CATEGORY_DESCRIPTIONS]: {
+      fieldJoin: `${Table.CATEGORIES}.category_id`,
+      rootJoin: `${Table.CATEGORY_DESCRIPTIONS}.category_id`,
+    },
+  },
+};
+
 export const valuationBillLeftJoiner = {
   [JoinTable.leftJoin]: {
     [Table.STORE_LOCATION_DESCRIPTIONS]: {
@@ -1033,11 +1042,11 @@ export const tradeinProgrameDetailJoiner = {
   },
 };
 
-export const valuat = {
+export const discountProgramDetailJoiner = {
   [JoinTable.innerJoin]: {
-    [Table.TRADEIN_PROGRAM]: {
-      fieldJoin: `${Table.TRADEIN_PROGRAM}.tradein_id`,
-      rootJoin: `${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`,
+    [Table.DISCOUNT_PROGRAM]: {
+      fieldJoin: `${Table.DISCOUNT_PROGRAM}.discount_id`,
+      rootJoin: `${Table.DISCOUNT_PROGRAM_DETAIL}.discount_id`,
     },
   },
 };

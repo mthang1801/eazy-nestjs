@@ -11,7 +11,7 @@ export class CategoryEntity {
   usergroup_ids: string = '';
   status: string = 'A';
   product_count: number = 0;
-  position: number = 0;
+  position: number = 9999;
   is_op: string = 'N';
   selected_views: string = '';
   slug: string = '';
