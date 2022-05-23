@@ -13,6 +13,9 @@ export const cacheKeys = {
   bannerTargets: (params) => `banner-targets${params}`,
   carts: (params) => `carts${params}`,
   cart: (id) => `cart-${id}`,
+  dashboardOverview: `dashboard-overview`,
+  flashSale: (id) => `flashSale-${id}`,
+  flashSales: (params) => `flashSale${params}`,
 };
 
 export const cacheTables = {
@@ -22,6 +25,8 @@ export const cacheTables = {
   sticker: 'Sticker',
   banner: 'Banner',
   cart: 'Cart',
+  dashboard: 'Dashboard',
+  flashSale: 'Flash sale',
 };
 
 export const prefixCacheKey = {
@@ -36,4 +41,6 @@ export const prefixCacheKey = {
   bannerTargets: 'banner-targets',
   cart: 'cart',
   carts: 'carts',
+  dashboard: 'dashboard',
+  flasSale: 'flashSale',
 };

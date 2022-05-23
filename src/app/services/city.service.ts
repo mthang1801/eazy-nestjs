@@ -9,6 +9,7 @@ export class CityService {
 
   async getList(params) {
     const { q } = params;
+
     let count = await this.cityRepo.find({
       select: 'COUNT(id) as total',
       where: citiesSearch(q),

@@ -28,7 +28,7 @@ import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
 import { formatStandardTimeStamp } from '../../utils/helper';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewEntity } from '../entities/review.entity';
-import { cacheKeys } from '../../constants/cache';
+import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
@@ -171,12 +171,21 @@ export class FlashSalesService {
 
     flashSaleResult = flashSale;
     await this.cache.set(cacheKey, flashSaleResult);
-
+    await this.cache.saveCache(
+      cacheTables.flashSale,
+      prefixCacheKey.flasSale,
+      cacheKey,
+    );
     return flashSale;
   }
   async CMSget(flash_sale_id) {
-    let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
+    let flashSaleCacheKey = cacheKeys.flashSale(flash_sale_id);
+    let flashSaleCacheResult = await this.cache.get(flashSaleCacheKey);
+    if (flashSaleCacheResult) {
+      return flashSaleCacheResult;
+    }
 
+    let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
     if (!flashSale) {
       throw new HttpException('Không tìm thấy FlashSale', 404);
     }
@@ -220,6 +229,12 @@ export class FlashSalesService {
       }
     }
 
+    await this.cache.set(flashSaleCacheKey, flashSale);
+    await this.cache.saveCache(
+      cacheTables.flashSale,
+      prefixCacheKey.flasSale,
+      flashSaleCacheKey,
+    );
     return flashSale;
   }
 

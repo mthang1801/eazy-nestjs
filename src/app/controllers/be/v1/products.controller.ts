@@ -114,7 +114,7 @@ export class ProductsController extends BaseController {
   @Get(':product_id')
   @UseGuards(AuthGuard)
   async get(
-    @Param('product_id') product_id: number | string,
+    @Param('product_id') product_id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.get(product_id);

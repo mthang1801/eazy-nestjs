@@ -79,7 +79,7 @@ export class ProductIntegrationController extends BaseController {
 
   @Get(':identifier')
   async get(
-    @Param('identifier') identifier: number | string,
+    @Param('identifier') identifier: number,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.get(identifier);
