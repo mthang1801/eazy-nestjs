@@ -1675,6 +1675,17 @@ export class ProductService {
       }
     }
 
+    if (
+      !data.category_feature_id &&
+      data.product_features &&
+      data.product_features.length
+    ) {
+      throw new HttpException(
+        'Cần truyền id của danh mục tương ứng với bộ thuộc tính',
+        400,
+      );
+    }
+
     // //Kiểm tra product features hợp lệ
     // if (data?.product_features?.length) {
     //   for (let productFeature of data.product_features) {
@@ -1719,7 +1730,7 @@ export class ProductService {
       if (childrenProducts.length) {
         for (let childProduct of childrenProducts) {
           let childCacheKey = cacheKeys.product(childProduct.product_id);
-          await this.cache.delete(childProduct.product_id);
+          await this.cache.delete(childCacheKey);
         }
       }
     }
@@ -2889,10 +2900,14 @@ export class ProductService {
   }
 
   async deleteProductImage(
-    product_id: number,
+    identifier: string | number,
     data: DeleteProductImageDto,
   ): Promise<string> {
-    const product = await this.productRepo.findOne({ product_id });
+    console.log(identifier);
+    const product = await this.productRepo.findOne({
+      select: '*',
+      where: [{ product_code: identifier }, { product_id: identifier }],
+    });
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -3905,7 +3920,7 @@ export class ProductService {
     if (product) {
       cacheKey = cacheKeys.product(product.product_id);
       let cacheResult = await this.cache.get(cacheKey);
-      await this.cache.delete(cacheKey);
+
       if (cacheResult) {
         this.productRepo.update(
           { product_id: product.product_id },
@@ -4049,64 +4064,61 @@ export class ProductService {
     }
 
     // Get stores
-    let stores = this.getProductsStores(result.product_id);
+    result['stores'] = await this.getProductsStores(result.product_id);
 
     // get Image
-    let images = this.getProductImages(result.product_id);
+    result['images'] = await this.getProductImages(result.product_id);
 
     //============= Get Features ===============
-    let productFeatures;
     if (result['category_feature_id'] !== 0) {
-      productFeatures = this.getProductFeaturesByCategoryId(
+      result['productFeatures'] = await this.getProductFeaturesByCategoryId(
         result['category_feature_id'],
         result.product_id,
       );
     } else {
-      productFeatures = this.getProductFeatures(result.product_id);
-    }
-
-    //=========== Get accessory ============
-    let promotion_accessory_products;
-    if (result['promotion_accessory_id']) {
-      promotion_accessory_products = this.getAccessoriesByProductId(
-        result['promotion_accessory_id'],
-        1,
+      result['productFeatures'] = await this.getProductFeatures(
+        result.product_id,
       );
     }
 
-    let free_accessory_products;
+    //=========== Get accessory ============
+    result['promotion_accessory_products'] = [];
+    if (result['promotion_accessory_id']) {
+      result['promotion_accessory_products'] =
+        await this.getAccessoriesByProductId(
+          result['promotion_accessory_id'],
+          1,
+        );
+    }
+
+    result['free_accessory_products'] = [];
     if (result['free_accessory_id']) {
-      free_accessory_products = this.getAccessoriesByProductId(
+      result['free_accessory_products'] = await this.getAccessoriesByProductId(
         result['free_accessory_id'],
         1,
       );
     }
 
-    let warranty_package_products;
+    result['warranty_package_products'] = [];
     if (result['warranty_package_id']) {
-      warranty_package_products = this.getAccessoriesByProductId(
-        result['warranty_package_id'],
-        1,
-      );
+      result['warranty_package_products'] =
+        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
     }
 
     //============== Get ratings ================
-    let ratings = await this.reviewRepo.findOne({
+    result['ratings'] = await this.reviewRepo.findOne({
       product_id: result.product_id,
     });
 
     // Get Current category info
-    let currentCategory = null;
-    let parentCategories;
-    let relative_products;
     if (product['category_id']) {
-      currentCategory = await this.categoryRepo.findOne({
+      result['currentCategory'] = await this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
       // Get parent categories info
-      parentCategories = this.categoryService.parentCategories(
+      result['parentCategories'] = await this.categoryService.parentCategories(
         result['currentCategory'],
       );
       result['parentCategories'] = _.sortBy(result['parentCategories'], [
@@ -4114,21 +4126,10 @@ export class ProductService {
       ]);
 
       // Get relative products
-      relative_products = this.getRelativeProductsByCategory(product);
+      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+        product,
+      );
     }
-
-    let results: any = await Promise.all([
-      stores,
-      images,
-      productFeatures,
-      promotion_accessory_products,
-      free_accessory_products,
-      warranty_package_products,
-      ratings,
-      currentCategory,
-      parentCategories,
-      relative_products,
-    ]);
 
     await this.cache.set(cacheKey, result);
     await this.cache.saveCache(
@@ -4156,7 +4157,7 @@ export class ProductService {
           childProduct.product_id,
         );
         // Get stores
-        childProduct['stores'] = await this.checkProductsStores(
+        childProduct['stores'] = await this.getProductsStores(
           childProduct.product_id,
         );
         // Get accessory
