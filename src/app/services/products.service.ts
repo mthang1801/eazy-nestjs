@@ -4534,53 +4534,68 @@ export class ProductService {
     // } catch (error) {
     //   console.log(error);
     // }
-    let cryptography = new Cryptography();
-    let msg = 'This is a secret message';
-    console.log(msg);
-    // console.log(crypto.getRandomValues());
-    let encryptedData = cryptography.encrypt(msg);
-    console.log(encryptedData);
-    let c1 = new Cryptography();
-    let decryptedData = c1.decrypt(encryptedData);
-    console.log(decryptedData);
+    // let cryptography = new Cryptography();
+    // let msg = 'This is a secret message';
+    // console.log(msg);
+    // // console.log(crypto.getRandomValues());
+    // let encryptedData = cryptography.encrypt(msg);
+    // console.log(encryptedData);
+    // let c1 = new Cryptography();
+    // let decryptedData = c1.decrypt(encryptedData);
+    // console.log(decryptedData);
     // var hw = cryptography.encrypt('30512');
     // console.log(hw);
     // let cryptography1 = new Cryptography();
 
-    // console.log(cryptography1.decrypt(hw));
-    // const slug = convertToSlug('Lynk Lee - Ngày ấy bạn và tôi (Official MV)');
-    // await this.productRepo.findOne({
-    //   select: '*',
-    //   join: productLeftJoiner,
-    //   where: [
-    //     {
-    //       $or: [
-    //         { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
-    //         { [`${Table.PRODUCT_PRICES}.barcode`]: 'JKJLS782136HK' },
-    //         { [`${Table.PRODUCTS}.amount`]: MoreThan(0) },
-    //         {
-    //           [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
-    //             1, 2, 3, 4, 5, 6, 7,
-    //           ]),
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       $and: [
-    //         {
-    //           $or: {
-    //             [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-    //             [`${Table.PRODUCTS}.amount`]: MoreThan(0),
-    //           },
-    //           [`${Table.PRODUCTS_CATEGORIES}.category_id`]: In([
-    //             1, 2, 3, 4, 5, 6, 7,
-    //           ]),
-    //         },
-    //         { [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0) },
-    //       ],
-    //     },
-    //   ],
-    // });
+    await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: [
+        {
+          $or: [
+            // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
+            {
+              $and: [
+                { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+                { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+                // {
+                //   $or: [
+                //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+                //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+                //   ],
+                // },
+              ],
+            },
+
+            { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
+
+            // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
+            // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
+            // {
+            //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
+            // },
+
+            // {
+            //   $and: [
+            //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+            //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+            //     {
+            //       $or: [
+            //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+            //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+            //       ],
+            //     },
+            //     {
+            //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
+            //         1, 2, 3, 4, 5, 6, 7,
+            //       ]),
+            //     },
+            //   ],
+            // },
+          ],
+        },
+      ],
+    });
   }
 
   async autoFillPriceIntoConfigurableProducts() {

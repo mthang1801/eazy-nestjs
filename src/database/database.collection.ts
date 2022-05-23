@@ -1,4 +1,9 @@
-import { BadRequestException, ConsoleLogger, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConsoleLogger,
+  Injectable,
+  HttpException,
+} from '@nestjs/common';
 import { formatTypeValueConditionSQL } from 'src/base/base.helper';
 
 import {
@@ -26,6 +31,8 @@ export class DatabaseCollection {
   private stringGroupBy: string | number | string[] | number[];
   private stringHaving: string;
   private arrayHaving: any[];
+  private orOperator = '$or';
+  private andOperator = '$and';
 
   constructor(table) {
     this.table = table;
@@ -387,10 +394,11 @@ export class DatabaseCollection {
       if (
         objFields.some(
           (objItem) =>
-            objItem.hasOwnProperty('$or') || objItem.hasOwnProperty('$and'),
+            objItem.hasOwnProperty(this.orOperator) ||
+            objItem.hasOwnProperty(this.andOperator),
         )
       ) {
-        return this.setCondition(objFields);
+        return this.setAndOrCondition(objFields);
       }
       return this.orCondition(objFields);
     }
@@ -399,51 +407,112 @@ export class DatabaseCollection {
     this.andCondition(objFields);
   }
 
-  setCondition(objFields) {
+  setAndOrCondition(objFields) {
     let sqlQuery = '';
-    for (let objFieldItem of objFields) {
-      sqlQuery += this.handleReursiveCondition(objFieldItem, sqlQuery);
+    console.log(407, objFields);
+    if (objFields.length != 1) {
+      throw new HttpException(
+        'Cú pháp truy vấn mệnh đề điều kiện không hợp lệ.',
+        400,
+      );
     }
-    console.log(sqlQuery);
+    let objField = Object.values(objFields)[0];
+    let key = Object.keys(objField)[0];
+    let values = Object.values(objField)[0];
+
+    console.log('============ INITIAL ===========');
+    console.log(JSON.stringify(values, null, 4));
+
+    sqlQuery += this.handleRecursiveConditions(values, key, Infinity, sqlQuery);
+
+    console.log(407, JSON.stringify(sqlQuery, null, 4));
   }
 
-  handleReursiveCondition(objFieldItem, sqlQuery = '') {
-    if (typeof objFieldItem === 'object' && Array.isArray(objFieldItem)) {
-      for (let _objFieldItem of objFieldItem) {
-        sqlQuery += this.handleReursiveCondition(_objFieldItem, sqlQuery);
+  handleRecursiveConditions(
+    values,
+    operator,
+    position = Infinity,
+    sqlQuery = '',
+  ) {
+    if (!values.length) return sqlQuery;
+    console.log(438, position);
+    let strOperator = operator === this.orOperator ? 'OR' : 'AND';
+    for (let [i, objectItem] of values.entries()) {
+      if (i !== 0) {
+        sqlQuery += ` ${strOperator} `;
       }
-    }
-    if (
-      !objFieldItem ||
-      (objFieldItem && !Object.entries(objFieldItem).length)
-    ) {
-      return sqlQuery;
-    }
-    if (objFieldItem.hasOwnProperty('$or')) {
-      for (let objValue of Object.values(objFieldItem)) {
-        if (Array.isArray(objValue)) {
-          for (let objValueItem of objValue) {
-            if (
-              (typeof objValueItem === 'object' &&
-                objValueItem.hasOwnProperty('$or')) ||
-              objValueItem.hasOwnProperty('$and')
-            ) {
-              sqlQuery += this.handleReursiveCondition(objValueItem, sqlQuery);
-              continue;
-            }
-            for (let [i, [key, val]] of Object.entries(
-              objValueItem,
-            ).entries()) {
-              sqlQuery += ` ${key} ${val['operator'] ? val['operator'] : '='} ${
-                val['value'] != undefined ? `'${val['value']}'` : `'${val}'`
-              } `;
-            }
+      if (objectItem.hasOwnProperty(this.orOperator)) {
+        if (position === 0) {
+          sqlQuery += ` ( `;
+        }
+        sqlQuery = this.handleRecursiveConditions(
+          Object.values(objectItem),
+          this.orOperator,
+          i,
+          sqlQuery,
+        );
+        if (i === values.length - 1) {
+          sqlQuery += ' ) ';
+        }
+      } else if (objectItem.hasOwnProperty(this.andOperator)) {
+        if (position === 0) {
+          sqlQuery += ` ( `;
+        }
+        sqlQuery = this.handleRecursiveConditions(
+          Object.values(objectItem),
+          this.andOperator,
+          i,
+          sqlQuery,
+        );
+        if (i === values.length - 1) {
+          sqlQuery += ' ) ';
+        }
+      } else {
+        if (typeof objectItem !== 'object') {
+          throw new HttpException('Lỗi cú pháp truy vấn ở mệnh đề where.', 400);
+        }
+
+        if (Array.isArray(objectItem)) {
+          if (position === 0) {
+            sqlQuery += ` ( `;
+          }
+          if (operator === this.orOperator) {
+            sqlQuery = this.handleRecursiveConditions(
+              objectItem,
+              this.orOperator,
+              i,
+              sqlQuery,
+            );
+          } else {
+            sqlQuery = this.handleRecursiveConditions(
+              objectItem,
+              this.andOperator,
+              i,
+              sqlQuery,
+            );
+          }
+        } else {
+          if (i === 0) {
+            sqlQuery += ` ( `;
+          }
+          let key = Object.keys(objectItem)[0];
+          let value = Object.values(objectItem)[0];
+          if (
+            value.hasOwnProperty('operator') &&
+            value.hasOwnProperty('value')
+          ) {
+            sqlQuery += `( ${key} ${value['operator']} '${value['value']}' )`;
+          } else {
+            sqlQuery += `( ${key} = '${value}' )`;
+          }
+          if (i === values.length - 1) {
+            sqlQuery += ' ) ';
           }
         }
       }
     }
-    if (objFieldItem.hasOwnProperty('$and')) {
-    }
+
+    console.log('============ END ==========');
     return sqlQuery;
   }
 
@@ -451,15 +520,6 @@ export class DatabaseCollection {
     if (typeof objFields !== 'object') {
       throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
     }
-
-    // Array is considered as OR operator, so we will connect with orAndWhere each other
-    if (Array.isArray(objFields)) {
-      this.orCondition(objFields, 'having');
-      return;
-    }
-
-    // Object us considered as AND operator, so we will connect with andOrWhere each other
-    this.andCondition(objFields, 'having');
   }
 
   andCondition(objFields: any, type = 'where'): void {
