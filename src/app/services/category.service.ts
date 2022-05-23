@@ -64,7 +64,10 @@ import { sortBy } from 'lodash';
 import { categorySelector } from '../../database/sqlQuery/select/category.select';
 import { categoryJoiner } from 'src/database/sqlQuery/join/category.join';
 import { productCategoryJoinProductAndCategory } from '../../database/sqlQuery/join/category.join';
-import { getPageSkipLimit } from '../../utils/helper';
+import {
+  getPageSkipLimit,
+  convertQueryParamsIntoCachedString,
+} from '../../utils/helper';
 import {
   productCategoryJoiner,
   productJoiner,
@@ -184,7 +187,7 @@ export class CategoryService {
       }
     }
 
-    await this.cache.removeManyCachedModule(prefixCacheKey.categories);
+    await this.cache.removeManyPrefixCachesKey(prefixCacheKey.categories);
 
     return result;
   }
@@ -207,6 +210,7 @@ export class CategoryService {
     const category = await this.categoryRepository.findOne({
       category_appcore_id: data.category_id,
     });
+
     if (category) {
       return await this.itgUpdate(data.category_id, data);
     }
@@ -334,21 +338,6 @@ export class CategoryService {
       throw new HttpException(`Không tìm thấy category với id là ${id}`, 404);
     }
 
-    //======== remove cached category table ==============
-    let relevantTCachedTables = [cacheTables.category];
-    await this.cache.removeManyCachedTables(relevantTCachedTables);
-
-    //======== remove cached product item which it belongs this category ==========
-    const products = await this.productCategoryRepository.find({
-      category_id: id,
-    });
-    if (products.length) {
-      for (let product of products) {
-        let productCacheKey = cacheKeys.product(product.product_id);
-        await this.cache.delete(productCacheKey);
-      }
-    }
-
     if (data.slug) {
       const checkSlug = await this.categoryRepository.findOne({
         slug: convertToSlug(data.slug),
@@ -359,6 +348,20 @@ export class CategoryService {
           'đường dẫn danh mục này đã tồn tại, không thể sử dụng. Cập nhật không thành công.',
           409,
         );
+      }
+    }
+
+    //======== remove cached category table ==============
+    await this.cache.removeCache(cacheTables.category);
+
+    //======== remove cached product item which it belongs this category ==========
+    const products = await this.productCategoryRepository.find({
+      category_id: id,
+    });
+    if (products.length) {
+      for (let product of products) {
+        let productCacheKey = cacheKeys.product(product.product_id);
+        await this.cache.delete(productCacheKey);
       }
     }
 
@@ -595,31 +598,11 @@ export class CategoryService {
 
     await this.cache.removeCache(null, null, cacheKeys.category(id));
   }
-  // async testCate(id: number, data: UpdateCategoryDto) {
-  //   if (data.category_features && data.category_features.length) {
-  //     await this.categoryFeatureRepo.delete({category_id: id})
-
-  //     for (let { feature_id, position, status } of data.category_features){
-  //       const checkExist = await this.categoryFeatureRepo.findOne({category_id: id, feature_id: feature_id,})
-  //       console.log(checkExist);
-  //       if (checkExist){
-  //         continue;
-  //       }
-
-  //       const categoryFeature = {
-  //         ...new CategoryFeatureEntity(),
-  //         ...this.categoryFeatureRepo.setData(data),
-  //         category_id: id,
-  //         feature_id: feature_id,
-  //         status: status,
-  //         position: position,
-  //       }
-  //       await this.categoryFeatureRepo.create(categoryFeature);
-  //     }
-  //   }
-  // }
 
   async updateLevelChildrenCategories(category_id) {
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.cache.delete(categoryCacheKey);
+
     let currentCategory = await this.categoryRepository.findOne({
       category_id,
     });
@@ -648,9 +631,14 @@ export class CategoryService {
 
   async uploadMetaImage(file, category_id) {
     const category = await this.categoryRepository.findOne({ category_id });
+
     if (!category) {
       throw new HttpException('Không tìm thấy Category.', 404);
     }
+
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.cache.delete(categoryCacheKey);
+
     const categoryDesc = await this.categoryDescriptionRepo.findOne({
       category_id,
     });
@@ -698,6 +686,8 @@ export class CategoryService {
   }
 
   async deleteMetaImage(category_id) {
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.cache.delete(categoryCacheKey);
     return this.categoryDescriptionRepo.update(
       { category_id },
       { meta_image: '' },
@@ -706,9 +696,13 @@ export class CategoryService {
 
   async uploadIcon(file, category_id) {
     const category = await this.categoryRepository.findOne({ category_id });
+
     if (!category) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
+
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.cache.delete(categoryCacheKey);
 
     try {
       let data = new FormData();
@@ -746,6 +740,8 @@ export class CategoryService {
   }
 
   async deleteIcon(category_id) {
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.cache.delete(categoryCacheKey);
     return this.categoryRepository.update(
       {
         category_id,
@@ -754,8 +750,10 @@ export class CategoryService {
     );
   }
 
-  async getListFE() {
-    const categoryCacheKey = cacheKeys.categories;
+  async getListFE(params: any = {}) {
+    const categoryCacheKey = cacheKeys.categories(
+      convertQueryParamsIntoCachedString(params),
+    );
     let cacheResult = await this.cache.get(categoryCacheKey);
     if (cacheResult) {
       return cacheResult;
@@ -778,6 +776,14 @@ export class CategoryService {
     // ignore page and limit
     let { search, level } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
+
+    let categoryCacheKey = cacheKeys.categories(
+      convertQueryParamsIntoCachedString(params),
+    );
+    let categoryCacheResult = await this.cache.get(categoryCacheKey);
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
 
     let filterCondition = {};
     if (level) {
@@ -809,7 +815,7 @@ export class CategoryService {
         categories,
       );
 
-      return {
+      let result = {
         paging: {
           currentPage: page,
           pageSize: limit,
@@ -817,6 +823,14 @@ export class CategoryService {
         },
         categories: categoriesListResponse,
       };
+
+      await this.cache.set(categoryCacheKey, result);
+      await this.cache.saveCache(
+        cacheTables.category,
+        prefixCacheKey.categories,
+        categoryCacheKey,
+      );
+      return;
     }
 
     let categoriesListRoot = await this.categoryRepository.find({
@@ -862,7 +876,7 @@ export class CategoryService {
       }
     }
 
-    return {
+    let result = {
       categories: categoriesListRoot,
       paging: {
         currentPage: page,
@@ -872,6 +886,15 @@ export class CategoryService {
           : categoriesListRoot.length,
       },
     };
+
+    await this.cache.set(categoryCacheKey, result);
+    await this.cache.saveCache(
+      cacheTables.category,
+      prefixCacheKey.categories,
+      categoryCacheKey,
+    );
+
+    return result;
   }
 
   async searchCategoriesListFromRoot(categories) {
@@ -1092,6 +1115,11 @@ export class CategoryService {
   }
 
   async getAll(level = Infinity) {
+    let categoryCacheKey = cacheKeys.categoryLevel(level);
+    let categoryCacheResult = await this.cache.get(categoryCacheKey);
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
     const categories = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
@@ -1105,6 +1133,13 @@ export class CategoryService {
       category = categoriesList;
     }
 
+    await this.cache.set(categoryCacheKey, categories);
+    await this.cache.saveCache(
+      cacheTables.category,
+      prefixCacheKey.categoriesLevel,
+      categoryCacheKey,
+    );
+
     return categories;
   }
 
@@ -1115,6 +1150,14 @@ export class CategoryService {
     get_products = get_products && get_products == 'false' ? false : true;
 
     let { skip, limit, page } = getPageSkipLimit(params);
+
+    let categoryCacheKey = cacheKeys.category(
+      `${id}${convertQueryParamsIntoCachedString(params)}`,
+    );
+    let categoryCacheResult = await this.cache.get(categoryCacheKey);
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
     let category = await this.categoryRepository.findOne({
       select: ['*'],
       join: {
@@ -1174,7 +1217,7 @@ export class CategoryService {
       where: productListsInCategorySearchFilter(search, filterProductCategory),
     });
 
-    return {
+    categoryCacheResult = {
       categories: childrenCategories,
       childrenCategories: childrenCategories['children']
         ? childrenCategories['children']
@@ -1190,17 +1233,14 @@ export class CategoryService {
       },
     };
 
-    // categories['currentCategory'] = category;
-    // categories['products'] = {
-    //   paging: {
-    //     currentPage: page,
-    //     pageSize: limit,
-    //     total: countProducts[0].total,
-    //   },
-    //   products: productsListInCategory,
-    // };
+    await this.cache.set(categoryCacheKey, categoryCacheResult);
+    await this.cache.saveCache(
+      cacheTables.category,
+      prefixCacheKey.category,
+      categoryCacheKey,
+    );
 
-    // return categories;
+    return categoryCacheResult;
   }
 
   async getCategoriesChildrenRecursive(
@@ -1236,37 +1276,37 @@ export class CategoryService {
   }
 
   async updateList(data: UpDateCategoriesListDto) {
-    //============== remove cached category list  =================
-    await this.cache.removeManyCachedModule(prefixCacheKey.categories);
-
     if (data.categories && data.categories.length) {
       for (let { category_id, position } of data.categories) {
         await this.categoryRepository.update({ category_id }, { position });
       }
     }
+    //============== remove cached category list  =================
+    await this.cache.removeCache(cacheTables.category);
   }
 
   async delete(id: number): Promise<boolean> {
-    const deleteStatus = await this.categoryRepository.delete({
-      category_id: id,
-    });
+    // const deleteStatus = await this.categoryRepository.delete({
+    //   category_id: id,
+    // });
 
-    await this.categoryDescriptionRepo.delete({ category_id: id });
+    // await this.categoryDescriptionRepo.delete({ category_id: id });
 
-    return deleteStatus;
+    // return deleteStatus;
+    return false;
   }
 
   async clearAll() {
-    await this.categoryRepository.writeExec(
-      `TRUNCATE TABLE ${Table.CATEGORIES}`,
-    );
-    await this.categoryDescriptionRepo.writeExec(
-      `TRUNCATE TABLE ${Table.CATEGORY_DESCRIPTIONS}`,
-    );
+    // await this.categoryRepository.writeExec(
+    //   `TRUNCATE TABLE ${Table.CATEGORIES}`,
+    // );
+    // await this.categoryDescriptionRepo.writeExec(
+    //   `TRUNCATE TABLE ${Table.CATEGORY_DESCRIPTIONS}`,
+    // );
   }
 
   async getSync() {
-    await this.clearAll();
+    // await this.clearAll();
     const categoriesResponse = await this.databaseService.executeMagentoPool(
       sqlSyncGetCategoryFromMagento,
     );

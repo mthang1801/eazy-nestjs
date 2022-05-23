@@ -15,6 +15,8 @@ import { CreateProductStickerDto } from '../dto/sticker/create-productSticker.dt
 import { productStickerJoiner } from 'src/utils/joinTable';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { UpdateProductStickerDto } from '../dto/sticker/update-productSticker.dto';
+import { RedisCacheService } from './redisCache.service';
+import { cacheKeys } from '../../constants/cache';
 
 @Injectable()
 export class StickerService {
@@ -22,6 +24,7 @@ export class StickerService {
     private stickerRepo: StickerRepository<StickerEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async create(data: CreateStickerDto) {
@@ -84,7 +87,12 @@ export class StickerService {
 
   async createProductSticker(data: CreateProductStickerDto) {
     for (let productId of data.product_ids) {
-      const product = await this.productRepo.findById(productId);
+      const product: any = await this.productRepo.findOne({
+        product_id: productId,
+      });
+      let productCacheKey = cacheKeys.product(productId);
+      await this.cache.delete(productCacheKey);
+
       if (!product) {
         continue;
       }

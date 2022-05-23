@@ -67,18 +67,32 @@ export class RedisCacheService {
     }
   }
 
-  async removeCache(tableName, prefixCacheKey = '', cacheKey = '') {
+  async removeCache(tableName, prefixCacheKey = null, cacheKey = null) {
     if (cacheKey) {
       this.logger.error(`======= REMOVE CAHCE KEY [${cacheKey}]========`);
       return this.delete(cacheKey);
     }
     if (prefixCacheKey && !tableName) {
+      this.logger.error(`======= REMOVE PREFIX KEYS CACHE========`);
+      const prefixCaches = await this.cacheRepo.find({
+        prefix_cache_key: prefixCacheKey,
+      });
+      if (prefixCaches.length) {
+        for (let cache of prefixCaches) {
+          await this.delete(cache.cache_key);
+        }
+      }
+      return;
+    }
+    if (!prefixCacheKey && tableName) {
       this.logger.error(
         `======= REMOVE KEYS CACHE IN TABLE [${tableName}]========`,
       );
       const cacheTables = await this.cacheRepo.find({ table_name: tableName });
-      for (let cache of cacheTables) {
-        await this.delete(cache.cache_key);
+      if (cacheTables.length) {
+        for (let cache of cacheTables) {
+          await this.delete(cache.cache_key);
+        }
       }
       return;
     }
@@ -87,9 +101,10 @@ export class RedisCacheService {
       table_name: tableName,
       prefix_cache_key: prefixCacheKey,
     });
-
-    for (let cache of caches) {
-      await this.delete(cache.cache_key);
+    if (caches.length) {
+      for (let cache of caches) {
+        await this.delete(cache.cache_key);
+      }
     }
   }
 
@@ -100,7 +115,7 @@ export class RedisCacheService {
       }
     }
   }
-  async removeManyCachedModule(prefix_cache_key: string[] | string = []) {
+  async removeManyPrefixCachesKey(prefix_cache_key: string[] | string = []) {
     if (typeof prefix_cache_key == 'string')
       prefix_cache_key = [prefix_cache_key];
     if (prefix_cache_key.length) {

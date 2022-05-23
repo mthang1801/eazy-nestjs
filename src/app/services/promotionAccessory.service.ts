@@ -34,7 +34,7 @@ import {
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
-import { cacheKeys } from '../../constants/cache';
+import { cacheKeys, cacheTables } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
@@ -66,12 +66,14 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
+
         if (!product) {
           throw new HttpException(
             `Sản phẩm có id ${productItem.product_id} tồn tại`,
             404,
           );
         }
+
         if (
           productItem.promotion_price < 0 ||
           productItem.promotion_price > product['price']
@@ -418,6 +420,10 @@ export class PromotionAccessoryService {
             newAccessoryItemData,
             false,
           );
+
+          //============== remove new promotion product cache ==============
+          let productCacheKey = cacheKeys.product(product.product_id);
+          await this.cache.delete(productCacheKey);
         }
       }
     }
@@ -461,6 +467,10 @@ export class PromotionAccessoryService {
             { product_id: product['product_id'] },
             updatedData,
           );
+
+          //============== remove new promotion product cache ==============
+          let productCacheKey = cacheKeys.product(product.product_id);
+          await this.cache.delete(productCacheKey);
         }
       }
     }
@@ -577,6 +587,10 @@ export class PromotionAccessoryService {
             newAccessoryItemData,
             false,
           );
+
+          //============== remove new promotion product cache ==============
+          let productCacheKey = cacheKeys.product(product.product_id);
+          await this.cache.delete(productCacheKey);
         }
       }
     }
@@ -623,6 +637,10 @@ export class PromotionAccessoryService {
             { product_appcore_id: appliedProductItem['product_appcore_id'] },
             updatedData,
           );
+
+          //============== remove new promotion product cache ==============
+          let productCacheKey = cacheKeys.product(product.product_id);
+          await this.cache.delete(productCacheKey);
         }
       }
     }

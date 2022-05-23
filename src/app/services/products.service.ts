@@ -226,7 +226,7 @@ import {
 } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
 import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
-import { convertIntoCacheString } from '../../utils/helper';
+import { convertQueryParamsIntoCachedString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
@@ -1506,23 +1506,40 @@ export class ProductService {
     let count;
     if (variant_ids) {
       variant_ids = variant_ids.split(',');
-      console.log(variant_ids);
+      for (let [i, variantId] of variant_ids.entries()) {
+        let filterCondition = {
+          [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId,
+        };
+        if (productsList.length) {
+          filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.product_id`] = In(
+            productsList.map((productId) => productId),
+          );
+        }
+        if (i === variant_ids.length - 1) {
+          productsList = await this.productFeatureValueRepo.find({
+            select: getProductListByVariantsInCategory,
+            join: productFeatureVariantByCategoryJoiner,
 
-      productsList = await this.productFeatureValueRepo.find({
-        select: getProductListByVariantsInCategory,
-        join: productFeatureVariantByCategoryJoiner,
+            where: productsListsSearchFilter(search, filterCondition),
+            orderBy: filterOrder,
+            skip,
+            limit,
+          });
 
-        where: productsListsSearchFilter(search, filterCondition),
-        orderBy: filterOrder,
-        skip,
-        limit,
-      });
-
-      count = await this.productFeatureValueRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
-        join: productFeatureVariantByCategoryJoiner,
-        where: productsListsSearchFilter(search, filterCondition),
-      });
+          count = await this.productFeatureValueRepo.find({
+            select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
+            join: productFeatureVariantByCategoryJoiner,
+            where: productsListsSearchFilter(search, filterCondition),
+          });
+        } else {
+          productsList = await this.productFeatureValueRepo.find({
+            select: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+            join: productFeatureVariantByCategoryJoiner,
+            where: productsListsSearchFilter(search, filterCondition),
+          });
+          productsList = productsList.map(({ product_id }) => product_id);
+        }
+      }
     } else {
       productsList = await this.productCategoryRepo.find({
         select: [

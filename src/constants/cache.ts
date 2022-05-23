@@ -1,11 +1,18 @@
 export const cacheKeys = {
   catalog: (queryParameters = '') => `catalog${queryParameters}`,
-  categories: `categories`,
   banner: (bannerId) => `banner-${bannerId}`,
+  banners: (params) => `banners${params}`,
   productByCategorySlug: (categorySlug) => `cat-${categorySlug}`,
   flashSaleFE: `flash-sale-fe`,
-  category: (categoryId) => `cat-${categoryId}`,
+  category: (categoryId) => `category-${categoryId}`,
+  categories: (params) => `categories${params}`,
+  categoryLevel: (level) => `categories-level-${level}`,
   product: (productId) => `product-${productId}`,
+  products: (params) => `products${params}`,
+  bannerLocations: `banner-locations`,
+  bannerTargets: (params) => `banner-targets${params}`,
+  carts: (params) => `carts${params}`,
+  cart: (id) => `cart-${id}`,
 };
 
 export const cacheTables = {
@@ -14,13 +21,19 @@ export const cacheTables = {
   productFeature: 'Product Feature',
   sticker: 'Sticker',
   banner: 'Banner',
+  cart: 'Cart',
 };
 
 export const prefixCacheKey = {
   categories: 'categories',
+  categoriesLevel: 'categories-level',
   products: 'products',
-  categoryId: 'Category Id',
-  banner: 'Banner',
-  bannerId: 'Banner Id',
-  productId: 'Product Id',
+  category: 'category',
+  banner: 'banner',
+  bannerId: 'banner',
+  productId: 'product',
+  banners: 'banners',
+  bannerTargets: 'banner-targets',
+  cart: 'cart',
+  carts: 'carts',
 };

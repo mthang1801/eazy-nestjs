@@ -27,7 +27,7 @@ export class CartController extends BaseController {
     @Param('user_id') user_id: number,
   ): Promise<IResponse> {
     await this.service.create(user_id, product_id);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   /**
@@ -43,8 +43,8 @@ export class CartController extends BaseController {
     @Res() res: Response,
     @Body('alter_user_id') alter_user_id: number,
   ): Promise<IResponse> {
-    await this.service.alterUser(user_id, alter_user_id);
-    return this.responseSuccess(res, null, 'Thành công.');
+    const result = await this.service.alterUser(user_id, alter_user_id);
+    return this.responseSuccess(res, result);
   }
 
   @Put(':cart_item_id')
@@ -54,7 +54,7 @@ export class CartController extends BaseController {
     @Body('amount') amount: number,
   ): Promise<IResponse> {
     await this.service.update(cart_item_id, amount);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   @Get(':user_id')
@@ -72,7 +72,7 @@ export class CartController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     await this.service.delete(cart_item_id);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   @Delete('/clear/:cart_id')
@@ -81,6 +81,6 @@ export class CartController extends BaseController {
     @Param('cart_id') cart_id: number,
   ): Promise<IResponse> {
     await this.service.clearAll(cart_id);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 }

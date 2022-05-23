@@ -34,7 +34,10 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
 import { CreateBannerTargetDescriptionDto } from '../dto/banner/create-bannerTargetDescription.dto';
 import { UpdateBannerTargetDescriptionDto } from '../dto/banner/update-bannerTargetDescription.dto';
 
-import { getPageSkipLimit, convertIntoCacheString } from '../../utils/helper';
+import {
+  getPageSkipLimit,
+  convertQueryParamsIntoCachedString,
+} from '../../utils/helper';
 import { MoreThan, Not, Equal } from '../../database/operators/operators';
 import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
 import { RedisCacheService } from './redisCache.service';
@@ -92,13 +95,6 @@ export class bannerService {
         LessThanOrEqual(created_at_start);
     }
 
-    // if (start_at) {
-    //   filterConditions[`${Table.BANNER}.start_at`] = MoreThan(start_at);
-    // }
-    // if (end_at) {
-    //   filterConditions[`${Table.BANNER}.end_at`] = LessThanOrEqual(end_at);
-    // }
-
     if (page_location_id) {
       filterConditions['page_location_id'] = page_location_id;
     }
@@ -139,7 +135,7 @@ export class bannerService {
       where: bannerSearchFilter(search, filterConditions),
     });
 
-    return {
+    let result = {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -147,6 +143,8 @@ export class bannerService {
       },
       banners,
     };
+
+    return result;
   }
 
   async getListFE(params) {
@@ -154,11 +152,13 @@ export class bannerService {
     slug = slug || '/';
     device_type = device_type || 'D';
 
-    // let bannerCacheKey = cacheKeys.banner(`${slug}-${device_type}`);
-    // let bannerResult = await this.cache.get(bannerCacheKey);
-    // if (bannerResult) {
-    //   return bannerResult;
-    // }
+    let bannerCacheKey = cacheKeys.banners(
+      convertQueryParamsIntoCachedString(params),
+    );
+    let bannerResult = await this.cache.get(bannerCacheKey);
+    if (bannerResult) {
+      return bannerResult;
+    }
     let banners;
     if (target_id && location_id) {
       banners = await this.bannerRepo.find({
@@ -224,22 +224,38 @@ export class bannerService {
       }
     }
 
-    // await this.cache.set(bannerCacheKey, _banners);
-    // await this.cache.saveCache(
-    //   cacheTables.banner,
-    //   prefixCacheKey.bannerId,
-    //   bannerCacheKey,
-    // );
+    await this.cache.set(bannerCacheKey, _banners);
+    await this.cache.saveCache(
+      cacheTables.banner,
+      prefixCacheKey.bannerId,
+      bannerCacheKey,
+    );
     return _banners;
   }
 
   async getLocationsList() {
-    return this.bannerLocationsDescRepo.find();
+    let bannerLocationsCacheKey = cacheKeys.bannerLocations;
+    let bannerLocationResult = await this.cache.get(bannerLocationsCacheKey);
+    if (bannerLocationResult) {
+      return bannerLocationResult;
+    }
+
+    bannerLocationResult = await this.bannerLocationsDescRepo.find();
+    return bannerLocationResult;
   }
 
   async getTargetsList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search } = params;
+
+    let bannerTargetKeys = cacheKeys.bannerTargets(
+      convertQueryParamsIntoCachedString(params),
+    );
+    let bannerTargetCacheResult = await this.cache.get(bannerTargetKeys);
+    if (bannerTargetCacheResult) {
+      return bannerTargetCacheResult;
+    }
+
     let targetsList = await this.bannerTargetDescRepo.find({
       select: '*',
       where: {
@@ -259,7 +275,7 @@ export class bannerService {
       },
     });
 
-    return {
+    bannerTargetCacheResult = {
       paging: {
         pageSize: limit,
         currentPage: page,
@@ -267,6 +283,15 @@ export class bannerService {
       },
       data: targetsList,
     };
+
+    await this.cache.set(bannerTargetKeys, bannerTargetCacheResult);
+    await this.cache.saveCache(
+      cacheTables.banner,
+      prefixCacheKey.bannerTargets,
+      bannerTargetKeys,
+    );
+
+    return bannerTargetCacheResult;
   }
 
   async getById(id: number, params = { page: 1, limit: 50 }) {
@@ -378,6 +403,7 @@ export class bannerService {
       }
     }
 
+    await this.cache.removeCache(cacheTables.banner);
     return this.getById(id);
   }
 
@@ -390,6 +416,15 @@ export class bannerService {
   async getBySlug(params) {
     let { type, slug } = params;
     let bannerItems;
+
+    let bannerCacheKey = cacheKeys.banners(
+      convertQueryParamsIntoCachedString(params),
+    );
+    let bannerCacheResult = await this.cache.get(bannerCacheKey);
+    if (bannerCacheResult) {
+      return bannerCacheResult;
+    }
+
     if (type) {
       bannerItems = await this.bannerItemRepo.find({
         select: '*',
@@ -433,13 +468,18 @@ export class bannerService {
       }
     }
 
+    await this.cache.set(bannerCacheKey, result);
+    await this.cache.saveCache(
+      cacheTables.banner,
+      prefixCacheKey.banners,
+      bannerCacheKey,
+    );
+
     return result;
   }
 
   async getAllBannerTarget() {
-    return this.bannerTargetDescRepo.find({
-      select: ['*'],
-    });
+    return this.bannerTargetDescRepo.find({});
   }
 
   async BannerTargetDescriptioncreate(data: CreateBannerTargetDescriptionDto) {

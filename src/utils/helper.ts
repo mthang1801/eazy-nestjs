@@ -276,7 +276,7 @@ export const convertIntoQueryParams = (params = {}) => {
   return result;
 };
 
-export const convertIntoCacheString = (params) => {
+export const convertQueryParamsIntoCachedString = (params) => {
   let result = '';
   if (Object.entries(params).length) {
     for (let [i, [key, val]] of Object.entries(params).entries()) {
