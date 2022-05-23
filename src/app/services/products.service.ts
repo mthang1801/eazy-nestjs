@@ -545,12 +545,6 @@ export class ProductService {
   }
 
   async get(product_id: number): Promise<any> {
-    let productCacheKey = cacheKeys.product(product_id);
-    let productCacheResult = await this.cache.get(productCacheKey);
-    if (productCacheResult) {
-      return productCacheResult;
-    }
-
     let product = await this.productRepo.findOne({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
@@ -717,17 +711,10 @@ export class ProductService {
       });
 
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+      result['relative_products'] = await this.getRelativeProductsByCategory(
         result,
       );
     }
-
-    await this.cache.set(productCacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.product,
-      prefixCacheKey.productId,
-      productCacheKey,
-    );
 
     return result;
   }
@@ -3368,12 +3355,6 @@ export class ProductService {
   }
 
   async testGetProductDetails(product_id) {
-    let productCacheKey = cacheKeys.product(product_id);
-    let productCacheResult = await this.cache.get(productCacheKey);
-    if (productCacheResult) {
-      return productCacheResult;
-    }
-
     let product = await this.productRepo.findOne({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
@@ -3493,7 +3474,7 @@ export class ProductService {
 
     // get Image
     result['images'] = await this.getProductImages(result.product_id);
-    console.log(result);
+
     //Get Features
     if (result['category_feature_id'] !== 0) {
       result['productFeatures'] = await this.getProductFeaturesByCategoryId(
@@ -3540,17 +3521,10 @@ export class ProductService {
       });
 
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+      result['relative_products'] = await this.getRelativeProductsByCategory(
         result,
       );
     }
-
-    await this.cache.set(productCacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.product,
-      prefixCacheKey.productId,
-      productCacheKey,
-    );
 
     return result;
   }
@@ -4327,6 +4301,7 @@ export class ProductService {
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
+
       // Get parent categories info
       result['parentCategories'] = await this.categoryService.parentCategories(
         result['currentCategory'],
