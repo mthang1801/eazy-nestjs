@@ -1671,6 +1671,9 @@ export class ProductService {
       for (let [i, variantId] of variant_ids.entries()) {
         let filterCondition = {
           [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId,
+          [`${Table.PRODUCT_FEATURE_VALUES}.category_id`]: In(
+            categoriesList.map((categoryId) => categoryId),
+          ),
         };
         if (productsList.length) {
           filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.product_id`] = In(
