@@ -1684,7 +1684,6 @@ export class ProductService {
           productsList = await this.productFeatureValueRepo.find({
             select: getProductListByVariantsInCategory,
             join: productFeatureVariantByCategoryJoiner,
-
             where: productsListsSearchFilter(search, filterCondition),
             orderBy: filterOrder,
             skip,
@@ -1736,6 +1735,8 @@ export class ProductService {
           : productsListsSearchFilter(search, filterCondition),
       });
     }
+
+    productsList = _.uniqBy(productsList, 'product_id');
 
     for (let productItem of productsList) {
       // get images
