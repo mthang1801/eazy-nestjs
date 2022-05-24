@@ -24,6 +24,14 @@ import { CreatePageDetailValuesDto } from '../dto/page/create-pageDetailValues.d
 import { UpdatePageDetailValueDto } from '../dto/page/update-pageDetailValue.dto';
 import { CreatePageDetailValueDto } from '../dto/page/create-pageDetailValue.dto';
 import { CreatePageDetailItemDto } from '../dto/page/create-pageDetailItem.dto';
+import { CreateOrUpdatePageDetailDto } from '../dto/page-tester/create-update-pageDetailItem.dto';
+import { UpdatePageDetailsPosition } from '../dto/page-tester/update-pageDetailsPosition.dto';
+import {
+  pageProgramDetailJoiner,
+  pageProgramDetailValueJoiner,
+} from '../../utils/joinTable';
+import { CreateOrUpdatePageDetailValueItemDto } from '../dto/page-tester/create-update-pageDetailValueItem.dto';
+import { UpdatePageDetailValuesPositionDto } from '../dto/page-tester/update-pageDetailValuesPosition.dto';
 
 @Injectable()
 export class PageService {
@@ -512,5 +520,203 @@ export class PageService {
     currentPage['page_details'] = pageDetails;
 
     return currentPage;
+  }
+
+  async testCreateOrUpdatePageDetailItem(data: CreateOrUpdatePageDetailDto) {
+    if (data.page_detail_id) {
+      let pageDetail = await this.pageDetailRepo.findOne({
+        page_detail_id: data.page_detail_id,
+        page_id: data.page_id,
+      });
+      if (!pageDetail) {
+        throw new HttpException('Không tìm thấy trang chi tiết', 404);
+      }
+
+      let pageDetails = await this.pageDetailRepo.find({
+        page_id: data.page_id,
+      });
+      if (
+        pageDetails.length &&
+        data.module_name &&
+        pageDetails.some(
+          ({ module_name, page_detail_id }) =>
+            module_name.toLowerCase().trim() ==
+              removeMoreThanOneSpace(data.module_name).toLowerCase().trim() &&
+            data.page_detail_id === page_detail_id,
+        )
+      ) {
+        throw new HttpException('Tên Module trong trang đã tồn tại', 409);
+      }
+
+      const pageDetailData = this.pageDetailRepo.setData(data);
+      if (data.module_name) {
+        pageDetailData['module_name'] = removeMoreThanOneSpace(
+          data.module_name,
+        );
+      }
+      if (Object.entries(pageDetailData).length) {
+        await this.pageDetailRepo.update(
+          { page_detail_id: data.page_detail_id },
+          pageDetailData,
+        );
+      }
+    } else {
+      if (!data.module_name) {
+        throw new HttpException('Cần nhập tên module', 400);
+      }
+
+      let pageDetails = await this.pageDetailRepo.find({
+        page_id: data.page_id,
+      });
+      if (
+        pageDetails.length &&
+        pageDetails.some(
+          ({ module_name }) =>
+            module_name.toLowerCase().trim() ==
+            removeMoreThanOneSpace(data.module_name).toLowerCase().trim(),
+        )
+      ) {
+        throw new HttpException('Tên Module trong trang đã tồn tại', 409);
+      }
+
+      let pageDetailData = {
+        ...new PageDetailEntity(),
+        ...this.pageDetailRepo.setData(data),
+      };
+      await this.pageDetailRepo.create(pageDetailData);
+    }
+  }
+
+  async testUpdatePageDetailsPosition(data: UpdatePageDetailsPosition) {
+    if (data.page_details && data.page_details.length) {
+      for (let pageDetailItem of data.page_details) {
+        await this.pageDetailRepo.update(
+          { page_detail_id: pageDetailItem.page_detail_id },
+          { position: pageDetailItem.position },
+        );
+      }
+    }
+  }
+
+  async testGetPageInfo(page_id: number) {
+    const currentPage = await this.pageRepo.findOne({ page_id });
+    if (!currentPage) {
+      throw new HttpException('Không tìm thấy trang.', 404);
+    }
+
+    let pageDetails = await this.pageDetailRepo.find({
+      orderBy: [{ field: `${Table.PAGE_DETAIL}.position`, sortBy: SortBy.ASC }],
+      where: { page_id },
+    });
+
+    currentPage['page_details'] = pageDetails;
+    return currentPage;
+  }
+
+  async testGetPageDetailInfo(page_detail_id: number) {
+    const currentPageDetail = await this.pageDetailRepo.findOne({
+      select: '*',
+      join: pageProgramDetailJoiner,
+      where: { [`${Table.PAGE_DETAIL}.page_detail_id`]: page_detail_id },
+    });
+
+    if (!currentPageDetail) {
+      throw new HttpException('Không tìm thấy chi tiết trang', 404);
+    }
+
+    const pageDetailValues = await this.pageDetailValueRepo.find({
+      page_detail_id,
+    });
+
+    currentPageDetail['page_detail_values'] = pageDetailValues;
+    return currentPageDetail;
+  }
+
+  async testCreateOrUpdatePageDetailValueItem(
+    data: CreateOrUpdatePageDetailValueItemDto,
+  ) {
+    if (data.value_id) {
+      const currentPageDetail = await this.pageDetailRepo.findOne({
+        page_detail_id: data.page_detail_id,
+        value_id: data.value_id,
+      });
+      if (!currentPageDetail) {
+        throw new HttpException('Không tìm thấy trang chi tiết', 404);
+      }
+
+      let pageDetailValues = await this.pageDetailValueRepo.find({
+        page_detail_id: data.page_detail_id,
+      });
+
+      if (
+        data.page_detail_name &&
+        pageDetailValues.some(
+          ({ page_detail_name }) =>
+            page_detail_name.toLowerCase().trim() ===
+              removeMoreThanOneSpace(data.page_detail_name)
+                .toLowerCase()
+                .trim() && data.value_id !== data.value_id,
+        )
+      ) {
+        throw new HttpException(
+          'Tên module trong Chi tiết trang đã tồn tại',
+          400,
+        );
+      }
+      const pageDetailValueData = this.pageDetailValueRepo.setData(data);
+      if (Object.entries(pageDetailValueData).length) {
+        await this.pageDetailValueRepo.update(
+          { value_id: data.value_id },
+          pageDetailValueData,
+        );
+      }
+    } else {
+      if (!data.page_detail_id) {
+        throw new HttpException('Trang chi tiết là bắt buộc', 400);
+      }
+
+      let pageDetailValues = await this.pageDetailValueRepo.find({
+        page_detail_id: data.page_detail_id,
+      });
+      if (
+        data.page_detail_name &&
+        pageDetailValues.some(
+          ({ page_detail_name }) =>
+            page_detail_name.toLowerCase().trim() ===
+            removeMoreThanOneSpace(data.page_detail_name).toLowerCase().trim(),
+        )
+      ) {
+        throw new HttpException(
+          'Tên module trong Chi tiết trang đã tồn tại',
+          400,
+        );
+      }
+
+      const newPageDetailValue = {
+        ...new PageDetailValueEntity(),
+        ...this.pageDetailValueRepo.setData(data),
+      };
+      await this.pageDetailValueRepo.create(newPageDetailValue);
+    }
+  }
+
+  async testUpdatePageDetailValuePosition(
+    data: UpdatePageDetailValuesPositionDto,
+  ) {
+    if (data.page_detail_values && data.page_detail_values.length) {
+      for (let pageDetailValue of data.page_detail_values) {
+        await this.pageDetailValueRepo.update(
+          { value_id: pageDetailValue.value_id },
+          { position: pageDetailValue.position },
+        );
+      }
+    }
+  }
+
+  async testGetPageDetailValueInfo(value_id) {
+    return this.pageDetailValueRepo.findOne({
+      join: pageProgramDetailValueJoiner,
+      where: { [`${Table.PAGE_DETAIL_VALUE}.value_id`]: value_id },
+    });
   }
 }

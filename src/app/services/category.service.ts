@@ -761,6 +761,7 @@ export class CategoryService {
     const result = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
+      where: { [`${Table.CATEGORIES}.status`]: 'A' },
     });
 
     await this.cache.set(categoryCacheKey, result);

@@ -4296,8 +4296,31 @@ export class ProductService {
       product_id: result.product_id,
     });
 
+    result['currentCategory'] = null;
+    result['parentCategories'] = [];
     // Get Current category info
-    if (product['category_id']) {
+    if (product['category_feature_id']) {
+      result['currentCategory'] = await this.categoryRepo.findOne({
+        select: '*',
+        join: categoryJoiner,
+        where: {
+          [`${Table.CATEGORIES}.category_id`]: product['category_feature_id'],
+        },
+      });
+
+      // Get parent categories info
+      result['parentCategories'] = await this.categoryService.parentCategories(
+        result['currentCategory'],
+      );
+      result['parentCategories'] = _.sortBy(result['parentCategories'], [
+        (o) => o.level,
+      ]);
+
+      // Get relative products
+      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
+        product,
+      );
+    } else if (product['category_id']) {
       result['currentCategory'] = await this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,

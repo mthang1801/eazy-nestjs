@@ -38,6 +38,7 @@ export const getProductsListSelectorBE = [
   `${Table.PRODUCTS}.product_appcore_id`,
   `${Table.PRODUCTS}.product_status`,
   `${Table.PRODUCTS}.is_installment`,
+  `${Table.PRODUCTS}.category_feature_id`,
   `${Table.PRODUCTS}.status`,
 ];
 
@@ -59,6 +60,7 @@ export const getProductsByCategoryListSelectorBE = [
   `${Table.PRODUCTS}.product_appcore_id`,
   `${Table.PRODUCTS}.product_status`,
   `${Table.PRODUCTS}.is_installment`,
+  `${Table.PRODUCTS}.category_feature_id`,
   `${Table.PRODUCTS_CATEGORIES}.position`,
 ];
 
@@ -84,6 +86,7 @@ export const getProductListByVariantsInCategory = [
   `${Table.PRODUCTS}.product_appcore_id`,
   `${Table.PRODUCTS}.product_status`,
   `${Table.PRODUCTS}.is_installment`,
+  `${Table.PRODUCTS}.category_feature_id`,
   `${Table.PRODUCTS_CATEGORIES}.position`,
   `${Table.CATEGORIES}.slug`,
 ];
@@ -101,6 +104,7 @@ export const getProductByIdentifierSelector = [
   `${Table.PRODUCTS}.slug as productSlug`,
   `${Table.PRODUCT_DESCRIPTION}.url_media as productUrlMedia`,
   `${Table.CATEGORIES}.slug as categoryId`,
+  `${Table.PRODUCTS}.category_feature_id`,
   `${Table.PRODUCT_DESCRIPTION}.meta_keywords as productMetaKeywords`,
   `${Table.PRODUCT_DESCRIPTION}.meta_image as productMetaImage`,
   `${Table.PRODUCT_DESCRIPTION}.meta_description as productMetaDescription`,
