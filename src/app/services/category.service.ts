@@ -187,7 +187,7 @@ export class CategoryService {
       }
     }
 
-    await this.cache.removeManyPrefixCachesKey(prefixCacheKey.categories);
+    await this.cache.removeCache(cacheTables.category);
 
     return result;
   }
@@ -777,14 +777,6 @@ export class CategoryService {
     let { search, level } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
 
-    let categoryCacheKey = cacheKeys.categories(
-      convertQueryParamsIntoCachedString(params),
-    );
-    let categoryCacheResult = await this.cache.get(categoryCacheKey);
-    if (categoryCacheResult) {
-      return categoryCacheResult;
-    }
-
     let filterCondition = {};
     if (level) {
       filterCondition[`${Table.CATEGORIES}.level`] = +level;
@@ -824,13 +816,7 @@ export class CategoryService {
         categories: categoriesListResponse,
       };
 
-      await this.cache.set(categoryCacheKey, result);
-      await this.cache.saveCache(
-        cacheTables.category,
-        prefixCacheKey.categories,
-        categoryCacheKey,
-      );
-      return;
+      return result;
     }
 
     let categoriesListRoot = await this.categoryRepository.find({
@@ -886,13 +872,6 @@ export class CategoryService {
           : categoriesListRoot.length,
       },
     };
-
-    await this.cache.set(categoryCacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.category,
-      prefixCacheKey.categories,
-      categoryCacheKey,
-    );
 
     return result;
   }

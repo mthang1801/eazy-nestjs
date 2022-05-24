@@ -44,18 +44,10 @@ export class RedisCacheService {
     const cacheTable = await this.cacheRepo.findOne({
       table_name: tableName,
       prefix_cache_key: prefixCacheKey,
+      cache_key: cacheKey,
     });
 
-    if (cacheTable) {
-      await this.cacheRepo.update(
-        { id: cacheTable.id },
-        {
-          table_name: tableName,
-          prefix_cache_key: prefixCacheKey,
-          cache_key: cacheKey,
-        },
-      );
-    } else {
+    if (!cacheTable) {
       await this.cacheRepo.create(
         {
           table_name: tableName,

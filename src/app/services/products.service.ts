@@ -5128,4 +5128,20 @@ export class ProductService {
       );
     }
   }
+
+  async getCacheProductById(product_id) {
+    let cacheProductKey = cacheKeys.product(product_id);
+    let cacheProductResult = await this.cache.get(cacheProductKey);
+    return { cacheProductKey, cacheProductResult };
+  }
+
+  async setCacheProductById(product_id, data) {
+    let cacheProductKey = cacheKeys.product(product_id);
+    await this.cache.set(cacheProductKey, data);
+    await this.cache.saveCache(
+      cacheTables.product,
+      prefixCacheKey.productId,
+      cacheProductKey,
+    );
+  }
 }
