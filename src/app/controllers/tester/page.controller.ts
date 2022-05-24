@@ -5,6 +5,7 @@ import { PageService } from '../../services/page.service';
 import { UpdatePageDetailsPosition } from '../../dto/page-tester/update-pageDetailsPosition.dto';
 import { CreateOrUpdatePageDetailValueItemDto } from 'src/app/dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../../dto/page-tester/update-pageDetailValuesPosition.dto';
+import { Response } from 'express';
 @Controller('web-tester/v1/pages')
 export class PageControllerTester extends BaseController {
   constructor(private service: PageService) {
