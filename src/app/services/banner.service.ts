@@ -152,13 +152,6 @@ export class bannerService {
     slug = slug || '/';
     device_type = device_type || 'D';
 
-    let bannerCacheKey = cacheKeys.banners(
-      convertQueryParamsIntoCachedString(params),
-    );
-    let bannerResult = await this.cache.get(bannerCacheKey);
-    if (bannerResult) {
-      return bannerResult;
-    }
     let banners;
     if (target_id && location_id) {
       banners = await this.bannerRepo.find({
@@ -224,21 +217,15 @@ export class bannerService {
       }
     }
 
-    await this.cache.set(bannerCacheKey, _banners);
-    await this.cache.saveCache(
-      cacheTables.banner,
-      prefixCacheKey.bannerId,
-      bannerCacheKey,
-    );
     return _banners;
   }
 
   async getLocationsList() {
     let bannerLocationsCacheKey = cacheKeys.bannerLocations;
     let bannerLocationResult = await this.cache.get(bannerLocationsCacheKey);
-    if (bannerLocationResult) {
-      return bannerLocationResult;
-    }
+    // if (bannerLocationResult) {
+    //   return bannerLocationResult;
+    // }
 
     bannerLocationResult = await this.bannerLocationsDescRepo.find();
     return bannerLocationResult;
@@ -252,9 +239,9 @@ export class bannerService {
       convertQueryParamsIntoCachedString(params),
     );
     let bannerTargetCacheResult = await this.cache.get(bannerTargetKeys);
-    if (bannerTargetCacheResult) {
-      return bannerTargetCacheResult;
-    }
+    // if (bannerTargetCacheResult) {
+    //   return bannerTargetCacheResult;
+    // }
 
     let targetsList = await this.bannerTargetDescRepo.find({
       select: '*',
@@ -284,12 +271,12 @@ export class bannerService {
       data: targetsList,
     };
 
-    await this.cache.set(bannerTargetKeys, bannerTargetCacheResult);
-    await this.cache.saveCache(
-      cacheTables.banner,
-      prefixCacheKey.bannerTargets,
-      bannerTargetKeys,
-    );
+    // await this.cache.set(bannerTargetKeys, bannerTargetCacheResult);
+    // await this.cache.saveCache(
+    //   cacheTables.banner,
+    //   prefixCacheKey.bannerTargets,
+    //   bannerTargetKeys,
+    // );
 
     return bannerTargetCacheResult;
   }
@@ -421,9 +408,9 @@ export class bannerService {
       convertQueryParamsIntoCachedString(params),
     );
     let bannerCacheResult = await this.cache.get(bannerCacheKey);
-    if (bannerCacheResult) {
-      return bannerCacheResult;
-    }
+    // if (bannerCacheResult) {
+    //   return bannerCacheResult;
+    // }
 
     if (type) {
       bannerItems = await this.bannerItemRepo.find({

@@ -755,9 +755,9 @@ export class CategoryService {
       convertQueryParamsIntoCachedString(params),
     );
     let cacheResult = await this.cache.get(categoryCacheKey);
-    if (cacheResult) {
-      return cacheResult;
-    }
+    // if (cacheResult) {
+    //   return cacheResult;
+    // }
     const result = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
@@ -1094,9 +1094,8 @@ export class CategoryService {
   }
 
   async getAll(level = Infinity) {
-    // let categoryCacheKey = cacheKeys.categoryLevel(level);
-    // let categoryCacheResult = await this.cache.get(categoryCacheKey);
-    // let categoryCacheResult ;
+    let categoryCacheKey = cacheKeys.categoryLevel(level);
+    let categoryCacheResult = await this.cache.get(categoryCacheKey);
 
     // if (categoryCacheResult) {
     //   return categoryCacheResult;
@@ -1115,12 +1114,12 @@ export class CategoryService {
       category = categoriesList;
     }
 
-    // await this.cache.set(categoryCacheKey, categories);
-    // await this.cache.saveCache(
-    //   cacheTables.category,
-    //   prefixCacheKey.categoriesLevel,
-    //   categoryCacheKey,
-    // );
+    await this.cache.set(categoryCacheKey, categories);
+    await this.cache.saveCache(
+      cacheTables.category,
+      prefixCacheKey.categoriesLevel,
+      categoryCacheKey,
+    );
 
     return categories;
   }
@@ -1137,9 +1136,9 @@ export class CategoryService {
       `${id}${convertQueryParamsIntoCachedString(params)}`,
     );
     let categoryCacheResult = await this.cache.get(categoryCacheKey);
-    if (categoryCacheResult) {
-      return categoryCacheResult;
-    }
+    // if (categoryCacheResult) {
+    //   return categoryCacheResult;
+    // }
     let category = await this.categoryRepository.findOne({
       select: ['*'],
       join: {

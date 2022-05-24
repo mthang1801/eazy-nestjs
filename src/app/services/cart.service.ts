@@ -70,9 +70,9 @@ export class CartService {
   async get(user_id) {
     let cartCacheKey = cacheKeys.cart(user_id);
     let cartCacheResult = await this.cache.get(cartCacheKey);
-    if (cartCacheResult) {
-      return cartCacheResult;
-    }
+    // if (cartCacheResult) {
+    //   return cartCacheResult;
+    // }
     const cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng.', 404);

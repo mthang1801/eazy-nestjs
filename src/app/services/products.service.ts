@@ -4106,13 +4106,13 @@ export class ProductService {
       cacheKey = cacheKeys.product(product.product_id);
       let cacheResult = await this.cache.get(cacheKey);
 
-      if (cacheResult) {
-        this.productRepo.update(
-          { product_id: product.product_id },
-          { view_count: product.view_count + 1 },
-        );
-        return cacheResult;
-      }
+      // if (cacheResult) {
+      //   this.productRepo.update(
+      //     { product_id: product.product_id },
+      //     { view_count: product.view_count + 1 },
+      //   );
+      //   return cacheResult;
+      // }
     }
 
     product = await this.productRepo.findOne({

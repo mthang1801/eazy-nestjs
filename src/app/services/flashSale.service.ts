@@ -105,9 +105,9 @@ export class FlashSalesService {
   async FEget() {
     let cacheKey = cacheKeys.flashSaleFE;
     let flashSaleResult = await this.cache.get(cacheKey);
-    if (flashSaleResult) {
-      return flashSaleResult;
-    }
+    // if (flashSaleResult) {
+    //   return flashSaleResult;
+    // }
     let flashSale = await this.flashSaleRepo.findOne({
       status: 'A',
       end_at: MoreThanOrEqual(formatStandardTimeStamp()),
@@ -181,9 +181,9 @@ export class FlashSalesService {
   async CMSget(flash_sale_id) {
     let flashSaleCacheKey = cacheKeys.flashSale(flash_sale_id);
     let flashSaleCacheResult = await this.cache.get(flashSaleCacheKey);
-    if (flashSaleCacheResult) {
-      return flashSaleCacheResult;
-    }
+    // if (flashSaleCacheResult) {
+    //   return flashSaleCacheResult;
+    // }
 
     let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
     if (!flashSale) {
