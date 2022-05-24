@@ -8,14 +8,11 @@ import {
 } from 'class-validator';
 
 export class CreatePageDto {
-  @IsOptional()
-  page_id: number;
-
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   page_name: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsNumber()
   page_type: number = 1;
 
@@ -35,7 +32,7 @@ export class CreatePageDto {
 }
 
 class PageDetail {
-  @IsOptional()
+  @IsNotEmpty()
   module_name: string;
 
   @IsOptional()

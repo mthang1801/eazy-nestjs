@@ -27,7 +27,7 @@ export class PageController extends BaseController {
     super();
   }
   @Post()
-  async createOrUpdatePage(
+  async createPage(
     @Res() res: Response,
     @Body() data: CreatePageDto,
   ): Promise<IResponse> {
@@ -41,20 +41,12 @@ export class PageController extends BaseController {
     @Res() res: Response,
     @Body() data: UpdatePageDto,
   ): Promise<IResponse> {
-    // await this.service.updatePage(page_id, data);
-    return this.responseSuccess(res);
-  }
-
-  @Post('page-details')
-  async createOrUpdatePageDetails(
-    @Res() res: Response,
-    @Body() data: CreatePageDetailItemDto,
-  ) {
+    await this.service.updatePage(page_id, data);
     return this.responseSuccess(res);
   }
 
   @Post('/:page_id/page-details')
-  async createOrPageDetail(
+  async createPageDetail(
     @Res() res: Response,
     @Body() data: CreatePageDetailDto,
     @Param('page_id') page_id: number,
