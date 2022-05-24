@@ -1649,8 +1649,6 @@ export class ProductService {
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
 
-    console.log(categoriesList);
-
     let { search, variant_ids } = params;
 
     let { page, skip, limit } = getPageSkipLimit(params);
