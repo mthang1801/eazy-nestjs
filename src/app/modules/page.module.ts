@@ -4,9 +4,10 @@ import { PageService } from '../services/page.service';
 import { PageRepository } from '../repositories/page.repository';
 import { PageDetailRepository } from '../repositories/pageDetail.repository';
 import { PageDetailValueRepository } from '../repositories/pageDetailValue.repository';
+import { PageControllerTester } from '../controllers/tester/page.controller';
 
 @Module({
-  controllers: [PageController],
+  controllers: [PageController, PageControllerTester],
   providers: [
     PageService,
     PageRepository,
