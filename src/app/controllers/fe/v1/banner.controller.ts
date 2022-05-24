@@ -16,10 +16,4 @@ export class bannerController extends BaseController {
     const banners = await this.service.getListFE(params);
     return this.responseSuccess(res, banners);
   }
-
-  @Get('/slug')
-  async getBySlug(@Res() res, @Query() params): Promise<IResponse> {
-    const result = await this.service.getBySlug(params);
-    return this.responseSuccess(res, result);
-  }
 }

@@ -39,7 +39,11 @@ import {
   convertQueryParamsIntoCachedString,
 } from '../../utils/helper';
 import { MoreThan, Not, Equal } from '../../database/operators/operators';
-import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
+import {
+  cacheKeys,
+  cacheTables,
+  prefixCacheKey,
+} from '../../constants/cache.constant';
 import { RedisCacheService } from './redisCache.service';
 import {
   Between,
@@ -151,6 +155,10 @@ export class bannerService {
     let { slug, device_type, target_id, location_id } = params;
     slug = slug || '/';
     device_type = device_type || 'D';
+    let bannersCacheResult = await this.cache.getBanners(params);
+    if (bannersCacheResult) {
+      return bannersCacheResult;
+    }
 
     let banners;
     if (target_id && location_id) {
@@ -217,31 +225,18 @@ export class bannerService {
       }
     }
 
+    await this.cache.setBanners(params, _banners);
+
     return _banners;
   }
 
   async getLocationsList() {
-    let bannerLocationsCacheKey = cacheKeys.bannerLocations;
-    let bannerLocationResult = await this.cache.get(bannerLocationsCacheKey);
-    // if (bannerLocationResult) {
-    //   return bannerLocationResult;
-    // }
-
-    bannerLocationResult = await this.bannerLocationsDescRepo.find();
-    return bannerLocationResult;
+    return this.bannerLocationsDescRepo.find();
   }
 
   async getTargetsList(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search } = params;
-
-    let bannerTargetKeys = cacheKeys.bannerTargets(
-      convertQueryParamsIntoCachedString(params),
-    );
-    let bannerTargetCacheResult = await this.cache.get(bannerTargetKeys);
-    // if (bannerTargetCacheResult) {
-    //   return bannerTargetCacheResult;
-    // }
 
     let targetsList = await this.bannerTargetDescRepo.find({
       select: '*',
@@ -262,7 +257,7 @@ export class bannerService {
       },
     });
 
-    bannerTargetCacheResult = {
+    return {
       paging: {
         pageSize: limit,
         currentPage: page,
@@ -270,15 +265,6 @@ export class bannerService {
       },
       data: targetsList,
     };
-
-    // await this.cache.set(bannerTargetKeys, bannerTargetCacheResult);
-    // await this.cache.saveCache(
-    //   cacheTables.banner,
-    //   prefixCacheKey.bannerTargets,
-    //   bannerTargetKeys,
-    // );
-
-    return bannerTargetCacheResult;
   }
 
   async getById(id: number, params = { page: 1, limit: 50 }) {
@@ -398,71 +384,6 @@ export class bannerService {
     await this.bannerRepo.delete({ banner_id });
     await this.bannerDescriptionRepo.delete({ banner_id });
     await this.bannerItemRepo.delete({ banner_id });
-  }
-
-  async getBySlug(params) {
-    let { type, slug } = params;
-    let bannerItems;
-
-    let bannerCacheKey = cacheKeys.banners(
-      convertQueryParamsIntoCachedString(params),
-    );
-    let bannerCacheResult = await this.cache.get(bannerCacheKey);
-    // if (bannerCacheResult) {
-    //   return bannerCacheResult;
-    // }
-
-    if (type) {
-      bannerItems = await this.bannerItemRepo.find({
-        select: '*',
-        join: bannerItemsJoiner,
-        where: { page_url: slug, page_type: type },
-      });
-    } else {
-      bannerItems = await this.bannerItemRepo.find({
-        select: '*',
-        join: bannerItemsJoiner,
-        where: { page_url: slug },
-      });
-    }
-
-    if (!bannerItems.length) {
-      return bannerItems;
-    }
-
-    let result = [];
-    for (let bannerItem of bannerItems) {
-      bannerItem['image'] = null;
-      const bannerImageLink = await this.imageLinkRepo.findOne({
-        object_id: bannerItem.banner_id,
-        object_type: ImageObjectType.BANNER,
-      });
-      if (bannerImageLink) {
-        const bannerImage = await this.imageRepo.findOne({
-          image_id: bannerImageLink.image_id,
-        });
-        bannerItem['image'] = { ...bannerImageLink, ...bannerImage };
-      }
-
-      let banner = await this.bannerRepo.findOne({
-        select: '*',
-        join: bannerJoiner,
-        where: { [`${Table.BANNER}.banner_id`]: bannerItem['banner_id'] },
-      });
-
-      if (banner) {
-        result = [...result, { ...bannerItem, ...banner }];
-      }
-    }
-
-    await this.cache.set(bannerCacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.banner,
-      prefixCacheKey.banners,
-      bannerCacheKey,
-    );
-
-    return result;
   }
 
   async getAllBannerTarget() {

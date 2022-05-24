@@ -34,7 +34,7 @@ import {
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
-import { cacheKeys, cacheTables } from '../../constants/cache';
+import { cacheKeys, cacheTables } from '../../constants/cache.constant';
 import { RedisCacheService } from './redisCache.service';
 
 @Injectable()

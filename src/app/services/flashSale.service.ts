@@ -28,7 +28,11 @@ import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
 import { formatStandardTimeStamp } from '../../utils/helper';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewEntity } from '../entities/review.entity';
-import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
+import {
+  cacheKeys,
+  cacheTables,
+  prefixCacheKey,
+} from '../../constants/cache.constant';
 import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
@@ -103,11 +107,12 @@ export class FlashSalesService {
   }
 
   async FEget() {
-    let cacheKey = cacheKeys.flashSaleFE;
-    let flashSaleResult = await this.cache.get(cacheKey);
-    // if (flashSaleResult) {
-    //   return flashSaleResult;
-    // }
+    let flashSaleCacheResult = await this.cache.getFlashSaleWebsite();
+
+    if (flashSaleCacheResult) {
+      return flashSaleCacheResult;
+    }
+
     let flashSale = await this.flashSaleRepo.findOne({
       status: 'A',
       end_at: MoreThanOrEqual(formatStandardTimeStamp()),
@@ -168,16 +173,10 @@ export class FlashSalesService {
           : [flashSaleDetailItem];
       }
     }
-
-    flashSaleResult = flashSale;
-    await this.cache.set(cacheKey, flashSaleResult);
-    await this.cache.saveCache(
-      cacheTables.flashSale,
-      prefixCacheKey.flasSale,
-      cacheKey,
-    );
+    await this.cache.setFlashSaleWebSite(flashSale);
     return flashSale;
   }
+
   async CMSget(flash_sale_id) {
     let flashSaleCacheKey = cacheKeys.flashSale(flash_sale_id);
     let flashSaleCacheResult = await this.cache.get(flashSaleCacheKey);
@@ -229,12 +228,6 @@ export class FlashSalesService {
       }
     }
 
-    await this.cache.set(flashSaleCacheKey, flashSale);
-    await this.cache.saveCache(
-      cacheTables.flashSale,
-      prefixCacheKey.flasSale,
-      flashSaleCacheKey,
-    );
     return flashSale;
   }
 

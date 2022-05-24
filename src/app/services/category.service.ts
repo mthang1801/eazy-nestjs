@@ -85,7 +85,11 @@ import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.rep
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
 import { categoryFeatureJoiner } from '../../utils/joinTable';
 import { RedisCacheService } from './redisCache.service';
-import { cacheKeys, prefixCacheKey, cacheTables } from '../../constants/cache';
+import {
+  cacheKeys,
+  prefixCacheKey,
+  cacheTables,
+} from '../../constants/cache.constant';
 import { CacheRepository } from '../repositories/cache.repository';
 import { CacheEntity } from '../entities/cache.entity';
 @Injectable()
@@ -751,25 +755,17 @@ export class CategoryService {
   }
 
   async getListFE(params: any = {}) {
-    const categoryCacheKey = cacheKeys.categories(
-      convertQueryParamsIntoCachedString(params),
-    );
-    let cacheResult = await this.cache.get(categoryCacheKey);
-    // if (cacheResult) {
-    //   return cacheResult;
-    // }
+    let cacheResult = await this.cache.getCategoriesList(params);
+    if (cacheResult) {
+      return cacheResult;
+    }
     const result = await this.categoryRepository.find({
       select: '*',
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.status`]: 'A' },
     });
 
-    await this.cache.set(categoryCacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.category,
-      prefixCacheKey.categories,
-      categoryCacheKey,
-    );
+    await this.cache.setCategoriesList(params, result);
     return result;
   }
 

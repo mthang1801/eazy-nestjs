@@ -231,7 +231,11 @@ import {
   productListInCategoryJoiner,
 } from '../../utils/joinTable';
 import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
-import { cacheKeys, cacheTables, prefixCacheKey } from '../../constants/cache';
+import {
+  cacheKeys,
+  cacheTables,
+  prefixCacheKey,
+} from '../../constants/cache.constant';
 import { convertQueryParamsIntoCachedString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
@@ -1621,11 +1625,23 @@ export class ProductService {
     const category = await this.categoryRepo.findOne({
       select: categorySelector,
       join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.slug`]: slug },
+      where: { [`${Table.CATEGORIES}.slug`]: slug.trim() },
     });
 
     if (!category) {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
+    }
+
+    let { search, variant_ids } = params;
+
+    let { page, skip, limit } = getPageSkipLimit(params);
+
+    let categoryCacheResult = await this.cache.getCategoryById(
+      category.category_id,
+      params,
+    );
+    if (categoryCacheResult) {
+      return categoryCacheResult;
     }
 
     let categoryId = category.category_id;
@@ -1648,10 +1664,6 @@ export class ProductService {
       +categoryId,
       ..._.map(categoriesListByLevel, 'category_id'),
     ];
-
-    let { search, variant_ids } = params;
-
-    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterOrder = [
       {
@@ -1739,18 +1751,6 @@ export class ProductService {
     productsList = _.uniqBy(productsList, 'product_id');
 
     for (let productItem of productsList) {
-      // get images
-      // const productImageLink = await this.imageLinkRepo.findOne({
-      //   object_id: productItem.product_id,
-      //   object_type: ImageObjectType.PRODUCT,
-      // });
-      // if (productImageLink) {
-      //   const productImage = await this.imageRepo.findOne({
-      //     image_id: productImageLink.image_id,
-      //   });
-      //   productItem['image'] = { ...productImageLink, ...productImage };
-      // }
-
       //find product Stickers
       productItem['stickers'] = await this.getProductStickers(productItem);
 
@@ -1774,6 +1774,12 @@ export class ProductService {
       products: productsList,
       features,
     };
+
+    await this.cache.setCategoryById(
+      category['category_id'],
+      params,
+      categoryResult,
+    );
 
     return categoryResult;
   }
@@ -3880,6 +3886,12 @@ export class ProductService {
     limit = +limit || 10;
     let skip = (page - 1) * limit;
     let filterConditions = {};
+    let searchResult = await this.cache.getSearchProducts(q);
+
+    if (searchResult) {
+      return searchResult;
+    }
+
     if (category_ids) {
       filterConditions = {
         [`${Table.PRODUCTS_CATEGORIES}.category_id`]: category_ids
@@ -3904,7 +3916,10 @@ export class ProductService {
       limit,
     });
 
-    return { categoriesList, productsList };
+    searchResult = { categoriesList, productsList };
+    await this.cache.setSearchProducts(q, searchResult);
+
+    return searchResult;
   }
 
   async getProductsAmountFromStores() {
@@ -4102,19 +4117,6 @@ export class ProductService {
     let product = await this.productRepo.findOne({
       slug: slug.trim(),
     });
-    let cacheKey;
-    if (product) {
-      cacheKey = cacheKeys.product(product.product_id);
-      let cacheResult = await this.cache.get(cacheKey);
-
-      // if (cacheResult) {
-      //   this.productRepo.update(
-      //     { product_id: product.product_id },
-      //     { view_count: product.view_count + 1 },
-      //   );
-      //   return cacheResult;
-      // }
-    }
 
     product = await this.productRepo.findOne({
       select: productDetailSelector,
@@ -4130,6 +4132,13 @@ export class ProductService {
       { product_id: product.product_id },
       { view_count: product.view_count + 1 },
     );
+
+    const productCacheResult = await this.cache.getProductCacheById(
+      product.product_id,
+    );
+    if (productCacheResult) {
+      return productCacheResult;
+    }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
@@ -4256,6 +4265,7 @@ export class ProductService {
     result['images'] = await this.getProductImages(result.product_id);
 
     //============= Get Features ===============
+
     if (result['category_feature_id'] !== 0) {
       result['productFeatures'] = await this.getProductFeaturesByCategoryId(
         result['category_feature_id'],
@@ -4345,12 +4355,7 @@ export class ProductService {
       result['product_id'],
     );
 
-    await this.cache.set(cacheKey, result);
-    await this.cache.saveCache(
-      cacheTables.product,
-      prefixCacheKey.productId,
-      cacheKey,
-    );
+    await this.cache.setProductCacheById(result.product_id, result);
 
     return result;
   }
@@ -5165,7 +5170,7 @@ export class ProductService {
     await this.cache.set(cacheProductKey, data);
     await this.cache.saveCache(
       cacheTables.product,
-      prefixCacheKey.productId,
+      prefixCacheKey.product,
       cacheProductKey,
     );
   }

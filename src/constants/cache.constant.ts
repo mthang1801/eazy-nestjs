@@ -3,7 +3,7 @@ export const cacheKeys = {
   banner: (bannerId) => `banner-${bannerId}`,
   banners: (params) => `banners${params}`,
   productByCategorySlug: (categorySlug) => `cat-${categorySlug}`,
-  flashSaleFE: `flash-sale-fe`,
+  flashSaleWebsite: `flash-sale-website`,
   category: (categoryId) => `category-${categoryId}`,
   categories: (params) => `categories${params}`,
   categoryLevel: (level) => `categories-level-${level}`,
@@ -16,6 +16,7 @@ export const cacheKeys = {
   dashboardOverview: `dashboard-overview`,
   flashSale: (id) => `flashSale-${id}`,
   flashSales: (params) => `flashSale${params}`,
+  search: (q) => `search-${q}`,
 };
 
 export const cacheTables = {
@@ -27,6 +28,7 @@ export const cacheTables = {
   cart: 'Cart',
   dashboard: 'Dashboard',
   flashSale: 'Flash sale',
+  search: 'Search',
 };
 
 export const prefixCacheKey = {
@@ -34,13 +36,16 @@ export const prefixCacheKey = {
   categoriesLevel: 'categories-level',
   products: 'products',
   category: 'category',
+  categoryId: (categoryId) => `category-${categoryId}`,
   banner: 'banner',
   bannerId: 'banner',
-  productId: 'product',
+  product: 'product',
+  productId: (productId) => `product-${productId}`,
   banners: 'banners',
   bannerTargets: 'banner-targets',
   cart: 'cart',
   carts: 'carts',
   dashboard: 'dashboard',
-  flasSale: 'flashSale',
+  flashSale: 'flashSale',
+  search: 'search',
 };

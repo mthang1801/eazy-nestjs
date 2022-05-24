@@ -2,7 +2,16 @@ import { CACHE_MANAGER, Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { CacheEntity } from '../entities/cache.entity';
 import { CacheRepository } from '../repositories/cache.repository';
-import { prefixCacheKey } from '../../constants/cache';
+import { removeVietnameseTones, convertToSlug } from '../../utils/helper';
+import {
+  prefixCacheKey,
+  cacheKeys,
+  cacheTables,
+} from '../../constants/cache.constant';
+import {
+  convertIntoQueryParams,
+  convertQueryParamsIntoCachedString,
+} from '../../utils/helper';
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
@@ -62,7 +71,9 @@ export class RedisCacheService {
   async removeCache(tableName, prefixCacheKey = null, cacheKey = null) {
     if (cacheKey) {
       this.logger.error(`======= REMOVE CAHCE KEY [${cacheKey}]========`);
-      return this.delete(cacheKey);
+      await this.delete(cacheKey);
+      await this.cacheRepo.delete({ cache_key: cacheKey });
+      return;
     }
     if (prefixCacheKey && !tableName) {
       this.logger.error(`======= REMOVE PREFIX KEYS CACHE========`);
@@ -74,6 +85,7 @@ export class RedisCacheService {
           await this.delete(cache.cache_key);
         }
       }
+      await this.cacheRepo.delete({ prefix_cache_key: prefixCacheKey });
       return;
     }
     if (!prefixCacheKey && tableName) {
@@ -86,6 +98,7 @@ export class RedisCacheService {
           await this.delete(cache.cache_key);
         }
       }
+      await this.cacheRepo.delete({ table_name: tableName });
       return;
     }
 
@@ -96,6 +109,7 @@ export class RedisCacheService {
     if (caches.length) {
       for (let cache of caches) {
         await this.delete(cache.cache_key);
+        await this.cacheRepo.delete({ cache_key: cache.cache_key });
       }
     }
   }
@@ -107,7 +121,8 @@ export class RedisCacheService {
       }
     }
   }
-  async removeManyPrefixCachesKey(prefix_cache_key: string[] | string = []) {
+
+  async removeManyPrefixCachesKey(prefix_cache_key: string | string[] = []) {
     if (typeof prefix_cache_key == 'string')
       prefix_cache_key = [prefix_cache_key];
     if (prefix_cache_key.length) {
@@ -120,5 +135,146 @@ export class RedisCacheService {
         }
       }
     }
+  }
+
+  async getProductCacheById(product_id) {
+    let productCacheKey = cacheKeys.product(product_id);
+    let productCacheResult = await this.get(productCacheKey);
+    return productCacheResult;
+  }
+
+  async setProductCacheById(product_id, data) {
+    let productCacheKey = cacheKeys.product(product_id);
+    await this.set(productCacheKey, data);
+    await this.saveCache(
+      cacheTables.product,
+      prefixCacheKey.productId(product_id),
+      productCacheKey,
+    );
+  }
+
+  async getProductCacheList(params) {
+    let productCacheListKey = cacheKeys.products(
+      convertQueryParamsIntoCachedString(params),
+    );
+    let productCacheResult = await this.get(productCacheListKey);
+    return productCacheResult;
+  }
+
+  async setProductCacheList(params, data) {
+    let productCacheListKey = cacheKeys.products(
+      convertQueryParamsIntoCachedString(params),
+    );
+    await this.set(productCacheListKey, data);
+    await this.saveCache(
+      cacheTables.product,
+      prefixCacheKey.products,
+      productCacheListKey,
+    );
+  }
+
+  async getCategoriesList(params) {
+    let categoriesListKey = cacheKeys.categories(
+      convertQueryParamsIntoCachedString(params),
+    );
+    return this.get(categoriesListKey);
+  }
+
+  async setCategoriesList(params, data) {
+    let categoriesListKey = cacheKeys.categories(
+      convertQueryParamsIntoCachedString(params),
+    );
+    await this.set(categoriesListKey, data);
+    await this.saveCache(
+      cacheTables.category,
+      prefixCacheKey.categories,
+      categoriesListKey,
+    );
+  }
+
+  async getCategoryById(category_id, params) {
+    let queryParameters = `${category_id}${convertQueryParamsIntoCachedString(
+      params,
+    )}`;
+    let categoryCacheKey = cacheKeys.category(queryParameters);
+    return this.get(categoryCacheKey);
+  }
+
+  async setCategoryById(category_id, params, data) {
+    let queryParameters = `${category_id}${convertQueryParamsIntoCachedString(
+      params,
+    )}`;
+    let categoryCacheKey = cacheKeys.category(queryParameters);
+    await this.set(categoryCacheKey, data);
+    await this.saveCache(
+      cacheTables.category,
+      prefixCacheKey.categoryId(category_id),
+      categoryCacheKey,
+    );
+  }
+
+  async removeCartByUserId(user_id) {
+    let cartCacheKey = cacheKeys.cart(user_id);
+    await this.delete(cartCacheKey);
+  }
+
+  async setCartByUserId(user_id, data) {
+    let cartCacheKey = cacheKeys.cart(user_id);
+    await this.set(cartCacheKey, data);
+    await this.saveCache(cacheTables.cart, prefixCacheKey.cart, cartCacheKey);
+  }
+
+  async getCartByUserId(user_id) {
+    let cartCacheKey = cacheKeys.cart(user_id);
+    return this.get(cartCacheKey);
+  }
+
+  async getSearchProducts(q) {
+    let searchCacheKey = cacheKeys.search(convertToSlug(q));
+    return this.get(searchCacheKey);
+  }
+
+  async setSearchProducts(q, data) {
+    let searchCacheKey = cacheKeys.search(convertToSlug(q));
+    await this.set(searchCacheKey, data);
+    await this.saveCache(
+      cacheTables.search,
+      prefixCacheKey.search,
+      searchCacheKey,
+    );
+  }
+
+  async getBanners(params) {
+    let bannersCacheKey = cacheKeys.banners(
+      convertQueryParamsIntoCachedString(params),
+    );
+    return this.get(bannersCacheKey);
+  }
+
+  async setBanners(params, data) {
+    let bannersCacheKey = cacheKeys.banners(
+      convertQueryParamsIntoCachedString(params),
+    );
+    await this.set(bannersCacheKey, data);
+    await this.saveCache(
+      cacheTables.banner,
+      prefixCacheKey.banners,
+      bannersCacheKey,
+    );
+  }
+
+  async getFlashSaleWebsite() {
+    let flashSaleWebCacheKey = cacheKeys.flashSaleWebsite;
+    return this.get(flashSaleWebCacheKey);
+  }
+
+  async setFlashSaleWebSite(data) {
+    let flashSaleWebCacheKey = cacheKeys.flashSaleWebsite;
+    await this.set(flashSaleWebCacheKey, data);
+    await this.saveCache(
+      cacheTables.flashSale,
+      prefixCacheKey.flashSale,
+      flashSaleWebCacheKey,
+    );
   }
 }
