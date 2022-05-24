@@ -536,7 +536,7 @@ export class RoleService {
             `Bạn không được cấp quyền truy cập vào ${roleGroup.funct_name}`,
             roleGroup.funct_name,
           ],
-          401,
+          423,
         );
       }
       throw new HttpException(`Yêu cầu truy cập bị từ chối.`, 401);

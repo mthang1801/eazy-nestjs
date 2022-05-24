@@ -44,10 +44,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
           exception?.response ||
           exception.sqlMessage;
     }
+    let data = null;
+    if (
+      httpStatus === 423 &&
+      message &&
+      Array.isArray(message) &&
+      message.length == 2
+    ) {
+      data = message[1];
+      message = message[0];
+    }
 
     const responseBody = {
       statusCode: httpStatus,
-      data: null,
+      data,
       message,
       timestamp: new Date().toLocaleString(),
     };
