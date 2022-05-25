@@ -92,6 +92,7 @@ import {
 } from '../../utils/cache.utils';
 import { CacheRepository } from '../repositories/cache.repository';
 import { CacheEntity } from '../entities/cache.entity';
+import { convertCatelogoIntoCategory } from '../../utils/integrateFunctions';
 @Injectable()
 export class CategoryService {
   constructor(
@@ -1762,6 +1763,21 @@ export class CategoryService {
       };
 
       await this.catalogCategoryItemRepo.update({ item_id: id }, newItemData);
+    }
+  }
+
+  async migrateCatalogIntoCategory() {
+    const catalogsList = await this.catalogCategoryRepo.find({
+      select: '*',
+      join: catalogCategoryJoiner,
+    });
+
+    for (let [i, catalogItem] of catalogsList.entries()) {
+      let cvtData = convertCatelogoIntoCategory(catalogItem);
+      console.log(cvtData);
+      if (i > 10) {
+        break;
+      }
     }
   }
 }

@@ -4398,7 +4398,7 @@ export class ProductService {
   }
 
   async getChildrenProducts(product_appcore_id, role = 0) {
-    const childrenProducts = await this.productRepo.find({
+    let childrenProducts = await this.productRepo.find({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: {
@@ -4407,6 +4407,7 @@ export class ProductService {
     });
 
     if (childrenProducts.length) {
+      childrenProducts = _.unionBy(childrenProducts, 'product_id');
       for (let childProduct of childrenProducts) {
         // Get Features
         childProduct['productFeatures'] = await this.getProductFeatures(

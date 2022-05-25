@@ -1104,9 +1104,19 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
 
 export const convertCatelogoIntoCategory = (catalog) => {
   let category = {};
-  category['category_appcore_id'] = catalog['catalog_id'];
-  category['parent_appcore_id'] = catalog['parent_id'];
+  category['category_id'] = catalog['catalog_id'];
+  category['parent_id'] = catalog['parent_id'];
   category['position'] = catalog['position'];
   category['category_appcore'] = catalog['catalog_appcore_name'];
   category['category'] = catalog['catalog_name'];
+  category['level'] = catalog['level'] - 2;
+  category['slug'] = catalog['url_path'];
+  category['created_at'] = checkValidTimestamp(catalog['created_at'])
+    ? catalog['created_at']
+    : null;
+  category['updated_at'] = checkValidTimestamp(catalog['updated_at'])
+    ? catalog['updated_at']
+    : null;
+
+  return category;
 };

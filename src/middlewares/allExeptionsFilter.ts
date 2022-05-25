@@ -17,7 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const ctx = host.switchToHttp();
 
-    const httpStatus =
+    let httpStatus =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -33,10 +33,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
     switch (exception.name) {
       case 'TokenExpiredError':
-        message = 'Thời gian truy cập đã hết.';
+        message = 'Token đã hết hạn..';
+        httpStatus = 408;
         break;
       case 'ETIMEDOUT':
         message = 'Thời gian request quá lâu.';
+        httpStatus = 504;
         break;
       default:
         message =

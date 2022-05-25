@@ -46,4 +46,10 @@ export class CategorySyncController extends BaseController {
     await this.service.syncAccessoryCategories();
     return this.responseSuccess(res);
   }
+
+  @Post('/migrate-catalog')
+  async migrateCatalogIntoCategory(@Res() res: Response): Promise<IResponse> {
+    await this.service.migrateCatalogIntoCategory();
+    return this.responseSuccess(res);
+  }
 }
