@@ -1089,14 +1089,8 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
     status: coreData['status'] == 3 ? 'C' : coreData['status'] == 2 ? 'B' : 'A',
     note: coreData['note'],
     old_receipt_appcore_id: coreData['stockSlipCode'] || null,
-    created_at:
-      coreData['createdAt'] && checkValidTimestamp(coreData['createdAt'])
-        ? formatStandardTimeStamp(coreData['createdAt'])
-        : null,
-    updated_at:
-      coreData['updatedAt'] && checkValidTimestamp(coreData['updatedAt'])
-        ? formatStandardTimeStamp(coreData['updatedAt'])
-        : null,
+    created_at: formatStandardTimeStamp(),
+    updated_at: formatStandardTimeStamp(),
     type: coreData['typeTradeIn'],
   };
 

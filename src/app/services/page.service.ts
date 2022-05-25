@@ -636,7 +636,7 @@ export class PageService {
     data: CreateOrUpdatePageDetailValueItemDto,
   ) {
     if (data.value_id) {
-      const currentPageDetail = await this.pageDetailRepo.findOne({
+      const currentPageDetail = await this.pageDetailValueRepo.findOne({
         page_detail_id: data.page_detail_id,
         value_id: data.value_id,
       });

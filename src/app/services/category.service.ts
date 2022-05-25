@@ -1779,5 +1779,6 @@ export class CategoryService {
       let cvtData = convertCatelogoIntoCategory(catalogItem);
       await this.itgCreate(cvtData);
     }
+    await this.fillCategoriesIdPath();
   }
 }
