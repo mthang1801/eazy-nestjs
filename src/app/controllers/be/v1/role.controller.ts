@@ -96,8 +96,8 @@ export class RoleController extends BaseController {
 
   @Get()
   @UseGuards(AuthGuard)
-  async getGroupList(@Res() res: Response, @Query() params) {
-    const result = await this.service.getGroupList(params);
+  async getGroupList(@Res() res: Response, @Query() params, @Req() req) {
+    const result = await this.service.getGroupList(params, req.user);
     return this.responseSuccess(res, result);
   }
 

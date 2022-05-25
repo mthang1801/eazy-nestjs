@@ -981,11 +981,28 @@ export const tradeinOldReceiptJoiner = {
   },
 };
 
+export const userRoleFunctInfoJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.ROLE]: {
+      fieldJoin: `${Table.ROLE}.role_id`,
+      rootJoin: `${Table.USER_ROLES}.role_id`,
+    },
+    [Table.ROLE_FUNC]: {
+      fieldJoin: `${Table.ROLE_FUNC}.role_id`,
+      rootJoin: `${Table.USER_ROLES}.role_id`,
+    },
+    [Table.FUNC]: {
+      fieldJoin: `${Table.ROLE_FUNC}.funct_id`,
+      rootJoin: `${Table.FUNC}.funct_id`,
+    },
+  },
+};
+
 export const userRoleJoiner = {
   [JoinTable.innerJoin]: {
-    [Table.ROLE_FUNC]: {
-      fieldJoin: `${Table.ROLE_FUNC}.role_funct_id`,
-      rootJoin: `${Table.USER_ROLES}.role_funct_id`,
+    [Table.ROLE]: {
+      fieldJoin: `${Table.ROLE}.role_id`,
+      rootJoin: `${Table.USER_ROLES}.role_id`,
     },
   },
 };
@@ -1011,6 +1028,16 @@ export const roleFunctJoiner = {
     },
   },
 };
+
+// export const userRoleFunctJoiner = {
+//   [JoinTable.innerJoin]: {
+//     [Table.ROLE_FUNC]: {
+//       fieldJoin: `${Table.ROLE_FUNC}.role_funct_id`,
+//       rootJoin: `${Table.USER_ROLES}.role_funct_id`,
+//     },
+//   },
+// };
+
 export const userRoleFunctJoiner = {
   [JoinTable.leftJoin]: {
     [Table.USER_ROLES]: {
@@ -1069,6 +1096,15 @@ export const pageProgramDetailValueJoiner = {
     [Table.PAGE]: {
       fieldJoin: `${Table.PAGE}.page_id`,
       rootJoin: `${Table.PAGE_DETAIL}.page_id`,
+    },
+  },
+};
+
+export const productSEOJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCTS}.product_id`,
     },
   },
 };

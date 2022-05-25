@@ -248,7 +248,10 @@ import { DiscountProgramRepository } from '../repositories/discountProgram.repos
 import { DiscountProgramEntity } from '../entities/discountProgram.entity';
 import { DiscountProgramDetailRepository } from '../repositories/discountProgramDetail.repository';
 import { DiscountProgramDetailEntity } from '../entities/discountProgramDetail.entity';
-import { discountProgramDetailJoiner } from '../../utils/joinTable';
+import {
+  discountProgramDetailJoiner,
+  productSEOJoiner,
+} from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -552,7 +555,10 @@ export class ProductService {
     let product = await this.productRepo.findOne({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+      where: [
+        { [`${Table.PRODUCTS}.product_id`]: product_id },
+        { [`${Table.PRODUCTS}.product_appcore_id`]: product_id },
+      ],
     });
 
     if (!product) {
@@ -4365,6 +4371,16 @@ export class ProductService {
     await this.cache.setProductCacheById(result.product_id, result);
 
     return result;
+  }
+
+  async getBySlugSEO(slug) {
+    let product = await this.productRepo.findOne({
+      select: '*',
+      join: productSEOJoiner,
+      where: { slug: slug.trim() },
+    });
+
+    return product;
   }
 
   async getChildrenProducts(product_appcore_id, role = 0) {

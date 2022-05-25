@@ -36,6 +36,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get(':slug/seo')
+  async getSEO(
+    @Param('slug') slug: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getBySlugSEO(slug);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/:id/products-stores')
   async getProductsStores(
     @Param('id') id: string,
