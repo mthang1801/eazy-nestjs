@@ -34,7 +34,7 @@ import { DatabaseService } from '../../database/database.service';
 import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUserIP.repository';
 import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
 import { RedisCacheService } from './redisCache.service';
-import { cacheKeys } from '../../constants/cache.constant';
+import { cacheKeys } from '../../utils/cache.utils';
 
 @Injectable()
 export class ReviewsCommentService {

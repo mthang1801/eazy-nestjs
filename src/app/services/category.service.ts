@@ -89,7 +89,7 @@ import {
   cacheKeys,
   prefixCacheKey,
   cacheTables,
-} from '../../constants/cache.constant';
+} from '../../utils/cache.utils';
 import { CacheRepository } from '../repositories/cache.repository';
 import { CacheEntity } from '../entities/cache.entity';
 @Injectable()
@@ -168,6 +168,7 @@ export class CategoryService {
     await this.categoryFeatureRepo.delete({
       category_id: result['category_id'],
     });
+
     if (data.category_features && data.category_features.length) {
       for (let { feature_id, position, status } of data.category_features) {
         const checkExist = await this.categoryFeatureRepo.findOne({
@@ -191,7 +192,7 @@ export class CategoryService {
       }
     }
 
-    await this.cache.removeCache(cacheTables.category);
+    await this.cache.removeCachedCategoriesList();
 
     return result;
   }
@@ -355,8 +356,7 @@ export class CategoryService {
       }
     }
 
-    //======== remove cached category table ==============
-    await this.cache.removeCache(cacheTables.category);
+    await this.cache.removeCachedCategoryAfterUpdating(id);
 
     //======== remove cached product item which it belongs this category ==========
     const products = await this.productCategoryRepository.find({
@@ -364,8 +364,7 @@ export class CategoryService {
     });
     if (products.length) {
       for (let product of products) {
-        let productCacheKey = cacheKeys.product(product.product_id);
-        await this.cache.delete(productCacheKey);
+        await this.cache.removeCachedProductById(product.product_id);
       }
     }
 
@@ -599,8 +598,6 @@ export class CategoryService {
         await this.categoryFeatureRepo.create(categoryFeature);
       }
     }
-
-    await this.cache.removeCache(null, null, cacheKeys.category(id));
   }
 
   async updateLevelChildrenCategories(category_id) {
@@ -1260,7 +1257,7 @@ export class CategoryService {
       }
     }
     //============== remove cached category list  =================
-    await this.cache.removeCache(cacheTables.category);
+    await this.cache.removeCategriesList();
   }
 
   async delete(id: number): Promise<boolean> {

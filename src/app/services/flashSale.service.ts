@@ -32,7 +32,7 @@ import {
   cacheKeys,
   cacheTables,
   prefixCacheKey,
-} from '../../constants/cache.constant';
+} from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
 
 @Injectable()

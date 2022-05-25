@@ -8,7 +8,7 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
 import { DatabaseService } from '../../database/database.service';
 import { getProductsBestSeller } from '../../database/sqlQuery/others/reports/dashboard';
-import { cacheKeys } from '../../constants/cache.constant';
+import { cacheKeys } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
 import {
   getNumberCustomersMonthlyByYear,

@@ -17,6 +17,7 @@ export const cacheKeys = {
   flashSale: (id) => `flashSale-${id}`,
   flashSales: (params) => `flashSale${params}`,
   search: (q) => `search-${q}`,
+  functs: 'functs',
 };
 
 export const cacheTables = {
@@ -29,6 +30,7 @@ export const cacheTables = {
   dashboard: 'Dashboard',
   flashSale: 'Flash sale',
   search: 'Search',
+  functs: 'Functs',
 };
 
 export const prefixCacheKey = {
@@ -48,4 +50,5 @@ export const prefixCacheKey = {
   dashboard: 'dashboard',
   flashSale: 'flashSale',
   search: 'search',
+  functs: 'functs',
 };

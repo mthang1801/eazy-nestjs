@@ -16,7 +16,7 @@ import { productStickerJoiner } from 'src/utils/joinTable';
 import { UpdateProductDto } from '../dto/product/update-product.dto';
 import { UpdateProductStickerDto } from '../dto/sticker/update-productSticker.dto';
 import { RedisCacheService } from './redisCache.service';
-import { cacheKeys } from '../../constants/cache.constant';
+import { cacheKeys } from '../../utils/cache.utils';
 
 @Injectable()
 export class StickerService {

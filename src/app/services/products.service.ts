@@ -235,7 +235,7 @@ import {
   cacheKeys,
   cacheTables,
   prefixCacheKey,
-} from '../../constants/cache.constant';
+} from '../../utils/cache.utils';
 import { convertQueryParamsIntoCachedString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
@@ -1813,8 +1813,7 @@ export class ProductService {
     }
 
     //================== remove cached get product by categoryId =====================
-    let cachedCategoryKey = cacheKeys.category(category.category_id);
-    await this.cache.delete(cachedCategoryKey);
+    await this.cache.removeCategoryById(category.category_id);
 
     if (data.removed_products && data.removed_products.length) {
       for (let productId of data.removed_products) {
@@ -1898,11 +1897,8 @@ export class ProductService {
     // }
 
     //============ removed cached ==============
-    let cacheKey = cacheKeys.product(currentProduct.product_id);
-    await this.cache.delete(cacheKey);
-
-    let flashSaleKey = cacheTables.flashSale;
-    await this.cache.delete(flashSaleKey);
+    await this.cache.removeCachedProductById(currentProduct.product_id);
+    await this.cache.removeCachedFlashSale();
 
     if (currentProduct['parent_product_appcore_id']) {
       let parentProduct = await this.productRepo.findOne({
@@ -2007,14 +2003,16 @@ export class ProductService {
     });
     if (productrPrice) {
       const productPriceData = this.productPriceRepo.setData(data);
-      if (Object.entries(productPriceData).length) {
-        const updatedProductPrice = await this.productPriceRepo.update(
-          { product_id: result.product_id },
-          productPriceData,
-          true,
-        );
-        result = { ...result, ...updatedProductPrice };
-      }
+
+      // if (Object.entries(productPriceData).length) {
+      //   const updatedProductPrice = await this.productPriceRepo.update(
+      //     { product_id: result.product_id },
+      //     productPriceData,
+      //     true,
+      //   );
+
+      //   result = { ...result, ...updatedProductPrice };
+      // }
     } else {
       const newProductPriceData = {
         ...new ProductPricesEntity(),
@@ -2034,13 +2032,6 @@ export class ProductService {
 
     if (oldCategories.length) {
       for (let oldCategoryItem of oldCategories) {
-        let cacheKey = cacheKeys.category(oldCategoryItem.category_id);
-        await this.cache.removeCache(
-          cacheTables.category,
-          prefixCacheKey.categories,
-          cacheKey,
-        );
-
         let category = await this.categoryRepo.findOne({
           category_id: oldCategoryItem.category_id,
         });
@@ -2049,10 +2040,7 @@ export class ProductService {
             { category_id: category.category_id },
             { product_count: category.product_count - 1 },
           );
-
-          //========== Remove cache in category containing product ==========
-          let categoryCacheKey = cacheKeys.category(category.category_id);
-          await this.cache.delete(categoryCacheKey);
+          await this.cache.removeCategoryById(category.category_id);
         }
       }
     }
@@ -2075,6 +2063,7 @@ export class ProductService {
           { category_id: categoryId },
           { product_count: currentCategory.product_count + 1 },
         );
+        await this.cache.removeCategoryById(newProductCategoryData.category_id);
       }
     }
 
@@ -4264,6 +4253,24 @@ export class ProductService {
     // get Image
     result['images'] = await this.getProductImages(result.product_id);
 
+    // Get Color, Size
+    if (result['color'] && !isNaN(+result['color'])) {
+      let featureColor = await this.productFeatureVariantRepo.findOne({
+        variant_code: result['color'],
+      });
+      if (featureColor) {
+        result['color'] = featureColor['variant'];
+      }
+    }
+    if (result['size'] && !isNaN(+result['size'])) {
+      let featureSize = await this.productFeatureVariantRepo.findOne({
+        variant_code: result['size'],
+      });
+      if (featureSize) {
+        result['size'] = featureSize['variant'];
+      }
+    }
+
     //============= Get Features ===============
 
     if (result['category_feature_id'] !== 0) {
@@ -4405,6 +4412,24 @@ export class ProductService {
               childProduct['warranty_package_id'],
               role,
             );
+        }
+
+        // Get Color, Size
+        if (childProduct['color'] && !isNaN(+childProduct['color'])) {
+          let featureColor = await this.productFeatureVariantRepo.findOne({
+            variant_code: childProduct['color'],
+          });
+          if (featureColor) {
+            childProduct['color'] = featureColor['variant'];
+          }
+        }
+        if (childProduct['size'] && !isNaN(+childProduct['size'])) {
+          let featureSize = await this.productFeatureVariantRepo.findOne({
+            variant_code: childProduct['size'],
+          });
+          if (featureSize) {
+            childProduct['size'] = featureSize['variant'];
+          }
         }
 
         childProduct['discount_programs'] =
@@ -4608,7 +4633,10 @@ export class ProductService {
     return this.discountProgramDetailRepo.findOne({
       select: '*',
       join: discountProgramDetailJoiner,
-      where: { [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]: product_id },
+      where: {
+        [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]: product_id,
+        [`${Table.DISCOUNT_PROGRAM}.status`]: 'A',
+      },
       orderBy: [
         { field: `${Table.DISCOUNT_PROGRAM}.created_at`, sortBy: SortBy.DESC },
       ],

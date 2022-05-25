@@ -43,7 +43,7 @@ import {
   cacheKeys,
   cacheTables,
   prefixCacheKey,
-} from '../../constants/cache.constant';
+} from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
 import {
   Between,
@@ -333,7 +333,8 @@ export class bannerService {
       }
     }
     //============== remove cached banner  =================
-    await this.cache.removeCache(cacheTables.banner);
+    await this.cache.removeAllCachedBanners();
+
     return this.getById(newBanner.banner_id);
   }
 
@@ -353,7 +354,6 @@ export class bannerService {
       throw new HttpException('Vị trí bị trùng trên trang', 400);
     }
     //============== remove cached banner  =================
-    await this.cache.removeCache(cacheTables.banner);
 
     const bannerData = this.bannerRepo.setData({
       ...data,
@@ -376,7 +376,8 @@ export class bannerService {
       }
     }
 
-    await this.cache.removeCache(cacheTables.banner);
+    await this.cache.removeAllCachedBanners();
+
     return this.getById(id);
   }
 

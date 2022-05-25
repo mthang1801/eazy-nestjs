@@ -7,7 +7,7 @@ import {
   prefixCacheKey,
   cacheKeys,
   cacheTables,
-} from '../../constants/cache.constant';
+} from '../../utils/cache.utils';
 import {
   convertIntoQueryParams,
   convertQueryParamsIntoCachedString,
@@ -276,5 +276,56 @@ export class RedisCacheService {
       prefixCacheKey.flashSale,
       flashSaleWebCacheKey,
     );
+  }
+
+  async removeAllCachedBanners() {
+    let bannersCache = await this.cacheRepo.find({
+      table_name: cacheTables.banner,
+    });
+    if (bannersCache) {
+      for (let bannerCacheItem of bannersCache) {
+        await this.delete(bannerCacheItem.cache_key);
+        await this.cacheRepo.delete({ table_name: cacheTables.banner });
+      }
+    }
+  }
+
+  async removeCachedCategoriesList() {
+    let prefixCategoriesKey = prefixCacheKey.categories;
+    await this.removeCache(null, prefixCategoriesKey);
+    await this.cacheRepo.delete({ prefix_cache_key: prefixCategoriesKey });
+  }
+
+  async removeCachedCategoryAfterUpdating(category_id) {
+    let categoryCacheKey = cacheKeys.category(category_id);
+    await this.delete(categoryCacheKey);
+    await this.cacheRepo.delete({ cache_key: categoryCacheKey });
+  }
+
+  async removeCategoryById(category_id) {
+    let categoryByIdPrefix = prefixCacheKey.categoryId(category_id);
+    await this.removeCache(null, categoryByIdPrefix);
+    await this.cacheRepo.delete({ prefix_cache_key: categoryByIdPrefix });
+  }
+
+  async removeCategriesList() {
+    let categoryPrefixKey = prefixCacheKey.categories;
+    await this.removeCache(null, categoryPrefixKey);
+    await this.cacheRepo.delete({ prefix_cache_key: categoryPrefixKey });
+    let categoryLevelPrefixKey = prefixCacheKey.categoriesLevel;
+    await this.removeCache(null, categoryLevelPrefixKey);
+    await this.cacheRepo.delete({ prefix_cache_key: categoryLevelPrefixKey });
+  }
+
+  async removeCachedProductById(product_id) {
+    let productCacheKey = cacheKeys.product(product_id);
+    await this.delete(productCacheKey);
+    await this.cacheRepo.delete({ cache_key: productCacheKey });
+  }
+
+  async removeCachedFlashSale() {
+    let flashsaleCacheTableName = cacheTables.flashSale;
+    await this.removeCache(flashsaleCacheTableName);
+    await this.cacheRepo.delete({ table_name: flashsaleCacheTableName });
   }
 }

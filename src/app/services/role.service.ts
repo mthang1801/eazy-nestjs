@@ -520,7 +520,7 @@ export class RoleService {
         [`${Table.FUNC}.be_route`]: path,
       },
     });
-    console.log(roleGroup);
+
     if (!roleGroup) {
       roleGroup = await this.roleFunctRepo.findOne({
         select: '*',
