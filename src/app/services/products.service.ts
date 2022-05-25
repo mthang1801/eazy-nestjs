@@ -2857,6 +2857,8 @@ export class ProductService {
       }
     }
 
+    await this.cache.removeRelatedServicesWithCachedProduct(product.product_id);
+
     await this.checkProductGroupAndPrice(convertedData);
     // await this.requestIntegrateParentProduct();
   }
@@ -2893,6 +2895,8 @@ export class ProductService {
     const product = await this.productRepo.findOne({
       where: [{ product_code: sku }, { product_id: sku }],
     });
+
+    await this.cache.removeRelatedServicesWithCachedProduct(product.product_id);
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -3034,6 +3038,8 @@ export class ProductService {
       throw new HttpException('Không tìm thấy SP', 404);
     }
 
+    await this.cache.removeRelatedServicesWithCachedProduct(product_id);
+
     try {
       let data = new FormData();
       data.append('files', fs.createReadStream(file.path));
@@ -3093,7 +3099,6 @@ export class ProductService {
     identifier: string | number,
     data: DeleteProductImageDto,
   ): Promise<string> {
-    console.log(identifier);
     const product = await this.productRepo.findOne({
       select: '*',
       where: [{ product_code: identifier }, { product_id: identifier }],
@@ -3118,6 +3123,8 @@ export class ProductService {
         response.push(imageId);
       }
     }
+
+    await this.cache.removeRelatedServicesWithCachedProduct(product.product_id);
 
     if (response.length) {
       return `[Warning]: Xoá không thành công những ảnh có id : ${response.join(
@@ -4833,7 +4840,6 @@ export class ProductService {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",
     // };
-
     // try {
     //   const response = await axios(config);
     //   const data = { error_code: response.status, method: response.config.method, source_url: response.config.url }
@@ -4858,56 +4864,52 @@ export class ProductService {
     // var hw = cryptography.encrypt('30512');
     // console.log(hw);
     // let cryptography1 = new Cryptography();
-
-    await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: [
-        {
-          $or: [
-            // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
-            {
-              $and: [
-                { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-                { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-                // {
-                //   $or: [
-                //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-                //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-                //   ],
-                // },
-              ],
-            },
-
-            { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
-
-            // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
-            // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
-            // {
-            //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
-            // },
-
-            // {
-            //   $and: [
-            //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-            //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-            //     {
-            //       $or: [
-            //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-            //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-            //       ],
-            //     },
-            //     {
-            //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
-            //         1, 2, 3, 4, 5, 6, 7,
-            //       ]),
-            //     },
-            //   ],
-            // },
-          ],
-        },
-      ],
-    });
+    // await this.productRepo.findOne({
+    //   select: '*',
+    //   join: productLeftJoiner,
+    //   where: [
+    //     {
+    //       $or: [
+    //         // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
+    //         {
+    //           $and: [
+    //             { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+    //             { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+    //             // {
+    //             //   $or: [
+    //             //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+    //             //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+    //             //   ],
+    //             // },
+    //           ],
+    //         },
+    //         { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
+    //         // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
+    //         // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
+    //         // {
+    //         //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
+    //         // },
+    //         // {
+    //         //   $and: [
+    //         //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+    //         //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+    //         //     {
+    //         //       $or: [
+    //         //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+    //         //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+    //         //       ],
+    //         //     },
+    //         //     {
+    //         //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
+    //         //         1, 2, 3, 4, 5, 6, 7,
+    //         //       ]),
+    //         //     },
+    //         //   ],
+    //         // },
+    //       ],
+    //     },
+    //   ],
+    // });
   }
 
   async autoFillPriceIntoConfigurableProducts() {

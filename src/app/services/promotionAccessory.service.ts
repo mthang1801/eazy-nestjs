@@ -236,8 +236,9 @@ export class PromotionAccessoryService {
       );
       // ======= Remove product cache =========
       for (let oldPromotionProduct of oldPromotionProducts) {
-        let productCacheKey = cacheKeys.product(oldPromotionProduct.product_id);
-        await this.cache.delete(productCacheKey);
+        await this.cache.removeRelatedServicesWithCachedProduct(
+          oldPromotionProduct.product_id,
+        );
       }
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
@@ -245,10 +246,6 @@ export class PromotionAccessoryService {
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
         });
-
-        //============== remove new promotion product cache ==============
-        let productCacheKey = cacheKeys.product(product.product_id);
-        await this.cache.delete(productCacheKey);
 
         const newProductData = {
           ...new PromotionAccessoryDetailEntity(),
@@ -259,6 +256,11 @@ export class PromotionAccessoryService {
           accessory_id: accessory_id,
         };
         await this.promoAccessoryDetailRepo.create(newProductData, false);
+
+        //============== remove new promotion product cache ==============
+        await this.cache.removeRelatedServicesWithCachedProduct(
+          product.product_id,
+        );
       }
     }
 
@@ -285,6 +287,7 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [productFieldNameByAccessory]: accessory_id },
         );
+        await this.cache.removeRelatedServicesWithCachedProduct(productId);
       }
     }
   }

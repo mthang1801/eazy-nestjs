@@ -20,6 +20,7 @@ import {
   prefixCacheKey,
 } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
+import * as _ from 'lodash';
 @Injectable()
 export class CartService {
   constructor(
@@ -69,11 +70,13 @@ export class CartService {
 
     let result = { ...cart };
 
-    const cartItems = await this.cartRepo.find({
+    let cartItems = await this.cartRepo.find({
       select: `*, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCTS}.slug as productSlug, ${Table.CART_ITEMS}.amount`,
       join: cartJoiner,
       where: { [`${Table.CART}.cart_id`]: result.cart_id },
     });
+
+    cartItems = _.unionBy(cartItems, 'product_id');
 
     const totalAmount = cartItems.length;
     result['totalAmount'] = totalAmount;
@@ -83,21 +86,6 @@ export class CartService {
       0,
     );
     result['totalPrice'] = totalPrice;
-
-    for (let cartItem of cartItems) {
-      cartItem['image'] = null;
-      const productImageLink = await this.imageLinkRepo.findOne({
-        object_id: cartItem.product_id,
-        object_type: ImageObjectType.PRODUCT,
-      });
-      console.log(productImageLink);
-      if (productImageLink) {
-        const productImage = await this.imageRepo.findOne({
-          image_id: productImageLink.image_id,
-        });
-        cartItem['image'] = { ...productImageLink, ...productImage };
-      }
-    }
 
     result['cart_items'] = cartItems;
 

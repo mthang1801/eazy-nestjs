@@ -526,7 +526,6 @@ export class PageService {
     if (data.page_detail_id) {
       let pageDetail = await this.pageDetailRepo.findOne({
         page_detail_id: data.page_detail_id,
-        page_id: data.page_id,
       });
       if (!pageDetail) {
         throw new HttpException('Không tìm thấy trang chi tiết', 404);
@@ -560,6 +559,20 @@ export class PageService {
           pageDetailData,
         );
       }
+
+      if (data.page_detail_values && data.page_detail_values.length) {
+        let oldPageDetailValues = await this.pageDetailValueRepo.delete({
+          page_detail_id: data.page_detail_id,
+        });
+        for (let pageDetailValue of data.page_detail_values) {
+          let pageDetailValueData = {
+            ...new PageDetailValueEntity(),
+            ...this.pageDetailValueRepo.setData(pageDetailValue),
+            page_detail_id: data.page_detail_id,
+          };
+          await this.pageDetailValueRepo.create(pageDetailValueData, false);
+        }
+      }
     } else {
       if (!data.module_name) {
         throw new HttpException('Cần nhập tên module', 400);
@@ -583,7 +596,18 @@ export class PageService {
         ...new PageDetailEntity(),
         ...this.pageDetailRepo.setData(data),
       };
-      await this.pageDetailRepo.create(pageDetailData);
+      const newPageDetail = await this.pageDetailRepo.create(pageDetailData);
+
+      if (data.page_detail_values && data.page_detail_values.length) {
+        for (let pageDetailValue of data.page_detail_values) {
+          let pageDetailValueData = {
+            ...new PageDetailValueEntity(),
+            ...this.pageDetailValueRepo.setData(pageDetailValue),
+            page_detail_id: newPageDetail.page_detail_id,
+          };
+          await this.pageDetailValueRepo.create(pageDetailValueData, false);
+        }
+      }
     }
   }
 
