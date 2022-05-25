@@ -5,6 +5,8 @@ export class ValuationBillEntity {
   type: number = 1;
   store_id: number = null;
   store_name: string = null;
+  old_receipt_id: number = null;
+  old_receipt_appcore_id: number = null;
   is_sync: string = 'N';
   customer_phone: string = '';
   customer_name: string = '';

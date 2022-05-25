@@ -1041,7 +1041,7 @@ export class ProductService {
 
     if (productsList.length) {
       productsList = await this.productStoreRepo.find({
-        select: getTradeinDetailProductsListSelectorBE,
+        select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
           [`${Table.PRODUCTS}.product_id`]: In(

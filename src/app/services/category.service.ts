@@ -251,6 +251,7 @@ export class CategoryService {
           ? `${categoryData['id_path']}/${newCategory['category_id']}`
           : newCategory['category_id'],
       },
+      true,
     );
 
     await this.updateLevelChildrenCategories(newCategory['category_id']);
@@ -400,8 +401,9 @@ export class CategoryService {
       }
 
       const updatedCategory = await this.categoryRepository.update(
-        oldCategoryData.category_id,
+        { category_id: oldCategoryData.category_id },
         updatedCategoryData,
+        true,
       );
 
       result = { ...result, ...updatedCategory };
@@ -510,6 +512,7 @@ export class CategoryService {
           const updatedImage = await this.imageRepository.update(
             { image_id: currentImage.image_id },
             { image_path: data.image },
+            true,
           );
           result = {
             ...result,
@@ -559,7 +562,6 @@ export class CategoryService {
             { position },
           );
         } else {
-          console.log(product_id, position);
           let newProductCategory = {
             ...new ProductsCategoriesEntity(),
             product_id,
@@ -749,6 +751,7 @@ export class CategoryService {
         category_id,
       },
       { icon: '' },
+      true,
     );
   }
 
@@ -1774,10 +1777,7 @@ export class CategoryService {
 
     for (let [i, catalogItem] of catalogsList.entries()) {
       let cvtData = convertCatelogoIntoCategory(catalogItem);
-      console.log(cvtData);
-      if (i > 10) {
-        break;
-      }
+      await this.itgCreate(cvtData);
     }
   }
 }

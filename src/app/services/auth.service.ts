@@ -545,16 +545,22 @@ export class AuthService {
     }
 
     // Update user
-    await this.userRepository.update(user_id, {
-      status: UserStatusEnum.Active,
-      updated_at: formatStandardTimeStamp(),
-    });
+    await this.userRepository.update(
+      { user_id },
+      {
+        status: UserStatusEnum.Active,
+        updated_at: formatStandardTimeStamp(),
+      },
+    );
 
     // Update email
-    await this.userMailingListRepository.update(checkMail.list_id, {
-      confirmed: 1,
-      status: UserMailingListsStatusEnum.Disabled,
-    });
+    await this.userMailingListRepository.update(
+      { list_id: checkMail.list_id },
+      {
+        confirmed: 1,
+        status: UserMailingListsStatusEnum.Disabled,
+      },
+    );
 
     const user = await this.userRepository.findOne({
       [`${Table.USERS}.user_id`]: user_id,
@@ -603,18 +609,24 @@ export class AuthService {
     }
 
     // update email
-    await this.userMailingListRepository.update(checkMailingList.list_id, {
-      confirmed: 1,
-    });
+    await this.userMailingListRepository.update(
+      { list_id: checkMailingList.list_id },
+      {
+        confirmed: 1,
+      },
+    );
 
     // update user
     const { passwordHash, salt } = saltHashPassword(password);
 
-    const updatedUser = await this.userRepository.update(user_id, {
-      password: passwordHash,
-      salt,
-      updated_at: formatStandardTimeStamp(),
-    });
+    const updatedUser = await this.userRepository.update(
+      { user_id },
+      {
+        password: passwordHash,
+        salt,
+        updated_at: formatStandardTimeStamp(),
+      },
+    );
 
     const userLogin = { email: updatedUser.email, password };
     return this.loginFE(userLogin);

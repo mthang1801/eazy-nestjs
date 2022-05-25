@@ -159,6 +159,7 @@ export class UserSystemService {
       const updatedUser = await this.userRepository.update(
         { user_id: result.user_id },
         { ...userUpdateData, updated_at: formatStandardTimeStamp() },
+        true,
       );
 
       result = { ...result, ...updatedUser };

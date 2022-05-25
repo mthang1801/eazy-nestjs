@@ -1088,6 +1088,7 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
     store_id: coreData['storeId'],
     status: coreData['status'] == 3 ? 'C' : coreData['status'] == 2 ? 'B' : 'A',
     note: coreData['note'],
+    old_receipt_appcore_id: coreData['stockSlipCode'] || null,
     created_at:
       coreData['createdAt'] && checkValidTimestamp(coreData['createdAt'])
         ? formatStandardTimeStamp(coreData['createdAt'])
@@ -1105,7 +1106,8 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
 export const convertCatelogoIntoCategory = (catalog) => {
   let category = {};
   category['category_id'] = catalog['catalog_id'];
-  category['parent_id'] = catalog['parent_id'];
+  category['parent_id'] =
+    catalog['parent_id'] > 2 ? catalog['parent_id'] : null;
   category['position'] = catalog['position'];
   category['category_appcore'] = catalog['catalog_appcore_name'];
   category['category'] = catalog['catalog_name'];

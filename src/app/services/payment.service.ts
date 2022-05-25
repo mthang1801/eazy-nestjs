@@ -220,7 +220,7 @@ export class PaymentService {
       ...this.paymentRepository.setData(data),
     };
 
-    let _payment = await this.paymentRepository.update(id, PaymentData);
+    let _payment = await this.paymentRepository.update(id, PaymentData, true);
 
     ///===========================================
     const PaymentDesData = {

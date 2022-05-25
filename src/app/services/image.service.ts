@@ -31,7 +31,11 @@ export class ImagesService {
     const imageTableData = {
       ...this.repository.setData(data),
     };
-    let _images = await this.repository.update(images_id, imageTableData);
+    let _images = await this.repository.update(
+      { image_id: images_id },
+      imageTableData,
+      true,
+    );
     // ===========================|Add to ddve_images_links|=============================
     const imageLinkTableData = {
       object_id: banner_id,

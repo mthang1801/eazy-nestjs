@@ -2,7 +2,7 @@ import { formatStandardTimeStamp } from 'src/utils/helper';
 
 export class CategoryEntity {
   category_appcore_id: number = 0;
-  parent_id: number = 0;
+  parent_id: number = null;
   parent_appcore_id: number = 0;
   id_path: string = '';
   level: number = 0;

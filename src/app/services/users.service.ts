@@ -204,7 +204,6 @@ export class UsersService {
       let userProfileData = this.userProfileRepository.setData(data);
       if (Object.entries(userProfileData).length) {
         await this.userProfileRepository.update({ user_id }, userProfileData);
-        false;
       }
     } else {
       let newUserProfileData = {
@@ -358,13 +357,17 @@ export class UsersService {
 
     const verifyToken = uuidv4();
 
-    const updatedUser = await this.userRepository.update(user.user_id, {
-      verify_token: verifyToken,
-      verify_token_exp: formatStandardTimeStamp(
-        new Date(Date.now() + 2 * 3600 * 1000),
-      ),
-      updated_at: formatStandardTimeStamp(),
-    });
+    const updatedUser = await this.userRepository.update(
+      { user_id: user.user_id },
+      {
+        verify_token: verifyToken,
+        verify_token_exp: formatStandardTimeStamp(
+          new Date(Date.now() + 2 * 3600 * 1000),
+        ),
+        updated_at: formatStandardTimeStamp(),
+      },
+      true,
+    );
 
     await this.mailService.sendUserConfirmation(
       originUrl,
@@ -447,10 +450,14 @@ export class UsersService {
   }
 
   async updateUserOTP(user_id: number, otp: number): Promise<UserEntity> {
-    const updatedUser = this.userRepository.update(user_id, {
-      otp,
-      otp_incorrect_times: 0,
-    });
+    const updatedUser = this.userRepository.update(
+      { user_id },
+      {
+        otp,
+        otp_incorrect_times: 0,
+      },
+      true,
+    );
     return updatedUser;
   }
 
@@ -459,7 +466,7 @@ export class UsersService {
       ...this.userRepository.setData(data),
       updated_at: formatStandardTimeStamp(),
     };
-    let _user = await this.userRepository.update(id, userData);
+    let _user = await this.userRepository.update(id, userData, true);
     let result = { ..._user };
     const userProfile = {
       ...this.userProfileRepository.setData(data),
@@ -467,6 +474,7 @@ export class UsersService {
     const _userProfile = await this.userProfileRepository.update(
       id,
       userProfile,
+      true,
     );
     result = { ...result, ..._userProfile };
     return result;

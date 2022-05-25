@@ -309,6 +309,7 @@ export class bannerService {
     const bannerData = {
       ...new BannerEntity(),
       ...this.bannerRepo.setData(data),
+      status: 'A',
     };
 
     const checkDuplicatePosition = await this.bannerRepo.findOne({
@@ -357,6 +358,7 @@ export class bannerService {
 
     const bannerData = this.bannerRepo.setData({
       ...data,
+      status: 'A',
       updated_at: formatStandardTimeStamp(),
     });
 

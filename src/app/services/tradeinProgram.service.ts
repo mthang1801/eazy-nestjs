@@ -1898,6 +1898,15 @@ export class TradeinProgramService {
 
     const cvtData = ConverValuationBillDataFromAppcore(data);
 
+    if (cvtData.old_receipt_appcore_id) {
+      let oldReceipt = await this.tradeinOldReceiptRepo.findOne({
+        old_receipt_appcore_id: cvtData.old_receipt_appcore_id,
+      });
+      if (oldReceipt) {
+        cvtData['old_receipt_id'] = oldReceipt['old_receipt_id'];
+      }
+    }
+
     const valuationBillData = this.valuationBillRepo.setData(cvtData);
 
     if (Object.entries(valuationBillData).length) {
