@@ -32,8 +32,6 @@ export class CartService {
 
   async create(user_id: number, product_id: number) {
     // Kiểm tra xem giỏ hàng đã tồn tại hay chưa
-    await this.cache.removeCartByUserId(user_id);
-
     let cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       const cartData = { ...new CartEntity(), user_id };
@@ -60,16 +58,10 @@ export class CartService {
     }
 
     let result = await this.get(user_id);
-    if (result) {
-      await this.cache.setCartByUserId(user_id, result);
-    }
+    return result;
   }
 
   async get(user_id) {
-    let cartCacheResult = await this.cache.getCartByUserId(user_id);
-    if (cartCacheResult) {
-      return cartCacheResult;
-    }
     const cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng.', 404);
@@ -109,13 +101,10 @@ export class CartService {
 
     result['cart_items'] = cartItems;
 
-    await this.cache.setCartByUserId(user_id, result);
-
     return result;
   }
 
   async alterUser(user_id: string, alter_user_id) {
-    await this.cache.removeCartByUserId(user_id);
     const currentCart = await this.cartRepo.findOne({ user_id });
     if (!currentCart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
@@ -169,9 +158,6 @@ export class CartService {
     }
 
     let result = await this.get(alter_user_id);
-    if (result) {
-      await this.cache.setCartByUserId(user_id, result);
-    }
     return result;
   }
 
@@ -194,34 +180,18 @@ export class CartService {
 
     let cart = await this.cartRepo.findOne({ cart_id: cartItem.cart_id });
     if (!cart) return;
-    await this.cache.removeCartByUserId(cart.user_id);
 
     let result = await this.get(cart.user_id);
 
-    if (result) {
-      await this.cache.setCartByUserId(cart.user_id, result);
-    }
+    return result;
   }
 
   async delete(cart_item_id: number) {
-    let cartItem = await this.cartItemRepo.delete({ cart_item_id }, true);
-    if (cartItem) {
-      let cart = await this.cartRepo.findOne({ cart_id: cartItem.cart_id });
-      if (!cart) return;
-      await this.cache.removeCartByUserId(cart.user_id);
-
-      let result = await this.get(cart.user_id);
-
-      if (result) {
-        await this.cache.setCartByUserId(cart.user_id, result);
-      }
-    }
+    await this.cartItemRepo.delete({ cart_item_id }, true);
   }
 
   async clearAll(cart_id) {
     let cart = await this.cartRepo.delete({ cart_id });
     await this.cartItemRepo.delete({ cart_id });
-    if (!cart) return;
-    await this.cache.removeCartByUserId(cart.user_id);
   }
 }

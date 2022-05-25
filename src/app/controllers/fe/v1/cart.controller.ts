@@ -26,8 +26,8 @@ export class CartController extends BaseController {
     @Body('product_id') product_id: number,
     @Param('user_id') user_id: number,
   ): Promise<IResponse> {
-    await this.service.create(user_id, product_id);
-    return this.responseSuccess(res);
+    const result = await this.service.create(user_id, product_id);
+    return this.responseSuccess(res, result);
   }
 
   /**

@@ -3556,8 +3556,22 @@ export class ProductService {
         [`${Table.PRODUCTS}.product_id`]: Not(Equal(product['product_id'])),
       })),
       skip: 0,
-      limt: 10,
+      limt: 20,
     });
+
+    productsList = _.uniqBy(productsList, 'product_id');
+
+    for (let productItem of productsList) {
+      productItem['discount_program'] =
+        await this.discountProgramDetailRepo.findOne({
+          select: '*',
+          join: discountProgramDetailJoiner,
+          where: {
+            [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
+              productItem.product_id,
+          },
+        });
+    }
 
     return productsList;
   }
