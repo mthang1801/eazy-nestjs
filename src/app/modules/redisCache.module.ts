@@ -3,6 +3,11 @@ import { ConfigService, ConfigModule } from '@nestjs/config';
 import * as redisStore from 'cache-manager-redis-store';
 import { RedisCacheService } from '../services/redisCache.service';
 import { CacheRepository } from '../repositories/cache.repository';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
+import { FlashSaleRepository } from '../repositories/flashSale.repository';
+import { BannerRepository } from '../repositories/banner.repository';
+import { FlashSaleDetailRepository } from '../repositories/flashSaleDetail.repository';
+import { FlashSaleProductRepository } from '../repositories/flashSaleProduct.repository';
 
 @Global()
 @Module({
@@ -19,7 +24,15 @@ import { CacheRepository } from '../repositories/cache.repository';
       }),
     }),
   ],
-  providers: [RedisCacheService, CacheRepository],
+  providers: [
+    RedisCacheService,
+    CacheRepository,
+    ProductsCategoriesRepository,
+    FlashSaleRepository,
+    BannerRepository,
+    FlashSaleDetailRepository,
+    FlashSaleProductRepository,
+  ],
   exports: [RedisCacheService, CacheRepository],
 })
 export class RedisCacheModule {}

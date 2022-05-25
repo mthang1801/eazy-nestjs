@@ -950,6 +950,19 @@ export const flashSaleProductJoinerFE = {
   },
 };
 
+export const flashSaleProductCacheJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.FLASH_SALE_DETAILS]: {
+      fieldJoin: `${Table.FLASH_SALE_DETAILS}.detail_id`,
+      rootJoin: `${Table.FLASH_SALE_PRODUCTS}.detail_id`,
+    },
+    [Table.FLASH_SALES]: {
+      fieldJoin: `${Table.FLASH_SALES}.flash_sale_id`,
+      rootJoin: `${Table.FLASH_SALE_DETAILS}.flash_sale_id`,
+    },
+  },
+};
+
 export const shippingFeeLocationsJoiner = {
   [JoinTable.innerJoin]: {
     [Table.SHIPPING_FEE]: {

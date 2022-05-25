@@ -3,6 +3,7 @@ import { Cache } from 'cache-manager';
 import { CacheEntity } from '../entities/cache.entity';
 import { CacheRepository } from '../repositories/cache.repository';
 import { removeVietnameseTones, convertToSlug } from '../../utils/helper';
+import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import {
   prefixCacheKey,
   cacheKeys,
@@ -12,12 +13,28 @@ import {
   convertIntoQueryParams,
   convertQueryParamsIntoCachedString,
 } from '../../utils/helper';
+import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
+import { BannerRepository } from '../repositories/banner.repository';
+import { BannerEntity } from '../entities/banner.entity';
+import { FlashSaleDetailRepository } from '../repositories/flashSaleDetail.repository';
+import { FlashSaleDetailEntity } from '../entities/flashSaleDetail.entity';
+import { FlashSaleProductRepository } from '../repositories/flashSaleProduct.repository';
+import { FlashSaleProductEntity } from '../entities/flashSaleProduct.entity';
+import {
+  flashSaleProductJoiner,
+  flashSaleProductCacheJoiner,
+} from '../../utils/joinTable';
+import { Table } from 'src/database/enums';
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
   constructor(
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private cacheRepo: CacheRepository<CacheEntity>,
+    private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
+    private bannerRepo: BannerRepository<BannerEntity>,
+    private flashSaleDetailRepo: FlashSaleDetailRepository<FlashSaleDetailEntity>,
+    private flashSaleProductRepo: FlashSaleProductRepository<FlashSaleProductEntity>,
   ) {}
 
   async get(key) {
@@ -327,5 +344,18 @@ export class RedisCacheService {
     let flashsaleCacheTableName = cacheTables.flashSale;
     await this.removeCache(flashsaleCacheTableName);
     await this.cacheRepo.delete({ table_name: flashsaleCacheTableName });
+  }
+
+  async removeRelatedServicesWithCachedProduct(productId) {
+    await this.removeCachedProductById(productId);
+    let categories = await this.productCategoryRepo.find({
+      product_id: productId,
+    });
+    if (categories) {
+      for (let category of categories) {
+        await this.removeCategoryById(category.category_id);
+      }
+    }
+    await this.removeCachedFlashSale();
   }
 }

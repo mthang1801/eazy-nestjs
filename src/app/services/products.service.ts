@@ -1646,9 +1646,9 @@ export class ProductService {
       category.category_id,
       params,
     );
-    if (categoryCacheResult) {
-      return categoryCacheResult;
-    }
+    // if (categoryCacheResult) {
+    //   return categoryCacheResult;
+    // }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
@@ -1758,7 +1758,10 @@ export class ProductService {
 
     for (let productItem of productsList) {
       //find product Stickers
-      productItem['stickers'] = await this.getProductStickers(productItem);
+      productItem['stickers'] = await this.getProductStickers(
+        productItem,
+        true,
+      );
 
       productItem['ratings'] = await this.reviewRepo.findOne({
         product_id: productItem['product_id'],
@@ -3596,14 +3599,19 @@ export class ProductService {
     return { minPrice, maxPrice };
   }
 
-  async getProductStickers(product) {
+  async getProductStickers(product, status = false) {
+    let productStickerCondition = {
+      product_id: product.product_id,
+      end_at: MoreThan(moment(new Date()).format('YYYY-MM-DD HH:mm:ss')),
+    };
+
+    if (status === true) {
+      productStickerCondition['status'] = 'A';
+    }
     //find product Stickers
-    const productStickers = await this.productStickerRepo.find({
-      where: {
-        product_id: product.product_id,
-        end_at: MoreThan(moment(new Date()).format('YYYY-MM-DD HH:mm:ss')),
-      },
-    });
+    const productStickers = await this.productStickerRepo.find(
+      productStickerCondition,
+    );
 
     let stickers = [];
 

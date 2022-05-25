@@ -90,12 +90,13 @@ export class StickerService {
       const product: any = await this.productRepo.findOne({
         product_id: productId,
       });
-      let productCacheKey = cacheKeys.product(productId);
-      await this.cache.delete(productCacheKey);
 
       if (!product) {
         continue;
       }
+
+      await this.cache.removeRelatedServicesWithCachedProduct(productId);
+
       await this.productStickerRepo.delete({ product_id: productId });
       for (let productSticker of data.product_stickers) {
         const productStickerData = {

@@ -353,8 +353,19 @@ export class FlashSalesService {
         await this.flashSaleProductRepo.delete({
           detail_id: oldFlashSaleDetail.detail_id,
         });
+        let oldAppliedProducts = await this.flashSaleProductRepo.find({
+          detail_id: oldFlashSaleDetail.detail_id,
+        });
+        if (oldAppliedProducts.length) {
+          for (let product of oldAppliedProducts) {
+            await this.cache.removeRelatedServicesWithCachedProduct(
+              product.product_id,
+            );
+          }
+        }
       }
     }
+
     if (data.flash_sale_details && data.flash_sale_details.length) {
       for (let flashSaleDetailItem of data.flash_sale_details) {
         const newFlashSaleDetailItem = {
@@ -375,6 +386,9 @@ export class FlashSalesService {
           await this.flashSaleProductRepo.create(
             newFlashSaleProductData,
             false,
+          );
+          await this.cache.removeRelatedServicesWithCachedProduct(
+            flashSaleProductItem.product_id,
           );
         }
       }

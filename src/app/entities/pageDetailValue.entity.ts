@@ -7,5 +7,5 @@ export class PageDetailValueEntity {
   position: number = 9999;
   detail_status: string = 'A';
   image: string = '';
-  detail_type: number = 1;
+  detail_type: number = null;
 }
