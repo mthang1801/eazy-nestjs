@@ -34,6 +34,7 @@ import {
   prefixCacheKey,
 } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
+import * as _ from 'lodash';
 
 @Injectable()
 export class FlashSalesService {
@@ -197,7 +198,7 @@ export class FlashSalesService {
     if (flashSaleDetails.length) {
       for (let flashSaleDetailItem of flashSaleDetails) {
         let flashSaleProducts = await this.flashSaleProductRepo.find({
-          select: `*`,
+          select: `*, ${Table.FLASH_SALE_PRODUCTS}.*`,
           join: flashSaleProductJoiner,
           where: { detail_id: flashSaleDetailItem['detail_id'] },
           orderBy: [
@@ -221,6 +222,8 @@ export class FlashSalesService {
             flashSaleProductItem['stickers'] = flashSaleProductStickers;
           }
         }
+
+        flashSaleProducts = _.uniqBy(flashSaleProducts, 'product_id');
         flashSaleDetailItem['flash_sale_products'] = flashSaleProducts;
         flashSale['flash_sale_details'] = flashSale['flash_sale_details']
           ? [...flashSale['flash_sale_details'], flashSaleDetailItem]

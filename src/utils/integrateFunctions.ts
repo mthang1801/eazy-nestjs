@@ -984,16 +984,10 @@ export const syncConvertValuationBillFromCms = (cmsData) => {
   let coreData = {};
   coreData['tradeInProgramId'] = cmsData['tradein_appcore_id'];
   coreData['imei'] = String(cmsData['imei']);
-  coreData['productId'] = String(
-    cmsData['product_appcore_id'],
-  );
+  coreData['productId'] = String(cmsData['product_appcore_id']);
   coreData['productBuyingPrice'] = Number(cmsData['price']);
-  coreData['totalCriteriaPrice'] = Number(
-    cmsData['criteria_price'],
-  );
-  coreData['finalBuyingPrice'] = Number(
-    cmsData['final_price'],
-  );
+  coreData['totalCriteriaPrice'] = Number(cmsData['criteria_price']);
+  coreData['finalBuyingPrice'] = Number(cmsData['final_price']);
   coreData['customerPhone'] = cmsData['customer_phone'];
   coreData['customerName'] = cmsData['customer_name'];
   coreData['options'] = [];
@@ -1106,4 +1100,13 @@ export const ConverValuationBillDataFromAppcore = (coreData) => {
   };
 
   return cmsData;
+};
+
+export const convertCatelogoIntoCategory = (catalog) => {
+  let category = {};
+  category['category_appcore_id'] = catalog['catalog_id'];
+  category['parent_appcore_id'] = catalog['parent_id'];
+  category['position'] = catalog['position'];
+  category['category_appcore'] = catalog['catalog_appcore_name'];
+  category['category'] = catalog['catalog_name'];
 };
