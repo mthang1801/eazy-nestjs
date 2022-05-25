@@ -1045,6 +1045,7 @@ export class PaymentService {
       pay_credit_type: payCreditType,
       coupon_code: data.coupon_code ? data.coupon_code : null,
       callback_url: data.callback_url,
+      store_id: data.store_id,
     };
     //Check coupon if it exist
     if (data.coupon_code) {

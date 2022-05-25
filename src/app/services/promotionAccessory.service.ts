@@ -642,8 +642,9 @@ export class PromotionAccessoryService {
           );
 
           //============== remove new promotion product cache ==============
-          let productCacheKey = cacheKeys.product(product.product_id);
-          await this.cache.delete(productCacheKey);
+          await this.cache.removeRelatedServicesWithCachedProduct(
+            product.product_id,
+          );
         }
       }
     }
@@ -698,8 +699,8 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [typeNameOfAccessory]: 0 },
         );
-        let productCacheKey = cacheKeys.product(productId);
-        await this.cache.delete(productCacheKey);
+
+        await this.cache.removeRelatedServicesWithCachedProduct(productId);
       }
     }
     if (data.inserted_products && data.inserted_products.length) {
@@ -708,8 +709,7 @@ export class PromotionAccessoryService {
           { product_id: productId },
           { [typeNameOfAccessory]: accessory_id },
         );
-        let productCacheKey = cacheKeys.product(productId);
-        await this.cache.delete(productCacheKey);
+        await this.cache.removeRelatedServicesWithCachedProduct(productId);
       }
     }
   }

@@ -5,6 +5,7 @@ import { PageRepository } from '../repositories/page.repository';
 import { PageDetailRepository } from '../repositories/pageDetail.repository';
 import { PageDetailValueRepository } from '../repositories/pageDetailValue.repository';
 import { PageControllerTester } from '../controllers/tester/page.controller';
+import { ProductsRepository } from '../repositories/products.repository';
 
 @Module({
   controllers: [PageController, PageControllerTester],
@@ -13,12 +14,14 @@ import { PageControllerTester } from '../controllers/tester/page.controller';
     PageRepository,
     PageDetailRepository,
     PageDetailValueRepository,
+    ProductsRepository,
   ],
   exports: [
     PageService,
     PageRepository,
     PageDetailRepository,
     PageDetailValueRepository,
+    ProductsRepository,
   ],
 })
 export class PageModule {}

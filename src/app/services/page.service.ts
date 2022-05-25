@@ -32,6 +32,10 @@ import {
 } from '../../utils/joinTable';
 import { CreateOrUpdatePageDetailValueItemDto } from '../dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../dto/page-tester/update-pageDetailValuesPosition.dto';
+import { PageDetailType } from '../../constants/page.constant';
+import { productLeftJoiner } from '../../utils/joinTable';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
 
 @Injectable()
 export class PageService {
@@ -39,6 +43,7 @@ export class PageService {
     private pageRepo: PageRepository<PageEntity>,
     private pageDetailRepo: PageDetailRepository<PageDetailEntity>,
     private pageDetailValueRepo: PageDetailValueRepository<PageDetailValueEntity>,
+    private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
   async createPage(data: CreatePageDto) {
     const pages = await this.pageRepo.find();
@@ -648,11 +653,36 @@ export class PageService {
       throw new HttpException('Không tìm thấy chi tiết trang', 404);
     }
 
-    const pageDetailValues = await this.pageDetailValueRepo.find({
+    let pageDetailValues = await this.pageDetailValueRepo.find({
       page_detail_id,
     });
 
-    currentPageDetail['page_detail_values'] = pageDetailValues;
+    if (currentPageDetail.detail_type == PageDetailType.productBox) {
+      currentPageDetail['page_detail_values'] = {};
+      for (let detailValue of pageDetailValues) {
+        if (detailValue.detail_type == 1) {
+          let product = await this.productRepo.findOne({
+            select: '*',
+            join: productLeftJoiner,
+            where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_id },
+          });
+          detailValue = { ...detailValue, ...product };
+        }
+
+        currentPageDetail['page_detail_values'][detailValue.detail_type] =
+          currentPageDetail['page_detail_values'][detailValue.detail_type]
+            ? [
+                ...currentPageDetail['page_detail_values'][
+                  detailValue.detail_type
+                ],
+                detailValue,
+              ]
+            : [detailValue];
+      }
+    } else {
+      currentPageDetail['page_detail_values'] = pageDetailValues;
+    }
+
     return currentPageDetail;
   }
 
