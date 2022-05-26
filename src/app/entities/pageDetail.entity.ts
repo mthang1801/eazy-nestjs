@@ -6,7 +6,7 @@ export class PageDetailEntity {
   module_name: string = '';
   description: string = '';
   position: number = 9999;
-  detail_type: number = 1;
+  detail_type: string = null;
   url: string = '';
   image: string = '';
   status: string = 'A';

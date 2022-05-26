@@ -25,5 +25,5 @@ export class CreateOrUpdatePageDetailValueItemDto {
   image: string;
 
   @IsOptional()
-  detail_type: number;
+  detail_type: string;
 }

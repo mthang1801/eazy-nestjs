@@ -33,7 +33,7 @@ export class CreateOrUpdatePageDetailDto {
   status: string;
 
   @IsOptional()
-  detail_type: number;
+  detail_type: string;
 
   @IsOptional()
   router: string;
@@ -65,5 +65,5 @@ class PageDetailValue {
   image: string;
 
   @IsOptional()
-  detail_type: number;
+  detail_type: string;
 }
