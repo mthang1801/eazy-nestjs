@@ -1109,6 +1109,19 @@ export const pageProgramDetailJoiner = {
   },
 };
 
+export const pageDetailValueJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.PAGE_DETAIL]: {
+      fieldJoin: `${Table.PAGE_DETAIL}.page_detail_id`,
+      rootJoin: `${Table.PAGE_DETAIL_VALUE}.page_detail_id`,
+    },
+    [Table.PAGE]: {
+      fieldJoin: `${Table.PAGE}.page_id`,
+      rootJoin: `${Table.PAGE_DETAIL}.page_id`,
+    },
+  },
+};
+
 export const pageProgramDetailValueJoiner = {
   [JoinTable.innerJoin]: {
     [Table.PAGE_DETAIL]: {

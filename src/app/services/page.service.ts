@@ -33,7 +33,10 @@ import {
 import { CreateOrUpdatePageDetailValueItemDto } from '../dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../dto/page-tester/update-pageDetailValuesPosition.dto';
 import { PageDetailType } from '../../constants/page.constant';
-import { productLeftJoiner } from '../../utils/joinTable';
+import {
+  productLeftJoiner,
+  pageDetailValueJoiner,
+} from '../../utils/joinTable';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { getProductsListSelectorBE } from '../../utils/tableSelector';
@@ -676,7 +679,8 @@ export class PageService {
     }
 
     let pageDetailValues = await this.pageDetailValueRepo.find({
-      page_detail_id,
+      join: pageDetailValueJoiner,
+      where: { [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id },
     });
 
     if (currentPageDetail.detail_type == PageDetailType.productBox) {
@@ -690,7 +694,6 @@ export class PageService {
           });
 
           detailValue = {
-            page_id: currentPageDetail['page_id'],
             ...detailValue,
             ...product,
           };
