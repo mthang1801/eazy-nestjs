@@ -26,4 +26,7 @@ export class CreateOrUpdatePageDetailValueItemDto {
 
   @IsOptional()
   detail_type: string;
+
+  @IsOptional()
+  value_url: string;
 }

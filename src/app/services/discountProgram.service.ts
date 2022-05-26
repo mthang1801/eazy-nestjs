@@ -25,6 +25,12 @@ import {
 import { UpdateDiscountProgramDto } from '../dto/discountProgram/update-discountProgram.dto';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import {
+  MoreThan,
+  LessThan,
+  MoreThanOrEqual,
+  LessThanOrEqual,
+} from '../../database/operators/operators';
+import {
   productPromotionAccessoryJoiner,
   productDiscountProgramJoiner,
 } from '../../utils/joinTable';
@@ -40,19 +46,56 @@ export class DiscountProgramService {
 
   async getList(params: any = {}) {
     let { page, skip, limit } = getPageSkipLimit(params);
-    let { search, start_at, end_at, status } = params;
+    let {
+      search,
+      start_at,
+      end_at,
+      status,
+      time_start_at,
+      time_end_at,
+      priority,
+    } = params;
     let filterConditions = {};
 
     if (start_at) {
-      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_start_at`] = start_at;
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.start_at`] = start_at;
     }
 
     if (end_at) {
-      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_end_at`] = end_at;
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.end_at`] = end_at;
+    }
+
+    if (start_at && end_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.end_at`] = MoreThanOrEqual(
+        formatStandardTimeStamp(),
+      );
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.start_at`] = LessThanOrEqual(
+        formatStandardTimeStamp(),
+      );
     }
 
     if (status) {
       filterConditions[`${Table.DISCOUNT_PROGRAM}.status`] = status;
+    }
+
+    if (start_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_start_at`] =
+        time_start_at;
+    }
+
+    if (end_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_end_at`] = time_end_at;
+    }
+
+    if (start_at && end_at) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_end_at`] =
+        MoreThanOrEqual(formatStandardTimeStamp());
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.time_start_at`] =
+        LessThanOrEqual(formatStandardTimeStamp());
+    }
+
+    if (priority) {
+      filterConditions[`${Table.DISCOUNT_PROGRAM}.priority`] = priority;
     }
 
     const result = await this.discountProgramRepo.find({

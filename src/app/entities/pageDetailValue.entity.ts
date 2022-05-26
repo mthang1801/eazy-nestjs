@@ -8,4 +8,5 @@ export class PageDetailValueEntity {
   detail_status: string = 'A';
   image: string = '';
   detail_type: string = null;
+  value_url: string = '';
 }
