@@ -36,6 +36,7 @@ import { PageDetailType } from '../../constants/page.constant';
 import { productLeftJoiner } from '../../utils/joinTable';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
+import { getProductsListSelectorBE } from '../../utils/tableSelector';
 
 @Injectable()
 export class PageService {
@@ -662,9 +663,9 @@ export class PageService {
       for (let detailValue of pageDetailValues) {
         if (detailValue.detail_type == 'LIST_PRODUCTS') {
           let product = await this.productRepo.findOne({
-            select: '*',
+            select: getProductsListSelectorBE,
             join: productLeftJoiner,
-            where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_id },
+            where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_value },
           });
           detailValue = { ...detailValue, ...product };
         }

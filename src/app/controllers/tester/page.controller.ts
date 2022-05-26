@@ -47,18 +47,18 @@ export class PageControllerTester extends BaseController {
     return this.responseSuccess(res);
   }
 
-  @Get(':page_id')
-  async getPageInfo(@Res() res: Response, @Param('page_id') page_id: number) {
-    const result = await this.service.testGetPageInfo(page_id);
-    return this.responseSuccess(res, result);
-  }
-
   @Get('page-details/:page_detail_id')
   async getPageDetailInfo(
     @Res() res: Response,
     @Param('page_detail_id') page_detail_id: number,
   ) {
     const result = await this.service.testGetPageDetailInfo(page_detail_id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':page_id')
+  async getPageInfo(@Res() res: Response, @Param('page_id') page_id: number) {
+    const result = await this.service.testGetPageInfo(page_id);
     return this.responseSuccess(res, result);
   }
 
