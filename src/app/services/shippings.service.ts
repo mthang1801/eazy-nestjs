@@ -35,7 +35,7 @@ export class ShippingService {
     const shippingData = {
       ...new ShippingsEntity(),
       ...this.shippingRepo.setData(data),
-      created_at: formatStandardTimeStamp(new Date(data.created_at)),
+      created_at: formatStandardTimeStamp(data.created_at),
     };
 
     const newShipping = await this.shippingRepo.create(shippingData);
@@ -46,7 +46,7 @@ export class ShippingService {
       shipping_id: newShipping.shipping_id,
     };
 
-    await this.shippingDescriptionRepo.create(shippingDescData);
+    await this.shippingDescriptionRepo.create(shippingDescData, false);
 
     for (let service of data.services) {
       const serviceData = {

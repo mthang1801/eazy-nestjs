@@ -1646,9 +1646,9 @@ export class ProductService {
       category.category_id,
       params,
     );
-    // if (categoryCacheResult) {
-    //   return categoryCacheResult;
-    // }
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.categoryService.childrenCategories(
@@ -1904,18 +1904,18 @@ export class ProductService {
     //     }
     //   }
     // }
-
-    //============ removed cached ==============
-    await this.cache.removeCachedProductById(currentProduct.product_id);
-    await this.cache.removeCachedFlashSale();
+    await this.cache.removeRelatedServicesWithCachedProduct(
+      currentProduct.product_id,
+    );
 
     if (currentProduct['parent_product_appcore_id']) {
       let parentProduct = await this.productRepo.findOne({
         product_appcore_id: currentProduct['parent_product_appcore_id'],
       });
       if (parentProduct) {
-        let parentCacheKey = cacheKeys.product(parentProduct.product_id);
-        await this.cache.delete(parentCacheKey);
+        await this.cache.removeRelatedServicesWithCachedProduct(
+          parentProduct.product_id,
+        );
       }
     }
 
@@ -1925,8 +1925,9 @@ export class ProductService {
       });
       if (childrenProducts.length) {
         for (let childProduct of childrenProducts) {
-          let childCacheKey = cacheKeys.product(childProduct.product_id);
-          await this.cache.delete(childCacheKey);
+          await this.cache.removeRelatedServicesWithCachedProduct(
+            childProduct.product_id,
+          );
         }
       }
     }

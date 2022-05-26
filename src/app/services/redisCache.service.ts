@@ -255,13 +255,18 @@ export class RedisCacheService {
   }
 
   async removeCacheCartByProductId(product_id) {
-    let cartItem = await this.cartItemRepo.findOne({
+    let cartItems = await this.cartItemRepo.find({
       select: '*',
       join: cartItemCacheJoiner,
       where: { [`${Table.CART_ITEMS}.product_id`]: product_id },
     });
-    if (cartItem?.user_id) {
-      await this.removeCartByUserId(cartItem?.user_id);
+
+    if (cartItems.length) {
+      for (let cartItem of cartItems) {
+        if (cartItem?.user_id) {
+          await this.removeCartByUserId(cartItem?.user_id);
+        }
+      }
     }
   }
 
@@ -347,12 +352,37 @@ export class RedisCacheService {
     let categoryCacheKey = cacheKeys.category(category_id);
     await this.delete(categoryCacheKey);
     await this.cacheRepo.delete({ cache_key: categoryCacheKey });
+    // remove products
+    let productCategories = await this.productCategoryRepo.find({
+      category_id,
+    });
+    if (productCategories.length) {
+      for (let productCategoryItem of productCategories) {
+        if (productCategoryItem.product_id) {
+          await this.removeRelatedServicesWithCachedProduct(
+            productCategoryItem.product_id,
+          );
+        }
+      }
+    }
   }
 
   async removeCategoryById(category_id) {
     let categoryByIdPrefix = prefixCacheKey.categoryId(category_id);
     await this.removeCache(null, categoryByIdPrefix);
     await this.cacheRepo.delete({ prefix_cache_key: categoryByIdPrefix });
+    let productCategories = await this.productCategoryRepo.find({
+      category_id,
+    });
+    if (productCategories.length) {
+      for (let productCategoryItem of productCategories) {
+        if (productCategoryItem.product_id) {
+          await this.removeRelatedServicesWithCachedProduct(
+            productCategoryItem.product_id,
+          );
+        }
+      }
+    }
   }
 
   async removeCategriesList() {
