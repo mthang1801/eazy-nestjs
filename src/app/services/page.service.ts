@@ -679,6 +679,7 @@ export class PageService {
     }
 
     let pageDetailValues = await this.pageDetailValueRepo.find({
+      select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL}.page_detail_id, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageDetailValueJoiner,
       where: { [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id },
     });
