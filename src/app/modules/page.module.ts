@@ -6,9 +6,10 @@ import { PageDetailRepository } from '../repositories/pageDetail.repository';
 import { PageDetailValueRepository } from '../repositories/pageDetailValue.repository';
 import { PageControllerTester } from '../controllers/tester/page.controller';
 import { ProductsRepository } from '../repositories/products.repository';
+import { PageControllerFE } from '../controllers/fe/v1/page.controller';
 
 @Module({
-  controllers: [PageController, PageControllerTester],
+  controllers: [PageController, PageControllerTester, PageControllerFE],
   providers: [
     PageService,
     PageRepository,
