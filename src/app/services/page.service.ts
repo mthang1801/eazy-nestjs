@@ -665,7 +665,7 @@ export class PageService {
   }
 
   async testGetPageDetailInfo(page_detail_id: number) {
-    const currentPageDetail = await this.pageDetailRepo.findOne({
+    let currentPageDetail = await this.pageDetailRepo.findOne({
       select: '*',
       join: pageProgramDetailJoiner,
       where: { [`${Table.PAGE_DETAIL}.page_detail_id`]: page_detail_id },
@@ -688,7 +688,12 @@ export class PageService {
             join: productLeftJoiner,
             where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_value },
           });
-          detailValue = { ...detailValue, ...product };
+
+          detailValue = {
+            page_id: currentPageDetail['page_id'],
+            ...detailValue,
+            ...product,
+          };
         }
 
         currentPageDetail['page_detail_values'][detailValue.detail_type] =
