@@ -25,6 +25,11 @@ import {
   flashSaleProductCacheJoiner,
 } from '../../utils/joinTable';
 import { Table } from 'src/database/enums';
+import { CartRepository } from '../repositories/cart.repository';
+import { CartEntity } from '../entities/cart.entity';
+import { CartItemRepository } from '../repositories/cartItem.repository';
+import { CartItemEntity } from '../entities/cartItem.entity';
+import { cartItemCacheJoiner } from '../../utils/joinTable';
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
@@ -35,6 +40,8 @@ export class RedisCacheService {
     private bannerRepo: BannerRepository<BannerEntity>,
     private flashSaleDetailRepo: FlashSaleDetailRepository<FlashSaleDetailEntity>,
     private flashSaleProductRepo: FlashSaleProductRepository<FlashSaleProductEntity>,
+    private cartRepo: CartRepository<CartEntity>,
+    private cartItemRepo: CartItemRepository<CartItemEntity>,
   ) {}
 
   async get(key) {
@@ -231,18 +238,41 @@ export class RedisCacheService {
   }
 
   async removeCartByUserId(user_id) {
-    let cartCacheKey = cacheKeys.cart(user_id);
+    let cartCacheKey = cacheKeys.cartByUserId(user_id);
     await this.delete(cartCacheKey);
+    await this.cacheRepo.delete({ cache_key: cartCacheKey });
+  }
+
+  async removeCartByCartItemId(cartItemId) {
+    let cartItem = await this.cartItemRepo.findOne({
+      select: '*',
+      join: cartItemCacheJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_item_id`]: cartItemId },
+    });
+    if (cartItem && cartItem.user_id) {
+      await this.removeCartByUserId(cartItem.user_id);
+    }
+  }
+
+  async removeCacheCartByProductId(product_id) {
+    let cartItem = await this.cartItemRepo.findOne({
+      select: '*',
+      join: cartItemCacheJoiner,
+      where: { [`${Table.CART_ITEMS}.product_id`]: product_id },
+    });
+    if (cartItem?.user_id) {
+      await this.removeCartByUserId(cartItem?.user_id);
+    }
   }
 
   async setCartByUserId(user_id, data) {
-    let cartCacheKey = cacheKeys.cart(user_id);
+    let cartCacheKey = cacheKeys.cartByUserId(user_id);
     await this.set(cartCacheKey, data);
     await this.saveCache(cacheTables.cart, prefixCacheKey.cart, cartCacheKey);
   }
 
   async getCartByUserId(user_id) {
-    let cartCacheKey = cacheKeys.cart(user_id);
+    let cartCacheKey = cacheKeys.cartByUserId(user_id);
     return this.get(cartCacheKey);
   }
 
@@ -357,5 +387,7 @@ export class RedisCacheService {
       }
     }
     await this.removeCachedFlashSale();
+
+    await this.removeCacheCartByProductId(productId);
   }
 }

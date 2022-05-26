@@ -12,7 +12,7 @@ export const cacheKeys = {
   bannerLocations: `banner-locations`,
   bannerTargets: (params) => `banner-targets${params}`,
   carts: (params) => `carts${params}`,
-  cart: (id) => `cart-${id}`,
+  cartByUserId: (userId) => `cart-${userId}`,
   dashboardOverview: `dashboard-overview`,
   flashSale: (id) => `flashSale-${id}`,
   flashSales: (params) => `flashSale${params}`,

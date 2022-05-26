@@ -807,6 +807,15 @@ export const cartJoiner = {
   },
 };
 
+export const cartItemCacheJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CART]: {
+      fieldJoin: `${Table.CART}.cart_id`,
+      rootJoin: `${Table.CART_ITEMS}.cart_id`,
+    },
+  },
+};
+
 export const cartPaymentJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
