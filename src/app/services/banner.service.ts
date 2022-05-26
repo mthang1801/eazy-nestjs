@@ -155,6 +155,7 @@ export class bannerService {
     let { slug, device_type, target_id, location_id } = params;
     slug = slug || '/';
     device_type = device_type || 'D';
+
     let bannersCacheResult = await this.cache.getBanners(params);
     if (bannersCacheResult) {
       return bannersCacheResult;
@@ -228,6 +229,16 @@ export class bannerService {
     await this.cache.setBanners(params, _banners);
 
     return _banners;
+  }
+
+  async FEgetById(banner_id) {
+    let banner = await this.bannerRepo.findOne({ banner_id });
+    if (!banner) {
+      throw new HttpException('Không tìm thấy Banner', 404);
+    }
+    const bannerItems = await this.bannerItemRepo.find({ banner_id });
+    banner['banner_items'] = bannerItems;
+    return banner;
   }
 
   async getLocationsList() {

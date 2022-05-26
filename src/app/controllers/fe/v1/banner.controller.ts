@@ -16,4 +16,13 @@ export class bannerController extends BaseController {
     const banners = await this.service.getListFE(params);
     return this.responseSuccess(res, banners);
   }
+
+  @Get(':banner_id')
+  async getById(
+    @Res() res: Response,
+    @Param('banner_id') banner_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.FEgetById(banner_id);
+    return this.responseSuccess(res, result);
+  }
 }
