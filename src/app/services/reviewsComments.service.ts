@@ -398,10 +398,10 @@ export class ReviewsCommentService {
     };
 
     if (type == 1 && data.point) {
-      if (data.point < 5) {
+      if (data.point < 4) {
         suitableLevel = 2;
       }
-      if (data.point < 3) {
+      if (data.point <= 2) {
         suitableLevel = 3;
       }
     }

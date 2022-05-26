@@ -660,7 +660,7 @@ export class PageService {
     if (currentPageDetail.detail_type == PageDetailType.productBox) {
       currentPageDetail['page_detail_values'] = {};
       for (let detailValue of pageDetailValues) {
-        if (detailValue.detail_type == 1) {
+        if (detailValue.detail_type == 'LIST_PRODUCTS') {
           let product = await this.productRepo.findOne({
             select: '*',
             join: productLeftJoiner,
