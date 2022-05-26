@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { slice } from 'lodash';
 
 export class Cryptography {
   private algorithm: string = 'aes-256-cbc';
@@ -103,5 +104,18 @@ export class Cryptography {
   public generateMD5(str) {
     const hash = crypto.createHash('md5').update(str).digest('hex');
     return hash;
+  }
+
+  public uniqueId(id: number = 0, prefix: string = '', len: number = 10) {
+    if (len > 15) {
+      len = 15;
+    }
+
+    let length = len - id.toString().length;
+    let max = Math.pow(10, length);
+    let min = max / 10;
+    let num = Math.floor(Math.random() * (max - min)) + min;
+
+    return `${prefix}${num}${id}`;
   }
 }

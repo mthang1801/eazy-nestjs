@@ -4852,7 +4852,27 @@ export class ProductService {
     // } catch (error) {
     //   console.log(error);
     // }
-    // let cryptography = new Cryptography();
+    let cryptography = new Cryptography();
+
+    let tracking = {};
+    let countDuplicate = 0;
+    let reportDuplicate = [];
+    console.time('tracking');
+    for (let i = 0; i <= 1000000; i++) {
+      let randomId = cryptography.uniqueId(i, 'AX', 12);
+      if (tracking[randomId]) {
+        tracking[randomId] = tracking[randomId] + 1;
+        countDuplicate += 1;
+        reportDuplicate.push(randomId);
+      } else {
+        tracking[randomId] = 1;
+      }
+      console.log(randomId);
+    }
+    console.log('======================');
+    console.log(countDuplicate);
+    console.log(reportDuplicate);
+    console.timeEnd('tracking');
     // let msg = 'This is a secret message';
     // console.log(msg);
     // // console.log(crypto.getRandomValues());
