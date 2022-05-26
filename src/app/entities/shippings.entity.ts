@@ -17,4 +17,5 @@ export class ShippingsEntity {
   free_shipping: string = '';
   is_address_required: string = '';
   created_at: string = formatStandardTimeStamp();
+  image_path: string = '';
 }

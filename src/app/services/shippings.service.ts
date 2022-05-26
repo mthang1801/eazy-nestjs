@@ -63,17 +63,6 @@ export class ShippingService {
       };
       await this.shippingServiceDescriptionRepo.create(serviceDescData);
     }
-
-    //Create image in order to get image_id
-    const shippingImage = await this.imageRepo.create({
-      image_path: data.image_path,
-    });
-    //Create image link
-    await this.imageLinkRepo.create({
-      object_id: newShipping.shipping_id,
-      object_type: ImageObjectType.LOGO,
-      image_id: shippingImage.image_id,
-    });
   }
 
   async update(id: number, data: UpdateShippingDto) {
@@ -146,19 +135,6 @@ export class ShippingService {
           service_id: newService.service_id,
         };
         await this.shippingServiceDescriptionRepo.create(newServiceDescData);
-      }
-    }
-
-    if (data.image_path) {
-      const imageLink = await this.imageLinkRepo.findOne({
-        object_type: ImageObjectType.LOGO,
-        object_id: id,
-      });
-      if (imageLink) {
-        await this.imageRepo.update(
-          { image_id: imageLink.image_id },
-          { image_path: data.image_path },
-        );
       }
     }
   }
