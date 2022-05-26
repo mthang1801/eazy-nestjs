@@ -4853,27 +4853,27 @@ export class ProductService {
     // } catch (error) {
     //   console.log(error);
     // }
-    let cryptography = new Cryptography();
+    // let cryptography = new Cryptography();
 
-    let tracking = {};
-    let countDuplicate = 0;
-    let reportDuplicate = [];
-    console.time('tracking');
-    for (let i = 0; i <= 1000000; i++) {
-      let randomId = cryptography.uniqueId(i, 'AX', 12);
-      if (tracking[randomId]) {
-        tracking[randomId] = tracking[randomId] + 1;
-        countDuplicate += 1;
-        reportDuplicate.push(randomId);
-      } else {
-        tracking[randomId] = 1;
-      }
-      console.log(randomId);
-    }
-    console.log('======================');
-    console.log(countDuplicate);
-    console.log(reportDuplicate);
-    console.timeEnd('tracking');
+    // let tracking = {};
+    // let countDuplicate = 0;
+    // let reportDuplicate = [];
+    // console.time('tracking');
+    // for (let i = 0; i <= 1000000; i++) {
+    //   let randomId = cryptography.uniqueId(i, 'AX', 12);
+    //   if (tracking[randomId]) {
+    //     tracking[randomId] = tracking[randomId] + 1;
+    //     countDuplicate += 1;
+    //     reportDuplicate.push(randomId);
+    //   } else {
+    //     tracking[randomId] = 1;
+    //   }
+    //   console.log(randomId);
+    // }
+    // console.log('======================');
+    // console.log(countDuplicate);
+    // console.log(reportDuplicate);
+    // console.timeEnd('tracking');
     // let msg = 'This is a secret message';
     // console.log(msg);
     // // console.log(crypto.getRandomValues());
@@ -4885,52 +4885,52 @@ export class ProductService {
     // var hw = cryptography.encrypt('30512');
     // console.log(hw);
     // let cryptography1 = new Cryptography();
-    // await this.productRepo.findOne({
-    //   select: '*',
-    //   join: productLeftJoiner,
-    //   where: [
-    //     {
-    //       $or: [
-    //         // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
-    //         {
-    //           $and: [
-    //             { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-    //             { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-    //             // {
-    //             //   $or: [
-    //             //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-    //             //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-    //             //   ],
-    //             // },
-    //           ],
-    //         },
-    //         { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
-    //         // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
-    //         // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
-    //         // {
-    //         //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
-    //         // },
-    //         // {
-    //         //   $and: [
-    //         //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-    //         //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-    //         //     {
-    //         //       $or: [
-    //         //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-    //         //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-    //         //       ],
-    //         //     },
-    //         //     {
-    //         //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
-    //         //         1, 2, 3, 4, 5, 6, 7,
-    //         //       ]),
-    //         //     },
-    //         //   ],
-    //         // },
-    //       ],
-    //     },
-    //   ],
-    // });
+    await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: [
+        {
+          $or: [
+            // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
+            {
+              $and: [
+                { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+                { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+                // {
+                //   $or: [
+                //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+                //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+                //   ],
+                // },
+              ],
+            },
+            { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
+            // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
+            // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
+            // {
+            //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
+            // },
+            // {
+            //   $and: [
+            //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+            //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+            //     {
+            //       $or: [
+            //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+            //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+            //       ],
+            //     },
+            //     {
+            //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
+            //         1, 2, 3, 4, 5, 6, 7,
+            //       ]),
+            //     },
+            //   ],
+            // },
+          ],
+        },
+      ],
+    });
   }
 
   async autoFillPriceIntoConfigurableProducts() {
