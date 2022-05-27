@@ -21,30 +21,36 @@ export class CatalogService {
       ...new CatalogEntity(),
       ...this.catalogRepo.setData(data),
     };
-    
-    const checkExistCatalog = await this.catalogRepo.find({catalog_name: data.catalog_name});
+    console.log(data);
+    const checkExistCatalog = await this.catalogRepo.findOne({catalog_name: data.catalog_name});
+    console.log(checkExistCatalog);
     if (checkExistCatalog){
       throw new HttpException("Ngành hàng đã tồn tại trong hệ thống.", 409);
     }
 
     const catalog = await this.catalogRepo.create(catalogData);
-    for (let feature of data.features){
-      const catalogFeatureData = {
-        ...new CatalogFeatureEntity(),
-        ...this.catalogFeatureRepo.setData(feature),
-        catalog_id: catalog.catalog_id,
-      }
-      const catalogFeature = await this.catalogFeatureRepo.create(catalogFeatureData);
-      for (let featureDetail of feature.featureDetails){
-        //console.log(featureDetail);
-        const catalogFeatureDetailData = {
-          ...new CatalogFeatureDetailEntity(),
-          ...this.catalogFeatureDetailRepo.setData(featureDetail),
-          catalog_feature_id: catalogFeature.catalog_feature_id,
+    if (data.features && data.features.length) {
+      for (let feature of data.features){
+        const catalogFeatureData = {
+          ...new CatalogFeatureEntity(),
+          ...this.catalogFeatureRepo.setData(feature),
+          catalog_id: catalog.catalog_id,
         }
-        await this.catalogFeatureDetailRepo.create(catalogFeatureDetailData);
+        const catalogFeature = await this.catalogFeatureRepo.create(catalogFeatureData);
+        if (feature.featureDetails && feature.featureDetails.length) {
+          for (let featureDetail of feature.featureDetails){
+            //console.log(featureDetail);
+            const catalogFeatureDetailData = {
+              ...new CatalogFeatureDetailEntity(),
+              ...this.catalogFeatureDetailRepo.setData(featureDetail),
+              catalog_feature_id: catalogFeature.catalog_feature_id,
+            }
+            await this.catalogFeatureDetailRepo.create(catalogFeatureDetailData);
+          }
+        }
       }
     }
+
     return data;
   }
 
@@ -80,5 +86,12 @@ export class CatalogService {
       catalog_features: catalog_features,
     }
     return result;
+  }
+
+  async update(catalog_id, data) {
+    const catalog = this.catalogRepo.findOne(catalog_id);
+    console.log(catalog);
+
+    return this.catalogRepo.findOne(catalog_id);
   }
 }
