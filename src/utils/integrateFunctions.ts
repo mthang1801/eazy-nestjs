@@ -1009,6 +1009,13 @@ export const convertDiscountProgramFromAppcore = (coreData) => {
     discount_name: coreData['name'],
     description: coreData['description'],
     accessory_status: coreData['status'] === true ? 'A' : 'D',
+    start_at: checkValidTimestamp(coreData['startAt'])
+      ? formatStandardTimeStamp(coreData['startAt'])
+      : null,
+    end_at: checkValidTimestamp(coreData['endAt'])
+      ? formatStandardTimeStamp(coreData['endAt'])
+      : null,
+    priority: coreData['priority'],
     time_start_at: coreData['startTime'] || null,
     time_end_at: coreData['endTime'] || null,
     used: coreData['used'],

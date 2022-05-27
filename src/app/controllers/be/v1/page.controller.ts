@@ -111,15 +111,6 @@ export class PageController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('cms/:page_id')
-  async getPageDetailCms(
-    @Res() res: Response,
-    @Param('page_id') page_id: number,
-  ): Promise<IResponse> {
-    const result = await this.service.getPageDetailCms(page_id);
-    return this.responseSuccess(res, result);
-  }
-
   @Get(':page_id')
   async getPageDetail(
     @Res() res: Response,

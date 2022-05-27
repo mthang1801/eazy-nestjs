@@ -66,4 +66,7 @@ class PageDetailValue {
 
   @IsOptional()
   detail_type: string;
+
+  @IsOptional()
+  url_value: string;
 }

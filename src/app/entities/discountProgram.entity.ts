@@ -9,6 +9,9 @@ export class DiscountProgramEntity {
   status: string = 'A';
   used: number = 0;
   max_use: number = null;
+  priority: number = null;
+  start_at: string = null;
+  end_at: string = null;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
   time_start_at: string = null;

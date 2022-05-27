@@ -1,4 +1,4 @@
-const CORE_API = 'http://mb.viendidong.com/core-api/v1';
+const CORE_API = 'http://test.viendidong.com/core-api/v1';
 const TESTER_API = 'http://mb.viendidong.com/web-tester/v1/api';
 
 export const UPLOAD_IMAGE_API = `${CORE_API}/files/website`;

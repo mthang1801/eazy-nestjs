@@ -33,7 +33,10 @@ import {
 import { CreateOrUpdatePageDetailValueItemDto } from '../dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../dto/page-tester/update-pageDetailValuesPosition.dto';
 import { PageDetailType } from '../../constants/page.constant';
-import { productLeftJoiner } from '../../utils/joinTable';
+import {
+  productLeftJoiner,
+  pageDetailValueJoiner,
+} from '../../utils/joinTable';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import { getProductsListSelectorBE } from '../../utils/tableSelector';
@@ -449,25 +452,44 @@ export class PageService {
   }
 
   async getPageDetailValues(page_detail_id) {
-    let pageDetail = await this.pageDetailRepo.findOne({ page_detail_id });
-    if (!pageDetail) {
+    let currentPageDetail = await this.pageDetailRepo.findOne({
+      page_detail_id,
+    });
+    if (!currentPageDetail) {
       throw new HttpException('Không tìm thấy trang chi tiết', 404);
     }
+
     const pageDetailValues = await this.pageDetailValueRepo.find({
-      select: '*',
-      orderBy: [
-        {
-          field: `CASE WHEN ${Table.PAGE_DETAIL_VALUE}.position`,
-          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PAGE_DETAIL_VALUE}.position ASC`,
-        },
-      ],
-      where: {
-        [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id,
-      },
+      page_detail_id,
     });
 
-    pageDetail['page_detail_values'] = pageDetailValues;
-    return pageDetail;
+    if (currentPageDetail.detail_type == PageDetailType.productBox) {
+      currentPageDetail['page_detail_values'] = {};
+      for (let detailValue of pageDetailValues) {
+        if (detailValue.detail_type == 'LIST_PRODUCTS') {
+          let product = await this.productRepo.findOne({
+            select: getProductsListSelectorBE,
+            join: productLeftJoiner,
+            where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_value },
+          });
+          detailValue = { ...detailValue, ...product };
+        }
+
+        currentPageDetail['page_detail_values'][detailValue.detail_type] =
+          currentPageDetail['page_detail_values'][detailValue.detail_type]
+            ? [
+                ...currentPageDetail['page_detail_values'][
+                  detailValue.detail_type
+                ],
+                detailValue,
+              ]
+            : [detailValue];
+      }
+    } else {
+      currentPageDetail['page_detail_values'] = pageDetailValues;
+    }
+
+    return currentPageDetail;
   }
 
   async createPageDetailItem(data: CreatePageDetailItemDto) {
@@ -502,7 +524,7 @@ export class PageService {
     return result;
   }
 
-  async getPageDetailCms(page_id) {
+  async FEGetPage(page_id) {
     const currentPage = await this.pageRepo.findOne({ page_id });
 
     const pageDetails = await this.pageDetailRepo.find({
@@ -519,8 +541,10 @@ export class PageService {
     });
 
     for (let pageDetail of pageDetails) {
-      let tempValue = await this.getPageDetailValues(pageDetail.page_detail_id);
-      pageDetail['page_detail_values'] = tempValue;
+      let pageValues = await this.getPageDetailValues(
+        pageDetail.page_detail_id,
+      );
+      pageDetail['page_detail_values'] = pageValues;
     }
 
     currentPage['page_details'] = pageDetails;
@@ -644,7 +668,7 @@ export class PageService {
   }
 
   async testGetPageDetailInfo(page_detail_id: number) {
-    const currentPageDetail = await this.pageDetailRepo.findOne({
+    let currentPageDetail = await this.pageDetailRepo.findOne({
       select: '*',
       join: pageProgramDetailJoiner,
       where: { [`${Table.PAGE_DETAIL}.page_detail_id`]: page_detail_id },
@@ -655,7 +679,9 @@ export class PageService {
     }
 
     let pageDetailValues = await this.pageDetailValueRepo.find({
-      page_detail_id,
+      select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL}.page_detail_id, ${Table.PAGE_DETAIL_VALUE}.*`,
+      join: pageDetailValueJoiner,
+      where: { [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id },
     });
 
     if (currentPageDetail.detail_type == PageDetailType.productBox) {
@@ -667,7 +693,11 @@ export class PageService {
             join: productLeftJoiner,
             where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_value },
           });
-          detailValue = { ...detailValue, ...product };
+
+          detailValue = {
+            ...detailValue,
+            ...product,
+          };
         }
 
         currentPageDetail['page_detail_values'][detailValue.detail_type] =
