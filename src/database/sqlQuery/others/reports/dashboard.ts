@@ -25,7 +25,7 @@ export const getNumberCustomersMonthlyByYear = (
 //   } LIMIT 10 OFFSET 0;`;
 
 export const getProductsAmountInStores = (sortBy) =>
-  `SELECT * FROM ddv_product_stores AS ps LEFT JOIN ddv_product_descriptions AS pd ON ps.product_id = pd.product_id WHERE amount > 0 ORDER BY amount ${
+  `SELECT store_location_id, product, MAX(amount) AS amount FROM ddv_product_stores AS ps JOIN ddv_product_descriptions AS pd ON ps.product_id = pd.product_id WHERE amount > 0 GROUP BY store_location_id ORDER BY amount ${
     sortBy == 0 ? 'ASC' : 'DESC'
   } LIMIT 10 OFFSET 0;`;
 

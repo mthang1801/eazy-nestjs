@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { stringShortener } from '../../../utils/helper';
 import {
   IsNotEmpty,
   IsOptional,
@@ -12,15 +13,28 @@ export class CreateCatalogDto {
   @IsOptional()
   status: string;
 
-  @ArrayNotEmpty()
+  @IsOptional()
   @Type(() => CatalogFeature)
   @ValidateNested()
   features: CatalogFeature[];
 }
 
 class CatalogFeature {
-  @IsNotEmpty()
-  feature: string;
+  @IsOptional()
+  feature_name: string;
+
+  @IsOptional()
+  status: string;
+
+  @IsOptional()
+  @Type(() => CatalogFeatureDetail)
+  @ValidateNested()
+  featureDetails: CatalogFeatureDetail[];
+}
+
+class CatalogFeatureDetail {
+  @IsOptional()
+  detail_name: string;
 
   @IsOptional()
   status: string;

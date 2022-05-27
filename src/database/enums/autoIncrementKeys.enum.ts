@@ -151,6 +151,6 @@ export enum AutoIncrementKeys {
   //========== Catalog =========
   ddv_catalogs = 'catalog_id',
   ddv_catalog_features = 'catalog_feature_id',
-  ddv_catalog_feature_value_products = 'value_id',
   ddv_catalog_feature_details = 'detail_id',
+  ddv_catalog_feature_value_products = 'value_id',
 }

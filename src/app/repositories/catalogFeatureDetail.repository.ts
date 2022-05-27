@@ -1,8 +1,8 @@
-import { Table } from 'src/database/enums';
-import { DatabaseService } from 'src/database/database.service';
-import { BaseRepositorty } from './../../base/base.repository';
 import { Injectable } from '@nestjs/common';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
+import { BaseRepositorty } from '../../base/base.repository';
+import { DatabaseService } from '../../database/database.service';
+import { Table } from '../../database/enums/tables.enum';
 @Injectable()
 export class CatalogFeatureDetailRepository<
   CatalogFeatureDetailEntity,
