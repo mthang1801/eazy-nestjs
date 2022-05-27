@@ -4,6 +4,7 @@ import { CatalogFeatureRepository } from '../repositories/catalogFeature.reposit
 import { CatalogRepository } from '../repositories/catalog.repository';
 import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
 import { CatalogController } from '../controllers/be/v1/catalog.controller';
+import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
 
 @Module({
   providers: [
@@ -11,12 +12,14 @@ import { CatalogController } from '../controllers/be/v1/catalog.controller';
     CatalogFeatureRepository,
     CatalogRepository,
     CatalogFeatureValueProductRepository,
+    CatalogFeatureDetailRepository,
   ],
   exports: [
     CatalogService,
     CatalogFeatureRepository,
     CatalogRepository,
     CatalogFeatureValueProductRepository,
+    CatalogFeatureDetailRepository,
   ],
   controllers: [CatalogController],
 })

@@ -800,6 +800,7 @@ export class PageService {
 
   async testGetPageDetailValueInfo(value_id) {
     return this.pageDetailValueRepo.findOne({
+      select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageProgramDetailValueJoiner,
       where: { [`${Table.PAGE_DETAIL_VALUE}.value_id`]: value_id },
     });
