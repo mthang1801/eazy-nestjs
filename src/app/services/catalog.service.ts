@@ -8,6 +8,9 @@ import { CatalogFeatureValueProductRepository } from '../repositories/catalogFet
 import { CatalogFeatureValueProductEntity } from '../entities/catalogFeatureValueProduct.entity';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
 import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
+import { getPageSkipLimit } from '../../utils/helper';
+import { catalogsListSearchFilter } from '../../utils/tableConditioner';
+import { Table } from 'src/database/enums';
 
 @Injectable()
 export class CatalogService {
@@ -52,13 +55,32 @@ export class CatalogService {
     return data;
   }
 
-  async get() {
-    const catalogList = await this.catalogRepo.find();
+  async getList(params: any = {}) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
 
-    for (let catalog of catalogList) {
-    }
+    let filterConditions = {};
 
-    return catalogList;
+    const catalogList = await this.catalogRepo.find({
+      select: '*',
+      where: catalogsListSearchFilter(search, filterConditions),
+      skip,
+      limit,
+    });
+
+    let count = await this.catalogRepo.find({
+      select: `COUNT(${Table.CATALOG}.catalog_id) as total`,
+      where: catalogsListSearchFilter(search, filterConditions),
+    });
+
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: catalogList,
+    };
   }
 
   async getById(catalog_id) {
@@ -68,6 +90,24 @@ export class CatalogService {
       catalog_id: catalog.catalog_id,
     });
 
-    return catalog;
+    let catalog_features = [];
+
+    for (let catalogFeature of catalogFeatures) {
+      //let catalog_feature_details = [];
+      let catalog_feature_details = await this.catalogFeatureDetailRepo.find({
+        catalog_feature_id: catalogFeature.catalog_feature_id,
+      });
+      let catalog_feature = {
+        ...catalogFeature,
+        catalog_feature_details: catalog_feature_details,
+      };
+      catalog_features.push(catalog_feature);
+    }
+
+    const result = {
+      ...catalog,
+      catalog_features: catalog_features,
+    };
+    return result;
   }
 }

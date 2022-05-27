@@ -542,3 +542,16 @@ export const discountProgramsDetailSearchFilter = (
 
   return searchFilterTemplate(filterConditions, arraySearch);
 };
+
+export const catalogsListSearchFilter = (
+  search = '',
+  filterConditions = {},
+) => {
+  let arraySearch = [];
+
+  if (search) {
+    arraySearch = [{ [`${Table.CATALOG}.catalog_name`]: Like(search) }];
+  }
+
+  return searchFilterTemplate(filterConditions, arraySearch);
+};

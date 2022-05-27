@@ -20,15 +20,12 @@ export class CatalogController extends BaseController {
   }
 
   @Get()
-  async get(
-    @Res() res: Response,
-    @Query() query,
-  ): Promise<IResponse> {
-    const result = await this.service.get();
+  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getList(params);
     return this.responseSuccess(res, result);
   }
 
-  @Get(":catalog_id")
+  @Get(':catalog_id')
   async getById(
     @Res() res: Response,
     @Param('catalog_id') catalog_id: number,
