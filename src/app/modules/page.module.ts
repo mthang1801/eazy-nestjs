@@ -7,6 +7,8 @@ import { PageDetailValueRepository } from '../repositories/pageDetailValue.repos
 import { PageControllerTester } from '../controllers/tester/page.controller';
 import { ProductsRepository } from '../repositories/products.repository';
 import { PageControllerFE } from '../controllers/fe/v1/page.controller';
+import { ProductsModule } from './products.module';
+import { BannerModule } from './banner.module';
 
 @Module({
   controllers: [PageController, PageControllerTester, PageControllerFE],
@@ -24,5 +26,6 @@ import { PageControllerFE } from '../controllers/fe/v1/page.controller';
     PageDetailValueRepository,
     ProductsRepository,
   ],
+  imports: [ProductsModule, BannerModule],
 })
 export class PageModule {}

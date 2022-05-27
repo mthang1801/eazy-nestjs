@@ -404,9 +404,9 @@ export class RedisCacheService {
   }
 
   async removeCachedFlashSale() {
-    let flashsaleCacheTableName = cacheTables.flashSale;
-    await this.removeCache(flashsaleCacheTableName);
-    await this.cacheRepo.delete({ table_name: flashsaleCacheTableName });
+    let FLASHSALECacheTableName = cacheTables.flashSale;
+    await this.removeCache(FLASHSALECacheTableName);
+    await this.cacheRepo.delete({ table_name: FLASHSALECacheTableName });
   }
 
   async removeRelatedServicesWithCachedProduct(productId) {

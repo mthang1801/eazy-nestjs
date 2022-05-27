@@ -231,7 +231,7 @@ export class bannerService {
     return _banners;
   }
 
-  async FEgetById(banner_id) {
+  async FEgetById(banner_id: number) {
     let banner = await this.bannerRepo.findOne({ banner_id });
     if (!banner) {
       throw new HttpException('Không tìm thấy Banner', 404);

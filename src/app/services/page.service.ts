@@ -32,17 +32,25 @@ import {
 } from '../../utils/joinTable';
 import { CreateOrUpdatePageDetailValueItemDto } from '../dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../dto/page-tester/update-pageDetailValuesPosition.dto';
-import { PageDetailType } from '../../constants/page.constant';
+import {
+  PageDetailType,
+  PageDetailValueType,
+} from '../../constants/page.constant';
 import {
   productLeftJoiner,
   pageDetailValueJoiner,
 } from '../../utils/joinTable';
 import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
+import { BOX_PRODUCTLeftJoiner } from '../../utils/joinTable';
+import { ProductService } from './products.service';
+import { ReviewRepository } from '../repositories/review.repository';
 import {
   getProductsListSelectorBE,
   getDetailProductsListSelectorFE,
 } from '../../utils/tableSelector';
+import { ReviewEntity } from '../entities/review.entity';
+import { bannerService } from './banner.service';
 
 @Injectable()
 export class PageService {
@@ -51,6 +59,9 @@ export class PageService {
     private pageDetailRepo: PageDetailRepository<PageDetailEntity>,
     private pageDetailValueRepo: PageDetailValueRepository<PageDetailValueEntity>,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private productService: ProductService,
+    private reviewRepo: ReviewRepository<ReviewEntity>,
+    private bannerService: bannerService,
   ) {}
   async createPage(data: CreatePageDto) {
     const pages = await this.pageRepo.find();
@@ -466,7 +477,7 @@ export class PageService {
       page_detail_id,
     });
 
-    if (currentPageDetail.detail_type == PageDetailType.productBox) {
+    if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
       currentPageDetail['page_detail_values'] = {};
       for (let detailValue of pageDetailValues) {
         if (detailValue.detail_type == 'LIST_PRODUCTS') {
@@ -507,31 +518,85 @@ export class PageService {
       page_detail_id,
     });
 
-    if (currentPageDetail.detail_type == PageDetailType.productBox) {
-      currentPageDetail['page_detail_values'] = {};
-      for (let detailValue of pageDetailValues) {
-        if (detailValue.detail_type == 'LIST_PRODUCTS') {
-          let product = await this.productRepo.findOne({
-            select: getDetailProductsListSelectorFE,
-            join: productLeftJoiner,
-            where: { [`${Table.PRODUCTS}.product_id`]: detailValue.data_value },
+    switch (currentPageDetail.detail_type) {
+      case PageDetailType.BOX_PRODUCT:
+        let pageDetailValue = {};
+        let products = await this.pageDetailValueRepo.find({
+          select: getDetailProductsListSelectorFE,
+          join: BOX_PRODUCTLeftJoiner,
+          where: {
+            page_detail_id,
+            detail_type: PageDetailValueType.LIST_PRODUCTS,
+          },
+        });
+
+        for (let productItem of products) {
+          //find product Stickers
+          productItem['stickers'] =
+            await this.productService.getProductStickers(productItem, true);
+
+          productItem['ratings'] = await this.reviewRepo.findOne({
+            product_id: productItem['product_id'],
           });
-          detailValue = { ...detailValue, ...product };
         }
 
-        currentPageDetail['page_detail_values'][detailValue.detail_type] =
-          currentPageDetail['page_detail_values'][detailValue.detail_type]
-            ? [
-                ...currentPageDetail['page_detail_values'][
-                  detailValue.detail_type
-                ],
-                detailValue,
-              ]
-            : [detailValue];
-      }
-    } else {
-      currentPageDetail['page_detail_values'] = pageDetailValues;
+        pageDetailValue['products'] = [...products];
+
+        pageDetailValue['tabNames'] = await this.pageDetailValueRepo.find({
+          select: '*',
+          where: {
+            page_detail_id,
+            detail_type: PageDetailValueType.LIST_TABS,
+          },
+        });
+
+        pageDetailValue['background'] = await this.pageDetailValueRepo.findOne({
+          page_detail_id,
+          detail_type: PageDetailValueType.BACKGROUND,
+        });
+
+        currentPageDetail['page_detail_values'] = { ...pageDetailValue };
+        break;
+      case PageDetailType.BANNER:
+        let bannerId = pageDetailValues[0]['data_value'];
+        if (bannerId) {
+          const banner = await this.bannerService.FEgetById(bannerId);
+          currentPageDetail['page_detail_values'] = banner;
+        }
+
+        break;
+      default:
+        currentPageDetail['page_detail_values'] = pageDetailValues;
     }
+
+    // if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
+    //   currentPageDetail['page_detail_values'] = {};
+    //   for (let detailValue of pageDetailValues) {
+    //     switch (detailValue.detail_type) {
+    //       case 'LIST_PRODUCTS':
+    //         let product = await this.productRepo.findOne({
+    //           select: getDetailProductsListSelectorFE,
+    //           join: productLeftJoiner,
+    //           where: {
+    //             [`${Table.PRODUCTS}.product_id`]: detailValue.data_value,
+    //           },
+    //         });
+    //         detailValue = { ...detailValue, ...product };
+    //         currentPageDetail['page_detail_values'][detailValue.detail_type] =
+    //           currentPageDetail['page_detail_values'][detailValue.detail_type]
+    //             ? [
+    //                 ...currentPageDetail['page_detail_values'][
+    //                   detailValue.detail_type
+    //                 ],
+    //                 detailValue,
+    //               ]
+    //             : [detailValue];
+    //         break;
+    //       default:
+    //         currentPageDetail['page_detail_values'] = pageDetailValues;
+    //     }
+    //   }
+    // }
 
     return currentPageDetail['page_detail_values'];
   }
@@ -732,7 +797,7 @@ export class PageService {
       where: { [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id },
     });
 
-    if (currentPageDetail.detail_type == PageDetailType.productBox) {
+    if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
       currentPageDetail['page_detail_values'] = {};
       for (let detailValue of pageDetailValues) {
         if (detailValue.detail_type == 'LIST_PRODUCTS') {
