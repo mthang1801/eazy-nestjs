@@ -22,4 +22,7 @@ class PageDetailValue {
 
   @IsNotEmpty()
   position: number;
+
+  @IsOptional()
+  status: string;
 }
