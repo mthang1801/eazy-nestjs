@@ -1,3 +1,5 @@
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 import {
   IsOptional,
   IsString,
@@ -26,6 +28,8 @@ export class UpdateDiscountProgramDto {
   time_end_at: string;
 
   @IsOptional()
+  @Type(() => AppliedProduct)
+  @ValidateNested()
   applied_products: AppliedProduct[];
 }
 

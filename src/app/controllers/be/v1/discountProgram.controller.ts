@@ -43,4 +43,17 @@ export class DiscountProgramController extends BaseController {
     await this.service.update(discount_id, data);
     return this.responseSuccess(res);
   }
+
+  @Get(':discount_id/products')
+  async getProductsInDiscountProgram(
+    @Res() res: Response,
+    @Param('discount_id') discount_id: number,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductsInDiscountProgram(
+      discount_id,
+      params,
+    );
+    return this.responseSuccess(res, result);
+  }
 }

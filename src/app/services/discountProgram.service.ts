@@ -130,7 +130,10 @@ export class DiscountProgramService {
         404,
       );
     }
+    return discountProgram;
+  }
 
+  async getProductsInDiscountProgram(discount_id, params: any = {}) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search, status } = params;
 
@@ -141,7 +144,6 @@ export class DiscountProgramService {
       filterConditions[`${Table.DISCOUNT_PROGRAM_DETAIL}.status`] = status;
     }
 
-    discountProgram['products'] = [];
     let orderFilters = [
       {
         field: `${Table.DISCOUNT_PROGRAM_DETAIL}.position`,
@@ -168,7 +170,7 @@ export class DiscountProgramService {
       where: discountProgramsDetailSearchFilter(search, filterConditions),
     });
 
-    discountProgram['products'] = {
+    return {
       paging: {
         currentPage: page,
         pageSize: limit,
@@ -176,8 +178,6 @@ export class DiscountProgramService {
       },
       data: productLists,
     };
-
-    return discountProgram;
   }
 
   async update(discount_id, data: UpdateDiscountProgramDto) {
