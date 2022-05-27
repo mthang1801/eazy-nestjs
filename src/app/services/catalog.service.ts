@@ -61,8 +61,24 @@ export class CatalogService {
   async getById(catalog_id) {
     const catalog = await this.catalogRepo.findOne({catalog_id});
 
-    const catalogFeatures = await this.catalogFeatureRepo.find({catalog.catalog_id});
+    const catalogFeatures = await this.catalogFeatureRepo.find({catalog_id: catalog.catalog_id});
 
-    return catalog;
+    let catalog_features = [];
+
+    for (let catalogFeature of catalogFeatures) {
+      //let catalog_feature_details = [];
+      let catalog_feature_details = await this.catalogFeatureDetailRepo.find({catalog_feature_id: catalogFeature.catalog_feature_id});
+      let catalog_feature = {
+        ...catalogFeature,
+        catalog_feature_details: catalog_feature_details
+      }
+      catalog_features.push(catalog_feature);
+    }
+
+    const result = {
+      ...catalog,
+      catalog_features: catalog_features,
+    }
+    return result;
   }
 }
