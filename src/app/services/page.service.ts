@@ -647,9 +647,13 @@ export class PageService {
   async testUpdatePageDetailsPosition(data: UpdatePageDetailsPosition) {
     if (data.page_details && data.page_details.length) {
       for (let pageDetailItem of data.page_details) {
+        let pageDetailItemData = this.pageDetailRepo.setData(pageDetailItem);
         await this.pageDetailRepo.update(
           { page_detail_id: pageDetailItem.page_detail_id },
-          { position: pageDetailItem.position },
+          {
+            ...pageDetailItemData,
+            page_detail_id: pageDetailItem.page_detail_id,
+          },
         );
       }
     }
