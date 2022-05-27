@@ -55,6 +55,7 @@ import { LogsModule } from './logs.module';
 import { PageModule } from './page.module';
 import { RedisCacheModule } from './redisCache.module';
 import { DiscountProgramModule } from './discountProgram.module';
+import { CatalogModule } from './catalog.module';
 
 @Module({
   imports: [
@@ -113,6 +114,7 @@ import { DiscountProgramModule } from './discountProgram.module';
     TradeinProgramModule,
     HomepageConfigModule,
     PageModule,
+    CatalogModule,
   ],
   providers: [
     {

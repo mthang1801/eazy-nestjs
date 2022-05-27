@@ -155,5 +155,6 @@ export enum Table {
   //=========== Catalog =============
   CATALOG = 'ddv_catalogs',
   CATALOG_FEATURE = 'ddv_catalog_features',
+  CATALOG_FEATURE_DETAIL = 'ddv_catalog_feature_details',
   CATALOG_FEATURE_VALUE_PRODUCT = 'ddv_catalog_feature_value_products',
 }
