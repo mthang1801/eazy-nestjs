@@ -29,4 +29,7 @@ export class CreateOrUpdatePageDetailValueItemDto {
 
   @IsOptional()
   url_value: string;
+
+  @IsOptional()
+  is_follow: string;
 }

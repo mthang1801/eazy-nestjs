@@ -69,4 +69,7 @@ class PageDetailValue {
 
   @IsOptional()
   url_value: string;
+
+  @IsOptional()
+  is_follow: string;
 }

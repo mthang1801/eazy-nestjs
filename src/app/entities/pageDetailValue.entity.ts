@@ -9,4 +9,5 @@ export class PageDetailValueEntity {
   image: string = '';
   detail_type: string = null;
   url_value: string = '';
+  is_follow: string = 'Y';
 }
