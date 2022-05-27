@@ -250,8 +250,8 @@ export class RedisCacheService {
       join: cartItemCacheJoiner,
       where: { [`${Table.CART_ITEMS}.cart_item_id`]: cartItemId },
     });
-    console.log(cartItem);
-    console.log(cartItem);
+    await this.cartItemRepo.delete({ cart_item_id: cartItemId }, true);
+
     if (cartItem && cartItem.user_id) {
       await this.removeCartByUserId(cartItem.user_id);
     }

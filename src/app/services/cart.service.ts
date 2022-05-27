@@ -187,8 +187,8 @@ export class CartService {
   }
 
   async delete(cart_item_id: number) {
-    await this.cartItemRepo.delete({ cart_item_id }, true);
     await this.cache.removeCartByCartItemId(cart_item_id);
+    await this.cartItemRepo.delete({ cart_item_id }, true);
   }
 
   async clearAll(cart_id) {
