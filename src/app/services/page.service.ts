@@ -717,7 +717,7 @@ export class PageService {
 
   async testGetPageDetailInfo(page_detail_id: number) {
     let currentPageDetail = await this.pageDetailRepo.findOne({
-      select: '*',
+      select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL}.*`,
       join: pageProgramDetailJoiner,
       where: { [`${Table.PAGE_DETAIL}.page_detail_id`]: page_detail_id },
     });
