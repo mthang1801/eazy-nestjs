@@ -492,7 +492,7 @@ export class PageService {
       currentPageDetail['page_detail_values'] = pageDetailValues;
     }
 
-    return currentPageDetail;
+    return currentPageDetail['page_detail_values'];
   }
 
   async createPageDetailItem(data: CreatePageDetailItemDto) {
@@ -544,10 +544,10 @@ export class PageService {
     });
 
     for (let pageDetail of pageDetails) {
-      let pageValues = await this.getPageDetailValues(
+      let pageDetailWithValues = await this.getPageDetailValues(
         pageDetail.page_detail_id,
       );
-      pageDetail['page_detail_values'] = pageValues;
+      pageDetail['page_detail_values'] = pageDetailWithValues;
     }
 
     currentPage['page_details'] = pageDetails;
@@ -793,9 +793,11 @@ export class PageService {
   ) {
     if (data.page_detail_values && data.page_detail_values.length) {
       for (let pageDetailValue of data.page_detail_values) {
+        let pageDetailValueData =
+          this.pageDetailValueRepo.setData(pageDetailValue);
         await this.pageDetailValueRepo.update(
           { value_id: pageDetailValue.value_id },
-          { position: pageDetailValue.position },
+          { ...pageDetailValueData, value_id: pageDetailValue.value_id },
         );
       }
     }
