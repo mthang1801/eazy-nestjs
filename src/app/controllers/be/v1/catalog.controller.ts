@@ -5,6 +5,7 @@ import { CreateCatalogDto } from '../../../dto/catalog/create-catalog.dto';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { CatalogService } from '../../../services/catalog.service';
 import { resourceUsage } from 'process';
+import { UpdateCatalogDto } from '../../../dto/catalog/update-catalog.dto';
 @Controller('be/v1/catalogs')
 export class CatalogController extends BaseController {
   constructor(private service: CatalogService) {
@@ -23,7 +24,7 @@ export class CatalogController extends BaseController {
   @Put(":catalog_id")
   async update(
     @Res() res: Response,
-    @Body() data: CreateCatalogDto,
+    @Body() data: UpdateCatalogDto,
     @Param('catalog_id') catalog_id: number,
   ): Promise<IResponse> {
     const result = await this.service.update(catalog_id, data);

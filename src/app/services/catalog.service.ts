@@ -8,6 +8,7 @@ import { CatalogFeatureValueProductRepository } from '../repositories/catalogFet
 import { CatalogFeatureValueProductEntity } from '../entities/catalogFeatureValueProduct.entity';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
 import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
+import { UpdateCatalogDto } from '../dto/catalog/update-catalog.dto';
 
 @Injectable()
 export class CatalogService {
@@ -88,10 +89,55 @@ export class CatalogService {
     return result;
   }
 
-  async update(catalog_id, data) {
-    const catalog = this.catalogRepo.findOne(catalog_id);
+  async update(catalog_id, data: UpdateCatalogDto) {
+    const catalog = await this.catalogRepo.findOne({catalog_id});
     console.log(catalog);
 
-    return this.catalogRepo.findOne(catalog_id);
+    const catalogInfo = {
+      ...this.catalogRepo.setData(data),
+    }
+    await this.catalogRepo.update(
+      {catalog_id},
+      catalogInfo,
+    )
+    if(data.features && data.features.length) {
+      for (let feature of data.features) {
+        // Nếu có truyền vào id của catalog_feature thì tiến hành cập nhật
+        if (feature.catalog_feature_id) {
+          //const featureInfo = await this.catalogFeatureRepo.findOne({catalog_feature_id: feature.catalog_feature_id});
+          const featureInfo = {
+            ...this.catalogFeatureRepo.setData(feature),
+          }
+          await this.catalogFeatureRepo.update(
+            {catalog_feature_id: feature.catalog_feature_id},
+            featureInfo,
+          )
+
+          if (feature.featureDetails && feature.featureDetails.length) {
+            for (let featureDetail of feature.featureDetails) {
+              if (featureDetail.detail_id) {
+                //const featureDetailInfo = await this.catalogFeatureDetailRepo.findOne({detail_id: featureDetail.detail_id});
+                const featureDetailInfo = {
+                  ...this.catalogFeatureDetailRepo.setData(featureDetail),
+                }
+                await this.catalogFeatureDetailRepo.update(
+                  {detail_id: featureDetail.detail_id},
+                  featureDetailInfo,
+                )
+              }
+              else {
+                console.log("Cần tạo mới feature detail.");
+              }
+            }
+          }
+        }
+        // Nếu không truyền vào id của catalog_feature thì tiến hành tạo mới
+        else {
+          console.log("Cần tạo mới catalog_feature.");
+        }
+      }
+    }
+
+    return this.getById(catalog_id);
   }
 }
