@@ -1638,7 +1638,7 @@ export class ProductService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    let { search, variant_ids } = params;
+    let { search, ...feature_codes } = params;
 
     let { page, skip, limit } = getPageSkipLimit(params);
 
@@ -1667,8 +1667,7 @@ export class ProductService {
     );
 
     let categoriesList = [
-      +categoryId,
-      ..._.map(categoriesListByLevel, 'category_id'),
+      ...new Set([+categoryId, ..._.map(categoriesListByLevel, 'category_id')]),
     ];
 
     let filterOrder = [
@@ -1684,75 +1683,43 @@ export class ProductService {
 
     let productsList = [];
     let count;
-    if (variant_ids) {
-      variant_ids = variant_ids.split(',');
-      for (let [i, variantId] of variant_ids.entries()) {
-        let filterCondition = {
-          [`${Table.PRODUCT_FEATURE_VALUES}.variant_id`]: variantId,
-          [`${Table.PRODUCT_FEATURE_VALUES}.category_id`]: In(
-            categoriesList.map((categoryId) => categoryId),
-          ),
-        };
-        if (productsList.length) {
-          filterCondition[`${Table.PRODUCT_FEATURE_VALUES}.product_id`] = In(
-            productsList.map((productId) => productId),
-          );
-        }
-        if (i === variant_ids.length - 1) {
-          productsList = await this.productFeatureValueRepo.find({
-            select: getProductListByVariantsInCategory,
-            join: productFeatureVariantByCategoryJoiner,
-            where: productsListsSearchFilter(search, filterCondition),
-            orderBy: filterOrder,
-            skip,
-            limit,
-          });
 
-          count = await this.productFeatureValueRepo.find({
-            select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
-            join: productFeatureVariantByCategoryJoiner,
-            where: productsListsSearchFilter(search, filterCondition),
-          });
-        } else {
-          productsList = await this.productFeatureValueRepo.find({
-            select: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
-            join: productFeatureVariantByCategoryJoiner,
-            where: productsListsSearchFilter(search, filterCondition),
-          });
-          productsList = productsList.map(({ product_id }) => product_id);
-        }
+    if (
+      feature_codes &&
+      typeof feature_codes === 'object' &&
+      Object.entries(feature_codes).length
+    ) {
+      for (let [key, val] of feature_codes) {
+        console.log(key, val);
       }
-    } else {
-      productsList = await this.productCategoryRepo.find({
-        select: [
-          ...getDetailProductsListSelectorFE,
-          `${Table.PRODUCTS_CATEGORIES}.position as position`,
-        ],
-        join: productListInCategoryJoiner,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-        orderBy: filterOrder,
-        skip,
-        limit,
-      });
-
-      count = await this.productCategoryRepo.find({
-        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-        join: productListInCategoryJoiner,
-        where: categoriesList.length
-          ? productsListCategorySearchFilter(
-              categoriesList,
-              search,
-              filterCondition,
-            )
-          : productsListsSearchFilter(search, filterCondition),
-      });
     }
+
+    productsList = await this.productCategoryRepo.find({
+      select: [
+        ...getDetailProductsListSelectorFE,
+        `${Table.PRODUCTS_CATEGORIES}.position as position`,
+      ],
+      join: productListInCategoryJoiner,
+      where: productsListCategorySearchFilter(
+        categoriesList,
+        search,
+        filterCondition,
+      ),
+
+      orderBy: filterOrder,
+      skip,
+      limit,
+    });
+
+    count = await this.productCategoryRepo.find({
+      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+      join: productListInCategoryJoiner,
+      where: productsListCategorySearchFilter(
+        categoriesList,
+        search,
+        filterCondition,
+      ),
+    });
 
     productsList = _.uniqBy(productsList, 'product_id');
 
@@ -4143,14 +4110,8 @@ export class ProductService {
       slug: slug.trim(),
     });
 
-    product = await this.productRepo.findOne({
-      select: productDetailSelector,
-      join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
+    if (product.status !== 'A') {
+      throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
     }
 
     this.productRepo.update(
@@ -4163,6 +4124,16 @@ export class ProductService {
     );
     if (productCacheResult) {
       return productCacheResult;
+    }
+
+    product = await this.productRepo.findOne({
+      select: productDetailSelector,
+      join: { [JoinTable.leftJoin]: productFullJoiner },
+      where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
+    });
+
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
     }
 
     if (product['product_function'] == 2) {
@@ -4419,6 +4390,7 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: {
         [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
+        [`${Table.PRODUCTS}.status`]: 'A',
       },
     });
 

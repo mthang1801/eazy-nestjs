@@ -1,7 +1,7 @@
 export enum PageDetailType {
   'normal' = 1,
   'BOX_PRODUCT' = 'BOX_PRODUCT',
-  'FLASHSALE' = 'FLASHSALE',
+  'FLASH_SALE' = 'FLASH_SALE',
   'BANNER' = 'BANNER',
 }
 

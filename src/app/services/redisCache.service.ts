@@ -374,18 +374,6 @@ export class RedisCacheService {
     let categoryByIdPrefix = prefixCacheKey.categoryId(category_id);
     await this.removeCache(null, categoryByIdPrefix);
     await this.cacheRepo.delete({ prefix_cache_key: categoryByIdPrefix });
-    // let productCategories = await this.productCategoryRepo.find({
-    //   category_id,
-    // });
-    // if (productCategories.length) {
-    //   for (let productCategoryItem of productCategories) {
-    //     if (productCategoryItem.product_id) {
-    //       await this.removeRelatedServicesWithCachedProduct(
-    //         productCategoryItem.product_id,
-    //       );
-    //     }
-    //   }
-    // }
   }
 
   async removeCategriesList() {
@@ -399,6 +387,7 @@ export class RedisCacheService {
 
   async removeCachedProductById(product_id) {
     let productCacheKey = cacheKeys.product(product_id);
+    await this.removeCache(null, null, productCacheKey);
     await this.delete(productCacheKey);
     await this.cacheRepo.delete({ cache_key: productCacheKey });
   }
@@ -406,7 +395,6 @@ export class RedisCacheService {
   async removeCachedFlashSale() {
     let FLASHSALECacheTableName = cacheTables.flashSale;
     await this.removeCache(FLASHSALECacheTableName);
-    await this.cacheRepo.delete({ table_name: FLASHSALECacheTableName });
   }
 
   async removeRelatedServicesWithCachedProduct(productId) {
@@ -422,5 +410,25 @@ export class RedisCacheService {
     await this.removeCachedFlashSale();
 
     await this.removeCacheCartByProductId(productId);
+  }
+
+  async getPage(pageId) {
+    const pageCacheKey = cacheKeys.page(pageId);
+    return this.get(pageCacheKey);
+  }
+
+  async setPage(pageId, data) {
+    const pageCacheKey = cacheKeys.page(pageId);
+    await this.set(pageCacheKey, data);
+    await this.saveCache(
+      cacheTables.page,
+      prefixCacheKey.pageId(pageId),
+      pageCacheKey,
+    );
+  }
+
+  async removePageById(pageId) {
+    const pageCacheKey = cacheKeys.page(pageId);
+    await this.removeCache(null, null, pageCacheKey);
   }
 }

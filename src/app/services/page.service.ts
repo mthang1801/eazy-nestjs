@@ -51,6 +51,9 @@ import {
 } from '../../utils/tableSelector';
 import { ReviewEntity } from '../entities/review.entity';
 import { bannerService } from './banner.service';
+import { FlashSaleRepository } from '../repositories/flashSale.repository';
+import { FlashSaleEntity } from '../entities/flashSale.entity';
+import { FlashSalesService } from './flashSale.service';
 
 @Injectable()
 export class PageService {
@@ -62,6 +65,7 @@ export class PageService {
     private productService: ProductService,
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private bannerService: bannerService,
+    private flashSaleService: FlashSalesService,
   ) {}
   async createPage(data: CreatePageDto) {
     const pages = await this.pageRepo.find();
@@ -540,20 +544,22 @@ export class PageService {
           });
         }
 
-        pageDetailValue['products'] = [...products];
+        pageDetailValue[PageDetailValueType.LIST_PRODUCTS] = [...products];
 
-        pageDetailValue['tabNames'] = await this.pageDetailValueRepo.find({
-          select: '*',
-          where: {
+        pageDetailValue[PageDetailValueType.LIST_TABS] =
+          await this.pageDetailValueRepo.find({
+            select: '*',
+            where: {
+              page_detail_id,
+              detail_type: PageDetailValueType.LIST_TABS,
+            },
+          });
+
+        pageDetailValue[PageDetailValueType.BACKGROUND] =
+          await this.pageDetailValueRepo.findOne({
             page_detail_id,
-            detail_type: PageDetailValueType.LIST_TABS,
-          },
-        });
-
-        pageDetailValue['background'] = await this.pageDetailValueRepo.findOne({
-          page_detail_id,
-          detail_type: PageDetailValueType.BACKGROUND,
-        });
+            detail_type: PageDetailValueType.BACKGROUND,
+          });
 
         currentPageDetail['page_detail_values'] = { ...pageDetailValue };
         break;
@@ -563,40 +569,15 @@ export class PageService {
           const banner = await this.bannerService.FEgetById(bannerId);
           currentPageDetail['page_detail_values'] = banner;
         }
+        break;
+      case PageDetailType.FLASH_SALE:
+        const flashSale = await this.flashSaleService.FEget();
+        currentPageDetail['page_detail_values'] = flashSale;
 
         break;
       default:
         currentPageDetail['page_detail_values'] = pageDetailValues;
     }
-
-    // if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
-    //   currentPageDetail['page_detail_values'] = {};
-    //   for (let detailValue of pageDetailValues) {
-    //     switch (detailValue.detail_type) {
-    //       case 'LIST_PRODUCTS':
-    //         let product = await this.productRepo.findOne({
-    //           select: getDetailProductsListSelectorFE,
-    //           join: productLeftJoiner,
-    //           where: {
-    //             [`${Table.PRODUCTS}.product_id`]: detailValue.data_value,
-    //           },
-    //         });
-    //         detailValue = { ...detailValue, ...product };
-    //         currentPageDetail['page_detail_values'][detailValue.detail_type] =
-    //           currentPageDetail['page_detail_values'][detailValue.detail_type]
-    //             ? [
-    //                 ...currentPageDetail['page_detail_values'][
-    //                   detailValue.detail_type
-    //                 ],
-    //                 detailValue,
-    //               ]
-    //             : [detailValue];
-    //         break;
-    //       default:
-    //         currentPageDetail['page_detail_values'] = pageDetailValues;
-    //     }
-    //   }
-    // }
 
     return currentPageDetail['page_detail_values'];
   }
