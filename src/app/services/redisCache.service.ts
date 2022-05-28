@@ -415,6 +415,8 @@ export class RedisCacheService {
     await this.removeCachedFlashSale();
 
     await this.removeCacheCartByProductId(productId);
+
+    await this.removeCacheAllPages();
   }
 
   async getPage(pageId) {
@@ -435,5 +437,33 @@ export class RedisCacheService {
   async removePageById(pageId) {
     const pageCacheKey = cacheKeys.page(pageId);
     await this.removeCache(null, null, pageCacheKey);
+  }
+
+  async getCachePageById(page_id) {
+    const pageCacheKey = cacheKeys.page(page_id);
+    return this.get(pageCacheKey);
+  }
+
+  async setCachePageById(page_id, data) {
+    const pageCacheKey = cacheKeys.page(page_id);
+    await this.set(pageCacheKey, data);
+    await this.saveCache(
+      cacheTables.page,
+      prefixCacheKey.pageId(page_id),
+      pageCacheKey,
+    );
+  }
+
+  async removeCachePageById(page_id) {
+    const pageCacheKey = cacheKeys.page(page_id);
+    await this.removeCache(
+      cacheTables.page,
+      prefixCacheKey.pageId(page_id),
+      pageCacheKey,
+    );
+  }
+
+  async removeCacheAllPages() {
+    await this.removeCache(cacheTables.page);
   }
 }

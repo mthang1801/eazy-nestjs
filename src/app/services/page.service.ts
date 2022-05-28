@@ -54,6 +54,7 @@ import { bannerService } from './banner.service';
 import { FlashSaleRepository } from '../repositories/flashSale.repository';
 import { FlashSaleEntity } from '../entities/flashSale.entity';
 import { FlashSalesService } from './flashSale.service';
+import { RedisCacheService } from './redisCache.service';
 
 @Injectable()
 export class PageService {
@@ -66,6 +67,7 @@ export class PageService {
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private bannerService: bannerService,
     private flashSaleService: FlashSalesService,
+    private cache: RedisCacheService,
   ) {}
   async createPage(data: CreatePageDto) {
     const pages = await this.pageRepo.find();
@@ -573,13 +575,39 @@ export class PageService {
       case PageDetailType.FLASH_SALE:
         const flashSale = await this.flashSaleService.FEget();
         currentPageDetail['page_detail_values'] = flashSale;
-
+        break;
+      case PageDetailType.MENU:
+        const menuDetailValue = await this.getMenu(pageDetailValues);
+        currentPageDetail['page_detail_values'] = menuDetailValue;
         break;
       default:
         currentPageDetail['page_detail_values'] = pageDetailValues;
     }
 
     return currentPageDetail['page_detail_values'];
+  }
+
+  async getMenu(pageDetailValues) {
+    for (let pageDetailValue of pageDetailValues) {
+      if (pageDetailValue.detail_type === PageDetailType.BOX_MENU) {
+        let resultData = JSON.parse(pageDetailValue.data_value);
+        pageDetailValue['data_value'] = { ...resultData };
+        if (resultData['LIST_PRODUCT'] && resultData['LIST_PRODUCT'].length) {
+          let productDetails = [];
+          for (let { product_id } of resultData['LIST_PRODUCT']) {
+            let product = await this.productRepo.findOne({
+              select: getProductsListSelectorBE,
+              join: productLeftJoiner,
+              where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+            });
+            productDetails = [...productDetails, product];
+          }
+          resultData['LIST_PRODUCT'] = productDetails;
+        }
+        pageDetailValue['data_value'] = resultData;
+      }
+    }
+    return pageDetailValues;
   }
 
   async createPageDetailItem(data: CreatePageDetailItemDto) {
@@ -614,8 +642,18 @@ export class PageService {
     return result;
   }
 
-  async FEGetPage(page_id) {
-    const currentPage = await this.pageRepo.findOne({ page_id });
+  async FEGetPage(page_code) {
+    const currentPage = await this.pageRepo.findOne({ page_code });
+    if (!currentPage) {
+      throw new HttpException('Không tìm thấy trang.', 404);
+    }
+
+    let pageCacheResult = await this.cache.getCachePageById(
+      currentPage.page_id,
+    );
+    if (pageCacheResult) {
+      return pageCacheResult;
+    }
 
     const pageDetails = await this.pageDetailRepo.find({
       select: '*',
@@ -626,7 +664,7 @@ export class PageService {
         },
       ],
       where: {
-        [`${Table.PAGE_DETAIL}.page_id`]: page_id,
+        [`${Table.PAGE_DETAIL}.page_id`]: currentPage.page_id,
       },
     });
 
@@ -639,6 +677,8 @@ export class PageService {
 
     currentPage['page_details'] = pageDetails;
 
+    await this.cache.setCachePageById(currentPage.page_id, currentPage);
+
     return currentPage;
   }
 
@@ -650,6 +690,8 @@ export class PageService {
       if (!pageDetail) {
         throw new HttpException('Không tìm thấy trang chi tiết', 404);
       }
+
+      await this.cache.removeCachePageById(pageDetail.page_id);
 
       let pageDetails = await this.pageDetailRepo.find({
         page_id: data.page_id,
@@ -698,9 +740,16 @@ export class PageService {
         throw new HttpException('Cần nhập tên module', 400);
       }
 
+      if (!data.page_id) {
+        throw new HttpException('Cần truyền page_id', 400);
+      }
+
+      await this.cache.removeCachePageById(data.page_id);
+
       let pageDetails = await this.pageDetailRepo.find({
         page_id: data.page_id,
       });
+
       if (
         pageDetails.length &&
         pageDetails.some(
@@ -733,6 +782,12 @@ export class PageService {
 
   async testUpdatePageDetailsPosition(data: UpdatePageDetailsPosition) {
     if (data.page_details && data.page_details.length) {
+      let pageDetail = await this.pageDetailRepo.findOne({
+        page_detail_id: data.page_details[0].page_detail_id,
+      });
+      if (pageDetail) {
+        await this.cache.removeCachePageById(pageDetail.page_id);
+      }
       for (let pageDetailItem of data.page_details) {
         let pageDetailItemData = this.pageDetailRepo.setData(pageDetailItem);
         await this.pageDetailRepo.update(
@@ -815,12 +870,19 @@ export class PageService {
     data: CreateOrUpdatePageDetailValueItemDto,
   ) {
     if (data.value_id) {
-      const currentPageDetail = await this.pageDetailValueRepo.findOne({
+      const currentPageDetailValue = await this.pageDetailValueRepo.findOne({
         page_detail_id: data.page_detail_id,
         value_id: data.value_id,
       });
-      if (!currentPageDetail) {
+      if (!currentPageDetailValue) {
         throw new HttpException('Không tìm thấy trang chi tiết', 404);
+      }
+
+      const currentPageDetail = await this.pageDetailRepo.findOne({
+        page_detail_id: currentPageDetailValue.page_detail_id,
+      });
+      if (currentPageDetail) {
+        await this.cache.removeCachePageById(currentPageDetail.page_id);
       }
 
       let pageDetailValues = await this.pageDetailValueRepo.find({
@@ -853,6 +915,12 @@ export class PageService {
       if (!data.page_detail_id) {
         throw new HttpException('Trang chi tiết là bắt buộc', 400);
       }
+      const currentPageDetail = await this.pageDetailRepo.findOne({
+        page_detail_id: data.page_detail_id,
+      });
+      if (currentPageDetail) {
+        await this.cache.removeCachePageById(currentPageDetail.page_id);
+      }
 
       let pageDetailValues = await this.pageDetailValueRepo.find({
         page_detail_id: data.page_detail_id,
@@ -883,6 +951,17 @@ export class PageService {
     data: UpdatePageDetailValuesPositionDto,
   ) {
     if (data.page_detail_values && data.page_detail_values.length) {
+      let firstPageDetailValue = await this.pageDetailValueRepo.findOne({
+        value_id: data.page_detail_values[0].value_id,
+      });
+      if (firstPageDetailValue) {
+        let pageDetail = await this.pageDetailRepo.findOne({
+          page_detail_id: firstPageDetailValue.page_detail_id,
+        });
+        if (pageDetail) {
+          await this.cache.removeCachePageById(pageDetail.page_id);
+        }
+      }
       for (let pageDetailValue of data.page_detail_values) {
         let pageDetailValueData =
           this.pageDetailValueRepo.setData(pageDetailValue);
@@ -916,6 +995,7 @@ export class PageService {
         }
         resultData['LIST_PRODUCT'] = productDetails;
       }
+
       result['data_value'] = resultData;
     }
 
