@@ -105,28 +105,34 @@ export class CatalogService {
         // Nếu có truyền vào id của catalog_feature thì tiến hành cập nhật
         if (feature.catalog_feature_id) {
           //const featureInfo = await this.catalogFeatureRepo.findOne({catalog_feature_id: feature.catalog_feature_id});
-          const featureInfo = {
+          const featureData = {
             ...this.catalogFeatureRepo.setData(feature),
           }
           await this.catalogFeatureRepo.update(
             {catalog_feature_id: feature.catalog_feature_id},
-            featureInfo,
+            featureData,
           )
 
           if (feature.featureDetails && feature.featureDetails.length) {
             for (let featureDetail of feature.featureDetails) {
               if (featureDetail.detail_id) {
                 //const featureDetailInfo = await this.catalogFeatureDetailRepo.findOne({detail_id: featureDetail.detail_id});
-                const featureDetailInfo = {
+                const featureDetailData = {
                   ...this.catalogFeatureDetailRepo.setData(featureDetail),
                 }
                 await this.catalogFeatureDetailRepo.update(
                   {detail_id: featureDetail.detail_id},
-                  featureDetailInfo,
+                  featureDetailData,
                 )
               }
               else {
                 console.log("Cần tạo mới feature detail.");
+                const featureDetailData = {
+                  ...new CatalogFeatureDetailEntity(),
+                  ...this.catalogFeatureDetailRepo.setData(featureDetail),
+                  catalog_feature_id: feature.catalog_feature_id,
+                }
+                await this.catalogFeatureDetailRepo.create(featureDetailData);
               }
             }
           }
@@ -134,6 +140,23 @@ export class CatalogService {
         // Nếu không truyền vào id của catalog_feature thì tiến hành tạo mới
         else {
           console.log("Cần tạo mới catalog_feature.");
+          const catalogFeatureData = {
+            ...new CatalogFeatureEntity(),
+            ...this.catalogFeatureRepo.setData(feature),
+            catalog_id: catalog.catalog_id,
+          }
+          const catalogFeature = await this.catalogFeatureRepo.create(catalogFeatureData);
+          if (feature.featureDetails && feature.featureDetails.length) {
+            for (let featureDetail of feature.featureDetails){
+              //console.log(featureDetail);
+              const catalogFeatureDetailData = {
+                ...new CatalogFeatureDetailEntity(),
+                ...this.catalogFeatureDetailRepo.setData(featureDetail),
+                catalog_feature_id: catalogFeature.catalog_feature_id,
+              }
+              await this.catalogFeatureDetailRepo.create(catalogFeatureDetailData);
+            }
+          }
         }
       }
     }
