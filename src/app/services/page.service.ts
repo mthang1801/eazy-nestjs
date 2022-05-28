@@ -895,10 +895,30 @@ export class PageService {
   }
 
   async testGetPageDetailValueInfo(value_id) {
-    return this.pageDetailValueRepo.findOne({
+    let result = await this.pageDetailValueRepo.findOne({
       select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageProgramDetailValueJoiner,
       where: { [`${Table.PAGE_DETAIL_VALUE}.value_id`]: value_id },
     });
+
+    if (result.detail_type === PageDetailType.BOX_MENU) {
+      let resultData = JSON.parse(result.data_value);
+      result['data_value'] = { ...resultData };
+      if (resultData['LIST_PRODUCT'] && resultData['LIST_PRODUCT'].length) {
+        let productDetails = [];
+        for (let { product_id } of resultData['LIST_PRODUCT']) {
+          let product = await this.productRepo.findOne({
+            select: getProductsListSelectorBE,
+            join: productLeftJoiner,
+            where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+          });
+          productDetails = [...productDetails, product];
+        }
+        resultData['LIST_PRODUCT'] = productDetails;
+      }
+      result['data_value'] = resultData;
+    }
+
+    return result;
   }
 }

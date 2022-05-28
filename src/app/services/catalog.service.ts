@@ -25,11 +25,11 @@ export class CatalogService {
       ...new CatalogEntity(),
       ...this.catalogRepo.setData(data),
     };
-    console.log(data);
+
     const checkExistCatalog = await this.catalogRepo.findOne({
       catalog_name: data.catalog_name,
     });
-    console.log(checkExistCatalog);
+
     if (checkExistCatalog) {
       throw new HttpException('Ngành hàng đã tồn tại trong hệ thống.', 409);
     }

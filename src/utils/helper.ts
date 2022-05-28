@@ -160,8 +160,12 @@ export const formatCustomerDatetime = (customer) => {
 
 export const getPageSkipLimit = (params) => {
   let { page, limit } = params;
+
   page = +page || 1;
-  limit = +limit || 10;
+  limit = +limit || 50;
+  if (limit > 100) {
+    limit = 100;
+  }
   let skip = (page - 1) * limit;
   return { page, skip, limit };
 };
@@ -184,7 +188,7 @@ export const startToday = moment(new Date().toLocaleDateString()).format(
   'YYYY-MM-DD HH:mm:ss',
 );
 
-function distance(lat1, lon1, lat2, lon2, unit) {
+export function distance(lat1, lon1, lat2, lon2, unit) {
   var radlat1 = (Math.PI * lat1) / 180;
   var radlat2 = (Math.PI * lat2) / 180;
   var theta = lon1 - lon2;

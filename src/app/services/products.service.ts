@@ -1646,6 +1646,7 @@ export class ProductService {
       category.category_id,
       params,
     );
+
     if (categoryCacheResult) {
       return categoryCacheResult;
     }
