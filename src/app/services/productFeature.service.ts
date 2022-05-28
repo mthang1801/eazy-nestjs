@@ -57,7 +57,7 @@ export class ProductFeatureService {
     data: CreateProductFeatureDto,
   ): Promise<IProductFeaturesResponse> {
     const checkFeatureCodeExist = await this.productFeaturesRepo.findOne({
-      feature_code: data.feature_code,
+      feature_code: convertToSlug(data.feature_code),
     });
     if (checkFeatureCodeExist) {
       throw new HttpException('Feature code đã tồn tại', 409);
@@ -70,6 +70,7 @@ export class ProductFeatureService {
       ...productFeatureData,
       created_at: formatStandardTimeStamp(),
       updated_at: formatStandardTimeStamp(),
+      feature_code: convertToSlug(data.feature_code),
     });
 
     let result = { ...newFeature };
@@ -473,7 +474,7 @@ export class ProductFeatureService {
     if (data.feature_code) {
       const checkFeatureCode = await this.productFeaturesRepo.findOne({
         feature_id: Not(Equal(id)),
-        feature_code: data.feature_code,
+        feature_code: convertToSlug(data.feature_code),
       });
       if (checkFeatureCode) {
         throw new HttpException('Feature code đã tồn tại', 409);
@@ -484,6 +485,11 @@ export class ProductFeatureService {
       ...this.productFeaturesRepo.setData(data),
       updated_at: formatStandardTimeStamp(),
     };
+
+    if (data.feature_code) {
+      productFeatureData['feature_code'] = convertToSlug(data.feature_code);
+    }
+
     let updatedFeature = {};
     if (Object.entries(productFeatureData).length) {
       updatedFeature = await this.productFeaturesRepo.update(

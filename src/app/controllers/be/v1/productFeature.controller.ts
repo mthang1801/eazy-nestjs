@@ -58,7 +58,7 @@ export class ProductFeatureController extends BaseController {
     @Res() res: Response,
   ): Promise<IResponse> {
     const { result, message } = await this.service.update(id, data);
-    return this.responseSuccess(res, result, 'Cập nhật thành công');
+    return this.responseSuccess(res, result);
   }
 
   // @Delete()
