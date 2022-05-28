@@ -142,7 +142,7 @@ export class ProductFeatureService {
     }
 
     let productFeatures = await this.productFeaturesRepo.find({
-      select: ['*'],
+      select: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.*, ${Table.PRODUCT_FEATURES}.*`,
       join: productFeatureJoiner,
       orderBy: [
         { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
@@ -156,7 +156,7 @@ export class ProductFeatureService {
       for (let productFeatureItem of productFeatures) {
         let productFeatureVariants = await this.productFeatureVariantsRepo.find(
           {
-            select: ['*'],
+            select: `${Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS}.*, ${Table.PRODUCT_FEATURES_VARIANTS}.*`,
             join: productFeatureVariantJoiner,
             where: {
               [`${Table.PRODUCT_FEATURES_VARIANTS}.feature_id`]:
