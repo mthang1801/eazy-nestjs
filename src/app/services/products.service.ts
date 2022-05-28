@@ -730,64 +730,181 @@ export class ProductService {
   }
 
   async getListFE(params) {
-    let {
-      search,
-      status, // Trạng thái hiển thị
-      category_id, //  Danh mục SP
-    } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
-
-    let filterCondition = {};
-    let filterOrders = [
-      { field: `${Table.PRODUCTS}.updated_at`, sortBy: SortBy.DESC },
-    ];
+    let { search, category_ids, ...feature_codes } = params;
+    let filterConditions = {};
 
     let categoriesList = [];
-    if (category_id) {
-      categoriesList = await this.categoryService.childrenCategories(
-        category_id,
-      );
-      categoriesList = [
-        +category_id,
-        ...categoriesList.map(({ category_id }) => category_id),
-      ];
+    if (category_ids) {
+      let _category_ids = category_ids;
+      categoriesList = _category_ids.split(',').map((categoryId) => categoryId);
+      filterConditions[`${Table.PRODUCTS_CATEGORIES}.category_id`] =
+        In(categoriesList);
     }
 
-    let productLists = await this.productRepo.find({
-      select: getProductsListSelector,
-      join: productLeftJoiner,
-      orderBy: filterOrders,
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-      skip,
+    let filterOrder = [
+      {
+        field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+        sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
+      },
+      {
+        field: `${Table.PRODUCTS}.updated_at`,
+        sortBy: SortBy.DESC,
+      },
+    ];
+
+    let variantIds = [];
+    if (feature_codes) {
+      for (let [key, val] of Object.entries(feature_codes)) {
+        if (val) {
+          let _val: any = val;
+          variantIds = [
+            ...variantIds,
+            ..._val.split(',').map((variantId) => variantId),
+          ];
+        }
+      }
+    }
+
+    let productsList = [];
+    let count;
+
+    //======== cache =========
+    let productCacheKey = {
+      page,
       limit,
-    });
+    };
 
-    let count = await this.productRepo.find({
-      select: countDistinctProduct,
-      join: productLeftJoiner,
-      where: categoriesList.length
-        ? productsListCategorySearchFilter(
-            categoriesList,
-            search,
-            filterCondition,
-          )
-        : productsListsSearchFilter(search, filterCondition),
-    });
+    if (category_ids) {
+      productCacheKey['category_ids'] = category_ids;
+    }
 
-    return {
+    if (variantIds) {
+      variantIds = [...new Set(variantIds.sort((a, b) => a - b))];
+      productCacheKey['variant_ids'] = variantIds.join(',');
+    }
+    await this.cache.removeProductCacheList(productCacheKey);
+    let productCacheResult = await this.cache.getProductCacheList(
+      productCacheKey,
+    );
+
+    if (productCacheResult) {
+      return productCacheResult;
+    }
+
+    if (variantIds) {
+      for (let [i, variantId] of variantIds.entries()) {
+        filterConditions[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] =
+          variantId;
+
+        if (productsList.length) {
+          filterConditions[`${Table.PRODUCT_FEATURE_VALUES}.product_id`] = In(
+            productsList.map((productId) => productId),
+          );
+        }
+
+        if (i === variantIds.length - 1) {
+          productsList = await this.productFeatureValueRepo.find({
+            select: getProductListByVariantsInCategory,
+            join: productFeatureVariantByCategoryJoiner,
+            where: categoriesList.length
+              ? productsListCategorySearchFilter(
+                  categoriesList,
+                  search,
+                  filterConditions,
+                )
+              : productsListsSearchFilter(search, filterConditions),
+            orderBy: filterOrder,
+            skip,
+            limit,
+          });
+
+          count = await this.productFeatureValueRepo.find({
+            select: `COUNT(DISTINCT(${Table.PRODUCT_FEATURE_VALUES}.product_id)) as total`,
+            join: productFeatureVariantByCategoryJoiner,
+            where: categoriesList.length
+              ? productsListCategorySearchFilter(
+                  categoriesList,
+                  search,
+                  filterConditions,
+                )
+              : productsListsSearchFilter(search, filterConditions),
+          });
+
+          continue;
+        }
+        productsList = await this.productFeatureValueRepo.find({
+          select: `${Table.PRODUCT_FEATURE_VALUES}.product_id`,
+          join: productFeatureVariantByCategoryJoiner,
+          where: categoriesList.length
+            ? productsListCategorySearchFilter(
+                categoriesList,
+                search,
+                filterConditions,
+              )
+            : productsListsSearchFilter(search, filterConditions),
+        });
+        productsList = productsList.map(({ product_id }) => product_id);
+      }
+    } else {
+      productsList = await this.productCategoryRepo.find({
+        select: [
+          ...getDetailProductsListSelectorFE,
+          `${Table.PRODUCTS_CATEGORIES}.position as position`,
+        ],
+        join: productListInCategoryJoiner,
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterConditions,
+            )
+          : productsListsSearchFilter(search, filterConditions),
+        orderBy: filterOrder,
+        skip,
+        limit,
+      });
+
+      count = await this.productCategoryRepo.find({
+        select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
+        join: productListInCategoryJoiner,
+        where: categoriesList.length
+          ? productsListCategorySearchFilter(
+              categoriesList,
+              search,
+              filterConditions,
+            )
+          : productsListsSearchFilter(search, filterConditions),
+      });
+    }
+
+    console.log(productsList);
+    productsList = _.uniqBy(productsList, 'product_id');
+
+    for (let productItem of productsList) {
+      //find product Stickers
+      productItem['stickers'] = await this.getProductStickers(
+        productItem,
+        true,
+      );
+
+      productItem['ratings'] = await this.reviewRepo.findOne({
+        product_id: productItem['product_id'],
+      });
+    }
+
+    let productsResult = {
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count[0].total,
+        total: count[0]?.total,
       },
-      products: productLists,
+      data: productsList,
     };
+
+    await this.cache.setProductCacheList(productCacheKey, productsResult);
+
+    return productsResult;
   }
 
   async getListBE(params: any) {
@@ -1625,140 +1742,6 @@ export class ProductService {
       },
       products: productsList,
     };
-  }
-
-  async getProductsListByCategorySlug(slug: string, params) {
-    const category = await this.categoryRepo.findOne({
-      select: categorySelector,
-      join: categoryJoiner,
-      where: { [`${Table.CATEGORIES}.slug`]: slug.trim() },
-    });
-
-    if (!category) {
-      throw new HttpException('Không tìm thấy danh mục SP.', 404);
-    }
-
-    let { search, ...feature_codes } = params;
-
-    let { page, skip, limit } = getPageSkipLimit(params);
-
-    let categoryCacheResult = await this.cache.getCategoryById(
-      category.category_id,
-      params,
-    );
-
-    if (categoryCacheResult) {
-      return categoryCacheResult;
-    }
-
-    let categoryId = category.category_id;
-    let categoriesListByLevel = await this.categoryService.childrenCategories(
-      categoryId,
-    );
-
-    let filterCondition = {
-      [`${Table.PRODUCTS}.product_function`]: Not(Equal(2)),
-      [`${Table.PRODUCTS}.status`]: 'A',
-    };
-
-    categoriesListByLevel = _.orderBy(
-      categoriesListByLevel,
-      ['level'],
-      ['asc'],
-    );
-
-    let categoriesList = [
-      ...new Set([+categoryId, ..._.map(categoriesListByLevel, 'category_id')]),
-    ];
-
-    let filterOrder = [
-      {
-        field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
-        sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
-      },
-      {
-        field: `${Table.PRODUCTS}.updated_at`,
-        sortBy: SortBy.DESC,
-      },
-    ];
-
-    let productsList = [];
-    let count;
-
-    if (
-      feature_codes &&
-      typeof feature_codes === 'object' &&
-      Object.entries(feature_codes).length
-    ) {
-      for (let [key, val] of feature_codes) {
-        console.log(key, val);
-      }
-    }
-
-    productsList = await this.productCategoryRepo.find({
-      select: [
-        ...getDetailProductsListSelectorFE,
-        `${Table.PRODUCTS_CATEGORIES}.position as position`,
-      ],
-      join: productListInCategoryJoiner,
-      where: productsListCategorySearchFilter(
-        categoriesList,
-        search,
-        filterCondition,
-      ),
-
-      orderBy: filterOrder,
-      skip,
-      limit,
-    });
-
-    count = await this.productCategoryRepo.find({
-      select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
-      join: productListInCategoryJoiner,
-      where: productsListCategorySearchFilter(
-        categoriesList,
-        search,
-        filterCondition,
-      ),
-    });
-
-    productsList = _.uniqBy(productsList, 'product_id');
-
-    for (let productItem of productsList) {
-      //find product Stickers
-      productItem['stickers'] = await this.getProductStickers(
-        productItem,
-        true,
-      );
-
-      productItem['ratings'] = await this.reviewRepo.findOne({
-        product_id: productItem['product_id'],
-      });
-    }
-
-    let features = await this.getFeaturesSetByCategoryId(
-      category['category_id'],
-    );
-
-    let categoryResult = {
-      paging: {
-        currentPage: page,
-        pageSize: limit,
-        total: count[0]?.total,
-      },
-      currentCategory: category,
-      childrenCategories: categoriesListByLevel,
-      products: productsList,
-      features,
-    };
-
-    await this.cache.setCategoryById(
-      category['category_id'],
-      params,
-      categoryResult,
-    );
-
-    return categoryResult;
   }
 
   async getFeaturesSetByCategoryId(category_id) {

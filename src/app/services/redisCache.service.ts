@@ -198,6 +198,17 @@ export class RedisCacheService {
     );
   }
 
+  async removeProductCacheList(params) {
+    let productCacheListKey = cacheKeys.products(
+      convertQueryParamsIntoCachedString(params),
+    );
+    await this.removeCache(
+      cacheKeys.product,
+      prefixCacheKey.products,
+      productCacheListKey,
+    );
+  }
+
   async getCategoriesList(params) {
     let categoriesListKey = cacheKeys.categories(
       convertQueryParamsIntoCachedString(params),
@@ -217,19 +228,22 @@ export class RedisCacheService {
     );
   }
 
-  async getCategoryById(category_id, params) {
-    let queryParameters = `${category_id}${convertQueryParamsIntoCachedString(
-      params,
-    )}`;
-    let categoryCacheKey = cacheKeys.category(queryParameters);
+  async removeCategriesList() {
+    let categoryPrefixKey = prefixCacheKey.categories;
+    await this.removeCache(null, categoryPrefixKey);
+    await this.cacheRepo.delete({ prefix_cache_key: categoryPrefixKey });
+    let categoryLevelPrefixKey = prefixCacheKey.categoriesLevel;
+    await this.removeCache(null, categoryLevelPrefixKey);
+    await this.cacheRepo.delete({ prefix_cache_key: categoryLevelPrefixKey });
+  }
+
+  async getCategoryById(category_id) {
+    let categoryCacheKey = cacheKeys.category(category_id);
     return this.get(categoryCacheKey);
   }
 
-  async setCategoryById(category_id, params, data) {
-    let queryParameters = `${category_id}${convertQueryParamsIntoCachedString(
-      params,
-    )}`;
-    let categoryCacheKey = cacheKeys.category(queryParameters);
+  async setCategoryById(category_id, data) {
+    let categoryCacheKey = cacheKeys.category(category_id);
     await this.set(categoryCacheKey, data);
     await this.saveCache(
       cacheTables.category,
@@ -374,15 +388,6 @@ export class RedisCacheService {
     let categoryByIdPrefix = prefixCacheKey.categoryId(category_id);
     await this.removeCache(null, categoryByIdPrefix);
     await this.cacheRepo.delete({ prefix_cache_key: categoryByIdPrefix });
-  }
-
-  async removeCategriesList() {
-    let categoryPrefixKey = prefixCacheKey.categories;
-    await this.removeCache(null, categoryPrefixKey);
-    await this.cacheRepo.delete({ prefix_cache_key: categoryPrefixKey });
-    let categoryLevelPrefixKey = prefixCacheKey.categoriesLevel;
-    await this.removeCache(null, categoryLevelPrefixKey);
-    await this.cacheRepo.delete({ prefix_cache_key: categoryLevelPrefixKey });
   }
 
   async removeCachedProductById(product_id) {

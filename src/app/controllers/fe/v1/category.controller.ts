@@ -43,16 +43,13 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, categoriesMenuList);
   }
 
-  @Get(':slug/products')
-  async getProductsList(
+  @Get(':slug')
+  async getCategoryBySlug(
     @Param('slug') slug: string,
     @Query() params,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.productService.getProductsListByCategorySlug(
-      slug,
-      params,
-    );
+    const result = await this.service.getCategoryBySlug(slug);
     return this.responseSuccess(res, result);
   }
 }

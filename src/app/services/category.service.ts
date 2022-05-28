@@ -83,7 +83,10 @@ import { CreateCatalogCategoryItemDto } from '../dto/category/create-catalogCate
 import { CatalogCategoryItemEntity } from '../entities/catalogCategoryItem.entity';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
 import { CategoryFeatureEntity } from '../entities/categoryFeature.entity';
-import { categoryFeatureJoiner } from '../../utils/joinTable';
+import {
+  categoryFeatureJoiner,
+  categoryFeaturesSetJoiner,
+} from '../../utils/joinTable';
 import { RedisCacheService } from './redisCache.service';
 import {
   cacheKeys,
@@ -93,11 +96,13 @@ import {
 import { CacheRepository } from '../repositories/cache.repository';
 import { CacheEntity } from '../entities/cache.entity';
 import { convertCatelogoIntoCategory } from '../../utils/integrateFunctions';
+import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
+import { ProductFeatureVariantEntity } from '../entities/productFeatureVariant.entity';
 @Injectable()
 export class CategoryService {
   constructor(
     private categoryDescriptionRepo: CategoryDescriptionRepository<CategoryDescriptionEntity>,
-    private categoryRepository: CategoryRepository<CategoryEntity>,
+    private categoryRepo: CategoryRepository<CategoryEntity>,
     private productRepository: ProductsRepository<ProductsEntity>,
     private productCategoryRepository: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private imageRepository: ImagesRepository<ImagesEntity>,
@@ -108,13 +113,13 @@ export class CategoryService {
     private accessoryCategoryRepo: AccessoryCategoryRepository<AccessoryCategoryEntity>,
     private catalogCategoryItemRepo: CatalogCategoryItemRepository<CatalogCategoryItemEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
+    private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private cache: RedisCacheService,
-    private cacheRepo: CacheRepository<CacheEntity>,
   ) {}
 
   async create(data: CreateCategoryDto): Promise<any> {
     if (data.slug) {
-      const checkSlugExist = await this.categoryRepository.findOne({
+      const checkSlugExist = await this.categoryRepo.findOne({
         slug: convertToSlug(data.slug),
       });
 
@@ -125,12 +130,12 @@ export class CategoryService {
 
     const categoryData = {
       ...new CategoryEntity(),
-      ...this.categoryRepository.setData(data),
+      ...this.categoryRepo.setData(data),
       slug: data.slug ? data.slug : convertToSlug(data.category, true),
     };
 
     if (data.parent_id) {
-      const parentCategory = await this.categoryRepository.findOne({
+      const parentCategory = await this.categoryRepo.findOne({
         category_id: data.parent_id,
       });
       if (!parentCategory) {
@@ -141,9 +146,9 @@ export class CategoryService {
       categoryData['parent_appcore_id'] = parentCategory['category_appcore_id'];
     }
 
-    let category = await this.categoryRepository.create(categoryData);
+    let category = await this.categoryRepo.create(categoryData);
     // Update id_path
-    category = await this.categoryRepository.update(
+    category = await this.categoryRepo.update(
       { category_id: category['category_id'] },
       {
         id_path: categoryData['id_path']
@@ -199,7 +204,7 @@ export class CategoryService {
   }
 
   async findAncestor(parentId: number, idPaths = '', level = 0) {
-    const parent = await this.categoryRepository.findById(parentId);
+    const parent = await this.categoryRepo.findById(parentId);
     idPaths = idPaths
       ? `${parent['category_id']}/${idPaths}`
       : `${parent['category_id']}`;
@@ -213,7 +218,7 @@ export class CategoryService {
   }
 
   async itgCreate(data) {
-    const category = await this.categoryRepository.findOne({
+    const category = await this.categoryRepo.findOne({
       category_appcore_id: data.category_id,
     });
 
@@ -228,12 +233,12 @@ export class CategoryService {
 
     const categoryData = {
       ...new CategoryEntity(),
-      ...this.categoryRepository.setData(convertedData),
+      ...this.categoryRepo.setData(convertedData),
       slug: convertToSlug(data['category']),
     };
 
     if (convertedData['parent_appcore_id']) {
-      let parentCategory = await this.categoryRepository.findOne({
+      let parentCategory = await this.categoryRepo.findOne({
         category_appcore_id: convertedData['parent_appcore_id'],
       });
       if (parentCategory) {
@@ -241,10 +246,10 @@ export class CategoryService {
       }
     }
 
-    let newCategory = await this.categoryRepository.create(categoryData);
+    let newCategory = await this.categoryRepo.create(categoryData);
 
     //update id_path
-    newCategory = await this.categoryRepository.update(
+    newCategory = await this.categoryRepo.update(
       { category_id: newCategory['category_id'] },
       {
         id_path: categoryData['id_path']
@@ -266,7 +271,7 @@ export class CategoryService {
   }
 
   async itgUpdate(category_appcore_id, data) {
-    const category = await this.categoryRepository.findOne({
+    const category = await this.categoryRepo.findOne({
       category_appcore_id,
     });
 
@@ -277,12 +282,12 @@ export class CategoryService {
 
     let updatedCategoryData = {};
     updatedCategoryData = {
-      ...this.categoryRepository.setData(convertedData),
+      ...this.categoryRepo.setData(convertedData),
       updated_at: formatStandardTimeStamp(),
     };
 
     if (convertedData['parent_appcore_id']) {
-      const parentCategory = await this.categoryRepository.findOne({
+      const parentCategory = await this.categoryRepo.findOne({
         category_appcore_id: convertedData['parent_appcore_id'],
       });
       if (parentCategory) {
@@ -293,7 +298,7 @@ export class CategoryService {
       }
     }
 
-    await this.categoryRepository.update(
+    await this.categoryRepo.update(
       { category_id: category['category_id'] },
       updatedCategoryData,
     );
@@ -314,15 +319,15 @@ export class CategoryService {
   }
 
   async convertAppcoreToCMSId() {
-    let categories = await this.categoryRepository.find();
+    let categories = await this.categoryRepo.find();
     if (categories.length) {
       for (let category of categories) {
         if (category['parent_appcore_id'] && !category['parent_id']) {
-          let parentCategory = await this.categoryRepository.findOne({
+          let parentCategory = await this.categoryRepo.findOne({
             category_appcore_id: category['parent_appcore_id'],
           });
           if (parentCategory) {
-            await this.categoryRepository.update(
+            await this.categoryRepo.update(
               { category_id: category['category_id'] },
               { parent_id: parentCategory['category_id'] },
             );
@@ -333,7 +338,7 @@ export class CategoryService {
   }
 
   async update(id: number, data: UpdateCategoryDto): Promise<any> {
-    const oldCategoryData = await this.categoryRepository.findOne({
+    const oldCategoryData = await this.categoryRepo.findOne({
       select: '*',
       join: categoryJoiner,
       where: {
@@ -346,7 +351,7 @@ export class CategoryService {
     }
 
     if (data.slug) {
-      const checkSlug = await this.categoryRepository.findOne({
+      const checkSlug = await this.categoryRepo.findOne({
         slug: convertToSlug(data.slug),
         category_id: Not(Equal(id)),
       });
@@ -371,12 +376,12 @@ export class CategoryService {
     }
 
     let updatedCategoryData = {
-      ...this.categoryRepository.setData(data),
+      ...this.categoryRepo.setData(data),
       updated_at: formatStandardTimeStamp(),
     };
 
     if (data.parent_id) {
-      let parentCategory = await this.categoryRepository.findOne({
+      let parentCategory = await this.categoryRepo.findOne({
         category_id: data['parent_id'],
       });
       if (!parentCategory) {
@@ -400,7 +405,7 @@ export class CategoryService {
         updatedCategoryData[key] = val;
       }
 
-      const updatedCategory = await this.categoryRepository.update(
+      const updatedCategory = await this.categoryRepo.update(
         { category_id: oldCategoryData.category_id },
         updatedCategoryData,
         true,
@@ -607,17 +612,17 @@ export class CategoryService {
     let categoryCacheKey = cacheKeys.category(category_id);
     await this.cache.delete(categoryCacheKey);
 
-    let currentCategory = await this.categoryRepository.findOne({
+    let currentCategory = await this.categoryRepo.findOne({
       category_id,
     });
     if (!currentCategory) return;
     if (currentCategory) {
-      let childrenCategories = await this.categoryRepository.find({
+      let childrenCategories = await this.categoryRepo.find({
         parent_id: category_id,
       });
       if (childrenCategories.length) {
         for (let childCategory of childrenCategories) {
-          await this.categoryRepository.update(
+          await this.categoryRepo.update(
             {
               category_id: childCategory['category_id'],
             },
@@ -634,7 +639,7 @@ export class CategoryService {
   }
 
   async uploadMetaImage(file, category_id) {
-    const category = await this.categoryRepository.findOne({ category_id });
+    const category = await this.categoryRepo.findOne({ category_id });
 
     if (!category) {
       throw new HttpException('Không tìm thấy Category.', 404);
@@ -699,7 +704,7 @@ export class CategoryService {
   }
 
   async uploadIcon(file, category_id) {
-    const category = await this.categoryRepository.findOne({ category_id });
+    const category = await this.categoryRepo.findOne({ category_id });
 
     if (!category) {
       throw new HttpException('Không tìm thấy SP', 404);
@@ -723,10 +728,7 @@ export class CategoryService {
       const response = await axios(config);
       const imageUrl = response.data.data;
       if (imageUrl && imageUrl.length) {
-        await this.categoryRepository.update(
-          { category_id },
-          { icon: imageUrl[0] },
-        );
+        await this.categoryRepo.update({ category_id }, { icon: imageUrl[0] });
       }
       await fsExtra.unlink(file.path);
     } catch (error) {
@@ -746,7 +748,7 @@ export class CategoryService {
   async deleteIcon(category_id) {
     let categoryCacheKey = cacheKeys.category(category_id);
     await this.cache.delete(categoryCacheKey);
-    return this.categoryRepository.update(
+    return this.categoryRepo.update(
       {
         category_id,
       },
@@ -760,7 +762,7 @@ export class CategoryService {
     if (cacheResult) {
       return cacheResult;
     }
-    const result = await this.categoryRepository.find({
+    const result = await this.categoryRepo.find({
       select: '*',
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.status`]: 'A' },
@@ -768,6 +770,76 @@ export class CategoryService {
 
     await this.cache.setCategoriesList(params, result);
     return result;
+  }
+
+  async getCategoryBySlug(slug) {
+    const category = await this.categoryRepo.findOne({
+      select: categorySelector,
+      join: categoryJoiner,
+      where: { [`${Table.CATEGORIES}.slug`]: slug.trim() },
+    });
+
+    if (!category) {
+      throw new HttpException('Không tìm thấy danh mục SP.', 404);
+    }
+
+    let categoryCacheResult = await this.cache.getCategoryById(
+      category.category_id,
+    );
+
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
+
+    let categoryId = category.category_id;
+    let categoriesListByLevel = await this.childrenCategories(categoryId);
+
+    categoriesListByLevel = _.orderBy(
+      categoriesListByLevel,
+      ['level'],
+      ['asc'],
+    );
+
+    let features = await this.getFeaturesSetByCategoryId(
+      category['category_id'],
+    );
+
+    let relevantCategories = [];
+    if (category['parent_id']) {
+      relevantCategories = await this.categoryRepo.find({
+        parent_id: category['parent_id'],
+      });
+    }
+
+    let categoryResult = {
+      currentCategory: category,
+      childrenCategories: categoriesListByLevel,
+      features,
+      relevantCategories,
+    };
+
+    await this.cache.setCategoryById(category['category_id'], categoryResult);
+
+    return categoryResult;
+  }
+
+  async getFeaturesSetByCategoryId(category_id) {
+    const featuresSet = await this.categoryFeatureRepo.find({
+      select: '*',
+      join: categoryFeaturesSetJoiner,
+      where: { [`${Table.CATEGORY_FEATURES}.category_id`]: category_id },
+    });
+
+    if (featuresSet.length) {
+      for (let featureItem of featuresSet) {
+        const variants = await this.productFeatureVariantRepo.find({
+          feature_id: featureItem.feature_id,
+        });
+        featureItem['variants_set'] = variants;
+      }
+    }
+
+    return featuresSet;
   }
 
   async getList(params) {
@@ -781,7 +853,7 @@ export class CategoryService {
     }
 
     if (search) {
-      const categories = await this.categoryRepository.find({
+      const categories = await this.categoryRepo.find({
         select: '*',
         join: categoryJoiner,
         orderBy: [
@@ -795,7 +867,7 @@ export class CategoryService {
         limit,
       });
 
-      const totalCategories = await this.categoryRepository.find({
+      const totalCategories = await this.categoryRepo.find({
         select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
         join: categoryJoiner,
         where: categoriesSearchFilter(search, filterCondition),
@@ -817,7 +889,7 @@ export class CategoryService {
       return result;
     }
 
-    let categoriesListRoot = await this.categoryRepository.find({
+    let categoriesListRoot = await this.categoryRepo.find({
       select: `*`,
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
@@ -832,7 +904,7 @@ export class CategoryService {
       limit,
     });
 
-    let totalCategory = await this.categoryRepository.find({
+    let totalCategory = await this.categoryRepo.find({
       select: `COUNT(DISTINCT(${Table.CATEGORIES}.category_id)) as total`,
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
@@ -890,7 +962,7 @@ export class CategoryService {
               );
 
               if (!findCategory) {
-                const _category = await this.categoryRepository.findOne({
+                const _category = await this.categoryRepo.findOne({
                   select: '*',
                   join: categoryJoiner,
                   where: { [`${Table.CATEGORIES}.category_id`]: idPath },
@@ -913,7 +985,7 @@ export class CategoryService {
               ) {
                 continue;
               }
-              const _category = await this.categoryRepository.findOne({
+              const _category = await this.categoryRepo.findOne({
                 select: '*',
                 join: categoryJoiner,
                 where: { [`${Table.CATEGORIES}.category_id`]: idPath },
@@ -945,7 +1017,7 @@ export class CategoryService {
               ) {
                 continue;
               }
-              const _category = await this.categoryRepository.findOne({
+              const _category = await this.categoryRepo.findOne({
                 select: '*',
                 join: categoryJoiner,
                 where: { [`${Table.CATEGORIES}.category_id`]: idPath },
@@ -995,7 +1067,7 @@ export class CategoryService {
                 continue;
               }
 
-              const _category = await this.categoryRepository.findOne({
+              const _category = await this.categoryRepo.findOne({
                 select: '*',
                 join: categoryJoiner,
                 where: { [`${Table.CATEGORIES}.category_id`]: idPath },
@@ -1056,7 +1128,7 @@ export class CategoryService {
                 continue;
               }
 
-              const _category = await this.categoryRepository.findOne({
+              const _category = await this.categoryRepo.findOne({
                 select: '*',
                 join: categoryJoiner,
                 where: { [`${Table.CATEGORIES}.category_id`]: idPath },
@@ -1099,7 +1171,7 @@ export class CategoryService {
     //   return categoryCacheResult;
     // }
 
-    const categories = await this.categoryRepository.find({
+    const categories = await this.categoryRepo.find({
       select: '*',
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.level`]: 0 },
@@ -1137,7 +1209,7 @@ export class CategoryService {
     // if (categoryCacheResult) {
     //   return categoryCacheResult;
     // }
-    let category = await this.categoryRepository.findOne({
+    let category = await this.categoryRepo.findOne({
       select: ['*'],
       join: {
         [JoinTable.leftJoin]: {
@@ -1228,7 +1300,7 @@ export class CategoryService {
     getCategoryListId = false,
     categoriesIdList = [],
   ) {
-    const categoriesChildrenList = await this.categoryRepository.find({
+    const categoriesChildrenList = await this.categoryRepo.find({
       select: '*',
       join: categoryJoiner,
       where: { parent_id: currentCategory.category_id },
@@ -1257,7 +1329,7 @@ export class CategoryService {
   async updateList(data: UpDateCategoriesListDto) {
     if (data.categories && data.categories.length) {
       for (let { category_id, position } of data.categories) {
-        await this.categoryRepository.update({ category_id }, { position });
+        await this.categoryRepo.update({ category_id }, { position });
       }
     }
     //============== remove cached category list  =================
@@ -1265,7 +1337,7 @@ export class CategoryService {
   }
 
   async delete(id: number): Promise<boolean> {
-    // const deleteStatus = await this.categoryRepository.delete({
+    // const deleteStatus = await this.categoryRepo.delete({
     //   category_id: id,
     // });
 
@@ -1276,7 +1348,7 @@ export class CategoryService {
   }
 
   async clearAll() {
-    // await this.categoryRepository.writeExec(
+    // await this.categoryRepo.writeExec(
     //   `TRUNCATE TABLE ${Table.CATEGORIES}`,
     // );
     // await this.categoryDescriptionRepo.writeExec(
@@ -1294,10 +1366,10 @@ export class CategoryService {
       const convertedData = convertCategoryFromMagentoToCMS(categoryItem);
       const newCategoryData = {
         ...new CategoryEntity(),
-        ...this.categoryRepository.setData(convertedData),
+        ...this.categoryRepo.setData(convertedData),
         slug: convertToSlug(convertedData['category']),
       };
-      const newCategory = await this.categoryRepository.create(newCategoryData);
+      const newCategory = await this.categoryRepo.create(newCategoryData);
 
       const categoryDescriptionData = {
         ...new CategoryDescriptionEntity(),
@@ -1306,18 +1378,18 @@ export class CategoryService {
       };
       await this.categoryDescriptionRepo.create(categoryDescriptionData, false);
     }
-    const CMSCategoriesList = await this.categoryRepository.find();
+    const CMSCategoriesList = await this.categoryRepo.find();
     await this.findAndUpdateFromMagento(CMSCategoriesList);
   }
 
   async findAndUpdateFromMagento(categoriesList) {
     for (let categoryItem of categoriesList) {
       if (categoryItem['parent_magento_id'] != 0) {
-        const categoryParent = await this.categoryRepository.findOne({
+        const categoryParent = await this.categoryRepo.findOne({
           category_magento_id: categoryItem['parent_magento_id'],
         });
         if (categoryParent) {
-          await this.categoryRepository.update(
+          await this.categoryRepo.update(
             {
               category_id: categoryItem.category_id,
             },
@@ -1331,14 +1403,14 @@ export class CategoryService {
       let idPaths = [];
       if (Array.isArray(categoryIdMatengoPaths)) {
         for (let idPath of categoryIdMatengoPaths) {
-          const categoryByIdPath = await this.categoryRepository.findOne({
+          const categoryByIdPath = await this.categoryRepo.findOne({
             category_id: idPath,
           });
           if (categoryByIdPath) {
             idPaths.push(categoryByIdPath.category_id);
           }
         }
-        await this.categoryRepository.update(
+        await this.categoryRepo.update(
           {
             category_id: categoryItem.category_id,
           },
@@ -1479,9 +1551,9 @@ export class CategoryService {
 
       const categoryData = {
         ...new CategoryEntity(),
-        ...this.categoryRepository.setData(cmsData),
+        ...this.categoryRepo.setData(cmsData),
       };
-      const newCategory = await this.categoryRepository.create(categoryData);
+      const newCategory = await this.categoryRepo.create(categoryData);
 
       const categoryDescData = {
         ...new CategoryDescriptionEntity(),
@@ -1492,15 +1564,15 @@ export class CategoryService {
       await this.categoryDescriptionRepo.create(categoryDescData, false);
     }
 
-    const categoriesList = await this.categoryRepository.find();
+    const categoriesList = await this.categoryRepo.find();
 
     for (let categoryItem of categoriesList) {
       if (categoryItem['parent_appcore_id']) {
-        let parentCategory = await this.categoryRepository.findOne({
+        let parentCategory = await this.categoryRepo.findOne({
           category_appcore_id: categoryItem['parent_appcore_id'],
         });
         if (parentCategory) {
-          await this.categoryRepository.update(
+          await this.categoryRepo.update(
             { category_id: categoryItem['category_id'] },
             { parent_id: parentCategory['category_id'] },
           );
@@ -1598,7 +1670,7 @@ export class CategoryService {
   }
 
   async fillCategoriesIdPath() {
-    let categories = await this.categoryRepository.find({
+    let categories = await this.categoryRepo.find({
       select: 'category_id, parent_id, level',
       orderBy: [{ field: `${Table.CATEGORIES}.level`, sortBy: SortBy.ASC }],
     });
@@ -1611,7 +1683,7 @@ export class CategoryService {
         currentLevel--
       ) {
         if (currentCategory.parent_id > 0) {
-          let parentCategory = await this.categoryRepository.findOne({
+          let parentCategory = await this.categoryRepo.findOne({
             select: 'category_id, parent_id, level',
             where: { category_id: currentCategory.parent_id },
           });
@@ -1622,7 +1694,7 @@ export class CategoryService {
         }
       }
 
-      await this.categoryRepository.update(
+      await this.categoryRepo.update(
         { category_id: categoryItem.category_id },
         { id_path: idPath.join('/') },
       );
@@ -1639,7 +1711,7 @@ export class CategoryService {
     if (!category.parent_id) {
       return categoriesList;
     } else {
-      let parentCategory = await this.categoryRepository.findOne({
+      let parentCategory = await this.categoryRepo.findOne({
         select: categorySelector,
         join: {
           [JoinTable.leftJoin]: {
@@ -1660,7 +1732,7 @@ export class CategoryService {
   }
 
   async childrenCategories(categoryId, categoriesList = []) {
-    let categories = await this.categoryRepository.find({
+    let categories = await this.categoryRepo.find({
       select: categorySelector,
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.parent_id`]: categoryId },

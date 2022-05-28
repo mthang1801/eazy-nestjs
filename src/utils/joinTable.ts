@@ -91,8 +91,8 @@ export const productFeaturesJoiner = {
 
 export const categoryFeaturesSetJoiner = {
   [JoinTable.leftJoin]: {
-    [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
-      fieldJoin: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.feature_id`,
+    [Table.PRODUCT_FEATURES]: {
+      fieldJoin: `${Table.PRODUCT_FEATURES}.feature_id`,
       rootJoin: `${Table.CATEGORY_FEATURES}.feature_id`,
     },
   },
