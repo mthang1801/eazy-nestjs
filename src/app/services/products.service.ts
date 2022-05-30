@@ -4431,6 +4431,8 @@ export class ProductService {
         orderBy: [{ field: `catalogFeaturePosition`, sortBy: SortBy.ASC }],
       },
     );
+
+    console.log(4435, catalogFeatureValues);
     let featuresSet = {};
     if (catalogFeatureValues) {
       for (let catalogFeatureValue of catalogFeatureValues) {
