@@ -731,10 +731,6 @@ export const statusJoiner = {
     fieldJoin: `${Table.STATUS_DESCRIPTION}.status_id`,
     rootJoin: `${Table.STATUS}.status_id`,
   },
-  [Table.STATUS_DATA]: {
-    fieldJoin: `${Table.STATUS_DATA}.status_id`,
-    rootJoin: `${Table.STATUS}.status_id`,
-  },
 };
 
 export const orderDetailsJoiner = {

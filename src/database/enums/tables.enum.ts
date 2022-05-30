@@ -98,7 +98,6 @@ export enum Table {
   //============== Status ===============
   STATUS = 'ddv_statuses',
   STATUS_DESCRIPTION = 'ddv_status_descriptions',
-  STATUS_DATA = 'ddv_status_data',
 
   //============== Order ==============
   ORDERS = 'ddv_orders',

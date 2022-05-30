@@ -1,10 +1,8 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { Table } from 'src/database/enums';
 import { StatusEntity } from '../entities/status.entity';
-import { StatusDataEntity } from '../entities/statusData.entity';
 import { StatusDescriptionEntity } from '../entities/statusDescription';
 import { StatusRepository } from '../repositories/status.repository';
-import { StatusDataRepository } from '../repositories/statusData.repository';
 import { StatusDescriptionRepository } from '../repositories/statusDescription.repository';
 import { JoinTable } from '../../database/enums/joinTable.enum';
 import { searchStatusFilter } from 'src/utils/tableConditioner';
@@ -17,7 +15,6 @@ export class StatusService {
   constructor(
     private statusRepo: StatusRepository<StatusEntity>,
     private statusDescRepo: StatusDescriptionRepository<StatusDescriptionEntity>,
-    private statusDataRepo: StatusDataRepository<StatusDataEntity>,
   ) {}
   async getList(params) {
     let { page, limit, search, ...others } = params;
@@ -85,7 +82,7 @@ export class StatusService {
 
     const orderStatusData = {
       ...new StatusEntity(),
-      ...this.statusDataRepo.setData(data),
+      ...this.statusRepo.setData(data),
     };
 
     let _orderStatus = await this.statusRepo.create(orderStatusData);
@@ -94,7 +91,7 @@ export class StatusService {
 
     const orderStatusDataDes = {
       ...new StatusDescriptionEntity(),
-      ...this.statusDataRepo.setData(data),
+      ...this.statusDescRepo.setData(data),
       status_id: _orderStatus.status_id,
     };
 
