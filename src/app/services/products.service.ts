@@ -4643,6 +4643,7 @@ export class ProductService {
   }
 
   async getDiscountProgramApplyProduct(product_id) {
+    console.log(4646, product_id);
     return this.discountProgramDetailRepo.findOne({
       select: '*',
       join: discountProgramDetailJoiner,

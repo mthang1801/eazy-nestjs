@@ -378,7 +378,7 @@ export const BOX_PRODUCTLeftJoiner = {
   [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,
-      rootJoin: `${Table.PAGE_DETAIL_VALUE}.value_id`,
+      rootJoin: `${Table.PAGE_DETAIL_VALUE}.data_value`,
     },
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,

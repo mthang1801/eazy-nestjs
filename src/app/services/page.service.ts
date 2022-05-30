@@ -537,6 +537,8 @@ export class PageService {
           },
         });
 
+        console.log(540, products);
+
         for (let productItem of products) {
           //find product Stickers
           productItem['stickers'] =
@@ -545,6 +547,11 @@ export class PageService {
           productItem['ratings'] = await this.reviewRepo.findOne({
             product_id: productItem['product_id'],
           });
+
+          productItem['discount_programs'] =
+            await this.productService.getDiscountProgramApplyProduct(
+              productItem['product_id'],
+            );
         }
 
         pageDetailValue[PageDetailValueType.LIST_PRODUCTS] = [...products];
@@ -650,6 +657,7 @@ export class PageService {
       throw new HttpException('Không tìm thấy trang.', 404);
     }
 
+    await this.cache.removePageById(currentPage.page_id);
     let pageCacheResult = await this.cache.getCachePageById(
       currentPage.page_id,
     );
