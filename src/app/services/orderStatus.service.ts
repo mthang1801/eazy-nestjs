@@ -9,9 +9,7 @@ import { OrderStatusRepository } from '../repositories/orderStatus.repository';
 
 import { Table, JoinTable } from '../../database/enums/index';
 import { OrderStatusDescriptionRepository } from '../repositories/orderStatusDescription.repository';
-import { OrderStatusDataRepository } from '../repositories/orderStatusData.repository';
 import { OrderStatusDescriptionEntity } from '../entities/orderStatusDescription.entity';
-import { OrderStatusDataEntity } from '../entities/orderStatusData.entity';
 import { Like } from 'typeorm';
 import { OrderStatusCreateDTO } from '../dto/orderStatus/create-orderStatus.dto';
 import { formatStandardTimeStamp } from '../../utils/helper';
@@ -22,7 +20,6 @@ export class OrderStatusService {
     private repository: OrderStatusRepository<OrderStatusEntity>,
 
     private orderStatusDescriptionRepo: OrderStatusDescriptionRepository<OrderStatusDescriptionEntity>,
-    private orderStatusDataRepo: OrderStatusDataRepository<OrderStatusDataEntity>,
   ) {}
   async getList(params) {
     //=====Filter param
@@ -57,24 +54,15 @@ export class OrderStatusService {
       skip: skip,
       limit: limit,
     });
-    const orderData = this.orderStatusDataRepo.find({
-      select: ['*'],
-      skip: 0,
-      limit: 9999,
-    });
-    const result = await Promise.all([orderData, orders]);
+
+    const result = await Promise.all([orders]);
     let _order = [];
-    result[1].forEach((ele) => {
-      _order.push({
-        ...ele,
-        data: result[0].filter((img) => img.status_id == ele.status_id),
-      });
-    });
+
     return _order;
   }
   async getById(id) {
     const string = `${Table.ORDER_STATUS}.status_id`;
-    const string1 = `${Table.ORDER_STATUS_DATA}.status_id`;
+
     const orders = this.repository.findOne({
       select: ['*'],
       join: {
@@ -89,15 +77,9 @@ export class OrderStatusService {
       skip: 0,
       limit: 30,
     });
-    const orderData = this.orderStatusDataRepo.find({
-      select: ['*'],
-      where: { [string1]: id },
 
-      skip: 0,
-      limit: 30,
-    });
-    const result = await Promise.all([orderData, orders]);
-    return { ...result[1], data: result[0] };
+    const result = await Promise.all([orders]);
+    return { data: result[0] };
   }
   async create(data: OrderStatusCreateDTO) {
     //====Check if exist
@@ -115,16 +97,7 @@ export class OrderStatusService {
     };
 
     let _orderStatus = await this.repository.create(orderStatusData);
-    ///==========================|Add to ddv_status_data table|==============
 
-    const orderStatusDataData = {
-      status_id: _orderStatus.status_id,
-      ...this.orderStatusDataRepo.setData(data),
-    };
-
-    let _orderStatusData = await this.orderStatusDataRepo.create(
-      orderStatusDataData,
-    );
     ///==========================|Add to ddv_status_data table|==============
 
     const orderStatusDataDes = {

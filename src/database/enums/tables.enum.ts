@@ -94,7 +94,6 @@ export enum Table {
   //============== Order status ==============
   ORDER_STATUS = 'ddv_statuses',
   ORDER_STATUS_DESCRIPTION = 'ddv_status_descriptions',
-  ORDER_STATUS_DATA = 'ddv_status_data',
 
   //============== Status ===============
   STATUS = 'ddv_statuses',
