@@ -745,8 +745,9 @@ export class ProductService {
     let filterConditions = {};
 
     let categoriesList = [];
+
     if (category_ids) {
-      let _category_ids = category_ids;
+      let _category_ids: any = category_ids;
       categoriesList = _category_ids.split(',').map((categoryId) => categoryId);
       filterConditions[`${Table.PRODUCTS_CATEGORIES}.category_id`] =
         In(categoriesList);
@@ -780,7 +781,7 @@ export class ProductService {
       productCacheKey['category_ids'] = category_ids;
     }
 
-    if (variantIds) {
+    if (variantIds.length) {
       variantIds = [...new Set(variantIds.sort((a, b) => a - b))];
       productCacheKey['variant_ids'] = variant_ids;
     }
@@ -793,7 +794,7 @@ export class ProductService {
       return productCacheResult;
     }
 
-    if (variantIds) {
+    if (variantIds.length) {
       for (let [i, variantId] of variantIds.entries()) {
         filterConditions[`${Table.PRODUCT_FEATURE_VALUES}.variant_id`] =
           variantId;
@@ -848,6 +849,7 @@ export class ProductService {
         productsList = productsList.map(({ product_id }) => product_id);
       }
     } else {
+      console.log(categoriesList);
       productsList = await this.productCategoryRepo.find({
         select: [
           ...getDetailProductsListSelectorFE,
@@ -879,19 +881,22 @@ export class ProductService {
       });
     }
 
-    console.log(productsList);
-    productsList = _.uniqBy(productsList, 'product_id');
+    productsList = productsList.length
+      ? _.uniqBy(productsList, 'product_id')
+      : productsList;
 
-    for (let productItem of productsList) {
-      //find product Stickers
-      productItem['stickers'] = await this.getProductStickers(
-        productItem,
-        true,
-      );
+    if (productsList.length) {
+      for (let productItem of productsList) {
+        //find product Stickers
+        productItem['stickers'] = await this.getProductStickers(
+          productItem,
+          true,
+        );
 
-      productItem['ratings'] = await this.reviewRepo.findOne({
-        product_id: productItem['product_id'],
-      });
+        productItem['ratings'] = await this.reviewRepo.findOne({
+          product_id: productItem['product_id'],
+        });
+      }
     }
 
     let productsResult = {
