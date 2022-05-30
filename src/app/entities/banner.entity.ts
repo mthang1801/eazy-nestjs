@@ -8,6 +8,8 @@ export class BannerEntity {
   page_location_id: number = null;
   status: string = 'A';
   device_type: string = 'D';
+  auto_slide: string = 'N';
+  slide_per_page: number = 1;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
 }

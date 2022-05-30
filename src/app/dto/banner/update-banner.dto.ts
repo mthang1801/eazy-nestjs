@@ -40,6 +40,12 @@ export class UpdateBannerDTO {
   url_media: string;
 
   @IsOptional()
+  auto_slide: string;
+
+  @IsOptional()
+  slide_per_page: number;
+
+  @IsOptional()
   @IsDateString()
   start_at: string;
 

@@ -44,6 +44,12 @@ export class CreateBannerDto {
   start_at: string;
 
   @IsOptional()
+  auto_slide: string;
+
+  @IsOptional()
+  slide_per_page: number;
+
+  @IsOptional()
   @IsDateString()
   end_at: string;
 

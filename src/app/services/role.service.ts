@@ -461,6 +461,13 @@ export class RoleService {
       },
     });
 
+    if (roleGroup.level === currentRoleFunct.level) {
+      throw new HttpException(
+        'Không thể thay đổi quyền, vui lòng liên hệ quản trị viên.',
+        400,
+      );
+    }
+
     if (roleGroup.level < currentRoleFunct.level) {
       throw new HttpException(
         'Không thể gán quyền cho nhóm có cấp độ cao hơn.',

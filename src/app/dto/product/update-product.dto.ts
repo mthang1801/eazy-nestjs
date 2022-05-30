@@ -158,6 +158,10 @@ export class UpdateProductDto {
 
   @IsOptional()
   category_feature_id: number;
+
+  @ValidateNested()
+  @Type(() => CatalogFeatureValue)
+  catalog_feature_values: CatalogFeatureValue[];
 }
 
 class ProductFeatureDto {
@@ -174,4 +178,12 @@ export class JoinedProduct {
 
   @IsOptional()
   name: string;
+}
+
+class CatalogFeatureValue {
+  @IsNotEmpty()
+  detail_id: number;
+
+  @IsNotEmpty()
+  value: string;
 }

@@ -230,7 +230,10 @@ import {
   productFeatureVariantByCategoryJoiner,
   productListInCategoryJoiner,
 } from '../../utils/joinTable';
-import { getProductListByVariantsInCategory } from '../../utils/tableSelector';
+import {
+  getProductListByVariantsInCategory,
+  catalogSelector,
+} from '../../utils/tableSelector';
 import {
   cacheKeys,
   cacheTables,
@@ -248,10 +251,13 @@ import { DiscountProgramRepository } from '../repositories/discountProgram.repos
 import { DiscountProgramEntity } from '../entities/discountProgram.entity';
 import { DiscountProgramDetailRepository } from '../repositories/discountProgramDetail.repository';
 import { DiscountProgramDetailEntity } from '../entities/discountProgramDetail.entity';
+import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
 import {
   discountProgramDetailJoiner,
   productSEOJoiner,
 } from '../../utils/joinTable';
+import { CatalogFeatureValueProductEntity } from '../entities/catalogFeatureValueProduct.entity';
+import { productFeatureValuesFEJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ProductService {
@@ -288,16 +294,15 @@ export class ProductService {
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private productPromoAccessoryRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private catalogCategoryRepo: CatalogCategoryRepository<CatalogCategoryEntity>,
-    private accessoryService: PromotionAccessoryService,
     private categoryService: CategoryService,
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private reviewCommentItemsRepo: ReviewCommentItemRepository<ReviewCommentItemsEntity>,
     private reviewCommentService: ReviewsCommentService,
-    private revisewCommentUserIPRepo: ReviewCommentUserIPRepository<ReviewCommentUserIPEntity>,
     private logRepo: LogRepository<LogEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
     private discountProgramRepo: DiscountProgramRepository<DiscountProgramEntity>,
     private discountProgramDetailRepo: DiscountProgramDetailRepository<DiscountProgramDetailEntity>,
+    private catalogFeatureValueProductRepo: CatalogFeatureValueProductRepository<CatalogFeatureValueProductEntity>,
     private cache: RedisCacheService,
   ) {}
 
@@ -674,7 +679,7 @@ export class ProductService {
 
     // get Image
     result['images'] = await this.getProductImages(result.product_id);
-    console.log(result);
+
     //Get Features
     if (result['category_feature_id'] !== 0) {
       result['productFeatures'] = await this.getProductFeaturesByCategoryId(
@@ -686,6 +691,11 @@ export class ProductService {
         result.product_id,
       );
     }
+
+    //get catalog features
+    result['catalogFeatures'] = await this.BEGetCatalogFeatureValuesForProduct(
+      result.product_id,
+    );
 
     // Get accessory
     if (result['promotion_accessory_id']) {
@@ -1824,28 +1834,6 @@ export class ProductService {
       );
     }
 
-    // //Kiểm tra product features hợp lệ
-    // if (data?.product_features?.length) {
-    //   for (let productFeature of data.product_features) {
-    //     const productFeatureItem = await this.productFeaturesRepo.findOne({
-    //       feature_id: productFeature.feature_id,
-    //     });
-    //     if (
-    //       productFeatureItem &&
-    //       productFeatureItem['is_singly_choosen'] === 'Y' &&
-    //       data.product_features.reduce(
-    //         (acc, ele) =>
-    //           ele.feature_id === productFeatureItem.feature_id ? acc + 1 : acc,
-    //         0,
-    //       ) > 1
-    //     ) {
-    //       throw new HttpException(
-    //         `Thuộc tính SP có id ${productFeatureItem.feature_id} chỉ được chọn 1, không thể chọn nhiều`,
-    //         422,
-    //       );
-    //     }
-    //   }
-    // }
     await this.cache.removeRelatedServicesWithCachedProduct(
       currentProduct.product_id,
     );
@@ -1877,16 +1865,16 @@ export class ProductService {
     let result = { ...currentProduct };
 
     // Kiểm tra tính sku đã tồn tại hay chưa
-    // if (data.product_code) {
-    //   const product = await this.productRepo.findOne({
-    //     product_code: data.product_code,
-    //     product_id: Not(Equal(result.product_id)),
-    //   });
-    //   console.log(product);
-    //   if (product) {
-    //     throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
-    //   }
-    // }
+    if (data.product_code) {
+      const product = await this.productRepo.findOne({
+        product_code: data.product_code,
+        product_id: Not(Equal(result.product_id)),
+      });
+
+      if (product) {
+        throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
+      }
+    }
 
     // Kiểm tra slug đã tồn tại hay chưa
     if (data.slug) {
@@ -1953,19 +1941,7 @@ export class ProductService {
     const productrPrice = await this.productPriceRepo.findOne({
       product_id: result.product_id,
     });
-    if (productrPrice) {
-      const productPriceData = this.productPriceRepo.setData(data);
-
-      // if (Object.entries(productPriceData).length) {
-      //   const updatedProductPrice = await this.productPriceRepo.update(
-      //     { product_id: result.product_id },
-      //     productPriceData,
-      //     true,
-      //   );
-
-      //   result = { ...result, ...updatedProductPrice };
-      // }
-    } else {
+    if (!productrPrice) {
       const newProductPriceData = {
         ...new ProductPricesEntity(),
         ...this.productPriceRepo.setData(data),
@@ -2072,6 +2048,22 @@ export class ProductService {
         result['features'] = result['features']
           ? [...result['features'], newFeatureValue]
           : [newFeatureValue];
+      }
+    }
+
+    if (data.catalog_feature_values && data.catalog_feature_values.length) {
+      await this.catalogFeatureValueProductRepo.delete({
+        product_id: result['product_id'],
+      });
+
+      for (let catalogFeatureValue of data.catalog_feature_values) {
+        let catalogFeatureValueData = {
+          ...this.catalogFeatureValueProductRepo.setData(catalogFeatureValue),
+          product_id: result['product_id'],
+        };
+        await this.catalogFeatureValueProductRepo.create(
+          catalogFeatureValueData,
+        );
       }
     }
 
@@ -4254,17 +4246,10 @@ export class ProductService {
     }
 
     //============= Get Features ===============
-
-    if (result['category_feature_id'] !== 0) {
-      result['productFeatures'] = await this.getProductFeaturesByCategoryId(
-        result['category_feature_id'],
-        result.product_id,
-      );
-    } else {
-      result['productFeatures'] = await this.getProductFeatures(
-        result.product_id,
-      );
-    }
+    result['productFeatures'] = [];
+    result['catalogFeatures'] = await this.FEGetCatalogFeatureValuesForProduct(
+      result.product_id,
+    );
 
     //=========== Get accessory ============
     result['promotion_accessory_products'] = [];
@@ -4349,6 +4334,39 @@ export class ProductService {
     return result;
   }
 
+  async FEGetCatalogFeatureValuesForProduct(product_id) {
+    const catalogFeatureValues = await this.catalogFeatureValueProductRepo.find(
+      {
+        select: catalogSelector,
+        join: productFeatureValuesFEJoiner,
+        where: {
+          [`${Table.CATALOG_FEATURE_VALUE_PRODUCT}.product_id`]: product_id,
+          [`${Table.CATALOG}.status`]: 'A',
+          [`${Table.CATALOG_FEATURE}.status`]: 'A',
+          [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
+        },
+        orderBy: [{ field: `catalogFeaturePosition`, sortBy: SortBy.ASC }],
+      },
+    );
+
+    let featuresSet = {};
+    if (catalogFeatureValues) {
+      for (let catalogFeatureValue of catalogFeatureValues) {
+        featuresSet[catalogFeatureValue.feature_name] = featuresSet[
+          catalogFeatureValue.feature_name
+        ]
+          ? [
+              ...featuresSet[catalogFeatureValue.feature_name],
+              catalogFeatureValue,
+            ]
+          : [catalogFeatureValue];
+      }
+    }
+    return featuresSet;
+  }
+
+  async BEGetCatalogFeatureValuesForProduct(product_id) {}
+
   async getBySlugSEO(slug) {
     let product = await this.productRepo.findOne({
       select: '*',
@@ -4373,9 +4391,10 @@ export class ProductService {
       childrenProducts = _.unionBy(childrenProducts, 'product_id');
       for (let childProduct of childrenProducts) {
         // Get Features
-        childProduct['productFeatures'] = await this.getProductFeatures(
-          childProduct.product_id,
-        );
+        childProduct['productFeatures'] =
+          await this.FEGetCatalogFeatureValuesForProduct(
+            childProduct.product_id,
+          );
         // Get stores
         childProduct['stores'] = await this.getProductsStores(
           childProduct.product_id,

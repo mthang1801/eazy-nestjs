@@ -16,12 +16,12 @@ export class UpdateCatalogDto {
   @IsOptional()
   @Type(() => CatalogFeature)
   @ValidateNested()
-  features: CatalogFeature[];
+  catalog_features: CatalogFeature[];
 }
 
 class CatalogFeature {
   @IsOptional()
-  catalog_feature_id: number;  
+  catalog_feature_id: number;
 
   @IsOptional()
   feature_name: string;
@@ -32,7 +32,7 @@ class CatalogFeature {
   @IsOptional()
   @Type(() => CatalogFeatureDetail)
   @ValidateNested()
-  featureDetails: CatalogFeatureDetail[];
+  catalog_feature_details: CatalogFeatureDetail[];
 }
 
 class CatalogFeatureDetail {

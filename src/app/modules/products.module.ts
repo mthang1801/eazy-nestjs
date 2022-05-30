@@ -54,12 +54,15 @@ import { ValuationBillRepository } from '../repositories/valuationBill.repositor
 import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
 import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
 import { TradeinProgramModule } from './tradeinProgram.module';
+import { CatalogModule } from './catalog.module';
+import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
 
 @Module({
   imports: [
     forwardRef(() => CategoryModule),
     forwardRef(() => StickerModule),
     ReviewsCommentsModule,
+    CatalogModule,
   ],
   providers: [
     ProductService,
@@ -88,6 +91,7 @@ import { TradeinProgramModule } from './tradeinProgram.module';
     ReviewCommentItemRepository,
     LogRepository,
     CategoryFeaturesRepository,
+    CatalogFeatureValueProductRepository,
   ],
   exports: [
     ProductService,
@@ -114,6 +118,7 @@ import { TradeinProgramModule } from './tradeinProgram.module';
     ProductStoreHistoryRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
+    CatalogFeatureValueProductRepository,
     CategoryFeaturesRepository,
   ],
   controllers: [

@@ -16,7 +16,7 @@ export class CreateCatalogDto {
   @IsOptional()
   @Type(() => CatalogFeature)
   @ValidateNested()
-  features: CatalogFeature[];
+  catalog_features: CatalogFeature[];
 }
 
 class CatalogFeature {
@@ -29,7 +29,7 @@ class CatalogFeature {
   @IsOptional()
   @Type(() => CatalogFeatureDetail)
   @ValidateNested()
-  featureDetails: CatalogFeatureDetail[];
+  catalog_feature_details: CatalogFeatureDetail[];
 }
 
 class CatalogFeatureDetail {

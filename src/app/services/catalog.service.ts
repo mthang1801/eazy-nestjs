@@ -35,8 +35,8 @@ export class CatalogService {
     }
 
     const catalog = await this.catalogRepo.create(catalogData);
-    if (data.features && data.features.length) {
-      for (let feature of data.features) {
+    if (data.catalog_features && data.catalog_features.length) {
+      for (let feature of data.catalog_features) {
         const catalogFeatureData = {
           ...new CatalogFeatureEntity(),
           ...this.catalogFeatureRepo.setData(feature),
@@ -45,8 +45,11 @@ export class CatalogService {
         const catalogFeature = await this.catalogFeatureRepo.create(
           catalogFeatureData,
         );
-        if (feature.featureDetails && feature.featureDetails.length) {
-          for (let featureDetail of feature.featureDetails) {
+        if (
+          feature.catalog_feature_details &&
+          feature.catalog_feature_details.length
+        ) {
+          for (let featureDetail of feature.catalog_feature_details) {
             //console.log(featureDetail);
             const catalogFeatureDetailData = {
               ...new CatalogFeatureDetailEntity(),
@@ -128,8 +131,8 @@ export class CatalogService {
       ...this.catalogRepo.setData(data),
     };
     await this.catalogRepo.update({ catalog_id }, catalogInfo);
-    if (data.features && data.features.length) {
-      for (let feature of data.features) {
+    if (data.catalog_features && data.catalog_features.length) {
+      for (let feature of data.catalog_features) {
         // Nếu có truyền vào id của catalog_feature thì tiến hành cập nhật
         if (feature.catalog_feature_id) {
           //const featureInfo = await this.catalogFeatureRepo.findOne({catalog_feature_id: feature.catalog_feature_id});
@@ -141,8 +144,11 @@ export class CatalogService {
             featureData,
           );
 
-          if (feature.featureDetails && feature.featureDetails.length) {
-            for (let featureDetail of feature.featureDetails) {
+          if (
+            feature.catalog_feature_details &&
+            feature.catalog_feature_details.length
+          ) {
+            for (let featureDetail of feature.catalog_feature_details) {
               if (featureDetail.detail_id) {
                 //const featureDetailInfo = await this.catalogFeatureDetailRepo.findOne({detail_id: featureDetail.detail_id});
                 const featureDetailData = {
@@ -175,8 +181,11 @@ export class CatalogService {
           const catalogFeature = await this.catalogFeatureRepo.create(
             catalogFeatureData,
           );
-          if (feature.featureDetails && feature.featureDetails.length) {
-            for (let featureDetail of feature.featureDetails) {
+          if (
+            feature.catalog_feature_details &&
+            feature.catalog_feature_details.length
+          ) {
+            for (let featureDetail of feature.catalog_feature_details) {
               //console.log(featureDetail);
               const catalogFeatureDetailData = {
                 ...new CatalogFeatureDetailEntity(),

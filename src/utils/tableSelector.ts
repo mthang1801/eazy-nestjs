@@ -141,3 +141,12 @@ export const menuSelector = [
   `level`,
   `position`,
 ];
+
+export const catalogSelector = [
+  `${Table.CATALOG}.status as catalogStatus`,
+  `${Table.CATALOG_FEATURE}.status as catalogFeatureStatus`,
+  `${Table.CATALOG_FEATURE}.position as catalogFeaturePosition`,
+  `${Table.CATALOG_FEATURE_DETAIL}.status as catalogFeatureDetailStatus`,
+  `${Table.CATALOG_FEATURE}.feature_name`,
+  `${Table.CATALOG_FEATURE_VALUE_PRODUCT}.*`,
+];
