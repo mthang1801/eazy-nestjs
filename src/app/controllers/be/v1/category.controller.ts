@@ -275,6 +275,4 @@ export class CategoryController extends BaseController {
     await this.productService.updateProductIntoCategory(categoryId, data);
     return this.responseSuccess(res);
   }
-
-  // @Put(":id/products")
 }

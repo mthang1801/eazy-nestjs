@@ -46,7 +46,6 @@ export class CategoryController extends BaseController {
   @Get(':slug')
   async getCategoryBySlug(
     @Param('slug') slug: string,
-    @Query() params,
     @Res() res: Response,
   ): Promise<IResponse> {
     const result = await this.service.getCategoryBySlug(slug);

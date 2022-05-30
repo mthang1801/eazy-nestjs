@@ -583,8 +583,8 @@ export class CategoryService {
     }
 
     //update table category_features
-    await this.categoryFeatureRepo.delete({ category_id: id });
     if (data.category_features && data.category_features.length) {
+      await this.categoryFeatureRepo.delete({ category_id: id });
       for (let { feature_id, position, status } of data.category_features) {
         const checkExist = await this.categoryFeatureRepo.findOne({
           category_id: id,
