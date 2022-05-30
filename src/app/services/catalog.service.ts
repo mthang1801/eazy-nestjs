@@ -12,6 +12,8 @@ import { UpdateCatalogDto } from '../dto/catalog/update-catalog.dto';
 import { getPageSkipLimit } from '../../utils/helper';
 import { catalogsListSearchFilter } from '../../utils/tableConditioner';
 import { Table } from 'src/database/enums';
+import { sortBy } from 'lodash';
+import { SortBy } from '../../database/enums/sortBy.enum';
 
 @Injectable()
 export class CatalogService {
@@ -76,6 +78,7 @@ export class CatalogService {
     const catalogList = await this.catalogRepo.find({
       select: '*',
       where: catalogsListSearchFilter(search, filterConditions),
+      orderBy: [{ field: `${Table.CATALOG}.updated_at`, sortBy: SortBy.DESC }],
       skip,
       limit,
     });
@@ -93,6 +96,36 @@ export class CatalogService {
       },
       data: catalogList,
     };
+  }
+
+  async getCatalogRestrict(catalog_id) {
+    const catalog = await this.catalogRepo.findOne({ catalog_id, status: 'A' });
+
+    const catalogFeatures = await this.catalogFeatureRepo.find({
+      catalog_id: catalog.catalog_id,
+      status: 'A',
+    });
+
+    let catalog_features = [];
+
+    for (let catalogFeature of catalogFeatures) {
+      //let catalog_feature_details = [];
+      let catalog_feature_details = await this.catalogFeatureDetailRepo.find({
+        catalog_feature_id: catalogFeature.catalog_feature_id,
+        status: 'A',
+      });
+      let catalog_feature = {
+        ...catalogFeature,
+        catalog_feature_details: catalog_feature_details,
+      };
+      catalog_features.push(catalog_feature);
+    }
+
+    const result = {
+      ...catalog,
+      catalog_features: catalog_features,
+    };
+    return result;
   }
 
   async getById(catalog_id) {

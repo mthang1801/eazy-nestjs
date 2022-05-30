@@ -741,7 +741,15 @@ export class ProductService {
 
   async getListFE(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
-    let { search, category_ids, variant_ids } = params;
+    let {
+      search,
+      category_ids,
+      variant_ids,
+      sort_by_outstanding,
+      sort_by_sale,
+      is_installment,
+      sort_by_price,
+    } = params;
     let filterConditions = {};
 
     let categoriesList = [];
@@ -764,9 +772,10 @@ export class ProductService {
       },
     ];
 
-    let variantIds = variant_ids
-      ? variant_ids.split(',').map((variantId) => variantId)
-      : [];
+    let variantIds =
+      variant_ids && variant_ids != 0
+        ? variant_ids.split(',').map((variantId) => variantId)
+        : [];
 
     let productsList = [];
     let count;
@@ -784,6 +793,42 @@ export class ProductService {
     if (variantIds.length) {
       variantIds = [...new Set(variantIds.sort((a, b) => a - b))];
       productCacheKey['variant_ids'] = variant_ids;
+    }
+
+    if (is_installment) {
+      filterConditions[`${Table.PRODUCTS}.is_installment`] = 'Y';
+      productCacheKey['is_installment'] = true;
+    }
+
+    if (sort_by_outstanding) {
+      filterOrder = [
+        {
+          field: `${Table.PRODUCTS}.view_count`,
+          sortBy: SortBy.DESC,
+        },
+      ];
+
+      productCacheKey['sort_by_outstanding'] = true;
+    }
+
+    if (sort_by_sale) {
+      filterOrder = [
+        {
+          field: `${Table.PRODUCT_PRICES}.percentage_discount`,
+          sortBy: SortBy.DESC,
+        },
+      ];
+      productCacheKey['sort_by_sale'] = true;
+    }
+
+    if (sort_by_price) {
+      filterOrder = [
+        {
+          field: `${Table.PRODUCT_PRICES}.price`,
+          sortBy: SortBy.ASC,
+        },
+      ];
+      productCacheKey['sort_by_price'] = true;
     }
 
     let productCacheResult = await this.cache.getProductCacheList(
@@ -4370,7 +4415,35 @@ export class ProductService {
     return featuresSet;
   }
 
-  async BEGetCatalogFeatureValuesForProduct(product_id) {}
+  async BEGetCatalogFeatureValuesForProduct(product_id) {
+    const catalogFeatureValues = await this.catalogFeatureValueProductRepo.find(
+      {
+        select: catalogSelector,
+        join: productFeatureValuesFEJoiner,
+        where: {
+          [`${Table.CATALOG_FEATURE_VALUE_PRODUCT}.product_id`]: product_id,
+          [`${Table.CATALOG}.status`]: 'A',
+          [`${Table.CATALOG_FEATURE}.status`]: 'A',
+          [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
+        },
+        orderBy: [{ field: `catalogFeaturePosition`, sortBy: SortBy.ASC }],
+      },
+    );
+    let featuresSet = {};
+    if (catalogFeatureValues) {
+      for (let catalogFeatureValue of catalogFeatureValues) {
+        featuresSet[catalogFeatureValue.feature_name] = featuresSet[
+          catalogFeatureValue.feature_name
+        ]
+          ? [
+              ...featuresSet[catalogFeatureValue.feature_name],
+              catalogFeatureValue,
+            ]
+          : [catalogFeatureValue];
+      }
+    }
+    return featuresSet;
+  }
 
   async getBySlugSEO(slug) {
     let product = await this.productRepo.findOne({

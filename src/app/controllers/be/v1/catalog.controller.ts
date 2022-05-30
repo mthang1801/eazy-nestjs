@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Res, Query, Param, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Res,
+  Query,
+  Param,
+  Put,
+} from '@nestjs/common';
 import { BaseController } from '../../../../base/base.controllers';
 import { Response } from 'express';
 import { CreateCatalogDto } from '../../../dto/catalog/create-catalog.dto';
@@ -21,7 +30,7 @@ export class CatalogController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Put(":catalog_id")
+  @Put(':catalog_id')
   async update(
     @Res() res: Response,
     @Body() data: UpdateCatalogDto,
@@ -34,6 +43,15 @@ export class CatalogController extends BaseController {
   @Get()
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':catalog_id/restrict')
+  async getCatalogRestrict(
+    @Res() res: Response,
+    @Param('catalog_id') catalog_id,
+  ): Promise<IResponse> {
+    const result = await this.service.getCatalogRestrict(catalog_id);
     return this.responseSuccess(res, result);
   }
 
