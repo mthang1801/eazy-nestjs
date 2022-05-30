@@ -143,7 +143,11 @@ export const customersListSearchFilter = (
 export const orderSearchFilter = (search = '', filterConditions = {}) => {
   let arraySearch = [];
   if (search) {
-    arraySearch = [{ [`${Table.ORDERS}.order_code`]: search }];
+    arraySearch = [
+      { [`${Table.ORDERS}.order_code`]: search },
+      { [`${Table.ORDERS}.b_phone`]: Like(search) },
+      { [`${Table.ORDERS}.s_phone`]: Like(search) },
+    ];
   }
 
   return searchFilterTemplate(filterConditions, arraySearch);

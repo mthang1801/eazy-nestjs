@@ -731,7 +731,7 @@ export class ProductService {
 
   async getListFE(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
-    let { search, category_ids, ...feature_codes } = params;
+    let { search, category_ids, variant_ids } = params;
     let filterConditions = {};
 
     let categoriesList = [];
@@ -753,18 +753,9 @@ export class ProductService {
       },
     ];
 
-    let variantIds = [];
-    if (feature_codes) {
-      for (let [key, val] of Object.entries(feature_codes)) {
-        if (val) {
-          let _val: any = val;
-          variantIds = [
-            ...variantIds,
-            ..._val.split(',').map((variantId) => variantId),
-          ];
-        }
-      }
-    }
+    let variantIds = variant_ids
+      ? variant_ids.split(',').map((variantId) => variantId)
+      : [];
 
     let productsList = [];
     let count;
@@ -781,9 +772,9 @@ export class ProductService {
 
     if (variantIds) {
       variantIds = [...new Set(variantIds.sort((a, b) => a - b))];
-      productCacheKey['variant_ids'] = variantIds.join(',');
+      productCacheKey['variant_ids'] = variant_ids;
     }
-    await this.cache.removeProductCacheList(productCacheKey);
+
     let productCacheResult = await this.cache.getProductCacheList(
       productCacheKey,
     );

@@ -296,3 +296,12 @@ export const stringShortener = (longString = '') => {
 
   return shortString;
 };
+
+export function isJsonString(str) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}

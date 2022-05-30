@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, ConsoleLogger } from '@nestjs/common';
 import { CreatePageDto } from '../dto/page/create-page.dto';
 import { PageEntity } from '../entities/page.entity';
 import { PageDetailEntity } from '../entities/pageDetail.entity';
@@ -13,7 +13,7 @@ import {
 import { genRandomString } from '../../utils/cipherHelper';
 import { CreatePageDetailDto } from '../dto/page/create-pageDetail.dto';
 import { UpdatePageDetailDto } from '../dto/page/update-pageDetail.dto';
-import { getPageSkipLimit } from '../../utils/helper';
+import { getPageSkipLimit, isJsonString } from '../../utils/helper';
 
 import { Table } from 'src/database/enums';
 import { pagesListSearchFilter } from '../../utils/tableConditioner';
@@ -522,6 +522,7 @@ export class PageService {
 
     const pageDetailValues = await this.pageDetailValueRepo.find({
       page_detail_id,
+      detail_status: 'A',
     });
 
     switch (currentPageDetail.detail_type) {
@@ -566,7 +567,8 @@ export class PageService {
         currentPageDetail['page_detail_values'] = { ...pageDetailValue };
         break;
       case PageDetailType.BANNER:
-        let bannerId = pageDetailValues[0]['data_value'];
+        let bannerId = currentPageDetail.page_detail_data;
+
         if (bannerId) {
           const banner = await this.bannerService.FEgetById(bannerId);
           currentPageDetail['page_detail_values'] = banner;
@@ -651,9 +653,14 @@ export class PageService {
     let pageCacheResult = await this.cache.getCachePageById(
       currentPage.page_id,
     );
+
     if (pageCacheResult) {
       return pageCacheResult;
     }
+
+    currentPage['page_data'] = isJsonString(currentPage['page_data'])
+      ? JSON.parse(currentPage['page_data'])
+      : currentPage['page_data'];
 
     const pageDetails = await this.pageDetailRepo.find({
       select: '*',
@@ -665,6 +672,7 @@ export class PageService {
       ],
       where: {
         [`${Table.PAGE_DETAIL}.page_id`]: currentPage.page_id,
+        [`${Table.PAGE_DETAIL}.status`]: 'A',
       },
     });
 
