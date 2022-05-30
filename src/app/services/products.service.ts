@@ -693,9 +693,8 @@ export class ProductService {
     }
 
     //get catalog features
-    result['catalogFeatures'] = await this.BEGetCatalogFeatureValuesForProduct(
-      result.product_id,
-    );
+    result['catalog_feature_values'] =
+      await this.BEGetCatalogFeatureValuesForProduct(result.product_id);
 
     // Get accessory
     if (result['promotion_accessory_id']) {
@@ -3484,6 +3483,9 @@ export class ProductService {
         result.product_id,
       );
     }
+
+    result['catalog_feature_values'] =
+      await this.BEGetCatalogFeatureValuesForProduct(result.product_id);
 
     // Get accessory
     if (result['promotion_accessory_id']) {
