@@ -537,8 +537,6 @@ export class PageService {
           },
         });
 
-        console.log(540, products);
-
         for (let productItem of products) {
           //find product Stickers
           productItem['stickers'] =

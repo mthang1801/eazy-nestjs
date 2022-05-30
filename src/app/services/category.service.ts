@@ -800,6 +800,13 @@ export class CategoryService {
       ['asc'],
     );
 
+    let filterCategories = [
+      ...new Set([
+        categoryId,
+        ...categoriesListByLevel.map(({ category_id }) => category_id),
+      ]),
+    ];
+
     let features = await this.getFeaturesSetByCategoryId(
       category['category_id'],
     );
@@ -808,6 +815,7 @@ export class CategoryService {
     if (category['parent_id']) {
       relevantCategories = await this.categoryRepo.find({
         parent_id: category['parent_id'],
+        category_id: Not(Equal(category.category_id)),
       });
     }
 
@@ -816,6 +824,7 @@ export class CategoryService {
       childrenCategories: categoriesListByLevel,
       features,
       relevantCategories,
+      filterCategories,
     };
 
     await this.cache.setCategoryById(category['category_id'], categoryResult);
