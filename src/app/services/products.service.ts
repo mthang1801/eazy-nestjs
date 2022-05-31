@@ -3570,31 +3570,33 @@ export class ProductService {
     });
 
     let listCategoriesId = categories.map(({ category_id }) => category_id);
-    let productsList = await this.productCategoryRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug`,
-      join: productByCategoryIdJoiner,
-      where: listCategoriesId.map((categoryId) => ({
-        [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
-        [`${Table.PRODUCT_PRICES}.price`]: Between(minPrice, maxPrice),
-        [`${Table.PRODUCTS}.product_function`]: product['product_function'],
-        [`${Table.PRODUCTS}.product_id`]: Not(Equal(product['product_id'])),
-      })),
-      skip: 0,
-      limt: 20,
-    });
+    let productsList = [];
+    if (listCategoriesId.length) {
+      productsList = await this.productCategoryRepo.find({
+        select: `*, ${Table.PRODUCTS}.slug as productSlug`,
+        join: productByCategoryIdJoiner,
+        where: listCategoriesId.map((categoryId) => ({
+          [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
+          [`${Table.PRODUCT_PRICES}.price`]: Between(minPrice, maxPrice),
+          [`${Table.PRODUCTS}.product_function`]: product['product_function'],
+          [`${Table.PRODUCTS}.product_id`]: Not(Equal(product['product_id'])),
+        })),
+        skip: 0,
+        limt: 20,
+      });
+      productsList = _.uniqBy(productsList, 'product_id');
 
-    productsList = _.uniqBy(productsList, 'product_id');
-
-    for (let productItem of productsList) {
-      productItem['discount_program'] =
-        await this.discountProgramDetailRepo.findOne({
-          select: '*',
-          join: discountProgramDetailJoiner,
-          where: {
-            [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
-              productItem.product_id,
-          },
-        });
+      for (let productItem of productsList) {
+        productItem['discount_program'] =
+          await this.discountProgramDetailRepo.findOne({
+            select: '*',
+            join: discountProgramDetailJoiner,
+            where: {
+              [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
+                productItem.product_id,
+            },
+          });
+      }
     }
 
     return productsList;
