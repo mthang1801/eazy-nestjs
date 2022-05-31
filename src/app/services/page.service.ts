@@ -845,6 +845,9 @@ export class PageService {
       select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL}.page_detail_id, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageDetailValueJoiner,
       where: { [`${Table.PAGE_DETAIL_VALUE}.page_detail_id`]: page_detail_id },
+      orderBy: [
+        { field: `${Table.PAGE_DETAIL_VALUE}.position`, sortBy: SortBy.ASC },
+      ],
     });
 
     if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
@@ -900,7 +903,10 @@ export class PageService {
       }
 
       let pageDetailValues = await this.pageDetailValueRepo.find({
-        page_detail_id: data.page_detail_id,
+        where: { page_detail_id: data.page_detail_id },
+        orderBy: [
+          { field: `${Table.PAGE_DETAIL_VALUE}.position`, sortBy: SortBy.ASC },
+        ],
       });
 
       if (
