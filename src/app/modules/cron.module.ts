@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronService } from '../microservices/cron/cron.service';
-import { DashboardService } from '../services/dashboard.service';
-import { DashboardModule } from './dashboard.module';
+import { ProductsModule } from './products.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    DashboardModule,
+    ProductsModule,
   ],
   providers: [
     CronService,
