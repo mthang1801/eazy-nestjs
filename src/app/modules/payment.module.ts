@@ -19,6 +19,7 @@ import { OrderPaymentRepository } from '../repositories/orderPayment.repository'
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
 import { ProductsModule } from './products.module';
 import { ShippingFeeModule } from './shippingFee.module';
+import { UsersModule } from './users.module';
 @Module({
   controllers: [PaymentController, PaymentControllerFE],
   providers: [
@@ -42,6 +43,7 @@ import { ShippingFeeModule } from './shippingFee.module';
     PromotionModule,
     ProductsModule,
     ShippingFeeModule,
+    UsersModule,
   ],
 })
 export class PaymentModule implements NestModule {

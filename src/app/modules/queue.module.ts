@@ -1,5 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import { QueueController } from '../controllers/common/queue.controller';
+
 import { BullModule } from '@nestjs/bull';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { MessageProducerService } from '../microservices/queue/producers/message.producer';
@@ -25,6 +25,5 @@ import { MessageConsumer } from '../microservices/queue/consumers/message.consum
   ],
   providers: [MessageProducerService, MessageConsumer],
   exports: [MessageProducerService, MessageConsumer],
-  controllers: [QueueController],
 })
 export class QueueModule {}

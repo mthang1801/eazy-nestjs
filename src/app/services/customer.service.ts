@@ -226,7 +226,10 @@ export class CustomerService {
       );
       return updatedUser;
     } catch (error) {
-      if (error.response.data.statusCode == 400) {
+      if (
+        error.response.data.statusCode <= 500 &&
+        error.response.data.statusCode >= 400
+      ) {
         this.userRepo.delete({ user_id: user['user_id'] });
         this.userProfileRepo.delete({ user_id: user['user_id'] });
       }
@@ -1230,7 +1233,7 @@ export class CustomerService {
     }
   }
 
-  async createCustomerFromValuationBill(data){
+  async createCustomerFromValuationBill(data) {
     let generatePassword = saltHashPassword(defaultPassword);
     let userData = {
       ...new UserEntity(),
@@ -1239,7 +1242,7 @@ export class CustomerService {
       lastname: data.customer_name,
       password: generatePassword.passwordHash,
       salt: generatePassword.salt,
-    }
+    };
     let user = await this.userRepo.create(userData);
 
     let userProfileData = {
@@ -1247,19 +1250,19 @@ export class CustomerService {
       ...this.userProfileRepo.setData(user),
       b_lastname: user.lastname,
       b_phone: user.phone,
-    }
+    };
     await this.userProfileRepo.create(userProfileData);
 
     let userLoyaltyData = {
       ...new UserLoyaltyEntity(),
       ...this.userLoyalRepo.setData(user),
-    }
+    };
     await this.userLoyalRepo.create(userLoyaltyData);
 
     let userDataData = {
       ...new UserDataEntity(),
       ...this.userDataRepo.setData(user),
-    }
+    };
     await this.userDataRepo.create(userDataData);
 
     user = await this.userRepo.findOne({
@@ -1268,13 +1271,12 @@ export class CustomerService {
       where: { [`${Table.USERS}.user_id`]: user.user_id },
     });
     console.log(user);
-    console.log("====================abc==============");
-    try{
+    console.log('====================abc==============');
+    try {
       const res = await this.createCustomerToAppcore(user);
       console.log(res);
-    }
-    catch (error){
-      throw new HttpException(error.response,  error.status);
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
     }
     //return res;
   }

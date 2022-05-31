@@ -25,7 +25,7 @@ import {
   generateRandomString,
   formatStandardTimeStamp,
 } from '../../utils/helper';
-import { generateSHA512 } from '../../utils/cipherHelper';
+import { generateSHA512, saltHashPassword } from '../../utils/cipherHelper';
 import {
   payooChecksum,
   payooRefer,
@@ -74,7 +74,10 @@ import {
   calculateInstallmentInterestRateHomeCredit,
 } from '../../utils/services/payment.helper';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
-import { shippingFeeLocationsJoiner } from '../../utils/joinTable';
+import {
+  shippingFeeLocationsJoiner,
+  userPaymentJoiner,
+} from '../../utils/joinTable';
 import { userSelector } from '../../utils/tableSelector';
 import { CreateMomoPaymentDto } from '../dto/orders/create-momoPayment.dto';
 import { Cryptography } from '../../utils/cryptography';
@@ -99,6 +102,14 @@ import { request } from 'https';
 import { constants } from 'fs';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 import { CreateMomoPaymentSelfTransportDto } from '../dto/orders/create-momoSelfTransport.dto';
+import { UserProfileRepository } from '../repositories/userProfile.repository';
+import { UserProfileEntity } from '../entities/userProfile.entity';
+import { defaultPassword } from '../../constants/defaultPassword';
+import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
+import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
+import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
+import { UserDataRepository } from '../repositories/userData.repository';
+import { UserDataEntity } from '../entities/userData.entity';
 
 @Injectable()
 export class PaymentService {
@@ -117,6 +128,9 @@ export class PaymentService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private shippingFeeService: ShippingFeeService,
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
+    private userProfileRepo: UserProfileRepository<UserProfileEntity>,
+    private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
   ) {}
 
   async getList(params) {
@@ -1173,5 +1187,158 @@ export class PaymentService {
         error?.response?.status || error.status,
       );
     }
+  }
+
+  async websiteCreateOrderCOD(data, userAuth) {
+    let user: any;
+    if (userAuth) {
+      user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+
+      if (!user.phone) {
+        throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
+      }
+      if (!user['user_appcore_id']) {
+        await this.customerService.createCustomerToAppcore(user);
+        user = await this.userRepo.findOne({ user_id: userAuth.user_id });
+      }
+      if (!user) {
+        throw new HttpException(
+          'Có lỗi trong quá trình tạo đơn hàng, vui lòng liên hệ quản trị viên',
+          400,
+        );
+      }
+    } else {
+      user = await this.userRepo.findOne({
+        select: '*',
+        join: userPaymentJoiner,
+        where: { phone: data.s_phone },
+      });
+
+      if (!user) {
+        let { passwordHash, salt } = saltHashPassword(defaultPassword);
+        let userData = {
+          ...new UserEntity(),
+          lastname: data.s_lastname,
+          password: passwordHash,
+          phone: data.s_phone,
+          salt,
+          user_type: UserTypeEnum.Customer,
+        };
+        let newUser = await this.userRepo.create(userData);
+
+        let userProfileData = {
+          ...new UserProfileEntity(),
+          b_lastname: data.s_lastname,
+          s_lastname: data.s_lastname,
+          b_phone: data.s_phone,
+          s_phone: data.s_phone,
+          b_city: data.s_city,
+          s_city: data.s_city,
+          b_district: data.s_district,
+          s_district: data.s_district,
+          b_ward: data.s_ward,
+          s_ward: data.s_ward,
+          b_address: data.s_address,
+          s_address: data.s_address,
+          user_id: newUser.user_id,
+        };
+        await this.userProfileRepo.create(userProfileData, false);
+
+        await this.userLoyaltyRepo.create({
+          ...new UserLoyaltyEntity(),
+          user_id: newUser.user_id,
+        });
+        await this.userDataRepo.create({
+          ...new UserDataEntity(),
+          user_id: newUser.user_id,
+        });
+
+        user = await this.userRepo.findOne({
+          select: '*',
+          join: userPaymentJoiner,
+          where: { [`${Table.USERS}.user_id`]: newUser.user_id },
+        });
+
+        user = await this.customerService.createCustomerToAppcore(user);
+      }
+    }
+
+    if (!user['user_appcore_id']) {
+      throw new HttpException(
+        'Người dùng hiện tại không thể thực hiện tạo đơn hàng, vui lòng liên hệ với nhân viên để được hỗ trợ',
+        409,
+      );
+    }
+
+    const cart = await this.cartRepo.findOne({
+      user_id: userAuth ? userAuth.user_id : data.user_id,
+    });
+    if (!cart) {
+      throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    }
+
+    let cartItems = await this.cartItemRepo.find({
+      select: `*, ${Table.CART_ITEMS}.amount`,
+      join: cartPaymentJoiner,
+      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    });
+
+    let totalPrice = cartItems.reduce(
+      (acc, ele) => acc + ele.price * ele.amount,
+      0,
+    );
+
+    if (!cartItems.length) {
+      throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
+    }
+
+    let userProfile = await this.userProfileRepo.findOne({
+      user_id: user.user_id,
+    });
+
+    // await this.createOrder(user, sendData);
+    userProfile['s_firstname'] = '';
+    userProfile['b_firstname'] = '';
+    userProfile['s_lastname'] = data.s_lastname || userProfile['s_lastname'];
+    userProfile['s_phone'] = data.s_phone || userProfile['s_phone'];
+    userProfile['s_city'] = data.s_city || userProfile['s_city'];
+    userProfile['s_district'] = data.s_district || userProfile['s_district'];
+    userProfile['s_ward'] = data.s_ward || userProfile['s_ward'];
+    userProfile['s_address'] = data.s_address || userProfile['s_address'];
+    if (!userProfile['b_lastname']) {
+      userProfile['b_lastname'] = data.s_lastname;
+    }
+
+    if (Object.entries(userProfile).length) {
+      userProfile = await this.userProfileRepo.update(
+        { user_id: user.user_id },
+        userProfile,
+        true,
+      );
+    }
+
+    const sendData = {
+      ...userProfile,
+      user_appcore_id: user['user_appcore_id'],
+      order_items: cartItems,
+    };
+
+    if (data.shipping_fee_location_id) {
+      let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+        select: '*',
+        join: shippingFeeLocationsJoiner,
+        where: { shipping_fee_location_id: data.shipping_fee_location_id },
+      });
+      if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
+        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
+        sendData['shipping_cost'] = shippingFeeLocation.value_fee;
+      }
+    }
+
+    const result = await this.orderService.createOrder(user, sendData);
+
+    await this.cartRepo.delete({ cart_id: cart.cart_id });
+    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    return result;
   }
 }

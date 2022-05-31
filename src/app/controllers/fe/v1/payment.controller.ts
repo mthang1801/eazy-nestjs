@@ -10,6 +10,7 @@ import { CreateInstallmentDto } from '../../../dto/payment/create-installment.dt
 import { CreatePaymentSelfTransportDto } from '../../../dto/orders/create-paymentSelfTransport.dto';
 import { CreateMomoPaymentDto } from '../../../dto/orders/create-momoPayment.dto';
 import { CreateMomoPaymentSelfTransportDto } from '../../../dto/orders/create-momoSelfTransport.dto';
+import { CreateOrderFEDto } from '../../../dto/orders/create-order.frontend.dto';
 @Controller('fe/v1/payment')
 export class PaymentControllerFE extends BaseController {
   constructor(private service: PaymentService) {
@@ -71,6 +72,16 @@ export class PaymentControllerFE extends BaseController {
   @Get('/installment/')
   async getProductInstallment(@Res() res: Response, @Query() params) {
     const result = await this.service.getProductInstallment(params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Post('cod')
+  async websiteCreateOrderCOD(
+    @Res() res,
+    @Body() data: CreateOrderFEDto,
+    @Req() req,
+  ): Promise<IResponse> {
+    const result = await this.service.websiteCreateOrderCOD(data, req.user);
     return this.responseSuccess(res, result);
   }
 }

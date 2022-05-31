@@ -614,7 +614,7 @@ export class OrdersService {
       await this.orderHistoryRepo.create(updatedOrder, false);
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
-      if (error.response.status == 400 || error.status == 400) {
+      if (error.response.status <= 500 || error.status <= 500) {
         await this.orderRepo.delete({ order_id: result.order_id });
         await this.orderHistoryRepo.delete({ order_id: result.order_id });
         await this.orderDetailRepo.delete({ order_id: result.order_id });
