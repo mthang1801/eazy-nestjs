@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, Logger } from '@nestjs/common';
 import { flashSaleProductJoiner } from 'src/utils/joinTable';
 import { CreateFlashSaleDto } from '../dto/flashSale/create-flashSale.dto';
 
@@ -35,9 +35,11 @@ import {
 } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
 import * as _ from 'lodash';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class FlashSalesService {
+  private logger = new Logger();
   constructor(
     private flashSaleRepo: FlashSaleRepository<FlashSaleEntity>,
     private flashSaleDetailRepo: FlashSaleDetailRepository<FlashSaleDetailEntity>,
@@ -46,6 +48,7 @@ export class FlashSalesService {
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private cache: RedisCacheService,
+    private schedulerRegistry: SchedulerRegistry,
   ) {}
 
   async CMScreate(data: CreateFlashSaleDto, user) {
