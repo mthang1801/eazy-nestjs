@@ -91,7 +91,9 @@ export class FlashSalesService {
       const startDate = formatStandardTimeStamp(
         newFlashSale['start_at'],
       ).toString();
-      const endDate = formatStandardTimeStamp(newFlashSale['end_at']).toString();
+      const endDate = formatStandardTimeStamp(
+        newFlashSale['end_at'],
+      ).toString();
       const today = formatStandardTimeStamp();
 
       if (new Date(endDate).getTime() < new Date(today).getTime()) {
@@ -354,6 +356,8 @@ export class FlashSalesService {
     if (!flashSale) {
       throw new HttpException('Không tìm thấy flash sale', 404);
     }
+
+    await this.cache.removeCachedFlashSale();
 
     const flashSaleData = {
       ...this.flashSaleRepo.setData(data),

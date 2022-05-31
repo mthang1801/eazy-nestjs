@@ -59,6 +59,7 @@ import { CatalogFeatureValueProductRepository } from '../repositories/catalogFet
 import { MessageProducerService } from '../microservices/queue/producers/message.producer';
 import { QueueModule } from './queue.module';
 import { CatalogRepository } from '../repositories/catalog.repository';
+import { AudioProducerService } from '../microservices/queue/producers/audio.producer';
 
 @Module({
   imports: [

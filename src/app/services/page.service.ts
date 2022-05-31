@@ -663,7 +663,6 @@ export class PageService {
       throw new HttpException('Không tìm thấy trang.', 404);
     }
 
-    await this.cache.removePageById(currentPage.page_id);
     let pageCacheResult = await this.cache.getCachePageById(
       currentPage.page_id,
     );

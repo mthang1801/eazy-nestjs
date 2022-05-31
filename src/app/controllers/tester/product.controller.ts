@@ -19,6 +19,7 @@ import { UpdateCategoryDto } from '../../dto/category/update-category.dto';
 import { CategoryService } from 'src/app/services/category.service';
 import { TradeinProgramService } from '../../services/tradeinProgram.service';
 import { MessageProducerService } from '../../microservices/queue/producers/message.producer';
+import { AudioProducerService } from '../../microservices/queue/producers/audio.producer';
 
 @Controller('/web-tester/v1/products')
 export class ProductTesterController extends BaseController {
@@ -26,6 +27,7 @@ export class ProductTesterController extends BaseController {
     private testService: CategoryService,
     private service: ProductService,
     private messageService: MessageProducerService,
+    private audioService: AudioProducerService,
   ) {
     super();
   }
@@ -76,6 +78,7 @@ export class ProductTesterController extends BaseController {
   @Post('test')
   async test(@Res() res, @Body() data) {
     await this.messageService.sendMessage(data);
+    await this.audioService.sendAudio(data);
     return this.responseSuccess(res);
   }
 }

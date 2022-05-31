@@ -4,6 +4,9 @@ import { BullModule } from '@nestjs/bull';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { MessageProducerService } from '../microservices/queue/producers/message.producer';
 import { MessageConsumer } from '../microservices/queue/consumers/message.consumer';
+import { join } from 'path';
+import { AudioProducerService } from '../microservices/queue/producers/audio.producer';
+import { AudioConsumer } from '../microservices/queue/consumers/audio.consumer';
 @Global()
 @Module({
   imports: [
@@ -22,8 +25,21 @@ import { MessageConsumer } from '../microservices/queue/consumers/message.consum
     BullModule.registerQueueAsync({
       name: 'message-queue',
     }),
+    BullModule.registerQueueAsync({
+      name: 'message-audio',
+    }),
   ],
-  providers: [MessageProducerService, MessageConsumer],
-  exports: [MessageProducerService, MessageConsumer],
+  providers: [
+    MessageProducerService,
+    AudioConsumer,
+    MessageConsumer,
+    AudioProducerService,
+  ],
+  exports: [
+    MessageProducerService,
+    AudioConsumer,
+    MessageConsumer,
+    AudioProducerService,
+  ],
 })
 export class QueueModule {}
