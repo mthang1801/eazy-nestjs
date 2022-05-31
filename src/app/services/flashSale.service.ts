@@ -389,6 +389,9 @@ export class FlashSalesService {
 
       if (new Date(endDate).getTime() < new Date(today).getTime()) {
         console.log('Không được cập nhật.');
+        if (!data.end_at) {
+          return;
+        }
       } else if (new Date(startDate).getTime() > new Date(today).getTime()) {
         console.log('Được phép cập nhật 1.');
         await this.flashSaleRepo.update(

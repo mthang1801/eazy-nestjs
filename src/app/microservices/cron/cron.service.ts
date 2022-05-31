@@ -1,16 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, Interval, Timeout } from '@nestjs/schedule';
-import { DashboardService } from '../../services/dashboard.service';
+import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
+import { ProductService } from '../../services/products.service';
 
 @Injectable()
 export class CronService {
   private logger = new Logger(CronService.name);
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private productService: ProductService) {}
 
-  // @Interval('test', 5000)
-  // handleInterval() {
-  //   this.logger.debug('Called every 5s');
-  //   this.dashboardService.getProductsAmountInStores('ASC');
-  //   console.log('Called every 5s');
-  // }
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  handleCron() {
+    this.logger.debug('Called everyday at midnight');
+    this.productService.syncGetProductsStores();
+  }
 }
