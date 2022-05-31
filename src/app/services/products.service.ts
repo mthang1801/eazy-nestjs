@@ -257,7 +257,16 @@ import {
   productSEOJoiner,
 } from '../../utils/joinTable';
 import { CatalogFeatureValueProductEntity } from '../entities/catalogFeatureValueProduct.entity';
-import { productFeatureValuesFEJoiner } from '../../utils/joinTable';
+import {
+  productFeatureValuesFEJoiner,
+  catalogFeatureDetailJoiner,
+} from '../../utils/joinTable';
+import { CatalogRepository } from '../repositories/catalog.repository';
+import { CatalogEntity } from '../entities/catalog.entity';
+import { CatalogFeatureRepository } from '../repositories/catalogFeature.repository';
+import { CatalogFeatureEntity } from '../entities/catalogFeature.entity';
+import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
+import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
 
 @Injectable()
 export class ProductService {
@@ -303,6 +312,9 @@ export class ProductService {
     private discountProgramRepo: DiscountProgramRepository<DiscountProgramEntity>,
     private discountProgramDetailRepo: DiscountProgramDetailRepository<DiscountProgramDetailEntity>,
     private catalogFeatureValueProductRepo: CatalogFeatureValueProductRepository<CatalogFeatureValueProductEntity>,
+    private catalogRepo: CatalogRepository<CatalogEntity>,
+    private catalogFeatureRepo: CatalogFeatureRepository<CatalogFeatureEntity>,
+    private catalogFeatureDetailRepo: CatalogFeatureDetailRepository<CatalogFeatureDetailEntity>,
     private cache: RedisCacheService,
   ) {}
 
@@ -693,8 +705,13 @@ export class ProductService {
     }
 
     //get catalog features
-    result['catalog_feature_values'] =
-      await this.BEGetCatalogFeatureValuesForProduct(result.product_id);
+    if (result['catalog_category_id']) {
+      result['catalog_feature_values'] =
+        await this.BEGetCatalogFeatureValuesForProduct(
+          result.catalog_category_id,
+          result.product_id,
+        );
+    }
 
     // Get accessory
     if (result['promotion_accessory_id']) {
@@ -3488,8 +3505,14 @@ export class ProductService {
       );
     }
 
-    result['catalog_feature_values'] =
-      await this.BEGetCatalogFeatureValuesForProduct(result.product_id);
+    result['catalog_feature_values'] = null;
+    if (result['catalog_category_id']) {
+      result['catalog_feature_values'] =
+        await this.BEGetCatalogFeatureValuesForProduct(
+          result.catalog_category_id,
+          result.product_id,
+        );
+    }
 
     // Get accessory
     if (result['promotion_accessory_id']) {
@@ -4349,12 +4372,15 @@ export class ProductService {
       });
 
       // Get parent categories info
-      result['parentCategories'] = await this.categoryService.parentCategories(
-        result['currentCategory'],
-      );
-      result['parentCategories'] = _.sortBy(result['parentCategories'], [
-        (o) => o.level,
-      ]);
+      if (result['currentCategory']) {
+        result['parentCategories'] =
+          await this.categoryService.parentCategories(
+            result['currentCategory'],
+          );
+        result['parentCategories'] = _.sortBy(result['parentCategories'], [
+          (o) => o.level,
+        ]);
+      }
 
       // Get relative products
       result['relative_prouducts'] = await this.getRelativeProductsByCategory(
@@ -4421,36 +4447,58 @@ export class ProductService {
     return featuresSet;
   }
 
-  async BEGetCatalogFeatureValuesForProduct(product_id) {
-    const catalogFeatureValues = await this.catalogFeatureValueProductRepo.find(
-      {
-        select: catalogSelector,
-        join: productFeatureValuesFEJoiner,
-        where: {
-          [`${Table.CATALOG_FEATURE_VALUE_PRODUCT}.product_id`]: product_id,
-          [`${Table.CATALOG}.status`]: 'A',
-          [`${Table.CATALOG_FEATURE}.status`]: 'A',
-          [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
-        },
-        orderBy: [{ field: `catalogFeaturePosition`, sortBy: SortBy.ASC }],
-      },
-    );
+  async BEGetCatalogFeatureValuesForProduct(catalog_id, product_id) {
+    const catalog = await this.catalogRepo.findOne({ catalog_id, status: 'A' });
+    if (catalog) {
+      const catalogFeatures = await this.catalogFeatureRepo.find({
+        catalog_id,
+        status: 'A',
+      });
+      if (catalogFeatures.length) {
+        for (let catalogFeatureItem of catalogFeatures) {
+          const catalogFeatureDetails =
+            await this.catalogFeatureDetailRepo.find({
+              select: '*',
+              where: {
+                [`${Table.CATALOG_FEATURE_DETAIL}.catalog_feature_id`]:
+                  catalogFeatureItem.catalog_feature_id,
+                [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
+              },
+            });
 
-    console.log(4435, catalogFeatureValues);
-    let featuresSet = {};
-    if (catalogFeatureValues) {
-      for (let catalogFeatureValue of catalogFeatureValues) {
-        featuresSet[catalogFeatureValue.feature_name] = featuresSet[
-          catalogFeatureValue.feature_name
-        ]
-          ? [
-              ...featuresSet[catalogFeatureValue.feature_name],
-              catalogFeatureValue,
-            ]
-          : [catalogFeatureValue];
+          let result = [
+            ...catalogFeatureDetails.map((catalogFeatureDetails) => ({
+              ...catalogFeatureDetails,
+              value: '',
+            })),
+          ];
+          if (catalogFeatureDetails.length) {
+            result = [];
+            for (let catalogFeatureDetail of catalogFeatureDetails) {
+              const catalogProductFeatureValue =
+                await this.catalogFeatureValueProductRepo.findOne({
+                  detail_id: catalogFeatureDetail.detail_id,
+                  product_id,
+                });
+              if (catalogProductFeatureValue) {
+                catalogFeatureDetail = {
+                  ...catalogFeatureDetail,
+                  ...catalogProductFeatureValue,
+                };
+              } else {
+                catalogFeatureDetail['value'] = '';
+              }
+              result = [...result, catalogFeatureDetail];
+            }
+          }
+
+          catalogFeatureItem['catalog_feature_details'] = result;
+        }
       }
+      catalog['catalog_features'] = catalogFeatures;
     }
-    return featuresSet;
+    console.log(catalog);
+    return catalog;
   }
 
   async getBySlugSEO(slug) {

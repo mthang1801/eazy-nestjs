@@ -1717,7 +1717,7 @@ export class CategoryService {
   }
 
   async parentCategories(category, categoriesList = [{ ...category }]) {
-    if (!category.parent_id) {
+    if (!category || !category.parent_id) {
       return categoriesList;
     } else {
       let parentCategory = await this.categoryRepo.findOne({

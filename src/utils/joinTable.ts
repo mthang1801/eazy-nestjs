@@ -1181,3 +1181,29 @@ export const productFeatureValuesFEJoiner = {
     },
   },
 };
+
+export const productFeatureValuesBEJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.CATALOG_FEATURE_DETAIL]: {
+      fieldJoin: `${Table.CATALOG_FEATURE_DETAIL}.detail_id`,
+      rootJoin: `${Table.CATALOG_FEATURE_VALUE_PRODUCT}.detail_id`,
+    },
+    [Table.CATALOG_FEATURE]: {
+      fieldJoin: `${Table.CATALOG_FEATURE}.catalog_feature_id`,
+      rootJoin: `${Table.CATALOG_FEATURE_DETAIL}.catalog_feature_id`,
+    },
+    [Table.CATALOG]: {
+      fieldJoin: `${Table.CATALOG}.catalog_id`,
+      rootJoin: `${Table.CATALOG_FEATURE}.catalog_id`,
+    },
+  },
+};
+
+export const catalogFeatureDetailJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.CATALOG_FEATURE_VALUE_PRODUCT]: {
+      fieldJoin: `${Table.CATALOG_FEATURE_VALUE_PRODUCT}.detail_id`,
+      rootJoin: `${Table.CATALOG_FEATURE_DETAIL}.detail_id`,
+    },
+  },
+};
