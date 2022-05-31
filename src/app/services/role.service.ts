@@ -343,6 +343,8 @@ export class RoleService {
       },
     });
 
+    console.log(currentRoleFunct);
+
     let filterCondition = {
       [`${Table.ROLE}.level`]: MoreThanOrEqual(currentRoleFunct.level),
     };

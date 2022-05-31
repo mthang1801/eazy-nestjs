@@ -59,7 +59,9 @@ export class AuthGuard implements CanActivate {
       throw new HttpException(['Yêu cầu truy cập bị từ chối 4.'], 401);
     }
 
-    let userId = decryptedData.split('-')[5] ? decryptedData : decryptedData;
+    let userId = decryptedData.split('-')[5]
+      ? decryptedData.split('-')[5]
+      : decryptedData;
 
     user['user_id'] = userId;
 
@@ -67,7 +69,7 @@ export class AuthGuard implements CanActivate {
       method,
       route: { path },
     } = req;
-    console.log(userId);
+
     try {
       await this.roleService.checkUserRole(userId, method, path);
     } catch (error) {
