@@ -19,13 +19,14 @@ import { get } from 'lodash';
 import { Get, Query } from '@nestjs/common';
 import { UpdateFlashSaleDto } from 'src/app/dto/flashSale/update-flashSale.dto';
 @Controller('be/v1/flash-sales')
-@UseGuards(AuthGuard)
+
 export class FlashSalesController extends BaseController {
   constructor(private service: FlashSalesService) {
     super();
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   async create(
     @Res() res: Response,
     @Body() data: CreateFlashSaleDto,
@@ -36,6 +37,7 @@ export class FlashSalesController extends BaseController {
   }
 
   @Get(':flash_sale_id')
+  @UseGuards(AuthGuard)
   async get(
     @Res() res: Response,
     @Param('flash_sale_id') flash_sale_id: number,
@@ -45,12 +47,14 @@ export class FlashSalesController extends BaseController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
     const result = await this.service.getList(params);
     return this.responseSuccess(res, result, 'Thành công.');
   }
 
   @Put(':flash_sale_id')
+  @UseGuards(AuthGuard)
   async update(
     @Res() res: Response,
     @Param('flash_sale_id') flash_sale_id: number,

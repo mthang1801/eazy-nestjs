@@ -57,6 +57,7 @@ import { RedisCacheModule } from './redisCache.module';
 import { DiscountProgramModule } from './discountProgram.module';
 import { CatalogModule } from './catalog.module';
 import { CronModule } from './cron.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -117,6 +118,8 @@ import { CronModule } from './cron.module';
     HomepageConfigModule,
     PageModule,
     CatalogModule,
+    ScheduleModule.forRoot(),
+    CronModule,
   ],
   providers: [
     {
