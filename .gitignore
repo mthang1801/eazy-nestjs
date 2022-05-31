@@ -24,6 +24,7 @@ lerna-debug.log*
 .classpath
 .c9/
 .env
+docker.env
 .development.env
 *.launch
 .settings/

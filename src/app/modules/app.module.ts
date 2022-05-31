@@ -40,7 +40,7 @@ import { UploadModule } from './upload.module';
 import { CartModule } from './cart.module';
 import { StickerModule } from './sticker.module';
 import { PromotionAccessoryModule } from './promotionAccessory.module';
-import { IndexModule } from './index.modules';
+import { IndexModule } from './index.module';
 import { PromotionModule } from './promotion.module';
 import { FlashSaleModule } from './flashSale.module';
 import { CityModule } from './city.module';
@@ -56,6 +56,7 @@ import { PageModule } from './page.module';
 import { RedisCacheModule } from './redisCache.module';
 import { DiscountProgramModule } from './discountProgram.module';
 import { CatalogModule } from './catalog.module';
+import { CronModule } from './cron.module';
 
 @Module({
   imports: [
@@ -64,12 +65,14 @@ import { CatalogModule } from './catalog.module';
       envFilePath: '.env',
       load: [appConfig, databaseConfig, authConfig, mailConfig, redisConfig],
     }),
-    RedisCacheModule,
     MulterModule.registerAsync({
       useFactory: () => ({
         dest: './uploads',
       }),
     }),
+    RedisCacheModule,
+    CronModule,
+    QueueModule,
     DashboardModule,
     UploadModule,
     AuthModule,
@@ -97,7 +100,6 @@ import { CatalogModule } from './catalog.module';
     CustomerModule,
     ProductFeaturesModule,
     StoreModule,
-    QueueModule,
     LocatorModule,
     ProductGroupModule,
     CartModule,

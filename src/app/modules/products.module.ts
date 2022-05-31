@@ -56,6 +56,8 @@ import { ValuationBillCriteriaDetailRepository } from '../repositories/valuation
 import { TradeinProgramModule } from './tradeinProgram.module';
 import { CatalogModule } from './catalog.module';
 import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
+import { MessageProducerService } from '../microservices/queue/producers/message.producer';
+import { QueueModule } from './queue.module';
 
 @Module({
   imports: [
@@ -63,6 +65,7 @@ import { CatalogFeatureValueProductRepository } from '../repositories/catalogFet
     forwardRef(() => StickerModule),
     ReviewsCommentsModule,
     CatalogModule,
+    QueueModule,
   ],
   providers: [
     ProductService,

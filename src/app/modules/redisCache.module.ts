@@ -22,6 +22,7 @@ import { CartItemRepository } from '../repositories/cartItem.repository';
         host: configService.get<string>('redisHost'),
         port: configService.get<number>('redisPort'),
         ttl: +configService.get<number>('redisTTL'),
+        db: 5,
         password: configService.get<string>('redisPass'),
       }),
     }),
