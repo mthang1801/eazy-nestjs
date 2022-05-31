@@ -4497,7 +4497,7 @@ export class ProductService {
       }
       catalog['catalog_features'] = catalogFeatures;
     }
-    console.log(catalog);
+
     return catalog;
   }
 
