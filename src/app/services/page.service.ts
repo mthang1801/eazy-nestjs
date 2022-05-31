@@ -521,8 +521,10 @@ export class PageService {
     }
 
     const pageDetailValues = await this.pageDetailValueRepo.find({
-      page_detail_id,
-      detail_status: 'A',
+      where: { page_detail_id, detail_status: 'A' },
+      orderBy: [
+        { field: `${Table.PAGE_DETAIL_VALUE}.position`, sortBy: SortBy.ASC },
+      ],
     });
 
     switch (currentPageDetail.detail_type) {
@@ -535,6 +537,12 @@ export class PageService {
             page_detail_id,
             detail_type: PageDetailValueType.LIST_PRODUCTS,
           },
+          orderBy: [
+            {
+              field: `${Table.PAGE_DETAIL_VALUE}.position`,
+              sortBy: SortBy.ASC,
+            },
+          ],
         });
 
         for (let productItem of products) {
