@@ -260,6 +260,7 @@ export class OrdersService {
       if (!user.phone) {
         throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
       }
+
       if (!user['user_appcore_id']) {
         await this.customerService.createCustomerToAppcore(user);
         user = await this.userRepo.findOne({ user_id: userAuth.user_id });
@@ -487,7 +488,7 @@ export class OrdersService {
       );
 
       if (checkResult['isValid']) {
-        // orderData['total'] -= checkResult['discountMoney'];
+        orderData['total'] -= checkResult['discountMoney'];
       }
     }
 

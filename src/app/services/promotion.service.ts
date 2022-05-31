@@ -4,6 +4,8 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 import axios from 'axios';
 import { CHECK_COUPON_API } from 'src/constants/api.appcore';
+import { productPriceJoiner } from '../../utils/joinTable';
+import { Table } from 'src/database/enums';
 @Injectable()
 export class PromotionService {
   constructor(private productRepo: ProductsRepository<ProductsEntity>) {}
@@ -11,16 +13,15 @@ export class PromotionService {
   async checkCoupon(data: CheckCouponDto) {
     let coreData = {};
     coreData['couponCode'] = data.coupon_code;
-    coreData['storeId'] = data.store_id || 67107;
-    coreData['couponeProgramId'] = data.coupon_programing_id || '123';
-    if (data.phone) {
-      // Chưa thực thi
-    }
+    // coreData['storeId'] = data.store_id || 67107;
+    // coreData['couponeProgramId'] = data.coupon_programing_id || '123';
 
     coreData['products'] = [];
     for (let productItem of data.products) {
       let product = await this.productRepo.findOne({
-        product_id: productItem.product_id,
+        select: '*',
+        join: productPriceJoiner,
+        where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
       });
       if (!product || !product['product_appcore_id']) {
         throw new HttpException(
@@ -28,11 +29,13 @@ export class PromotionService {
           404,
         );
       }
+
       coreData['products'] = [
         ...coreData['products'],
         {
           productId: product['product_appcore_id'],
           quantity: productItem.amount,
+          productPrice: +product.price,
         },
       ];
     }

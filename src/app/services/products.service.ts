@@ -4165,6 +4165,8 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
+    await this.cache.removeCachedProductById(product.product_id);
+
     const productCacheResult = await this.cache.getProductCacheById(
       product.product_id,
     );
@@ -4444,7 +4446,15 @@ export class ProductService {
           : [catalogFeatureValue];
       }
     }
-    return featuresSet;
+
+    let result = [];
+    if (Object.entries(featuresSet).length) {
+      Object.entries((key, value) => {
+        result = [...result, { feature: key, values: value }];
+      });
+    }
+    console.log(result);
+    return result;
   }
 
   async BEGetCatalogFeatureValuesForProduct(catalog_id, product_id) {

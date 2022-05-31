@@ -1612,48 +1612,47 @@ export class TradeinProgramService {
         where: { valuation_bill_id },
       });
 
-    if (!billCriteriaUniqueList.length) {
-      throw new HttpException(
-        'Không tìm thấy bộ tiêu chí áp dụng cho phiếu định giá',
-        404,
-      );
+    let tradeinCriteriaList = [];
+    if (billCriteriaUniqueList.length) {
+      tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
+        select: '*',
+        where: {
+          criteria_id: In(
+            billCriteriaUniqueList.map(({ criteria_id }) => criteria_id),
+          ),
+        },
+      });
     }
-    const tradeinCriteriaList = await this.tradeinProgramCriteriaRepo.find({
-      select: '*',
-      where: {
-        criteria_id: In(
-          billCriteriaUniqueList.map(({ criteria_id }) => criteria_id),
-        ),
-      },
-    });
 
     let criteriaSet = [];
-    for (let tradeinCriteria of tradeinCriteriaList) {
-      let tradeinCriteriaDetails =
-        await this.tradeinProgramCriteriaDetailRepo.find({
-          criteria_id: tradeinCriteria.criteria_id,
-        });
-      let selectedCriteriaList =
-        await this.valuationBillCriteriaDetailRepo.find({
-          valuation_bill_id,
-        });
+    if (tradeinCriteriaList.length) {
+      for (let tradeinCriteria of tradeinCriteriaList) {
+        let tradeinCriteriaDetails =
+          await this.tradeinProgramCriteriaDetailRepo.find({
+            criteria_id: tradeinCriteria.criteria_id,
+          });
+        let selectedCriteriaList =
+          await this.valuationBillCriteriaDetailRepo.find({
+            valuation_bill_id,
+          });
 
-      tradeinCriteria['criterial_details'] = [];
+        tradeinCriteria['criterial_details'] = [];
 
-      for (let tradeinCriteriaDetail of tradeinCriteriaDetails) {
-        tradeinCriteriaDetail['selected'] = false;
-        if (
-          selectedCriteriaList.some(
-            ({ criteria_detail_id }) =>
-              criteria_detail_id == tradeinCriteriaDetail.criteria_detail_id,
-          )
-        ) {
-          tradeinCriteriaDetail['selected'] = true;
+        for (let tradeinCriteriaDetail of tradeinCriteriaDetails) {
+          tradeinCriteriaDetail['selected'] = false;
+          if (
+            selectedCriteriaList.some(
+              ({ criteria_detail_id }) =>
+                criteria_detail_id == tradeinCriteriaDetail.criteria_detail_id,
+            )
+          ) {
+            tradeinCriteriaDetail['selected'] = true;
+          }
+          tradeinCriteria['criterial_details'].push(tradeinCriteriaDetail);
         }
-        tradeinCriteria['criterial_details'].push(tradeinCriteriaDetail);
-      }
 
-      criteriaSet = [...criteriaSet, tradeinCriteria];
+        criteriaSet = [...criteriaSet, tradeinCriteria];
+      }
     }
 
     let result = {

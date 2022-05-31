@@ -24,7 +24,7 @@ export class OrdersController extends BaseController {
   }
 
   @Post()
-  async create(
+  async createOrderCOD(
     @Res() res,
     @Body() data: CreateOrderFEDto,
     @Req() req,
