@@ -176,6 +176,9 @@ export class CreateOrderDto {
 
   @IsOptional()
   total: number = 0;
+
+  @IsOptional()
+  payment_date: string;
 }
 
 class ProductOrder {

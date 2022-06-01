@@ -9,11 +9,11 @@ export class ShippingFeesController extends BaseController {
     super();
   }
   @Get('calculation')
-  async calcShippingFee(
+  async findShippingFeeByDescCity(
     @Query('dest_city_id') dest_city_id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.calcShippingFee(dest_city_id);
+    const result = await this.service.findShippingFeeByDescCity(dest_city_id);
     return this.responseSuccess(res, result);
   }
 }

@@ -140,6 +140,7 @@ import {
 } from '../../utils/joinTable';
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
+import { paymentType, paymentTypeId } from '../../constants/payment.constant';
 
 @Injectable()
 export class OrdersService {
@@ -194,7 +195,7 @@ export class OrdersService {
       );
     }
 
-    const orderData = {
+    let orderData: any = {
       ...data,
       b_lastname: data.b_lastname,
       b_city: data.b_city,
@@ -235,9 +236,189 @@ export class OrdersService {
         );
       }
 
-      orderData['total'] += productInfo['price'] * orderItem.amount;
+      orderData['total'] = +productInfo['price'] * orderItem.amount;
+      orderData['subtotal'] = +productInfo['price'] * orderItem.amount;
     }
-    console.log(orderData);
+
+    if (data.s_city) {
+      const shippingFee = await this.shippingFeeService.calcShippingFee(
+        +data.s_city,
+        orderData['subtotal'],
+      );
+      if (shippingFee) {
+        orderData['shipping_cost'] = +shippingFee.value_fee;
+        orderData['shipping_id'] = shippingFee.shipping_fee_id;
+        orderData['subtotal'] += +shippingFee.value_fee;
+      }
+    }
+
+    if (data.coupon_code) {
+      let dataCheckCoupon: any = {
+        coupon_code: data.coupon_code,
+        products: data.order_items.map((orderItem) => ({
+          product_id: orderItem.product_id,
+          amount: orderItem.amount,
+        })),
+      };
+      const checkCouponCode = await this.promotionService.checkCoupon(
+        dataCheckCoupon,
+      );
+      if (checkCouponCode && checkCouponCode.isValid) {
+        orderData['discount'] = +checkCouponCode['discountMoney'];
+        orderData['discount_type'] = 1;
+        orderData['coupon_code'] = data.coupon_code;
+        orderData['subtotal'] -= +checkCouponCode['discountMoney'];
+      }
+    }
+
+    if (data.pay_credit_type != 1) {
+      orderData['transfer_amount'] = +orderData['subtotal'];
+    }
+
+    orderData = this.orderRepo.setData(orderData);
+
+    let result = await this.orderRepo.create(orderData);
+    // create order histories
+    const orderHistoryData = {
+      ...new OrderHistoryEntity(),
+      ...result,
+      is_sync: 'Y',
+    };
+
+    await this.orderHistoryRepo.create(orderHistoryData, false);
+
+    //order payment
+    if (data['orderPayment']) {
+      const orderPaymentData = {
+        ...new OrderPaymentEntity(),
+        ...this.orderPaymentRepo.setData(data['orderPayment']),
+        order_id: result['order_id'],
+      };
+      await this.orderPaymentRepo.create(orderPaymentData, false);
+    }
+
+    result['order_items'] = [];
+    for (let orderItem of data['order_items']) {
+      const orderProductItem = await this.productRepo.findOne({
+        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        join: productLeftJoiner,
+        where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
+      });
+
+      let orderDetailData = {
+        ...new OrderDetailsEntity(),
+        ...this.orderDetailRepo.setData({
+          ...result,
+          ...orderItem,
+          product_id: orderProductItem.product_id,
+          product_appcore_id: orderProductItem.product_appcore_id,
+          price: orderProductItem['price'],
+          status: CommonStatus.Active,
+        }),
+      };
+
+      let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+
+      result['order_items'] = [
+        ...result['order_items'],
+        {
+          ...newOrderDetail,
+          product_id: newOrderDetail.product_appcore_id,
+        },
+      ];
+    }
+
+    const configPushOrderToAppcore: any = {
+      method: 'POST',
+      url: PUSH_ORDER_TO_APPCORE_API,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: convertDataToIntegrate(result),
+    };
+
+    console.log(convertDataToIntegrate(result));
+
+    try {
+      const response = await axios(configPushOrderToAppcore);
+
+      const orderAppcoreResponse = response.data.data;
+      const updatedOrder = await this.orderRepo.update(
+        { order_id: result.order_id },
+        {
+          order_code: orderAppcoreResponse.orderId,
+          is_sync: 'N',
+          updated_date: formatStandardTimeStamp(),
+        },
+        true,
+      );
+
+      for (let orderItem of orderAppcoreResponse['orderItemIds']) {
+        await this.orderDetailRepo.update(
+          {
+            order_id: result.order_id,
+            product_appcore_id: orderItem.productId,
+          },
+          { order_item_appcore_id: orderItem.orderItemId },
+        );
+      }
+      // update order history
+      await this.orderHistoryRepo.create(updatedOrder, false);
+
+      return this.getByOrderCode(updatedOrder.order_code);
+    } catch (error) {
+      if (error.response.status <= 500 || error.status <= 500) {
+        await this.orderRepo.delete({ order_id: result.order_id });
+        await this.orderHistoryRepo.delete({ order_id: result.order_id });
+        await this.orderDetailRepo.delete({ order_id: result.order_id });
+      }
+      console.log(error);
+      throw new HttpException(
+        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
+          error?.response?.data?.message || error.message
+        }`,
+        400,
+      );
+    }
+    // let orderPayment = await this.orderPaymentRepo.findOne({
+    //   order_id,
+    // });
+    // const order = await this.orderRepo.findOne({ order_id });
+    // if (!order) {
+    //   throw new HttpException('Không tìm thấy đơn hàng', 404);
+    // }
+
+    // let installed_money_account_id;
+    // switch (gateway) {
+    //   case GatewayName.Momo:
+    //     installed_money_account_id = GatewayAppcoreId.Momo;
+    //     break;
+    //   default:
+    //     installed_money_account_id = GatewayAppcoreId.Payoo;
+    // }
+    // const paymentAppcoreData = {
+    //   installmentAccountId: installed_money_account_id,
+    //   installmentCode: orderPayment['order_gateway_id'],
+    //   paymentStatus: 'success',
+    //   totalAmount: +orderPayment['amount'],
+    // };
+
+    // await axios({
+    //   method: 'PUT',
+    //   url: UPDATE_ORDER_PAYMENT(order.order_code),
+    //   data: paymentAppcoreData,
+    // });
+
+    // await this.orderRepo.update(
+    //   { order_id },
+    //   {
+    //     installed_money_account_id,
+    //     installed_money_code: orderPayment['order_gateway_id'],
+    //     status: OrderStatus.purchased,
+    //     payment_status: PaymentStatus.success,
+    //     updated_date: formatStandardTimeStamp(),
+    //   },
+    // );
   }
 
   async createSelfTransport(data: CreateOrderSelfTransportDto, authUser) {
@@ -355,6 +536,7 @@ export class OrdersService {
           b_address: data.s_address,
           s_address: data.s_address,
           user_id: newUser.user_id,
+          is_sync: 'Y',
         };
         await this.userProfileRepo.create(userProfileData, false);
 

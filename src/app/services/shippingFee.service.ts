@@ -132,7 +132,10 @@ export class ShippingFeeService {
       let shippingFeesResult = [];
       for (let shippingFeeItemId of shippingFees) {
         let shippingFeeItem = await this.shippingFeeRepo.findOne({
-          shipping_fee_id: shippingFeeItemId,
+          orderBy: [
+            { field: `${Table.SHIPPING_FEE}.updated_at`, sortBy: SortBy.DESC },
+          ],
+          where: { shipping_fee_id: shippingFeeItemId },
         });
         for (let shippingFeeLocationItem of shippingFeeLocations) {
           if (
@@ -207,7 +210,7 @@ export class ShippingFeeService {
     return shippingFee;
   }
 
-  async calcShippingFee(dest_city_id: number) {
+  async findShippingFeeByDescCity(dest_city_id: number) {
     let shippingFeeByCity = await this.shippingFeeLocationRepo.findOne({
       select: '*',
       join: {
@@ -234,5 +237,25 @@ export class ShippingFeeService {
       'Thành phố hiện tại chưa áp dụng phí vận chuyển hoặc không còn hiệu lực.',
       409,
     );
+  }
+
+  async calcShippingFee(city_id, totalPrice) {
+    let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
+      select: '*',
+      join: shippingFeeLocationsJoiner,
+      where: {
+        [`${Table.SHIPPING_FEE_LOCATION}.city_id`]: city_id,
+        [`${Table.SHIPPING_FEE_LOCATION}.fee_location_status`]: 'A',
+        [`${Table.SHIPPING_FEE}.status`]: 'A',
+      },
+      orderBy: [
+        { field: `${Table.SHIPPING_FEE}.updated_at`, sortBy: SortBy.DESC },
+      ],
+    });
+
+    if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
+      return shippingFeeLocation;
+    }
+    return null;
   }
 }
