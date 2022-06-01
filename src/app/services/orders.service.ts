@@ -141,6 +141,7 @@ import {
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 import { paymentType, paymentTypeId } from '../../constants/payment.constant';
+import { uuid } from '../../utils/cipherHelper';
 
 @Injectable()
 export class OrdersService {
@@ -214,6 +215,7 @@ export class OrdersService {
       user_appcore_id: user.user_appcore_id,
       user_id: user.user_id,
       status: OrderStatus.new,
+      ref_order_id: uuid(),
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
     };
