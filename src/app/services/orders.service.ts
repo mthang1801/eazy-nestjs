@@ -414,8 +414,6 @@ export class OrdersService {
       if (!checkStore) {
         throw new HttpException('Cửa hàng không có trong hệ thống', 400);
       }
-    } else {
-      data['store_id'] = 67107;
     }
 
     data['utm_source'] = data['utm_source'] || 9;

@@ -89,7 +89,7 @@ export const convertDataToIntegrate = (data) => {
   itgData['loanInformation'] = {};
   let loanInformation = itgData['loanInformation'];
 
-  itgData['storeId'] = data['store_id']; //Mã cửa hàng *
+  itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
 
   itgData['orderSource'] = data['utm_source']; //Kênh đặt *
 

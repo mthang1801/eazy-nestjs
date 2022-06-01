@@ -331,6 +331,7 @@ export class RedisCacheService {
       prefixCacheKey.banners,
       bannersCacheKey,
     );
+    await this.removeCacheAllPages();
   }
 
   async getFlashSaleWebsite() {
@@ -346,6 +347,7 @@ export class RedisCacheService {
       prefixCacheKey.flashSale,
       flashSaleWebCacheKey,
     );
+    await this.removeCacheAllPages();
   }
 
   async removeAllCachedBanners() {
@@ -358,6 +360,7 @@ export class RedisCacheService {
         await this.cacheRepo.delete({ table_name: cacheTables.banner });
       }
     }
+    await this.removeCacheAllPages();
   }
 
   async removeCachedCategoriesList() {
