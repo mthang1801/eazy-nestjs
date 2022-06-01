@@ -366,25 +366,6 @@ export class FlashSalesService {
     };
 
     if (data.status === 'A') {
-      // const startDate = formatStandardTimeStamp(
-      //   flashSale['start_at'],
-      // ).toString();
-      // const endDate = formatStandardTimeStamp(flashSale['end_at']).toString();
-
-      // await this.flashSaleRepo.update(
-      //   {
-      //     start_at: MoreThanOrEqual(startDate),
-      //     end_at: LessThanOrEqual(endDate),
-      //   },
-      //   { status: 'D' },
-      // );
-
-      // await this.flashSaleRepo.update(
-      //   {
-      //     end_at: LessThanOrEqual(formatStandardTimeStamp()),
-      //   },
-      //   { status: 'D' },
-      // );
       const startDate = formatStandardTimeStamp(
         flashSale['start_at'],
       ).toString();
@@ -392,12 +373,13 @@ export class FlashSalesService {
       const today = formatStandardTimeStamp();
 
       if (new Date(endDate).getTime() < new Date(today).getTime()) {
-        console.log('Không được cập nhật.');
         if (!data.end_at) {
-          return;
+          throw new HttpException(
+            'Không thể cập nhật do thời gian hết hạn của chương trình đã qua.',
+            400,
+          );
         }
       } else if (new Date(startDate).getTime() > new Date(today).getTime()) {
-        console.log('Được phép cập nhật 1.');
         await this.flashSaleRepo.update(
           { flash_sale_id: flashSale.flash_sale_id },
           { status: 'A' },

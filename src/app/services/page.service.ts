@@ -658,7 +658,7 @@ export class PageService {
   }
 
   async FEGetPage(page_code) {
-    const currentPage = await this.pageRepo.findOne({ page_code });
+    const currentPage = await this.pageRepo.findOne({ page_code, status: 'A' });
     if (!currentPage) {
       throw new HttpException('Không tìm thấy trang.', 404);
     }
