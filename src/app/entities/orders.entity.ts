@@ -88,6 +88,7 @@ export class OrderEntity {
   tax_exempt: string = '';
   lang_code: string = '';
   ip_address: string = '';
+  prepaid: number = 0;
   repaid: number = 0;
   validation_code: string = '';
   localization_id: number = 0;

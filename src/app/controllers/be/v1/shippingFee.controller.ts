@@ -89,6 +89,16 @@ export class ShippingFeesController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('calculation')
+  async calcShippingFee(
+    @Query('city_id') city_id: number,
+    @Query('total_price') total_price: number,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.calcShippingFee(city_id, total_price);
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':shipping_fee_id')
   @UseGuards(AuthGuard)
   async getShippingFee(

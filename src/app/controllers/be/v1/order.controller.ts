@@ -32,7 +32,7 @@ export class OrderController extends BaseController {
 
   @Post()
   @UseGuards(AuthGuard)
-  async create(@Res() res, @Body() body: CreateOrderDto): Promise<IResponse> {
+  async create(@Res() res, @Body() body): Promise<IResponse> {
     const result = await this.service.CMScreate(body);
     return this.responseSuccess(res, result);
   }

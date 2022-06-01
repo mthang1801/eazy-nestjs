@@ -175,7 +175,7 @@ export class OrdersService {
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
   ) {}
 
-  async CMScreate(data: CreateOrderDto) {
+  async CMScreate(data) {
     let user: any = await this.userRepo.findById(data.user_id);
     if (!user) {
       user = await this.userRepo.findOne({ phone: data.b_phone });
@@ -217,6 +217,20 @@ export class OrdersService {
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
     };
+
+    if (data.payments && data.payments.length) {
+      for (let paymentItem of data.payments) {
+        switch (paymentItem.type) {
+          case 'COD':
+            orderData['prepaid'] = paymentItem.price;
+            break;
+          case 'TRANSFER':
+            orderData['transfer_amount'] = paymentItem.price;
+            orderData['transfer_bank'] = paymentItem.transfer_bank;
+            break;
+        }
+      }
+    }
 
     for (let orderItem of data.order_items) {
       const productInfo = await this.productRepo.findOne({
