@@ -3569,9 +3569,9 @@ export class ProductService {
       },
     });
 
-    console.log(categories);
-
-    let listCategoriesId = categories.map(({ category_id }) => category_id);
+    let listCategoriesId = categories
+      .filter(({ category_id }) => category_id)
+      .map(({ category_id }) => category_id);
 
     let productsList = [];
     if (listCategoriesId.length) {
@@ -4165,30 +4165,6 @@ export class ProductService {
       throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
     }
 
-    this.productRepo.update(
-      { product_id: product.product_id },
-      { view_count: product.view_count + 1 },
-    );
-
-    await this.cache.removeCachedProductById(product.product_id);
-
-    const productCacheResult = await this.cache.getProductCacheById(
-      product.product_id,
-    );
-    if (productCacheResult) {
-      return productCacheResult;
-    }
-
-    product = await this.productRepo.findOne({
-      select: productDetailSelector,
-      join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
-    });
-
-    if (!product) {
-      throw new HttpException('Không tìm thấy SP', 404);
-    }
-
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
         select: productDetailSelector,
@@ -4201,6 +4177,39 @@ export class ProductService {
       if (parentProduct) {
         product = parentProduct;
       }
+
+      this.productRepo.update(
+        { product_id: product.product_id },
+        { view_count: product.view_count + 1 },
+      );
+      const productCacheResult = await this.cache.getProductCacheById(
+        product.product_id,
+      );
+      if (productCacheResult) {
+        return productCacheResult;
+      }
+    } else {
+      product = await this.productRepo.findOne({
+        select: productDetailSelector,
+        join: { [JoinTable.leftJoin]: productFullJoiner },
+        where: { [`${Table.PRODUCTS}.slug`]: slug.trim() },
+      });
+
+      if (!product) {
+        throw new HttpException('Không tìm thấy SP', 404);
+      }
+    }
+
+    this.productRepo.update(
+      { product_id: product.product_id },
+      { view_count: product.view_count + 1 },
+    );
+
+    const productCacheResult = await this.cache.getProductCacheById(
+      product.product_id,
+    );
+    if (productCacheResult) {
+      return productCacheResult;
     }
 
     let result: any = { ...product };
