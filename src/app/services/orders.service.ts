@@ -214,6 +214,8 @@ export class OrdersService {
       user_appcore_id: user.user_appcore_id,
       user_id: user.user_id,
       status: OrderStatus.new,
+      created_date: formatStandardTimeStamp(),
+      updated_date: formatStandardTimeStamp(),
     };
 
     for (let orderItem of data.order_items) {
