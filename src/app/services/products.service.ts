@@ -3569,7 +3569,10 @@ export class ProductService {
       },
     });
 
+    console.log(categories);
+
     let listCategoriesId = categories.map(({ category_id }) => category_id);
+
     let productsList = [];
     if (listCategoriesId.length) {
       productsList = await this.productCategoryRepo.find({
@@ -4397,13 +4400,16 @@ export class ProductService {
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
 
-      // Get parent categories info
-      result['parentCategories'] = await this.categoryService.parentCategories(
-        result['currentCategory'],
-      );
-      result['parentCategories'] = _.sortBy(result['parentCategories'], [
-        (o) => o.level,
-      ]);
+      if (result['currentCategory']) {
+        // Get parent categories info
+        result['parentCategories'] =
+          await this.categoryService.parentCategories(
+            result['currentCategory'],
+          );
+        result['parentCategories'] = _.sortBy(result['parentCategories'], [
+          (o) => o.level,
+        ]);
+      }
 
       // Get relative products
       result['relative_prouducts'] = await this.getRelativeProductsByCategory(

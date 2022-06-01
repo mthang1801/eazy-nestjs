@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { formatStandardTimeStamp } from '../utils/helper';
+import { formatStandardTimeStamp, formatDateTime } from '../utils/helper';
 const orderSampleData = {
   b_firstname: 'Mai Van',
   b_lastname: 'Thang',
@@ -91,7 +91,7 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
 
-  itgData['orderSource'] = data['utm_source'] || 9; //Kênh đặt *
+  itgData['orderSource'] = data['utm_source']; //Kênh đặt *
 
   if (data['order_type']) {
     itgData['orderType'] = data['order_type'] == 1 ? 1 : 5; //Loại đơn
@@ -273,9 +273,9 @@ export const convertDataToIntegrate = (data) => {
     itgData['discountAmount'] = data['discount']; //Số tiền chiết khấu hoặc phần trăm
   }
 
-  if (data['payment_date']) {
-    itgData['paymentDate'] = formatStandardTimeStamp(data['payment_date']);
-  }
+  // if (data['payment_date']) {
+  //   itgData['paymentDate'] = moment(data['payment_date']).format('YYYY-MM-DD');
+  // }
 
   itgData['isSentToCustomerAddress'] =
     data['is_sent_customer_address'] == 0 ? false : true; // có gửi địa chỉ khác hay ko

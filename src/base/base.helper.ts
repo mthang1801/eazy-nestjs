@@ -15,6 +15,7 @@ export const datetimeFieldsList = [
   'last_comment',
   'open_at',
   'close_at',
+  'payment_date',
 ];
 
 const quotation = `"`;

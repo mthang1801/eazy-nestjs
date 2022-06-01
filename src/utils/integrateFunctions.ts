@@ -711,7 +711,7 @@ export const itgConvertProductsFromAppcore = (data) => {
   }
 
   if (convertedData['product']) {
-    convertedData['slug'] = convertToSlug(convertedData['product']);
+    convertedData['slug'] = convertToSlug(convertedData['product'], true);
   }
 
   delete convertedData['product_id'];

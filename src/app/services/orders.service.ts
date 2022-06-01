@@ -213,6 +213,7 @@ export class OrdersService {
       order_type: data.order_type,
       user_appcore_id: user.user_appcore_id,
       user_id: user.user_id,
+      status: OrderStatus.new,
     };
 
     for (let orderItem of data.order_items) {
@@ -278,6 +279,7 @@ export class OrdersService {
     orderData = this.orderRepo.setData(orderData);
 
     let result = await this.orderRepo.create(orderData);
+
     // create order histories
     const orderHistoryData = {
       ...new OrderHistoryEntity(),
