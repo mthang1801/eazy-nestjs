@@ -23,7 +23,7 @@ import { ProductOptionVariantsRepository } from '../repositories/productOptionVa
 import { ProductOptionVariantsEntity } from '../entities/productOptionVariants.entity';
 import { ProductOptionVariantDescriptionRepository } from '../repositories/productOptionsVariantsDescriptions.respository';
 import { ProductOptionVariantDescriptionEntity } from '../entities/productOptionsVariantsDescriptions.entity';
-import { formatStandardTimeStamp } from 'src/utils/helper';
+import { formatStandardTimeStamp, genRandomString } from 'src/utils/helper';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
@@ -996,6 +996,7 @@ export class ProductService {
       order_amount,
       stickers,
       ratings,
+      get_children_cat,
     } = params;
     let { page, skip, limit } = getPageSkipLimit(params);
 
@@ -1102,14 +1103,29 @@ export class ProductService {
     if (category_id) {
       let arrCategories = category_id.split(',');
       filterJoiner['category_id'] = 1;
-      // Theo danh mục
-      categoriesList = arrCategories.map((category_id) => category_id);
-      filterOrders = [
-        {
-          field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
-          sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
-        },
-      ];
+      console.log(category_id);
+      if (
+        arrCategories &&
+        arrCategories.length == 1 &&
+        get_children_cat == true
+      ) {
+        categoriesList =
+          await this.categoryService.getCategoriesChildrenRecursive(
+            arrCategories[0],
+          );
+
+        categoriesList = categoriesList.map(({ category_id }) => category_id);
+        console.log(1117, categoriesList);
+      } else {
+        // Theo danh mục
+        categoriesList = arrCategories.map((category_id) => category_id);
+        filterOrders = [
+          {
+            field: `CASE WHEN ${Table.PRODUCTS_CATEGORIES}.position`,
+            sortBy: ` IS NULL THEN 1 ELSE 0 END, ${Table.PRODUCTS_CATEGORIES}.position`,
+          },
+        ];
+      }
     }
 
     let productsList: any[] = [];
@@ -4964,7 +4980,24 @@ export class ProductService {
     return this.testGetProductDetails(product_id);
   }
 
-  async testSql(files) {
+  async testSql() {
+    const products = await this.productRepo.find();
+    if (products.length) {
+      for (let product of products) {
+        let checkSlugExist = await this.productRepo.findOne({
+          slug: product.slug,
+          product_id: Not(Equal(product.product_id)),
+        });
+
+        if (checkSlugExist) {
+          await this.productRepo.update(
+            { product_id: checkSlugExist.product_id },
+            { slug: `${product.slug}-${genRandomString(6)}` },
+          );
+        }
+      }
+    }
+
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",

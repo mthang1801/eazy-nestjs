@@ -77,8 +77,10 @@ export class ProductTesterController extends BaseController {
 
   @Post('test')
   async test(@Res() res, @Body() data) {
-    await this.messageService.sendMessage(data);
-    await this.audioService.sendAudio(data);
+    // await this.messageService.sendMessage(data);
+    // await this.audioService.sendAudio(data);
+
+    await this.service.testSql();
     return this.responseSuccess(res);
   }
 }
