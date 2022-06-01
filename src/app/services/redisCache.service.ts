@@ -263,6 +263,14 @@ export class RedisCacheService {
     if (cartItem && cartItem.user_id) {
       await this.removeCartByUserId(cartItem.user_id);
     }
+
+    let cart = await this.cartItemRepo.find({
+      cart_id: cartItem.cart_id,
+    });
+
+    if (!cart.length) {
+      await this.cartRepo.delete({ cart_id: cartItem.cart_id });
+    }
   }
 
   async removeCacheCartByProductId(product_id) {

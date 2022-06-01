@@ -91,7 +91,7 @@ export const convertDataToIntegrate = (data) => {
 
   itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
 
-  itgData['orderSource'] = data['utm_source']; //Kênh đặt *
+  itgData['orderSource'] = data['utm_source'] || 9; //Kênh đặt *
 
   if (data['order_type']) {
     itgData['orderType'] = data['order_type'] == 1 ? 1 : 5; //Loại đơn

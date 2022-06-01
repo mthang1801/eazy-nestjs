@@ -187,6 +187,35 @@ export class OrdersService {
       throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
     }
 
+    const sendData = {
+      ...data,
+      b_lastname: data.b_lastname,
+      b_city: data.b_city,
+      b_district: data.b_district,
+      b_ward: data.b_ward,
+      b_address: data.b_address,
+      b_phone: data.b_phone,
+      s_lastname: data.s_lastname,
+      s_city: data.s_city,
+      s_district: data.s_district,
+      s_ward: data.s_ward,
+      s_address: data.s_address,
+      s_phone: data.s_phone,
+      store_id: data.store_id,
+      order_type: data.order_type,
+    };
+
+    if (data.coupon_code) {
+      let checkCouponData = {
+        coupon_code: data['coupon_code'],
+
+        products: data['order_items'].map(({ product_id, amount }) => ({
+          product_id,
+          amount,
+        })),
+      };
+    }
+
     await this.createOrder(user, data);
   }
 
