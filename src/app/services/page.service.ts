@@ -658,9 +658,13 @@ export class PageService {
   }
 
   async FEGetPage(page_code) {
-    const currentPage = await this.pageRepo.findOne({ page_code, status: 'A' });
+    const currentPage = await this.pageRepo.findOne({ page_code });
     if (!currentPage) {
       throw new HttpException('Không tìm thấy trang.', 404);
+    }
+
+    if (currentPage.status !== 'A') {
+      throw new HttpException('Trang đã bị khoá.', 200);
     }
 
     let pageCacheResult = await this.cache.getCachePageById(

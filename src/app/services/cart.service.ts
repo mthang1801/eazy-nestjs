@@ -60,8 +60,10 @@ export class CartService {
     }
     await this.cache.removeCartByUserId(user_id);
     let result = await this.get(user_id);
+    console.log(result);
     await this.cache.setCartByUserId(user_id, result);
-    return result;
+
+    return this.get(user_id);
   }
 
   async get(user_id) {

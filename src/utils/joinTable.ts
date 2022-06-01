@@ -800,7 +800,7 @@ export const shippingServiceJoiner = {
 };
 
 export const cartJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.CART_ITEMS]: {
       fieldJoin: `${Table.CART_ITEMS}.cart_id`,
       rootJoin: `${Table.CART}.cart_id`,

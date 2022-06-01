@@ -252,12 +252,6 @@ export class RedisCacheService {
     );
   }
 
-  async removeCartByUserId(user_id) {
-    let cartCacheKey = cacheKeys.cartByUserId(user_id);
-    await this.delete(cartCacheKey);
-    await this.cacheRepo.delete({ cache_key: cartCacheKey });
-  }
-
   async removeCartByCartItemId(cartItemId) {
     let cartItem = await this.cartItemRepo.findOne({
       select: '*',
@@ -288,9 +282,16 @@ export class RedisCacheService {
   }
 
   async setCartByUserId(user_id, data) {
+    await this.removeCartByUserId(user_id);
     let cartCacheKey = cacheKeys.cartByUserId(user_id);
     await this.set(cartCacheKey, data);
     await this.saveCache(cacheTables.cart, prefixCacheKey.cart, cartCacheKey);
+  }
+
+  async removeCartByUserId(user_id) {
+    let cartCacheKey = cacheKeys.cartByUserId(user_id);
+    await this.delete(cartCacheKey);
+    await this.cacheRepo.delete({ cache_key: cartCacheKey });
   }
 
   async getCartByUserId(user_id) {
