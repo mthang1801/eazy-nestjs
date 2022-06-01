@@ -864,7 +864,7 @@ export const cartItemPriceJoiner = {
 };
 
 export const catalogCategoryJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.CATALOG_CATEGORY_DESCRIPTIONS]: {
       fieldJoin: 'catalog_id',
       rootJoin: 'catalog_id',
@@ -873,7 +873,7 @@ export const catalogCategoryJoiner = {
 };
 
 export const productFeatureJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.PRODUCT_FEATURE_DESCRIPTIONS]: {
       fieldJoin: 'feature_id',
       rootJoin: 'feature_id',
@@ -882,7 +882,7 @@ export const productFeatureJoiner = {
 };
 
 export const productFeatureVariantJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
       fieldJoin: 'variant_id',
       rootJoin: 'variant_id',
@@ -891,7 +891,7 @@ export const productFeatureVariantJoiner = {
 };
 
 export const storesLocationJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.STORE_LOCATION_DESCRIPTIONS]: {
       fieldJoin: 'store_location_id',
       rootJoin: 'store_location_id',
@@ -900,7 +900,7 @@ export const storesLocationJoiner = {
 };
 
 export const productStickerJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.STICKER]: {
       fieldJoin: `${Table.STICKER}.sticker_id`,
       rootJoin: `${Table.PRODUCT_STICKER}.sticker_id`,
@@ -909,7 +909,7 @@ export const productStickerJoiner = {
 };
 
 export const storeLocationJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.STORE_LOCATION_DESCRIPTIONS]: {
       fieldJoin: 'store_location_id',
       rootJoin: 'store_location_id',
@@ -964,7 +964,7 @@ export const flashSaleProductJoiner = {
 };
 
 export const flashSaleProductJoinerFE = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.PRODUCTS]: {
       fieldJoin: `${Table.PRODUCTS}.product_id`,
       rootJoin: `${Table.FLASH_SALE_PRODUCTS}.product_id`,
@@ -981,7 +981,7 @@ export const flashSaleProductJoinerFE = {
 };
 
 export const flashSaleProductCacheJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.FLASH_SALE_DETAILS]: {
       fieldJoin: `${Table.FLASH_SALE_DETAILS}.detail_id`,
       rootJoin: `${Table.FLASH_SALE_PRODUCTS}.detail_id`,
@@ -994,7 +994,7 @@ export const flashSaleProductCacheJoiner = {
 };
 
 export const shippingFeeLocationsJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.SHIPPING_FEE]: {
       fieldJoin: `${Table.SHIPPING_FEE}.shipping_fee_id`,
       rootJoin: `${Table.SHIPPING_FEE_LOCATION}.shipping_fee_id`,
