@@ -187,7 +187,14 @@ export class OrdersService {
       throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
     }
 
-    const sendData = {
+    if (!user.user_appcore_id) {
+      throw new HttpException(
+        'Khách hàng này không thể tạo đơn trên hệ thống Appcore, vui lòng liên hệ quản trị viên',
+        400,
+      );
+    }
+
+    const orderData = {
       ...data,
       b_lastname: data.b_lastname,
       b_city: data.b_city,
@@ -203,20 +210,34 @@ export class OrdersService {
       s_phone: data.s_phone,
       store_id: data.store_id,
       order_type: data.order_type,
+      user_appcore_id: user.user_appcore_id,
+      user_id: user.user_id,
     };
 
-    if (data.coupon_code) {
-      let checkCouponData = {
-        coupon_code: data['coupon_code'],
+    for (let orderItem of data.order_items) {
+      const productInfo = await this.productRepo.findOne({
+        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        join: productLeftJoiner,
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
+          [`${Table.PRODUCTS}.product_type`]: Not(Equal('4')),
+        },
+      });
 
-        products: data['order_items'].map(({ product_id, amount }) => ({
-          product_id,
-          amount,
-        })),
-      };
+      if (productInfo.product_function == 1) {
+        throw new HttpException('Không thể dùng SP cha', 401);
+      }
+
+      if (!productInfo) {
+        throw new HttpException(
+          `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+          404,
+        );
+      }
+
+      orderData['total'] += productInfo['price'] * orderItem.amount;
     }
-
-    await this.createOrder(user, data);
+    console.log(orderData);
   }
 
   async createSelfTransport(data: CreateOrderSelfTransportDto, authUser) {

@@ -664,7 +664,7 @@ export class PageService {
     }
 
     if (currentPage.status !== 'A') {
-      throw new HttpException('Trang đã bị khoá.', 200);
+      throw new HttpException('Trang đã bị khoá.', 409);
     }
 
     let pageCacheResult = await this.cache.getCachePageById(
