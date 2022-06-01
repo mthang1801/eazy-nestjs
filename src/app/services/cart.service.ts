@@ -72,7 +72,10 @@ export class CartService {
     }
     const cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
-      return {};
+      return {
+        cart_id: 0,
+        cart_items: [],
+      };
     }
 
     let result = { ...cart };
