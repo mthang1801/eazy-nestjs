@@ -72,7 +72,7 @@ export class CartService {
     }
     const cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
-      throw new HttpException('Không tìm thấy giỏ hàng.', 404);
+      return {};
     }
 
     let result = { ...cart };
