@@ -297,52 +297,109 @@ export class OrdersService {
     let installed_money_account_id;
     let responseData;
     let gatewayName;
-    if (data.pay_credit_type === 4 && data.company_id) {
-      switch (+data.company_id) {
-        case 1:
-          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
-          responseData = calculateInstallmentInterestRateHDSaiGon(
-            orderData['subtotal'],
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.HD_Saigon;
-          break; //HD Saigon
-        case 2:
-          installed_money_account_id = GatewayAppcoreId.Home_Credit;
-          responseData = calculateInstallmentInterestRateHomeCredit(
-            orderData['subtotal'],
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.Home_Credit;
-          break; // Home Credit
-        case 3:
-          installed_money_account_id = GatewayAppcoreId.Shinhan;
-          responseData = calculateInstallmentInterestRateHDSaiGon(
-            orderData['subtotal'],
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.Shinhan;
-          break; //Shinhan
-        default:
-          throw new HttpException('Mã công ty trả góp không đúng', 400);
-      }
 
-      let paymentPerMonth = responseData.paymentPerMonth;
-      let totalInterest = responseData.totalInterest;
-      let interestPerMonth = responseData.interestPerMonth;
-      let prepaidAmount = responseData.prepaidAmount;
-
+    if (data.pay_credit_type == 4) {
       orderData['pay_credit_type'] = 4;
-      orderData['installment_interest_rate_code'] = totalInterest;
-      orderData['installed_money_amount'] = paymentPerMonth;
-      orderData['installed_money_account_id'] = installed_money_account_id;
-      orderData['installmentCode'] = orderData['ref_order_id'];
+      orderData['installment_interest_rate_code'] = data.total_interest;
+      orderData['installed_money_amount'] = data.payment_per_month;
+      orderData['installed_money_account_id'] = data.installed_money_account_id;
       orderData['payment_status'] = PaymentStatus.success;
-      orderData['prepaid'] = prepaidAmount;
+      orderData['prepaid'] = data.prepaid;
+
+      if (data.pay_credit_type === 4 && data.company_id) {
+        switch (+data.company_id) {
+          case 1:
+            installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+            responseData = calculateInstallmentInterestRateHDSaiGon(
+              orderData['subtotal'],
+              data.prepaid_percentage,
+              data.tenor,
+            );
+            gatewayName = GatewayName.HD_Saigon;
+            break; //HD Saigon
+          case 2:
+            installed_money_account_id = GatewayAppcoreId.Home_Credit;
+            responseData = calculateInstallmentInterestRateHomeCredit(
+              orderData['subtotal'],
+              data.prepaid_percentage,
+              data.tenor,
+            );
+            gatewayName = GatewayName.Home_Credit;
+            break; // Home Credit
+          case 3:
+            installed_money_account_id = GatewayAppcoreId.Shinhan;
+            responseData = calculateInstallmentInterestRateHDSaiGon(
+              orderData['subtotal'],
+              data.prepaid_percentage,
+              data.tenor,
+            );
+            gatewayName = GatewayName.Shinhan;
+            break; //Shinhan
+          default:
+            throw new HttpException('Mã công ty trả góp không đúng', 400);
+        }
+
+        let paymentPerMonth = responseData.paymentPerMonth;
+        let totalInterest = responseData.totalInterest;
+        let interestPerMonth = responseData.interestPerMonth;
+        let prepaidAmount = responseData.prepaidAmount;
+
+        orderData['pay_credit_type'] = 4;
+        orderData['installment_interest_rate_code'] = totalInterest;
+        orderData['installed_money_amount'] = paymentPerMonth;
+        orderData['installed_money_account_id'] = installed_money_account_id;
+        orderData['installmentCode'] = orderData['ref_order_id'];
+        orderData['payment_status'] = PaymentStatus.success;
+        orderData['prepaid'] = prepaidAmount;
+      }
     }
+
+    // if (data.pay_credit_type === 4 && data.company_id) {
+    //   switch (+data.company_id) {
+    //     case 1:
+    //       installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+    //       responseData = calculateInstallmentInterestRateHDSaiGon(
+    //         orderData['subtotal'],
+    //         data.prepaid_percentage,
+    //         data.tenor,
+    //       );
+    //       gatewayName = GatewayName.HD_Saigon;
+    //       break; //HD Saigon
+    //     case 2:
+    //       installed_money_account_id = GatewayAppcoreId.Home_Credit;
+    //       responseData = calculateInstallmentInterestRateHomeCredit(
+    //         orderData['subtotal'],
+    //         data.prepaid_percentage,
+    //         data.tenor,
+    //       );
+    //       gatewayName = GatewayName.Home_Credit;
+    //       break; // Home Credit
+    //     case 3:
+    //       installed_money_account_id = GatewayAppcoreId.Shinhan;
+    //       responseData = calculateInstallmentInterestRateHDSaiGon(
+    //         orderData['subtotal'],
+    //         data.prepaid_percentage,
+    //         data.tenor,
+    //       );
+    //       gatewayName = GatewayName.Shinhan;
+    //       break; //Shinhan
+    //     default:
+    //       throw new HttpException('Mã công ty trả góp không đúng', 400);
+    //   }
+
+    //   let paymentPerMonth = responseData.paymentPerMonth;
+    //   let totalInterest = responseData.totalInterest;
+    //   let interestPerMonth = responseData.interestPerMonth;
+    //   let prepaidAmount = responseData.prepaidAmount;
+
+    //   orderData['pay_credit_type'] = 4;
+    //   orderData['installment_interest_rate_code'] = totalInterest;
+    //   orderData['installed_money_amount'] = paymentPerMonth;
+    //   orderData['installed_money_account_id'] = installed_money_account_id;
+    //   orderData['installmentCode'] = orderData['ref_order_id'];
+    //   orderData['payment_status'] = PaymentStatus.success;
+    //   orderData['prepaid'] = prepaidAmount;
+    // }
 
     orderData = this.orderRepo.setData(orderData);
 

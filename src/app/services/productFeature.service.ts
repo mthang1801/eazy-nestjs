@@ -22,11 +22,7 @@ import * as _ from 'lodash';
 
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 import { formatStandardTimeStamp } from 'src/utils/helper';
-import {
-  convertToSlug,
-  hasWhiteSpace,
-  getPageSkipLimit,
-} from '../../utils/helper';
+import { convertToSlug, hasWhiteSpace } from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   productFeatureSearchFilter,
@@ -127,8 +123,11 @@ export class ProductFeatureService {
     return result;
   }
 
-  async getList(params) {
-    let { search, ...others } = params;
+  async getList(params): Promise<IProductFeaturesResponse[]> {
+    let { page, limit, search, ...others } = params;
+    page = +page || 1;
+    limit = +limit || 20;
+    const skip = (page - 1) * limit;
 
     let filterCondition = {};
     if (others && typeof others === 'object' && Object.entries(others).length) {
@@ -501,7 +500,6 @@ export class ProductFeatureService {
 
     const productFeatureDescriptionData =
       this.productFeatureDescriptionRepo.setData(data);
-
     let updatedFeatureDescription = {};
     if (Object.entries(productFeatureDescriptionData).length) {
       updatedFeatureDescription =
@@ -624,8 +622,8 @@ export class ProductFeatureService {
 
       if (type === 'update') {
         if (
-          productFeatureVariantData &&
-          productFeatureVariantData['variant_code'] == 0
+          productFeatureVariantData['variant_code'] == 0 ||
+          !productFeatureVariantData['variant_code']
         ) {
           delete productFeatureVariantData['variant_code'];
         }
