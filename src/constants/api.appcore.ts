@@ -1,5 +1,5 @@
 const CORE_API = 'http://test.didongviet.vn/core-api/v1';
-const TESTER_API = 'http://mb.viendidong.com/web-tester/v1/api';
+const TESTER_API = 'http://test.didongviet.vn/web-tester/v1/api';
 const TEST_COUPON_API = 'http://test.didongviet.vn/core-api/v1';
 
 export const UPLOAD_IMAGE_API = `${CORE_API}/files/website`;

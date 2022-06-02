@@ -378,6 +378,7 @@ export class PaymentService {
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
         installment_interest_rate_code: totalInterest,
+        installed_interest_rate: totalInterest,
         installed_money_amount: paymentPerMonth,
         installed_money_account_id,
         ref_order_id: refOrderId,

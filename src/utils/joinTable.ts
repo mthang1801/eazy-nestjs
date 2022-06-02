@@ -891,7 +891,7 @@ export const productFeatureVariantJoiner = {
 };
 
 export const storesLocationJoiner = {
-  [JoinTable.leftJoin]: {
+  [JoinTable.innerJoin]: {
     [Table.STORE_LOCATION_DESCRIPTIONS]: {
       fieldJoin: 'store_location_id',
       rootJoin: 'store_location_id',

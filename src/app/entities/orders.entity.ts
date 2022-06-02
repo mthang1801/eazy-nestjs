@@ -82,6 +82,7 @@ export class OrderEntity {
   installed_prepaid_amount: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;
+  installed_interest_rate: number = 0;
   pay_credit_type: null | number = 1;
   payment_id: number = 0;
   payment_status: number = 1;
