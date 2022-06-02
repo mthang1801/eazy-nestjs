@@ -129,7 +129,6 @@ export class ProductFeatureService {
 
   async getList(params) {
     let { search, ...others } = params;
-    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
     if (others && typeof others === 'object' && Object.entries(others).length) {
@@ -145,17 +144,6 @@ export class ProductFeatureService {
 
     let productFeatures = await this.productFeaturesRepo.find({
       select: `${Table.PRODUCT_FEATURE_DESCRIPTIONS}.*, ${Table.PRODUCT_FEATURES}.*`,
-      join: productFeatureJoiner,
-      orderBy: [
-        { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
-      ],
-      where: productFeatureSearchFilter(search, filterCondition),
-      skip,
-      limit,
-    });
-
-    let count = await this.productFeaturesRepo.find({
-      select: `COUNT(${Table.PRODUCT_FEATURES}.feature_id) as total`,
       join: productFeatureJoiner,
       orderBy: [
         { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
@@ -182,14 +170,7 @@ export class ProductFeatureService {
       productFeatures = await this.findProductFeaturesByProductVariants(params);
     }
 
-    return {
-      paging: {
-        currentPage: page,
-        pageSize: limit,
-        total: count[0].total,
-      },
-      data: productFeatures,
-    };
+    return productFeatures;
   }
 
   async findProductFeaturesByProductVariants(params) {
