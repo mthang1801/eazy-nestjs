@@ -22,7 +22,11 @@ import * as _ from 'lodash';
 
 import { SyncProductFeatureDto } from '../dto/productFeatures/sync-productFeature.dto';
 import { formatStandardTimeStamp } from 'src/utils/helper';
-import { convertToSlug, hasWhiteSpace } from '../../utils/helper';
+import {
+  convertToSlug,
+  hasWhiteSpace,
+  getPageSkipLimit,
+} from '../../utils/helper';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import {
   productFeatureSearchFilter,
@@ -123,11 +127,9 @@ export class ProductFeatureService {
     return result;
   }
 
-  async getList(params): Promise<IProductFeaturesResponse[]> {
-    let { page, limit, search, ...others } = params;
-    page = +page || 1;
-    limit = +limit || 20;
-    const skip = (page - 1) * limit;
+  async getList(params) {
+    let { search, ...others } = params;
+    let { page, skip, limit } = getPageSkipLimit(params);
 
     let filterCondition = {};
     if (others && typeof others === 'object' && Object.entries(others).length) {
@@ -152,6 +154,15 @@ export class ProductFeatureService {
       limit,
     });
 
+    let count = await this.productFeaturesRepo.find({
+      select: `COUNT(${Table.PRODUCT_FEATURES}.feature_id) as total`,
+      join: productFeatureJoiner,
+      orderBy: [
+        { field: `${Table.PRODUCT_FEATURES}.updated_at`, sortBy: SortBy.DESC },
+      ],
+      where: productFeatureSearchFilter(search, filterCondition),
+    });
+
     if (productFeatures.length) {
       for (let productFeatureItem of productFeatures) {
         let productFeatureVariants = await this.productFeatureVariantsRepo.find(
@@ -171,7 +182,14 @@ export class ProductFeatureService {
       productFeatures = await this.findProductFeaturesByProductVariants(params);
     }
 
-    return productFeatures;
+    return {
+      paging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count[0].total,
+      },
+      data: productFeatures,
+    };
   }
 
   async findProductFeaturesByProductVariants(params) {
@@ -502,6 +520,7 @@ export class ProductFeatureService {
 
     const productFeatureDescriptionData =
       this.productFeatureDescriptionRepo.setData(data);
+
     let updatedFeatureDescription = {};
     if (Object.entries(productFeatureDescriptionData).length) {
       updatedFeatureDescription =
@@ -623,6 +642,12 @@ export class ProductFeatureService {
       }
 
       if (type === 'update') {
+        if (
+          productFeatureVariantData &&
+          productFeatureVariantData['variant_code'] == 0
+        ) {
+          delete productFeatureVariantData['variant_code'];
+        }
         if (Object.entries(productFeatureVariantData).length) {
           const updatedProductFeatureVariant =
             await this.productFeatureVariantsRepo.update(
