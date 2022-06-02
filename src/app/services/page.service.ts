@@ -577,8 +577,20 @@ export class PageService {
             detail_type: PageDetailValueType.BACKGROUND,
           });
 
+        pageDetailValue[PageDetailValueType.IMAGE_BACKGROUND] =
+          await this.pageDetailValueRepo.findOne({
+            page_detail_id,
+            detail_type: PageDetailValueType.IMAGE_BACKGROUND,
+          });
+
+        pageDetailValue[PageDetailValueType.COLOR_BACKGROUND] =
+          await this.pageDetailValueRepo.findOne({
+            page_detail_id,
+            detail_type: PageDetailValueType.COLOR_BACKGROUND,
+          });
         currentPageDetail['page_detail_values'] = { ...pageDetailValue };
         break;
+
       case PageDetailType.BANNER:
         let bannerId = currentPageDetail.page_detail_data;
 
