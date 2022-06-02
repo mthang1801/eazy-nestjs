@@ -8,8 +8,21 @@ export class CronService {
   constructor(private productService: ProductService) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  handleCron() {
+  handleCronAtMidnight() {
     this.logger.debug('Called everyday at midnight');
+    this.productService.syncGetProductsStores();
+    this.productService.standardizeProducts();
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  handleCronAtNoon() {
+    this.logger.debug('Called everyday at noon');
+    this.productService.syncGetProductsStores();
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_6PM)
+  handleCronAt6PM() {
+    this.logger.debug('Called everyday at 6PM');
     this.productService.syncGetProductsStores();
   }
 }
