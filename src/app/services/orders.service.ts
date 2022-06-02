@@ -146,6 +146,10 @@ import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 import { paymentType, paymentTypeId } from '../../constants/payment.constant';
 import { uuid } from '../../utils/cipherHelper';
 import { calculateInstallmentInterestRateHomeCredit } from '../../utils/services/payment.helper';
+import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
+import { ShippingsServiceEntity } from '../entities/shippingsService.entity';
+import { ShippingRepository } from '../repositories/shippings.repository';
+import { ShippingsEntity } from '../entities/shippings.entity';
 
 @Injectable()
 export class OrdersService {
@@ -178,6 +182,8 @@ export class OrdersService {
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private shippingFeeService: ShippingFeeService,
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
+    private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
+    private shippingRepo: ShippingRepository<ShippingsEntity>,
   ) {}
 
   async CMScreate(data) {
@@ -288,10 +294,10 @@ export class OrdersService {
       orderData['transfer_amount'] = +orderData['subtotal'];
     }
 
+    let installed_money_account_id;
+    let responseData;
+    let gatewayName;
     if (data.pay_credit_type === 4 && data.company_id) {
-      let installed_money_account_id;
-      let responseData;
-      let gatewayName;
       switch (+data.company_id) {
         case 1:
           installed_money_account_id = GatewayAppcoreId.HD_Saigon;
@@ -426,6 +432,36 @@ export class OrdersService {
       }
       // update order history
       await this.orderHistoryRepo.create(updatedOrder, false);
+
+      if (data.pay_credit_type === 4) {
+        await this.orderPaymentRepo.create({
+          order_id: result['order_id'],
+          order_no: result['ref_order_id'],
+          gateway_name: gatewayName,
+          amount: +result['subtotal'],
+        });
+
+        const paymentAppcoreData = {
+          installmentAccountId: installed_money_account_id,
+          installmentCode: result['ref_order_id'],
+          paymentStatus: 'success',
+          totalAmount: +result['subtotal'],
+        };
+
+        await axios({
+          method: 'PUT',
+          url: UPDATE_ORDER_PAYMENT(result['order_code']),
+          data: paymentAppcoreData,
+        });
+
+        await this.orderRepo.update(
+          { order_id: result['order_id'] },
+          {
+            status: OrderStatus.purchased,
+            updated_date: formatStandardTimeStamp(),
+          },
+        );
+      }
 
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
@@ -689,7 +725,6 @@ export class OrdersService {
         where: { shipping_fee_location_id: data.shipping_fee_location_id },
       });
       if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
-        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
         sendData['shipping_cost'] = shippingFeeLocation.value_fee;
       }
     }
@@ -1794,6 +1829,26 @@ export class OrdersService {
     //     });
     //   }
     // }
+
+    order['shippingService'] = null;
+    if (order.shipping_service_id) {
+      const shippingService = await this.shippingServiceRepo.findOne({
+        shipping_service_id: order.shipping_service_id,
+      });
+      if (shippingService) {
+        order['shippingService'] = shippingService;
+      }
+    }
+
+    order['shippingUnit'] = null;
+    if (order.shipping_id) {
+      const shippingUnit = await this.shippingRepo.findOne({
+        shipping_id: order.shipping_id,
+      });
+      if (shippingUnit) {
+        order['shippingUnit'] = shippingUnit;
+      }
+    }
 
     if (order['s_city']) {
       order['s_cityName'] = await this.cityService.get(order['s_city'], true);

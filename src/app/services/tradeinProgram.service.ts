@@ -1465,7 +1465,7 @@ export class TradeinProgramService {
 
   async getOldReceiptById(old_receipt_id) {
     let oldReceipt = await this.tradeinOldReceiptRepo.findOne({
-      old_receipt_id,
+      where: [{ old_receipt_id }, { old_receipt_appcore_id: old_receipt_id }],
     });
     if (!oldReceipt) {
       throw new HttpException('Không tìm thấy phiếu thu cũ', 404);

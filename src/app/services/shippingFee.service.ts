@@ -155,6 +155,9 @@ export class ShippingFeeService {
 
     let shippingFeesList = await this.shippingFeeRepo.find({
       select: '*',
+      orderBy: [
+        { field: `${Table.SHIPPING_FEE}.updated_at`, sortBy: SortBy.DESC },
+      ],
       skip,
       limit,
     });

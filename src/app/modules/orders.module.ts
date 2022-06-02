@@ -29,6 +29,9 @@ import { ProductsModule } from './products.module';
 import { getUserFromToken } from '../../middlewares/getUserFromToken';
 import { ShippingFeeService } from '../services/shippingFee.service';
 import { ShippingFeeModule } from './shippingFee.module';
+import { ShippingModule } from './shippings.module';
+import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
+import { ShippingRepository } from '../repositories/shippings.repository';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -47,6 +50,8 @@ import { ShippingFeeModule } from './shippingFee.module';
     UserProfileRepository,
     OrderHistoryRepository,
     OrderPaymentRepository,
+    ShippingServiceRepository,
+    ShippingRepository,
   ],
   exports: [
     OrdersService,
@@ -69,6 +74,7 @@ import { ShippingFeeModule } from './shippingFee.module';
     PromotionModule,
     ProductsModule,
     ShippingFeeModule,
+    ShippingModule,
   ],
 })
 export class OrdersModule implements NestModule {

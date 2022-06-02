@@ -42,6 +42,12 @@ export class PaymentController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('/installment/')
+  async getProductInstallment(@Res() res: Response, @Query() params) {
+    const result = await this.service.getProductInstallment(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('/:id')
   async getById(@Res() res, @Param('id') id): Promise<IResponse> {
     const result = await this.service.getById(id);
