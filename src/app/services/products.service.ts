@@ -4176,7 +4176,11 @@ export class ProductService {
     let product = await this.productRepo.findOne({
       slug: slug.trim(),
     });
+    console.log(product);
 
+    if (!product) {
+      throw new HttpException('Không tìm thấy SP', 404);
+    }
     if (product.status !== 'A') {
       throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
     }
@@ -4198,6 +4202,8 @@ export class ProductService {
         { product_id: product.product_id },
         { view_count: product.view_count + 1 },
       );
+
+      await this.cache.removeCachedProductById(product.product_id);
       const productCacheResult = await this.cache.getProductCacheById(
         product.product_id,
       );
@@ -4214,6 +4220,7 @@ export class ProductService {
       if (!product) {
         throw new HttpException('Không tìm thấy SP', 404);
       }
+      await this.cache.removeCachedProductById(product.product_id);
     }
 
     this.productRepo.update(
@@ -4358,9 +4365,13 @@ export class ProductService {
 
     //============= Get Features ===============
     result['productFeatures'] = [];
-    result['catalogFeatures'] = await this.FEGetCatalogFeatureValuesForProduct(
-      result.product_id,
-    );
+    if (result['catalog_category_id']) {
+      result['productFeatures'] =
+        await this.FEGetCatalogFeatureValuesForProduct(
+          result.catalog_category_id,
+          result.product_id,
+        );
+    }
 
     //=========== Get accessory ============
     result['promotion_accessory_products'] = [];
@@ -4451,43 +4462,68 @@ export class ProductService {
     return result;
   }
 
-  async FEGetCatalogFeatureValuesForProduct(product_id) {
-    const catalogFeatureValues = await this.catalogFeatureValueProductRepo.find(
-      {
-        select: catalogSelector,
-        join: productFeatureValuesFEJoiner,
-        where: {
-          [`${Table.CATALOG_FEATURE_VALUE_PRODUCT}.product_id`]: product_id,
-          [`${Table.CATALOG}.status`]: 'A',
-          [`${Table.CATALOG_FEATURE}.status`]: 'A',
-          [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
-        },
-        orderBy: [{ field: `catalogFeaturePosition`, sortBy: SortBy.ASC }],
-      },
-    );
-
-    let featuresSet = {};
-    if (catalogFeatureValues) {
-      for (let catalogFeatureValue of catalogFeatureValues) {
-        featuresSet[catalogFeatureValue.feature_name] = featuresSet[
-          catalogFeatureValue.feature_name
-        ]
-          ? [
-              ...featuresSet[catalogFeatureValue.feature_name],
-              catalogFeatureValue,
-            ]
-          : [catalogFeatureValue];
-      }
-    }
-
-    let result = [];
-    if (Object.entries(featuresSet).length) {
-      Object.entries((key, value) => {
-        result = [...result, { feature: key, values: value }];
+  async FEGetCatalogFeatureValuesForProduct(catalog_id, product_id) {
+    const catalog = await this.catalogRepo.findOne({ catalog_id, status: 'A' });
+    if (catalog) {
+      let catalogFeatures = await this.catalogFeatureRepo.find({
+        catalog_id,
+        status: 'A',
       });
+      if (catalogFeatures.length) {
+        for (let catalogFeatureItem of catalogFeatures) {
+          const catalogFeatureDetails =
+            await this.catalogFeatureDetailRepo.find({
+              select: '*',
+              join: catalogFeatureDetailJoiner,
+              where: {
+                [`${Table.CATALOG_FEATURE_DETAIL}.catalog_feature_id`]:
+                  catalogFeatureItem.catalog_feature_id,
+                [`${Table.CATALOG_FEATURE_DETAIL}.status`]: 'A',
+                [`${Table.CATALOG_FEATURE_VALUE_PRODUCT}.product_id`]:
+                  product_id,
+              },
+            });
+
+          let result = [
+            ...catalogFeatureDetails.map((catalogFeatureDetails) => ({
+              ...catalogFeatureDetails,
+              value: '',
+            })),
+          ];
+          if (catalogFeatureDetails.length) {
+            result = [];
+            for (let catalogFeatureDetail of catalogFeatureDetails) {
+              const catalogProductFeatureValue =
+                await this.catalogFeatureValueProductRepo.findOne({
+                  detail_id: catalogFeatureDetail.detail_id,
+                  product_id,
+                });
+              if (catalogProductFeatureValue) {
+                catalogFeatureDetail = {
+                  ...catalogFeatureDetail,
+                  ...catalogProductFeatureValue,
+                };
+                result = [...result, catalogFeatureDetail];
+              } else {
+                catalogFeatureDetail['value'] = '';
+              }
+            }
+          }
+          if (result.length) {
+            catalogFeatureItem['catalog_feature_details'] = result;
+          } else {
+            catalogFeatures = catalogFeatures.filter(
+              (catalogFeature) =>
+                catalogFeature.catalog_feature_id !==
+                catalogFeatureItem.catalog_feature_id,
+            );
+          }
+        }
+      }
+      catalog['catalog_features'] = catalogFeatures;
     }
-    console.log(result);
-    return result;
+
+    return catalog['catalog_features'] ? catalog['catalog_features'] : [];
   }
 
   async BEGetCatalogFeatureValuesForProduct(catalog_id, product_id) {
@@ -4568,10 +4604,9 @@ export class ProductService {
       childrenProducts = _.unionBy(childrenProducts, 'product_id');
       for (let childProduct of childrenProducts) {
         // Get Features
-        childProduct['productFeatures'] =
-          await this.FEGetCatalogFeatureValuesForProduct(
-            childProduct.product_id,
-          );
+
+        childProduct['productFeatures'] = [];
+
         // Get stores
         childProduct['stores'] = await this.getProductsStores(
           childProduct.product_id,

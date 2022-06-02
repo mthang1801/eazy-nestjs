@@ -357,8 +357,6 @@ export class OrdersService {
       data: convertDataToIntegrate(result),
     };
 
-    console.log(convertDataToIntegrate(result));
-
     try {
       const response = await axios(configPushOrderToAppcore);
 
