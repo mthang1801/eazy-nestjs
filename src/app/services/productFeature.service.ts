@@ -621,19 +621,22 @@ export class ProductFeatureService {
       }
 
       if (type === 'update') {
+        let _productFeatureVariantData = { ...productFeatureVariantData };
         if (
           productFeatureVariantData['variant_code'] == 0 ||
           !productFeatureVariantData['variant_code']
         ) {
-          delete productFeatureVariantData['variant_code'];
+          delete _productFeatureVariantData['variant_code'];
         }
+
         if (Object.entries(productFeatureVariantData).length) {
           const updatedProductFeatureVariant =
             await this.productFeatureVariantsRepo.update(
               { variant_id: variantItem['variant_id'] },
-              productFeatureVariantData,
+              _productFeatureVariantData,
               true,
             );
+
           updatedResult = {
             ...updatedResult,
             ...updatedProductFeatureVariant,
