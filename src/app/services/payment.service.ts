@@ -301,46 +301,8 @@ export class PaymentService {
       }
 
       let totalPrice = product['price'];
+      let subtotal = +totalPrice;
       let cartItems = [{ ...product, amount: 1 }];
-
-      let responseData;
-
-      let gatewayName = GatewayName.HD_Saigon;
-      let installed_money_account_id = GatewayAppcoreId.HD_Saigon;
-      switch (+data.company_id) {
-        case 1:
-          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
-          responseData = calculateInstallmentInterestRateHDSaiGon(
-            totalPrice,
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.HD_Saigon;
-          break; //HD Saigon
-        case 2:
-          installed_money_account_id = GatewayAppcoreId.Home_Credit;
-          responseData = calculateInstallmentInterestRateHomeCredit(
-            totalPrice,
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.Home_Credit;
-          break; // Home Credit
-        case 3:
-          installed_money_account_id = GatewayAppcoreId.Shinhan;
-          responseData = calculateInstallmentInterestRateHDSaiGon(
-            totalPrice,
-            data.prepaid_percentage,
-            data.tenor,
-          );
-          gatewayName = GatewayName.Shinhan;
-          break; //Shinhan
-      }
-
-      let paymentPerMonth = responseData.paymentPerMonth;
-      let totalInterest = responseData.totalInterest;
-      let interestPerMonth = responseData.interestPerMonth;
-      let prepaidAmount = responseData.prepaidAmount;
 
       if (data.shipping_fee_location_id) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
@@ -356,9 +318,48 @@ export class PaymentService {
           shippingFeeLocation &&
           +totalPrice < +shippingFeeLocation.max_value
         ) {
-          totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
+          subtotal = +subtotal + +shippingFeeLocation.value_fee;
         }
       }
+
+      let responseData;
+
+      let gatewayName = GatewayName.HD_Saigon;
+      let installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+      switch (+data.company_id) {
+        case 1:
+          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            subtotal,
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.HD_Saigon;
+          break; //HD Saigon
+        case 2:
+          installed_money_account_id = GatewayAppcoreId.Home_Credit;
+          responseData = calculateInstallmentInterestRateHomeCredit(
+            subtotal,
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.Home_Credit;
+          break; // Home Credit
+        case 3:
+          installed_money_account_id = GatewayAppcoreId.Shinhan;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            subtotal,
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.Shinhan;
+          break; //Shinhan
+      }
+
+      let paymentPerMonth = responseData.paymentPerMonth;
+      let totalInterest = responseData.totalInterest;
+      let interestPerMonth = responseData.interestPerMonth;
+      let prepaidAmount = responseData.prepaidAmount;
 
       let refOrderId = generateRandomString();
       let sendData = {
@@ -370,7 +371,9 @@ export class PaymentService {
         s_ward: data.s_ward,
         s_address: data.s_address,
         order_items: cartItems,
-        transfer_amount: totalPrice,
+        total_price: totalPrice,
+        transfer_amount: subtotal,
+        subtotal,
         pay_credit_type: 4,
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
@@ -388,14 +391,14 @@ export class PaymentService {
         order_id: result['order_id'],
         order_no: refOrderId,
         gateway_name: gatewayName,
-        amount: totalPrice,
+        amount: subtotal,
       });
 
       const paymentAppcoreData = {
         installmentAccountId: installed_money_account_id,
         installmentCode: refOrderId,
         paymentStatus: 'success',
-        totalAmount: +totalPrice,
+        totalAmount: +subtotal,
       };
 
       await axios({
@@ -582,7 +585,6 @@ export class PaymentService {
           shippingFeeLocation &&
           +totalPrice < +shippingFeeLocation.max_value
         ) {
-          sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
           sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
           sendData['transfer_amount'] =
             +totalPrice + +shippingFeeLocation.value_fee;
@@ -976,7 +978,6 @@ export class PaymentService {
         },
       });
       if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
-        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
         sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
         sendData['transfer_amount'] =
           +totalPrice + +shippingFeeLocation.value_fee;
@@ -1330,7 +1331,6 @@ export class PaymentService {
         where: { shipping_fee_location_id: data.shipping_fee_location_id },
       });
       if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
-        sendData['shipping_id'] = shippingFeeLocation.shipping_fee_id;
         sendData['shipping_cost'] = shippingFeeLocation.value_fee;
       }
     }

@@ -130,7 +130,10 @@ import {
 } from '../../constants/api.appcore';
 import { CreateOrderSelfTransportDto } from '../dto/orders/create-orderSelfTransport.dto';
 import { Equal } from '../../database/operators/operators';
-import { PaymentStatus } from '../../utils/services/payment.helper';
+import {
+  PaymentStatus,
+  calculateInstallmentInterestRateHDSaiGon,
+} from '../../utils/services/payment.helper';
 import { ShippingFeeService } from './shippingFee.service';
 import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
 import { ShippingFeeLocationEntity } from '../entities/shippingFeeLocation.entity';
@@ -142,6 +145,7 @@ import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
 import { paymentType, paymentTypeId } from '../../constants/payment.constant';
 import { uuid } from '../../utils/cipherHelper';
+import { calculateInstallmentInterestRateHomeCredit } from '../../utils/services/payment.helper';
 
 @Injectable()
 export class OrdersService {
@@ -215,7 +219,9 @@ export class OrdersService {
       user_appcore_id: user.user_appcore_id,
       user_id: user.user_id,
       status: OrderStatus.new,
+      shipping_cost: data.shipping_cost ? data.shipping_cost : 0,
       ref_order_id: uuid(),
+      subtotal: data.shipping_cost ? data.shipping_cost : 0,
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
     };
@@ -259,18 +265,6 @@ export class OrdersService {
       orderData['subtotal'] = +productInfo['price'] * orderItem.amount;
     }
 
-    if (data.s_city) {
-      const shippingFee = await this.shippingFeeService.calcShippingFee(
-        +data.s_city,
-        orderData['subtotal'],
-      );
-      if (shippingFee) {
-        orderData['shipping_cost'] = +shippingFee.value_fee;
-        orderData['shipping_id'] = shippingFee.shipping_fee_id;
-        orderData['subtotal'] += +shippingFee.value_fee;
-      }
-    }
-
     if (data.coupon_code) {
       let dataCheckCoupon: any = {
         coupon_code: data.coupon_code,
@@ -292,6 +286,56 @@ export class OrdersService {
 
     if (data.pay_credit_type != 1) {
       orderData['transfer_amount'] = +orderData['subtotal'];
+    }
+
+    if (data.pay_credit_type === 4 && data.company_id) {
+      let installed_money_account_id;
+      let responseData;
+      let gatewayName;
+      switch (+data.company_id) {
+        case 1:
+          installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            orderData['subtotal'],
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.HD_Saigon;
+          break; //HD Saigon
+        case 2:
+          installed_money_account_id = GatewayAppcoreId.Home_Credit;
+          responseData = calculateInstallmentInterestRateHomeCredit(
+            orderData['subtotal'],
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.Home_Credit;
+          break; // Home Credit
+        case 3:
+          installed_money_account_id = GatewayAppcoreId.Shinhan;
+          responseData = calculateInstallmentInterestRateHDSaiGon(
+            orderData['subtotal'],
+            data.prepaid_percentage,
+            data.tenor,
+          );
+          gatewayName = GatewayName.Shinhan;
+          break; //Shinhan
+        default:
+          throw new HttpException('Mã công ty trả góp không đúng', 400);
+      }
+
+      let paymentPerMonth = responseData.paymentPerMonth;
+      let totalInterest = responseData.totalInterest;
+      let interestPerMonth = responseData.interestPerMonth;
+      let prepaidAmount = responseData.prepaidAmount;
+
+      orderData['pay_credit_type'] = 4;
+      orderData['installment_interest_rate_code'] = totalInterest;
+      orderData['installed_money_amount'] = paymentPerMonth;
+      orderData['installed_money_account_id'] = installed_money_account_id;
+      orderData['installmentCode'] = orderData['ref_order_id'];
+      orderData['payment_status'] = PaymentStatus.success;
+      orderData['prepaid'] = prepaidAmount;
     }
 
     orderData = this.orderRepo.setData(orderData);
@@ -398,6 +442,7 @@ export class OrdersService {
         400,
       );
     }
+
     // let orderPayment = await this.orderPaymentRepo.findOne({
     //   order_id,
     // });
