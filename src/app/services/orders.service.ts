@@ -1833,7 +1833,7 @@ export class OrdersService {
     order['shippingService'] = null;
     if (order.shipping_service_id) {
       const shippingService = await this.shippingServiceRepo.findOne({
-        shipping_service_id: order.shipping_service_id,
+        service_id: order.shipping_service_id,
       });
       if (shippingService) {
         order['shippingService'] = shippingService;
