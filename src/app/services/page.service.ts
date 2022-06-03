@@ -669,8 +669,8 @@ export class PageService {
     return result;
   }
 
-  async FEGetPage(page_code) {
-    const currentPage = await this.pageRepo.findOne({ page_code });
+  async FEGetPage(link_url) {
+    const currentPage = await this.pageRepo.findOne({ link_url });
     if (!currentPage) {
       throw new HttpException('Không tìm thấy trang.', 404);
     }
@@ -717,6 +717,10 @@ export class PageService {
     await this.cache.setCachePageById(currentPage.page_id, currentPage);
 
     return currentPage;
+  }
+
+  async FEgetPagesList() {
+    return this.pageRepo.find();
   }
 
   async testCreateOrUpdatePageDetailItem(data: CreateOrUpdatePageDetailDto) {

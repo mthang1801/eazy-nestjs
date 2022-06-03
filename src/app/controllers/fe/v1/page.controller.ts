@@ -8,12 +8,18 @@ export class PageControllerFE extends BaseController {
   constructor(private service: PageService) {
     super();
   }
-  @Get(':page_code')
+  @Get(':link_url')
   async FEGetPage(
     @Res() res: Response,
-    @Param('page_code') page_code: number,
+    @Param('link_url') link_url: number,
   ): Promise<IResponse> {
-    const result = await this.service.FEGetPage(page_code);
+    const result = await this.service.FEGetPage(link_url);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get()
+  async getPagesList(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.FEgetPagesList();
     return this.responseSuccess(res, result);
   }
 }

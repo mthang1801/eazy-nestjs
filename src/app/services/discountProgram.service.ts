@@ -24,6 +24,8 @@ import {
 } from '../../utils/tableConditioner';
 import { UpdateDiscountProgramDto } from '../dto/discountProgram/update-discountProgram.dto';
 import { SortBy } from '../../database/enums/sortBy.enum';
+import { CacheRepository } from '../repositories/cache.repository';
+import { RedisCacheService } from './redisCache.service';
 import {
   MoreThan,
   LessThan,
@@ -42,6 +44,7 @@ export class DiscountProgramService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private productDescRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
+    private cache: RedisCacheService,
   ) {}
 
   async getList(params: any = {}) {
@@ -208,6 +211,13 @@ export class DiscountProgramService {
           await this.discountProgramDetailRepo.findOne({
             detail_id: aplliedProduct.detail_id,
           });
+
+        if (discountProgramDetail.product_id) {
+          await this.cache.removeCachedProductById(
+            discountProgramDetail.product_id,
+          );
+        }
+
         if (!discountProgramDetail) {
           continue;
         }

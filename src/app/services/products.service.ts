@@ -4176,14 +4176,13 @@ export class ProductService {
     let product = await this.productRepo.findOne({
       slug: slug.trim(),
     });
-    console.log(product);
 
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
-    if (product.status !== 'A') {
-      throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
-    }
+    // if (product.status !== 'A') {
+    //   throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
+    // }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
