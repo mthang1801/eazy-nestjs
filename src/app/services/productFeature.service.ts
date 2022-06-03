@@ -795,4 +795,24 @@ export class ProductFeatureService {
       }
     }
   }
+
+  async getPriceLevel() {
+    const productFeature = await this.productFeaturesRepo.findOne({feature_id: 2});
+
+    const productFeatureVariants = await this.productFeatureVariantsRepo.find({feature_id: 2});
+    
+    let result = [];
+    for (let productFeatureVariant of productFeatureVariants) {
+      let item = {
+        feature_id: productFeature.feature_id,
+        feature_code: productFeature.feature_code,
+        variant_id: productFeatureVariant.variant_id,
+        variant: productFeatureVariant.variant
+      }
+
+      result.push(item);
+    }
+
+    return result;
+  }
 }

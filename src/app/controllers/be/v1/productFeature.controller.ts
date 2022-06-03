@@ -40,6 +40,14 @@ export class ProductFeatureController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('price-level')
+  async getPriceLevel(
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.getPriceLevel();
+    return this.responseSuccess(res, result);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   async getById(
