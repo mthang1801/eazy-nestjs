@@ -55,7 +55,7 @@ import { FlashSaleRepository } from '../repositories/flashSale.repository';
 import { FlashSaleEntity } from '../entities/flashSale.entity';
 import { FlashSalesService } from './flashSale.service';
 import { RedisCacheService } from './redisCache.service';
-
+import * as _ from 'lodash';
 @Injectable()
 export class PageService {
   constructor(
@@ -544,6 +544,8 @@ export class PageService {
             },
           ],
         });
+
+        products = _.uniqBy(products, 'product_id');
 
         for (let productItem of products) {
           //find product Stickers
