@@ -484,7 +484,7 @@ export class PageService {
     });
 
     if (currentPageDetail.detail_type == PageDetailType.BOX_PRODUCT) {
-      currentPageDetail['page_detail_values'] = {};
+      currentPageDetail['page_detail_values'] = { ...currentPageDetail };
       for (let detailValue of pageDetailValues) {
         if (detailValue.detail_type == 'LIST_PRODUCTS') {
           let product = await this.productRepo.findOne({
@@ -538,6 +538,10 @@ export class PageService {
             detail_type: PageDetailValueType.LIST_PRODUCTS,
           },
           orderBy: [
+            {
+              field: `${Table.PAGE_DETAIL_VALUE}.position`,
+              sortBy: SortBy.ASC,
+            },
             {
               field: `${Table.PAGE_DETAIL_VALUE}.position`,
               sortBy: SortBy.ASC,
@@ -1028,7 +1032,7 @@ export class PageService {
 
   async testGetPageDetailValueInfo(value_id) {
     let result = await this.pageDetailValueRepo.findOne({
-      select: `${Table.PAGE}.page_id, ${Table.PAGE_DETAIL_VALUE}.*`,
+      select: `${Table.PAGE}.page_id, ${Table.PAGE}.page_name, ${Table.PAGE_DETAIL}.module_name, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageProgramDetailValueJoiner,
       where: { [`${Table.PAGE_DETAIL_VALUE}.value_id`]: value_id },
     });
