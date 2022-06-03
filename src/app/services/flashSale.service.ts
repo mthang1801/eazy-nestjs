@@ -200,6 +200,8 @@ export class FlashSalesService {
           ],
         });
 
+        flashSaleProducts = _.unionBy(flashSaleProducts, 'product_id');
+
         if (flashSaleProducts.length) {
           for (let flashSaleProductItem of flashSaleProducts) {
             const flashSaleProductStickers = await this.productStickerRepo.find(
