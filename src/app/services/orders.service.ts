@@ -409,6 +409,8 @@ export class OrdersService {
           { order_item_appcore_id: orderItem.orderItemId },
         );
       }
+
+      result['order_code'] = updatedOrder['order_code'];
       // update order history
       await this.orderHistoryRepo.create(updatedOrder, false);
 
@@ -426,6 +428,8 @@ export class OrdersService {
           paymentStatus: 'success',
           totalAmount: +result['subtotal'],
         };
+
+        console.log(result);
 
         await axios({
           method: 'PUT',
