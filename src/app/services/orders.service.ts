@@ -226,6 +226,7 @@ export class OrdersService {
       user_id: user.user_id,
       status: OrderStatus.new,
       shipping_cost: data.shipping_cost ? data.shipping_cost : 0,
+      pay_credit_type: data.pay_credit_type ? data.pay_credit_type : 1,
       ref_order_id: generateRandomString(),
       subtotal: data.shipping_cost ? data.shipping_cost : 0,
       created_date: formatStandardTimeStamp(),
@@ -236,7 +237,10 @@ export class OrdersService {
       for (let paymentItem of data.payments) {
         switch (paymentItem.type) {
           case 'COD':
-            orderData['prepaid'] = paymentItem.price;
+            orderData['prepaid'] =
+              data.payment_credit_type == 4 ? paymentItem.price : 0;
+            orderData['installed_prepaid_amount'] =
+              data.payment_credit_type == 4 ? paymentItem.price : 0;
             break;
           case 'TRANSFER':
             orderData['transfer_amount'] = paymentItem.price;
@@ -290,10 +294,6 @@ export class OrdersService {
       }
     }
 
-    if (data.pay_credit_type != 1) {
-      orderData['transfer_amount'] = +orderData['subtotal'];
-    }
-
     let installed_money_account_id;
     let responseData;
     let gatewayName;
@@ -309,6 +309,7 @@ export class OrdersService {
       switch (+data.company_id) {
         case 1:
           installed_money_account_id = GatewayAppcoreId.HD_Saigon;
+          gatewayName = GatewayName.HD_Saigon;
           break; //HD Saigon
         case 2:
           installed_money_account_id = GatewayAppcoreId.Home_Credit;
@@ -322,6 +323,8 @@ export class OrdersService {
           throw new HttpException('Mã công ty trả góp không đúng', 400);
       }
     }
+
+    console.log(gatewayName);
 
     orderData = this.orderRepo.setData(orderData);
 
@@ -414,7 +417,7 @@ export class OrdersService {
       // update order history
       await this.orderHistoryRepo.create(updatedOrder, false);
 
-      if (data.pay_credit_type === 4) {
+      if (data.pay_credit_type == 4) {
         await this.orderPaymentRepo.create({
           order_id: result['order_id'],
           order_no: result['ref_order_id'],
@@ -428,8 +431,6 @@ export class OrdersService {
           paymentStatus: 'success',
           totalAmount: +result['subtotal'],
         };
-
-        console.log(result);
 
         await axios({
           method: 'PUT',
