@@ -238,7 +238,7 @@ export class OrdersService {
         switch (paymentItem.type) {
           case 'COD':
             orderData['prepaid'] =
-              data.payment_credit_type == 4 ? paymentItem.price : 0;
+              data.payment_credit_type == 4 ? 0 : paymentItem.price;
             orderData['installed_prepaid_amount'] =
               data.payment_credit_type == 4 ? paymentItem.price : 0;
             break;
