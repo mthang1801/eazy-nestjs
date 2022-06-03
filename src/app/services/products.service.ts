@@ -4998,6 +4998,7 @@ export class ProductService {
       select: `category_id, category_appcore_id, COUNT(product_id) as total`,
       groupBy: 'category_id',
     });
+    return;
     if (productCategoriesCounter.length) {
       for (let {
         category_id,
