@@ -719,7 +719,11 @@ export class PageService {
     return currentPage;
   }
 
-  async FEgetPagesList() {
+  async FEgetPagesList(params: any = {}) {
+    let { link_url } = params;
+    if (link_url) {
+      return this.FEGetPage(link_url);
+    }
     return this.pageRepo.find();
   }
 

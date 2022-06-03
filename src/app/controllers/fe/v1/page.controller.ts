@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Get, Param, Res, Query } from '@nestjs/common';
 import { IResponse } from 'src/app/interfaces/response.interface';
 import { BaseController } from '../../../../base/base.controllers';
 import { PageService } from '../../../services/page.service';
@@ -8,7 +8,7 @@ export class PageControllerFE extends BaseController {
   constructor(private service: PageService) {
     super();
   }
-  @Get(':link_url')
+  @Get('/')
   async FEGetPage(
     @Res() res: Response,
     @Param('link_url') link_url: number,
@@ -18,8 +18,11 @@ export class PageControllerFE extends BaseController {
   }
 
   @Get()
-  async getPagesList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.FEgetPagesList();
+  async getPagesList(
+    @Res() res: Response,
+    @Query() params,
+  ): Promise<IResponse> {
+    const result = await this.service.FEgetPagesList(params);
     return this.responseSuccess(res, result);
   }
 }

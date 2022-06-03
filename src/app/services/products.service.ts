@@ -424,66 +424,79 @@ export class ProductService {
   }
 
   async standardizeProducts() {
-    let childrenProducts = await this.productRepo.find({
-      parent_product_id: '0',
-      parent_product_appcore_id: Not(IsNull()),
-    });
+    // let childrenProducts = await this.productRepo.find({
+    //   parent_product_id: '0',
+    //   parent_product_appcore_id: Not(IsNull()),
+    // });
+    // for (let childProduct of childrenProducts) {
+    //   let parentProduct = await this.productRepo.update(
+    //     { product_appcore_id: childProduct.parent_product_appcore_id },
+    //     { product_function: 1 },
+    //     true,
+    //   );
+    //   if (parentProduct) {
+    //     await this.productRepo.update(
+    //       { product_id: childProduct.product_id },
+    //       {
+    //         parent_product_id: parentProduct['product_id'],
+    //         product_function: 2,
+    //       },
+    //     );
+    //   }
+    // }
+    // let parentProducts = await this.productRepo.find({
+    //   parent_product_appcore_id: IsNull(),
+    //   product_function: 1,
+    // });
+    // if (parentProducts.length) {
+    //   for (let parentProduct of parentProducts) {
+    //     let childProduct = await this.productRepo.findOne({
+    //       select: '*',
+    //       join: productPriceJoiner,
+    //       orderBy: [
+    //         { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+    //       ],
+    //       where: {
+    //         [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+    //           parentProduct.product_appcore_id,
+    //         [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+    //       },
+    //     });
+    //     if (childProduct) {
+    //       let productPriceData = {
+    //         price: childProduct.price,
+    //         list_price: childProduct.list_price,
+    //         buy_price: childProduct.buy_price,
+    //         collect_price: childProduct.collect_price,
+    //         whole_price: childProduct.whole_price,
+    //         percentage_discount: childProduct.percentage_discount,
+    //         selling_price_program: childProduct.selling_price_program,
+    //         original_price_program: childProduct.price_discount,
+    //         time_start_at: childProduct.time_start_at,
+    //         time_end_at: childProduct.time_end_at,
+    //       };
+    //       await this.productPriceRepo.update(
+    //         { product_id: parentProduct.product_id },
+    //         productPriceData,
+    //       );
+    //     }
+    //   }
+    // }
 
-    for (let childProduct of childrenProducts) {
-      let parentProduct = await this.productRepo.update(
-        { product_appcore_id: childProduct.parent_product_appcore_id },
-        { product_function: 1 },
-        true,
-      );
-      if (parentProduct) {
-        await this.productRepo.update(
-          { product_id: childProduct.product_id },
-          {
-            parent_product_id: parentProduct['product_id'],
-            product_function: 2,
-          },
-        );
+    let parentProducts = await this.productRepo.find({ product_function: 1 });
+    for (let [i, parentProductItem] of parentProducts.entries()) {
+      let countChildren = await this.databaseService.executeQueryReadPool(`
+      SELECT product_appcore_id, COUNT(product_id) as total 
+      FROM ddv_products
+      GROUP BY parent_product_appcore_id
+      HAVING product_appcore_id = ${parentProductItem.product_appcore_id}    
+      `);
+
+      console.log(countChildren[0]);
+      if (countChildren[0].total == 0) {
+        console.log(parentProductItem);
       }
-    }
-
-    let parentProducts = await this.productRepo.find({
-      parent_product_appcore_id: IsNull(),
-      product_function: 1,
-    });
-
-    if (parentProducts.length) {
-      for (let parentProduct of parentProducts) {
-        let childProduct = await this.productRepo.findOne({
-          select: '*',
-          join: productPriceJoiner,
-          orderBy: [
-            { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
-          ],
-          where: {
-            [`${Table.PRODUCTS}.parent_product_appcore_id`]:
-              parentProduct.product_appcore_id,
-            [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-          },
-        });
-        if (childProduct) {
-          let productPriceData = {
-            price: childProduct.price,
-            list_price: childProduct.list_price,
-            buy_price: childProduct.buy_price,
-            collect_price: childProduct.collect_price,
-            whole_price: childProduct.whole_price,
-            percentage_discount: childProduct.percentage_discount,
-            selling_price_program: childProduct.selling_price_program,
-            original_price_program: childProduct.price_discount,
-            time_start_at: childProduct.time_start_at,
-            time_end_at: childProduct.time_end_at,
-          };
-          await this.productPriceRepo.update(
-            { product_id: parentProduct.product_id },
-            productPriceData,
-          );
-        }
-      }
+      if (i > 20) break;
     }
   }
 
