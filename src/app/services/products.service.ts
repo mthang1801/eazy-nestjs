@@ -492,8 +492,8 @@ export class ProductService {
       HAVING product_appcore_id = ${parentProductItem.product_appcore_id}    
       `);
 
-      console.log(countChildren[0]);
-      if (countChildren[0].total == 0) {
+      console.log();
+      if (countChildren[0]) {
         console.log(parentProductItem);
       }
       if (i > 20) break;
