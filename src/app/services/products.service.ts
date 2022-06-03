@@ -1964,16 +1964,16 @@ export class ProductService {
     let result = { ...currentProduct };
 
     // Kiểm tra tính sku đã tồn tại hay chưa
-    if (data.product_code) {
-      const product = await this.productRepo.findOne({
-        product_code: data.product_code,
-        product_id: Not(Equal(result.product_id)),
-      });
+    // if (data.product_code) {
+    //   const product = await this.productRepo.findOne({
+    //     product_code: data.product_code,
+    //     product_id: Not(Equal(result.product_id)),
+    //   });
 
-      if (product) {
-        throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
-      }
-    }
+    //   if (product) {
+    //     throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
+    //   }
+    // }
 
     // Kiểm tra slug đã tồn tại hay chưa
     if (data.slug) {
