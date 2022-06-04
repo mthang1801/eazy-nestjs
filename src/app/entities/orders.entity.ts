@@ -79,6 +79,7 @@ export class OrderEntity {
   credit_card_no: null | string = '';
   installed_money_amount: number = 0;
   installed_tenor: number = 0;
+  installed_payment_per_month: number = 0;
   installed_prepaid_amount: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;

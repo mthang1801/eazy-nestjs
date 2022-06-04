@@ -2052,7 +2052,7 @@ export class ProductService {
       result = { ...result, ...newProductPrice };
     }
 
-    //decrese the number of product of old category
+    //decrease the number of product of old category
     let oldCategories = await this.productCategoryRepo.find({
       product_id: result.product_id,
     });
@@ -4998,30 +4998,6 @@ export class ProductService {
       select: `category_id, category_appcore_id, COUNT(product_id) as total`,
       groupBy: 'category_id',
     });
-    return;
-    if (productCategoriesCounter.length) {
-      for (let {
-        category_id,
-        category_appcore_id,
-        total,
-      } of productCategoriesCounter) {
-        if (category_id === category_appcore_id) {
-          let category = await this.categoryRepo.findOne({
-            category_appcore_id,
-          });
-          if (category) {
-            await this.productCategoryRepo.update(
-              { category_id: category_appcore_id },
-              { category_id: category.category_id },
-            );
-          }
-        }
-        await this.categoryRepo.update(
-          { category_id },
-          { product_count: total },
-        );
-      }
-    }
   }
 
   async testGetById(product_id) {
