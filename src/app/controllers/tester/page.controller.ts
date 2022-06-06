@@ -16,7 +16,7 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Body() data: CreateOrUpdatePageDetailDto,
   ) {
-    await this.service.testCreateOrUpdatePageDetailItem(data);
+    await this.service.createOrUpdatePageDetailItem(data);
     return this.responseSuccess(res);
   }
 
@@ -25,7 +25,7 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Body() data: UpdatePageDetailsPosition,
   ) {
-    await this.service.testUpdatePageDetailsPosition(data);
+    await this.service.updatePageDetailsPosition(data);
     return this.responseSuccess(res);
   }
 
@@ -34,7 +34,7 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Body() data: CreateOrUpdatePageDetailValueItemDto,
   ) {
-    await this.service.testCreateOrUpdatePageDetailValueItem(data);
+    await this.service.createOrUpdatePageDetailValueItem(data);
     return this.responseSuccess(res);
   }
 
@@ -43,7 +43,7 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Body() data: UpdatePageDetailValuesPositionDto,
   ) {
-    await this.service.testUpdatePageDetailValuePosition(data);
+    await this.service.updatePageDetailValuePosition(data);
     return this.responseSuccess(res);
   }
 
@@ -52,13 +52,13 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Param('page_detail_id') page_detail_id: number,
   ) {
-    const result = await this.service.testGetPageDetailInfo(page_detail_id);
+    const result = await this.service.getPageDetailInfo(page_detail_id);
     return this.responseSuccess(res, result);
   }
 
   @Get(':page_id')
   async getPageInfo(@Res() res: Response, @Param('page_id') page_id: number) {
-    const result = await this.service.testGetPageInfo(page_id);
+    const result = await this.service.getPageInfo(page_id);
     return this.responseSuccess(res, result);
   }
 
@@ -67,7 +67,7 @@ export class PageControllerTester extends BaseController {
     @Res() res: Response,
     @Param('value_id') value_id: number,
   ) {
-    const result = await this.service.testGetPageDetailValueInfo(value_id);
+    const result = await this.service.getPageDetailValueInfo(value_id);
     await this.responseSuccess(res, result);
   }
 }

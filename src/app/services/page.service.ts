@@ -733,7 +733,7 @@ export class PageService {
     return this.pageRepo.find();
   }
 
-  async testCreateOrUpdatePageDetailItem(data: CreateOrUpdatePageDetailDto) {
+  async createOrUpdatePageDetailItem(data: CreateOrUpdatePageDetailDto) {
     if (data.page_detail_id) {
       let pageDetail = await this.pageDetailRepo.findOne({
         page_detail_id: data.page_detail_id,
@@ -831,7 +831,7 @@ export class PageService {
     }
   }
 
-  async testUpdatePageDetailsPosition(data: UpdatePageDetailsPosition) {
+  async updatePageDetailsPosition(data: UpdatePageDetailsPosition) {
     if (data.page_details && data.page_details.length) {
       let pageDetail = await this.pageDetailRepo.findOne({
         page_detail_id: data.page_details[0].page_detail_id,
@@ -852,7 +852,7 @@ export class PageService {
     }
   }
 
-  async testGetPageInfo(page_id: number) {
+  async getPageInfo(page_id: number) {
     const currentPage = await this.pageRepo.findOne({ page_id });
     if (!currentPage) {
       throw new HttpException('Không tìm thấy trang.', 404);
@@ -867,7 +867,7 @@ export class PageService {
     return currentPage;
   }
 
-  async testGetPageDetailInfo(page_detail_id: number) {
+  async getPageDetailInfo(page_detail_id: number) {
     let currentPageDetail = await this.pageDetailRepo.findOne({
       select: `${Table.PAGE}.page_id, ${Table.PAGE}.page_name, ${Table.PAGE_DETAIL}.*`,
       join: pageProgramDetailJoiner,
@@ -920,7 +920,7 @@ export class PageService {
     return currentPageDetail;
   }
 
-  async testCreateOrUpdatePageDetailValueItem(
+  async createOrUpdatePageDetailValueItem(
     data: CreateOrUpdatePageDetailValueItemDto,
   ) {
     if (data.value_id) {
@@ -1004,9 +1004,7 @@ export class PageService {
     }
   }
 
-  async testUpdatePageDetailValuePosition(
-    data: UpdatePageDetailValuesPositionDto,
-  ) {
+  async updatePageDetailValuePosition(data: UpdatePageDetailValuesPositionDto) {
     if (data.page_detail_values && data.page_detail_values.length) {
       let firstPageDetailValue = await this.pageDetailValueRepo.findOne({
         value_id: data.page_detail_values[0].value_id,
@@ -1030,7 +1028,7 @@ export class PageService {
     }
   }
 
-  async testGetPageDetailValueInfo(value_id) {
+  async getPageDetailValueInfo(value_id) {
     let result = await this.pageDetailValueRepo.findOne({
       select: `${Table.PAGE}.page_id, ${Table.PAGE}.page_name, ${Table.PAGE_DETAIL}.module_name, ${Table.PAGE_DETAIL_VALUE}.*`,
       join: pageProgramDetailValueJoiner,
