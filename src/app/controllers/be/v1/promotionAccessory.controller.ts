@@ -31,7 +31,7 @@ export class PromotionAccessoriesController extends BaseController {
     @Req() req,
   ): Promise<IResponse> {
     await this.service.create(data, req.user);
-    return this.responseSuccess(res, null, 'Thành công.');
+    return this.responseSuccess(res);
   }
 
   @Get()

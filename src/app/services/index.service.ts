@@ -33,7 +33,7 @@ export class IndexService {
     // // // Report count total amount from all stores
     // await this.productService.reportCountTotalFromStores();
     // // // Report Product In Category
-    await this.productService.reportCountTotalFromCategories();
+    // await this.productService.reportCountTotalFromCategories();
     // // Determine product functions
     // await this.productService.determineProductFunction();
     // await this.productService.standardizeProducts();

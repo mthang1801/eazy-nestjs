@@ -441,7 +441,7 @@ export class OrdersService {
         await this.orderRepo.update(
           { order_id: result['order_id'] },
           {
-            status: OrderStatus.purchased,
+            status: OrderStatus.new,
             updated_date: formatStandardTimeStamp(),
           },
         );

@@ -377,6 +377,7 @@ export class PaymentService {
         pay_credit_type: 4,
         installed_tenor: data.tenor,
         installed_prepaid_amount: prepaidAmount,
+        installed_payment_per_month: paymentPerMonth,
         installment_interest_rate_code: totalInterest,
         installed_interest_rate: totalInterest,
         installed_money_amount: paymentPerMonth,
@@ -411,7 +412,7 @@ export class PaymentService {
       await this.orderRepo.update(
         { order_id: result['order_id'] },
         {
-          status: OrderStatus.purchased,
+          status: OrderStatus.new,
           updated_date: formatStandardTimeStamp(),
         },
       );

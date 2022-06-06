@@ -394,6 +394,7 @@ export class RedisCacheService {
         }
       }
     }
+    await this.removeCache(null, prefixCacheKey.products);
   }
 
   async removeCategoryById(category_id) {

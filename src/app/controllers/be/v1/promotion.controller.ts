@@ -15,6 +15,6 @@ export class PromotionController extends BaseController {
     @Body() data: CheckCouponDto,
   ): Promise<IResponse> {
     const result = await this.service.checkCoupon(data);
-    return this.responseSuccess(res, result, 'Thành công.');
+    return this.responseSuccess(res, result);
   }
 }

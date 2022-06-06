@@ -423,7 +423,8 @@ export class DatabaseCollection {
     console.log('============ INITIAL ===========');
     console.log(JSON.stringify(values, null, 4));
 
-    sqlQuery += this.handleRecursiveConditions(values, key, Infinity, sqlQuery);
+    // sqlQuery += this.handleRecursiveConditions(values, key, Infinity, sqlQuery);
+    sqlQuery += this.handleRecursiveConditions2(values, key, sqlQuery);
 
     console.log(407, JSON.stringify(sqlQuery, null, 4));
   }
@@ -442,40 +443,40 @@ export class DatabaseCollection {
         sqlQuery += ` ${strOperator} `;
       }
       if (objectItem.hasOwnProperty(this.orOperator)) {
-        if (position === 0) {
-          sqlQuery += ` ( `;
-        }
+        // if (position === 0) {
+        //   sqlQuery += ` ( `;
+        // }
         sqlQuery = this.handleRecursiveConditions(
           Object.values(objectItem),
           this.orOperator,
           i,
           sqlQuery,
         );
-        if (i === values.length - 1) {
-          sqlQuery += ' ) ';
-        }
+        // if (i === values.length - 1) {
+        //   sqlQuery += ' ) ';
+        // }
       } else if (objectItem.hasOwnProperty(this.andOperator)) {
-        if (position === 0) {
-          sqlQuery += ` ( `;
-        }
+        // if (position === 0) {
+        //   sqlQuery += ` ( `;
+        // }
         sqlQuery = this.handleRecursiveConditions(
           Object.values(objectItem),
           this.andOperator,
           i,
           sqlQuery,
         );
-        if (i === values.length - 1) {
-          sqlQuery += ' ) ';
-        }
+        // if (i === values.length - 1) {
+        //   sqlQuery += ' ) ';
+        // }
       } else {
         if (typeof objectItem !== 'object') {
           throw new HttpException('Lỗi cú pháp truy vấn ở mệnh đề where.', 400);
         }
 
         if (Array.isArray(objectItem)) {
-          if (position === 0) {
-            sqlQuery += ` ( `;
-          }
+          // if (position === 0) {
+          //   sqlQuery += ` ( `;
+          // }
           if (operator === this.orOperator) {
             sqlQuery = this.handleRecursiveConditions(
               objectItem,
@@ -513,6 +514,33 @@ export class DatabaseCollection {
     }
 
     console.log('============ END ==========');
+    return sqlQuery;
+  }
+  handleRecursiveConditions2(values, operator, sqlQuery = '') {
+    if (!values.length) return sqlQuery;
+    let strOperator = '';
+    switch (operator) {
+      case this.orOperator:
+        strOperator = 'OR';
+        break;
+      case this.andOperator:
+        strOperator = 'AND';
+        break;
+      default:
+        throw new HttpException('Biểu thức điều kiện không hợp lệ', 400);
+    }
+
+    for (let [i, valueObj] of values.entries()) {
+      let key = Object.keys(valueObj)[0];
+      let childValues = Object.values(valueObj)[0];
+      if (i === 0) sqlQuery += '( ';
+      if (key === this.orOperator) {
+      } else if (key === this.andOperator) {
+      } else {
+      }
+      if (i === values.length - 1) sqlQuery += ' )';
+    }
+
     return sqlQuery;
   }
 

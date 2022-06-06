@@ -5005,23 +5005,6 @@ export class ProductService {
   }
 
   async testSql() {
-    const products = await this.productRepo.find();
-    if (products.length) {
-      for (let product of products) {
-        let checkSlugExist = await this.productRepo.findOne({
-          slug: product.slug,
-          product_id: Not(Equal(product.product_id)),
-        });
-
-        if (checkSlugExist) {
-          await this.productRepo.update(
-            { product_id: checkSlugExist.product_id },
-            { slug: `${product.slug}-${genRandomString(6)}` },
-          );
-        }
-      }
-    }
-
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",
@@ -5069,52 +5052,52 @@ export class ProductService {
     // var hw = cryptography.encrypt('30512');
     // console.log(hw);
     // let cryptography1 = new Cryptography();
-    // await this.productRepo.findOne({
-    //   select: '*',
-    //   join: productLeftJoiner,
-    //   where: [
-    //     {
-    //       $or: [
-    //         // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
-    //         {
-    //           $and: [
-    //             { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-    //             { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-    //             // {
-    //             //   $or: [
-    //             //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-    //             //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-    //             //   ],
-    //             // },
-    //           ],
-    //         },
-    //         { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
-    //         // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
-    //         // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
-    //         // {
-    //         //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
-    //         // },
-    //         // {
-    //         //   $and: [
-    //         //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
-    //         //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
-    //         //     {
-    //         //       $or: [
-    //         //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-    //         //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-    //         //       ],
-    //         //     },
-    //         //     {
-    //         //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
-    //         //         1, 2, 3, 4, 5, 6, 7,
-    //         //       ]),
-    //         //     },
-    //         //   ],
-    //         // },
-    //       ],
-    //     },
-    //   ],
-    // });
+    await this.productRepo.findOne({
+      select: '*',
+      join: productLeftJoiner,
+      where: [
+        {
+          $or: [
+            // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
+            {
+              $and: [
+                { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+                { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+                // {
+                //   $or: [
+                //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+                //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+                //   ],
+                // },
+              ],
+            },
+            { [`${Table.PRODUCT_PRICES}.or_3`]: MoreThan(0) },
+            // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
+            // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
+            // {
+            //   [`${Table.PRODUCTS_CATEGORIES}.or_4`]: In([1, 2, 3, 4, 5, 6, 7]),
+            // },
+            // {
+            //   $and: [
+            //     { [`${Table.PRODUCT_PRICES}.or_and_1`]: MoreThan(10) },
+            //     { [`${Table.PRODUCTS}.or_and_2`]: MoreThan(25) },
+            //     {
+            //       $or: [
+            //         { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
+            //         { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
+            //       ],
+            //     },
+            //     {
+            //       [`${Table.PRODUCTS_CATEGORIES}.or_and_3`]: In([
+            //         1, 2, 3, 4, 5, 6, 7,
+            //       ]),
+            //     },
+            //   ],
+            // },
+          ],
+        },
+      ],
+    });
   }
 
   async autoFillPriceIntoConfigurableProducts() {
