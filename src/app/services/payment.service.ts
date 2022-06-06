@@ -466,28 +466,6 @@ export class PaymentService {
         0,
       );
 
-      // Check coupon if it exist
-      if (data.coupon_code) {
-        let checkCouponData = {
-          store_id: method === 'selfTransport' ? data['store_id'] : 67107,
-          coupon_code: data['coupon_code'],
-          coupon_programing_id: 'HELLO_123',
-          phone: method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
-          products: cartItems.map(({ product_id, amount }) => ({
-            product_id,
-            amount,
-          })),
-        };
-
-        let checkResult = await this.promotionService.checkCoupon(
-          checkCouponData,
-        );
-
-        if (checkResult['isValid']) {
-          // totalPrice -= checkResult['discountMoney'];
-        }
-      }
-
       let user;
       if (userAuth) {
         user = await this.userRepo.findOne({
@@ -542,9 +520,35 @@ export class PaymentService {
         ref_order_id,
         pay_credit_type: payCreditType,
         transfer_amount: +totalPrice,
+        subtotal: +totalPrice,
         coupon_code: data.coupon_code ? data.coupon_code : null,
         order_type: OrderType.online,
       };
+
+      // Check coupon if it exist
+      if (data.coupon_code) {
+        let checkCouponData = {
+          store_id: method === 'selfTransport' ? data['store_id'] : 67107,
+          coupon_code: data['coupon_code'],
+          coupon_programing_id: 'HELLO_123',
+          phone: method === 'selfTransport' ? data['b_phone'] : data['s_phone'],
+          products: cartItems.map(({ product_id, amount }) => ({
+            product_id,
+            amount,
+          })),
+        };
+
+        const checkCouponCode = await this.promotionService.checkCoupon(
+          checkCouponData,
+        );
+        if (checkCouponCode && checkCouponCode.isValid) {
+          sendData['discount'] = +checkCouponCode['discountMoney'];
+          sendData['discount_type'] = 1;
+          sendData['coupon_code'] = data.coupon_code;
+          sendData['subtotal'] =
+            sendData['subtotal'] - +checkCouponCode['discountMoney'];
+        }
+      }
 
       switch (method) {
         case 'paynow':
@@ -591,6 +595,8 @@ export class PaymentService {
           sendData['transfer_amount'] =
             +totalPrice + +shippingFeeLocation.value_fee;
           totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
+          sendData['subtotal'] =
+            +sendData['subtotal'] + +shippingFeeLocation.value_fee;
         }
       }
 
@@ -1060,11 +1066,11 @@ export class PaymentService {
       order_items: cartItems,
       ref_order_id,
       pay_credit_type: payCreditType,
-      coupon_code: data.coupon_code ? data.coupon_code : null,
       callback_url: data.callback_url,
       store_id: data.store_id,
     };
-    //Check coupon if it exist
+
+    // Check coupon if it exist
     if (data.coupon_code) {
       let checkCouponData = {
         store_id: 67107,
@@ -1076,11 +1082,15 @@ export class PaymentService {
           amount,
         })),
       };
-      let checkResult = await this.promotionService.checkCoupon(
+
+      const checkCouponCode = await this.promotionService.checkCoupon(
         checkCouponData,
       );
-      if (checkResult['isValid']) {
-        // totalPrice -= checkResult['discountMoney'];
+      if (checkCouponCode && checkCouponCode.isValid) {
+        sendData['discount'] = +checkCouponCode['discountMoney'];
+        sendData['discount_type'] = 1;
+        sendData['coupon_code'] = data.coupon_code;
+        sendData['subtotal'] -= +checkCouponCode['discountMoney'];
       }
     }
 

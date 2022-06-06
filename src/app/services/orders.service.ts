@@ -228,10 +228,13 @@ export class OrdersService {
       shipping_cost: data.shipping_cost ? data.shipping_cost : 0,
       pay_credit_type: data.pay_credit_type ? data.pay_credit_type : 1,
       ref_order_id: generateRandomString(),
-      subtotal: data.shipping_cost ? data.shipping_cost : 0,
+      total: 0,
+      subtotal: data.shipping_cost ? +data.shipping_cost : 0,
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
     };
+
+    console.log(orderData['subtotal']);
 
     if (data.payments && data.payments.length) {
       for (let paymentItem of data.payments) {
@@ -272,8 +275,9 @@ export class OrdersService {
       }
 
       orderData['total'] = +productInfo['price'] * orderItem.amount;
-      orderData['subtotal'] = +productInfo['price'] * orderItem.amount;
     }
+
+    orderData['subtotal'] = +orderData['subtotal'] + +orderData['total'];
 
     if (data.coupon_code) {
       let dataCheckCoupon: any = {
@@ -290,7 +294,8 @@ export class OrdersService {
         orderData['discount'] = +checkCouponCode['discountMoney'];
         orderData['discount_type'] = 1;
         orderData['coupon_code'] = data.coupon_code;
-        orderData['subtotal'] -= +checkCouponCode['discountMoney'];
+        orderData['subtotal'] =
+          +orderData['subtotal'] - +checkCouponCode['discountMoney'];
       }
     }
 
@@ -323,8 +328,6 @@ export class OrdersService {
           throw new HttpException('Mã công ty trả góp không đúng', 400);
       }
     }
-
-    console.log(gatewayName);
 
     orderData = this.orderRepo.setData(orderData);
 
@@ -422,14 +425,14 @@ export class OrdersService {
           order_id: result['order_id'],
           order_no: result['ref_order_id'],
           gateway_name: gatewayName,
-          amount: +result['subtotal'],
+          amount: +result['subtotal'] + +result['discount'],
         });
 
         const paymentAppcoreData = {
           installmentAccountId: installed_money_account_id,
           installmentCode: result['ref_order_id'],
           paymentStatus: 'success',
-          totalAmount: +result['subtotal'],
+          totalAmount: +result['subtotal'] + +result['discount'],
         };
 
         await axios({
@@ -462,46 +465,6 @@ export class OrdersService {
         400,
       );
     }
-
-    // let orderPayment = await this.orderPaymentRepo.findOne({
-    //   order_id,
-    // });
-    // const order = await this.orderRepo.findOne({ order_id });
-    // if (!order) {
-    //   throw new HttpException('Không tìm thấy đơn hàng', 404);
-    // }
-
-    // let installed_money_account_id;
-    // switch (gateway) {
-    //   case GatewayName.Momo:
-    //     installed_money_account_id = GatewayAppcoreId.Momo;
-    //     break;
-    //   default:
-    //     installed_money_account_id = GatewayAppcoreId.Payoo;
-    // }
-    // const paymentAppcoreData = {
-    //   installmentAccountId: installed_money_account_id,
-    //   installmentCode: orderPayment['order_gateway_id'],
-    //   paymentStatus: 'success',
-    //   totalAmount: +orderPayment['amount'],
-    // };
-
-    // await axios({
-    //   method: 'PUT',
-    //   url: UPDATE_ORDER_PAYMENT(order.order_code),
-    //   data: paymentAppcoreData,
-    // });
-
-    // await this.orderRepo.update(
-    //   { order_id },
-    //   {
-    //     installed_money_account_id,
-    //     installed_money_code: orderPayment['order_gateway_id'],
-    //     status: OrderStatus.purchased,
-    //     payment_status: PaymentStatus.success,
-    //     updated_date: formatStandardTimeStamp(),
-    //   },
-    // );
   }
 
   async createSelfTransport(data: CreateOrderSelfTransportDto, authUser) {
