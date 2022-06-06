@@ -2063,10 +2063,11 @@ export class ProductService {
           category_id: oldCategoryItem.category_id,
         });
         if (category) {
-          await this.categoryRepo.update(
-            { category_id: category.category_id },
-            { product_count: category.product_count - 1 },
-          );
+          // await this.categoryRepo.update(
+          //   { category_id: category.category_id },
+          //   { product_count: category.product_count - 1 },
+          // );
+          await this.categoryService.updateProductCount(category.category_id, -1);
           await this.cache.removeCategoryById(category.category_id);
         }
       }
@@ -2086,10 +2087,11 @@ export class ProductService {
         let currentCategory = await this.categoryRepo.findOne({
           category_id: categoryId,
         });
-        await this.categoryRepo.update(
-          { category_id: categoryId },
-          { product_count: currentCategory.product_count + 1 },
-        );
+        // await this.categoryRepo.update(
+        //   { category_id: categoryId },
+        //   { product_count: currentCategory.product_count + 1 },
+        // );
+        await this.categoryService.updateProductCount(categoryId, 1);
         await this.cache.removeCategoryById(newProductCategoryData.category_id);
       }
     }
