@@ -36,6 +36,7 @@ import {
 import { RedisCacheService } from './redisCache.service';
 import * as _ from 'lodash';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 
 @Injectable()
 export class FlashSalesService {
@@ -474,5 +475,78 @@ export class FlashSalesService {
         }
       }
     }
+  }
+
+  async testCron() {
+    await this.addTimeoutTurnOnFlashSale(9);
+  }
+
+  async turnOnFlashSale(flash_sale_id) {
+    console.log("Turn on flash sale");
+    const today = formatStandardTimeStamp();
+    const flashSaleList = await this.flashSaleRepo.find({ status: 'A' });
+    for (let flashSaleDetail of flashSaleList) {
+      let tempStartDate = formatStandardTimeStamp(
+        flashSaleDetail['start_at'],
+      );
+      //let tempEndDate = formatStandardTimeStamp(flashSaleDetail['end_at']);
+      if (new Date(tempStartDate).getTime() > new Date(today).getTime()) {
+        console.log(
+          'Không thay đổi trạng thái của chương trình flash sale có id: ' +
+            flashSaleDetail['flash_sale_id'],
+        );
+      } else {
+        await this.flashSaleRepo.update(
+          { flash_sale_id: flashSaleDetail.flash_sale_id },
+          { status: 'D' },
+        );
+        console.log(
+          'Đã tắt chương trình flash sale có id: ' +
+            flashSaleDetail['flash_sale_id'],
+        );
+      }
+    }
+    await this.flashSaleRepo.update(
+      { flash_sale_id: flash_sale_id },
+      { status: 'A' },
+    );
+    console.log('Được phép cập nhật 2.');
+    await this.addTimeoutTurnOffFlashSale(flash_sale_id);
+  }
+
+  async addTimeoutTurnOffFlashSale(flash_sale_id) {
+    const callback = () => {
+      console.log("Turn off flash sale");
+      this.flashSaleRepo.update(
+        {flash_sale_id: flash_sale_id},
+        {status: 'D'}
+      );
+    };
+  
+    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
+    const endDate = formatStandardTimeStamp(
+      flashSale['end_at'],
+    ).toString();
+    const today = formatStandardTimeStamp();
+    const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
+    const timeout = setTimeout(callback, milliseconds);
+    console.log("flash sale will end after " + milliseconds/3600000 + " hours.");
+    this.schedulerRegistry.addTimeout("turn_off_flash_sale", timeout);
+  }
+
+  async addTimeoutTurnOnFlashSale(flash_sale_id) {
+    const callback = () => {
+      this.turnOnFlashSale(flash_sale_id);
+    };
+    
+    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
+    const startDate = formatStandardTimeStamp(
+      flashSale['start_at'],
+    ).toString();
+    const today = formatStandardTimeStamp();
+    const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+    const timeout = setTimeout(callback, milliseconds);
+    console.log("flash sale will start after " + milliseconds/3600000 + " hours.");
+    this.schedulerRegistry.addTimeout("turn_on_flash_sale", timeout);
   }
 }
