@@ -111,6 +111,9 @@ export class DiscountProgramService {
     const count = await this.discountProgramRepo.find({
       select: `COUNT(DISTINCT(${Table.DISCOUNT_PROGRAM}.discount_id)) as total`,
       where: discountProgramsSearchFilter(search, filterConditions),
+      orderBy: [
+        { field: `${Table.DISCOUNT_PROGRAM}.updated_at`, sortBy: SortBy.DESC },
+      ],
     });
 
     return {
