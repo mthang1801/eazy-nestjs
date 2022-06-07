@@ -546,7 +546,6 @@ export class CategoryService {
       }
     }
 
-
     if (data.removed_products && data.removed_products.length) {
       for (let productId of data.removed_products) {
         await this.productCategoryRepository.delete({
@@ -1214,13 +1213,6 @@ export class CategoryService {
 
     let { skip, limit, page } = getPageSkipLimit(params);
 
-    let categoryCacheKey = cacheKeys.category(
-      `${id}${convertQueryParamsIntoCachedString(params)}`,
-    );
-    let categoryCacheResult = await this.cache.get(categoryCacheKey);
-    // if (categoryCacheResult) {
-    //   return categoryCacheResult;
-    // }
     let category = await this.categoryRepo.findOne({
       select: ['*'],
       join: {
@@ -1238,6 +1230,16 @@ export class CategoryService {
       category,
       level,
     );
+
+    if (params.level && params.level != Infinity) {
+      return {
+        categories: childrenCategories,
+        childrenCategories: childrenCategories['children']
+          ? childrenCategories['children']
+          : [],
+        currentCategory: category,
+      };
+    }
 
     let filterProductCategory = {};
     filterProductCategory[`${Table.PRODUCTS_CATEGORIES}.category_id`] = id;
@@ -1280,7 +1282,7 @@ export class CategoryService {
       where: productListsInCategorySearchFilter(search, filterProductCategory),
     });
 
-    categoryCacheResult = {
+    return {
       categories: childrenCategories,
       childrenCategories: childrenCategories['children']
         ? childrenCategories['children']
@@ -1295,15 +1297,6 @@ export class CategoryService {
         products: productsListInCategory,
       },
     };
-
-    // await this.cache.set(categoryCacheKey, categoryCacheResult);
-    // await this.cache.saveCache(
-    //   cacheTables.category,
-    //   prefixCacheKey.category,
-    //   categoryCacheKey,
-    // );
-
-    return categoryCacheResult;
   }
 
   async getCategoriesChildrenRecursive(
@@ -1867,12 +1860,14 @@ export class CategoryService {
   }
 
   async updateProductCount(category_id, amount) {
-    const category = await this.categoryRepo.findOne({category_id: category_id});
+    const category = await this.categoryRepo.findOne({
+      category_id: category_id,
+    });
     console.log(category);
     await this.categoryRepo.update(
-      {category_id: category_id},
-      {product_count: category.product_count + amount}
-    )
+      { category_id: category_id },
+      { product_count: category.product_count + amount },
+    );
     if (category.parent_id) {
       await this.updateProductCount(category.parent_id, amount);
     }

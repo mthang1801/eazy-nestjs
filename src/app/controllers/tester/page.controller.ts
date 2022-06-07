@@ -1,4 +1,13 @@
-import { Controller, Post, Res, Body, Put, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Res,
+  Body,
+  Put,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { CreateOrUpdatePageDetailDto } from '../../dto/page-tester/create-update-pageDetailItem.dto';
 import { PageService } from '../../services/page.service';
@@ -6,6 +15,7 @@ import { UpdatePageDetailsPosition } from '../../dto/page-tester/update-pageDeta
 import { CreateOrUpdatePageDetailValueItemDto } from 'src/app/dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../../dto/page-tester/update-pageDetailValuesPosition.dto';
 import { Response } from 'express';
+import { IResponse } from '../../interfaces/response.interface';
 @Controller('web-tester/v1/pages')
 export class PageControllerTester extends BaseController {
   constructor(private service: PageService) {
@@ -45,6 +55,12 @@ export class PageControllerTester extends BaseController {
   ) {
     await this.service.updatePageDetailValuePosition(data);
     return this.responseSuccess(res);
+  }
+
+  @Get()
+  async getPages(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getPages(params);
+    return this.responseSuccess(res, result);
   }
 
   @Get('page-details/:page_detail_id')
