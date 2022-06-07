@@ -1,6 +1,7 @@
-const CORE_API = 'http://test.didongviet.vn/core-api/v1';
-const TESTER_API = 'http://test.didongviet.vn/web-tester/v1/api';
-const TEST_COUPON_API = 'http://test.didongviet.vn/core-api/v1';
+const CORE_API =
+  process.env.CORE_API || 'http://test.didongviet.vn/core-api/v1';
+const TESTER_API =
+  process.env.TESTER_API || 'http://test.didongviet.vn/web-tester/v1/api';
 
 export const UPLOAD_IMAGE_API = `${CORE_API}/files/website`;
 
@@ -41,7 +42,7 @@ export const GET_PRODUCTS_APPCORE_LIST = (page = 1, limit = 30) =>
 export const GET_PRODUCT_APPCORE_DETAIL = (product_appcore_id) =>
   `${TESTER_API}/product/${product_appcore_id}`;
 
-export const CHECK_COUPON_API = `${TEST_COUPON_API}/promotions/coupon/check`;
+export const CHECK_COUPON_API = `${CORE_API}/promotions/coupon/check`;
 
 export const IMPORT_CATEGORIES_APPCORE = `${TESTER_API}/category`;
 
