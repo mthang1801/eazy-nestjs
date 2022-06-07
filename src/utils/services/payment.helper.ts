@@ -23,7 +23,7 @@ export const calculateInstallmentInterestRateHDSaiGon = (
     paymentPerMonth: periodAmount,
     restAmount,
     interestPerMonth,
-    totalInterest,
+    totalInterest: interestRate,
     totalPriceAfterInstallment: +amount + totalInterest,
   };
 };
