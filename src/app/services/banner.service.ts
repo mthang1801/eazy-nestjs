@@ -162,7 +162,7 @@ export class bannerService {
   }
 
   async getListFE(params) {
-    let { slug, device_type, target_id, location_id } = params;
+    let { slug, device_type, target_id, location_id, page, limit } = params;
     slug = slug || '/';
     device_type = device_type || 'D';
 
