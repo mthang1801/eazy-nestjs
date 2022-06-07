@@ -511,6 +511,8 @@ export class FlashSalesService {
       { status: 'A' },
     );
     console.log('Được phép cập nhật 2.');
+    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
+    await this.schedulerRegistry.deleteTimeout(convertToSlug(flashSale.name));
     await this.addTimeoutTurnOffFlashSale(flash_sale_id);
   }
 
@@ -521,6 +523,8 @@ export class FlashSalesService {
         {flash_sale_id: flash_sale_id},
         {status: 'D'}
       );
+      this.schedulerRegistry.deleteTimeout(convertToSlug(flashSale.name));
+      this.logger.warn(`Timeout ${convertToSlug(flashSale.name)} deleted!`);
     };
   
     const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
@@ -531,7 +535,7 @@ export class FlashSalesService {
     const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
     console.log("flash sale will end after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout("turn_off_flash_sale", timeout);
+    this.schedulerRegistry.addTimeout(convertToSlug(flashSale.name), timeout);
   }
 
   async addTimeoutTurnOnFlashSale(flash_sale_id) {
@@ -545,10 +549,8 @@ export class FlashSalesService {
     ).toString();
     const today = formatStandardTimeStamp();
     const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
-    //const timeout = setTimeout(callback, milliseconds);
+    const timeout = setTimeout(callback, milliseconds);
     console.log("flash sale will start after " + milliseconds/3600000 + " hours.");
-    //this.schedulerRegistry.addTimeout(convertToSlug(flashSale.name), timeout);
-    const name = convertToSlug(flashSale.name);
-    console.log(name);
+    this.schedulerRegistry.addTimeout(convertToSlug(flashSale.name), timeout);
   }
 }
