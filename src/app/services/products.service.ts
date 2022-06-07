@@ -267,6 +267,7 @@ import { CatalogFeatureRepository } from '../repositories/catalogFeature.reposit
 import { CatalogFeatureEntity } from '../entities/catalogFeature.entity';
 import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
+import { CDN_URL } from '../../constants/api.appcore';
 
 @Injectable()
 export class ProductService {
@@ -5012,6 +5013,15 @@ export class ProductService {
   }
 
   async testSql() {
+    const images = await this.imageRepo.find();
+    for (let [i, image] of images.entries()) {
+      let newImagePath = image.image_path.replace(CDN_URL, '');
+      await this.imageRepo.update(
+        { image_id: image.image_id },
+        { image_path: newImagePath },
+      );
+    }
+
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",

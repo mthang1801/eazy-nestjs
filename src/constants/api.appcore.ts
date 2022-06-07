@@ -3,6 +3,8 @@ const CORE_API =
 const TESTER_API =
   process.env.TESTER_API || 'http://test.didongviet.vn/web-tester/v1/api';
 
+export const CDN_URL = process.env.CDN_URL || 'https://storage.googleapis.com/';
+
 export const UPLOAD_IMAGE_API = `${CORE_API}/files/website`;
 
 export const CREATE_CUSTOMER_API = `${CORE_API}/customers/cms`;

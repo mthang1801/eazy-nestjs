@@ -234,8 +234,6 @@ export class OrdersService {
       updated_date: formatStandardTimeStamp(),
     };
 
-    console.log(orderData['subtotal']);
-
     if (data.payments && data.payments.length) {
       for (let paymentItem of data.payments) {
         switch (paymentItem.type) {

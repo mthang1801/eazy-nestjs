@@ -16,6 +16,7 @@ import { CreateOrUpdatePageDetailDto } from '../../../dto/page-tester/create-upd
 import { UpdatePageDetailsPosition } from '../../../dto/page-tester/update-pageDetailsPosition.dto';
 import { CreateOrUpdatePageDetailValueItemDto } from '../../../dto/page-tester/create-update-pageDetailValueItem.dto';
 import { UpdatePageDetailValuesPositionDto } from '../../../dto/page-tester/update-pageDetailValuesPosition.dto';
+import { UpdatePageDto } from '../../../dto/page/update-page.dto';
 @Controller('be/v1/pages')
 export class PageController extends BaseController {
   constructor(private service: PageService) {
@@ -54,6 +55,16 @@ export class PageController extends BaseController {
     @Body() data: UpdatePageDetailValuesPositionDto,
   ) {
     await this.service.updatePageDetailValuePosition(data);
+    return this.responseSuccess(res);
+  }
+
+  @Put(':page_id')
+  async updatePage(
+    @Param('page_id') page_id: number,
+    @Res() res: Response,
+    @Body() data: UpdatePageDto,
+  ): Promise<IResponse> {
+    await this.service.updatePage(page_id, data);
     return this.responseSuccess(res);
   }
 
