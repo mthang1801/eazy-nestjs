@@ -5012,6 +5012,7 @@ export class ProductService {
   }
 
   async testSql() {
+    let constUrl = 'https://storage.googleapis.com/';
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",
