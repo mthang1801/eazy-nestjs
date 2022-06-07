@@ -85,6 +85,7 @@ export const calculateInstallmentInterestRateHomeCredit = (
     prepaidAmount,
     paymentPerMonth: paymentPerMonthAfterOtherFees,
     restAmount,
+    totalInterest: interestRate,
     warrantyFeePerMonth,
     totalPriceAfterInstallment: +(
       paymentPerMonthAfterOtherFees * tenor +
