@@ -4,6 +4,7 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as fsExtra from 'fs-extra';
 import { UPLOAD_IMAGE_API } from 'src/constants/api.appcore';
+import { CDN_URL } from '../../constants/api.appcore';
 @Injectable()
 export class UploadService {
   async upload(files) {
@@ -27,7 +28,10 @@ export class UploadService {
     try {
       const response = await axios(config);
 
-      const results = response?.data?.data;
+      const results: string[] = response?.data?.data.map((result) =>
+        result.replace(CDN_URL, ''),
+      );
+
       for (let file of files) {
         await fsExtra.unlink(file.path);
       }

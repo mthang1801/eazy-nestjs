@@ -5013,6 +5013,9 @@ export class ProductService {
 
   async testSql() {
     let constUrl = 'https://storage.googleapis.com/';
+
+    const images = await this.imageRepo.find();
+
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",
