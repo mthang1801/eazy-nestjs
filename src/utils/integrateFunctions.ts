@@ -692,7 +692,7 @@ export const itgConvertProductsFromAppcore = (data) => {
       convertedData['promo_text'] = convertedData[fromData];
     }
 
-    convertedData[toData] = convertedData[fromData];
+    convertedData[toData] = { ...convertedData[fromData] };
   }
 
   const mappingComboData = new Map([
@@ -718,8 +718,9 @@ export const itgConvertProductsFromAppcore = (data) => {
   delete convertedData['parent_product_id'];
 
   convertedData['product_function'] =
-    convertedData['product_type'] < 3
-      ? !convertedData['parent_product_appcore_id']
+    +convertedData['product_type'] < 3
+      ? !convertedData['parent_product_appcore_id'] ||
+        !convertedData['parent_product_appcore_id'] == null
         ? 4
         : 2
       : convertedData['product_type'];

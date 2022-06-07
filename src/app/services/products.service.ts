@@ -424,10 +424,10 @@ export class ProductService {
   }
 
   async standardizeProducts() {
-    // let childrenProducts = await this.productRepo.find({
-    //   parent_product_id: '0',
-    //   parent_product_appcore_id: Not(IsNull()),
-    // });
+    let childrenProducts = await this.productRepo.find({
+      parent_product_id: '0',
+      parent_product_appcore_id: Not(IsNull()),
+    });
     // for (let childProduct of childrenProducts) {
     //   let parentProduct = await this.productRepo.update(
     //     { product_appcore_id: childProduct.parent_product_appcore_id },
@@ -485,18 +485,15 @@ export class ProductService {
 
     let parentProducts = await this.productRepo.find({ product_function: 1 });
     for (let [i, parentProductItem] of parentProducts.entries()) {
-      let countChildren = await this.databaseService.executeQueryReadPool(`
-      SELECT product_appcore_id, COUNT(product_id) as total 
-      FROM ddv_products
-      GROUP BY parent_product_appcore_id
-      HAVING product_appcore_id = ${parentProductItem.product_appcore_id}    
-      `);
-
-      console.log();
-      if (countChildren[0]) {
-        console.log(parentProductItem);
+      const childrenProducts = await this.productRepo.find({
+        parent_product_appcore_id: parentProductItem['product_appcore_id'],
+      });
+      if (!childrenProducts.length) {
+        await this.productRepo.update(
+          { product_id: parentProductItem['product_id'] },
+          { product_function: 4 },
+        );
       }
-      if (i > 20) break;
     }
   }
 
@@ -2427,6 +2424,14 @@ export class ProductService {
       });
 
       if (parentProduct) {
+        if (parentProduct.product_function != 1) {
+          await this.productRepo.update(
+            {
+              product_id: parentProduct['product_id'],
+            },
+            { product_function: 1 },
+          );
+        }
         await this.supplyPriceToParentProduct(parentProduct['product_id']);
         let group = await this.productVariationGroupRepo.findOne({
           product_root_id: parentProduct.product_id,
