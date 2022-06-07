@@ -5438,16 +5438,4 @@ export class ProductService {
       cacheProductKey,
     );
   }
-
-  loop1(){
-    for (let i = 1; i <= 1000; i++){
-      console.log("Loop 1: " + i);
-    }
-  }
-
-  loop2(){
-    for (let i = 1001; i <= 2000; i++){
-      console.log("Loop 2: " + i);
-    }
-  }
 }
