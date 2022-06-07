@@ -25,6 +25,14 @@ export class FlashSalesController extends BaseController {
     super();
   }
 
+  @Get('test-cron')
+  async testCron(
+    @Res() res: Response,
+  ): Promise <IResponse> {
+    await this.service.testCron();
+    return this.responseSuccess(res, null, "Thành công.");
+  }
+
   @Post()
   @UseGuards(AuthGuard)
   async create(

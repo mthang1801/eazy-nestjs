@@ -546,12 +546,14 @@ export class CategoryService {
       }
     }
 
+
     if (data.removed_products && data.removed_products.length) {
       for (let productId of data.removed_products) {
         await this.productCategoryRepository.delete({
           product_id: productId,
           category_id: id,
         });
+        await this.updateProductCount(id, -1);
       }
     }
 
@@ -578,6 +580,7 @@ export class CategoryService {
               result['category_appcore_id'];
           }
           await this.productCategoryRepository.create(newProductCategory);
+          await this.updateProductCount(newProductCategory.category_id, 1);
         }
       }
     }
@@ -1861,5 +1864,17 @@ export class CategoryService {
       await this.itgCreate(cvtData);
     }
     await this.fillCategoriesIdPath();
+  }
+
+  async updateProductCount(category_id, amount) {
+    const category = await this.categoryRepo.findOne({category_id: category_id});
+    console.log(category);
+    await this.categoryRepo.update(
+      {category_id: category_id},
+      {product_count: category.product_count + amount}
+    )
+    if (category.parent_id) {
+      await this.updateProductCount(category.parent_id, amount);
+    }
   }
 }
