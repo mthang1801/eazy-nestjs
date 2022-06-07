@@ -425,26 +425,26 @@ export class ProductService {
   }
 
   async standardizeProducts() {
-    let childrenProducts = await this.productRepo.find({
-      parent_product_id: '0',
-      parent_product_appcore_id: Not(IsNull()),
-    });
-    for (let childProduct of childrenProducts) {
-      let parentProduct = await this.productRepo.update(
-        { product_appcore_id: childProduct.parent_product_appcore_id },
-        { product_function: 1 },
-        true,
-      );
-      if (parentProduct) {
-        await this.productRepo.update(
-          { product_id: childProduct.product_id },
-          {
-            parent_product_id: parentProduct['product_id'],
-            product_function: 2,
-          },
-        );
-      }
-    }
+    // let childrenProducts = await this.productRepo.find({
+    //   parent_product_id: '0',
+    //   parent_product_appcore_id: Not(IsNull()),
+    // });
+    // for (let childProduct of childrenProducts) {
+    //   let parentProduct = await this.productRepo.update(
+    //     { product_appcore_id: childProduct.parent_product_appcore_id },
+    //     { product_function: 1 },
+    //     true,
+    //   );
+    //   if (parentProduct) {
+    //     await this.productRepo.update(
+    //       { product_id: childProduct.product_id },
+    //       {
+    //         parent_product_id: parentProduct['product_id'],
+    //         product_function: 2,
+    //       },
+    //     );
+    //   }
+    // }
     let parentProducts = await this.productRepo.find({
       product_function: 1,
     });
@@ -2960,7 +2960,9 @@ export class ProductService {
 
     try {
       const response = await axios(config);
-      const results = response?.data?.data;
+      const results = response?.data?.data?.map((result) =>
+        result.replace(CDN_URL, ''),
+      );
 
       if (Array.isArray(results) && results?.length) {
         let imageLink = await this.imageLinkRepo.findOne({
@@ -3046,7 +3048,9 @@ export class ProductService {
         data,
       };
       const response = await axios(config);
-      const imageUrl = response.data.data;
+      const imageUrl = response?.data?.data?.map((imageItem) =>
+        imageItem.replace(CDN_URL, ''),
+      );
       if (imageUrl && imageUrl.length) {
         await this.productDescriptionsRepo.update(
           { product_id },
@@ -3095,7 +3099,9 @@ export class ProductService {
         data,
       };
       const response = await axios(config);
-      const imageUrl = response.data.data;
+      const imageUrl = response?.data?.data?.map((imageItem) =>
+        imageItem.replace(CDN_URL, ''),
+      );
       if (imageUrl && imageUrl.length) {
         await this.productRepo.update(
           { product_id },
@@ -4616,7 +4622,6 @@ export class ProductService {
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: {
         [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
-        [`${Table.PRODUCTS}.status`]: 'A',
       },
     });
 
@@ -4853,7 +4858,7 @@ export class ProductService {
     let condition: any = {
       [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]: accessory_id,
     };
-    console.log();
+
     if (source == 1) {
       condition = {
         ...condition,
@@ -4875,7 +4880,6 @@ export class ProductService {
   }
 
   async getDiscountProgramApplyProduct(product_id) {
-    console.log(4646, product_id);
     return this.discountProgramDetailRepo.findOne({
       select: '*',
       join: discountProgramDetailJoiner,

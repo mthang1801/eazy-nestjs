@@ -1373,6 +1373,10 @@ export class OrdersService {
       return this.itgCreate({ order_code: +order_code, ...data });
     }
 
+    if (order.s_lastname) {
+      delete convertedData['s_lastname'];
+    }
+
     let result = { ...order };
 
     if (convertedData.status) {

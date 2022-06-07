@@ -274,10 +274,4 @@ export class ProductsController extends BaseController {
     let message = await this.service.deleteProductImage(product_id, data);
     return this.responseSuccess(res, null, message);
   }
-
-  // @Delete('/clear')
-  // async delete(@Res() res: Response): Promise<IResponse> {
-  //   await this.service.clearAll();
-  //   return this.responseSuccess(res, null, 'Clear thành công');
-  // }
 }
