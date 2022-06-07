@@ -24,6 +24,7 @@ export const calculateInstallmentInterestRateHDSaiGon = (
     restAmount,
     interestPerMonth,
     totalInterest,
+    interestRate,
     totalPriceAfterInstallment: +amount + totalInterest,
   };
 };
@@ -85,6 +86,7 @@ export const calculateInstallmentInterestRateHomeCredit = (
     prepaidAmount,
     paymentPerMonth: paymentPerMonthAfterOtherFees,
     restAmount,
+    interestRate,
     warrantyFeePerMonth,
     totalPriceAfterInstallment: +(
       paymentPerMonthAfterOtherFees * tenor +

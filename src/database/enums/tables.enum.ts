@@ -90,6 +90,7 @@ export enum Table {
   PRODUCT_VARIATION_GROUP_INDEX = 'ddv_product_variation_index_groups',
   PRODUCT_STORES = 'ddv_product_stores',
   PRODUCT_STORE_HISTORIES = 'ddv_product_store_histories',
+  PRODUCT_PREVIEW = 'ddv_product_previews',
 
   //============== Order status ==============
   ORDER_STATUS = 'ddv_statuses',

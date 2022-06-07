@@ -325,6 +325,8 @@ export class OrdersService {
         default:
           throw new HttpException('Mã công ty trả góp không đúng', 400);
       }
+
+      orderData['installed_money_account_id'] = installed_money_account_id;
     }
 
     orderData = this.orderRepo.setData(orderData);
@@ -392,7 +394,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-
+      console.log(response);
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },
@@ -418,35 +420,35 @@ export class OrdersService {
       // update order history
       await this.orderHistoryRepo.create(updatedOrder, false);
 
-      if (data.pay_credit_type == 4) {
-        await this.orderPaymentRepo.create({
-          order_id: result['order_id'],
-          order_no: result['ref_order_id'],
-          gateway_name: gatewayName,
-          amount: +result['subtotal'] + +result['discount'],
-        });
+      // if (data.pay_credit_type == 4) {
+      //   await this.orderPaymentRepo.create({
+      //     order_id: result['order_id'],
+      //     order_no: result['ref_order_id'],
+      //     gateway_name: gatewayName,
+      //     amount: +result['subtotal'] + +result['discount'],
+      //   });
 
-        const paymentAppcoreData = {
-          installmentAccountId: installed_money_account_id,
-          installmentCode: result['ref_order_id'],
-          paymentStatus: 'success',
-          totalAmount: +result['subtotal'] + +result['discount'],
-        };
+      //   const paymentAppcoreData = {
+      //     installmentAccountId: installed_money_account_id,
+      //     installmentCode: result['ref_order_id'],
+      //     paymentStatus: 'success',
+      //     totalAmount: +result['subtotal'] + +result['discount'],
+      //   };
 
-        await axios({
-          method: 'PUT',
-          url: UPDATE_ORDER_PAYMENT(result['order_code']),
-          data: paymentAppcoreData,
-        });
+      //   await axios({
+      //     method: 'PUT',
+      //     url: UPDATE_ORDER_PAYMENT(result['order_code']),
+      //     data: paymentAppcoreData,
+      //   });
 
-        await this.orderRepo.update(
-          { order_id: result['order_id'] },
-          {
-            status: OrderStatus.new,
-            updated_date: formatStandardTimeStamp(),
-          },
-        );
-      }
+      //   await this.orderRepo.update(
+      //     { order_id: result['order_id'] },
+      //     {
+      //       status: OrderStatus.new,
+      //       updated_date: formatStandardTimeStamp(),
+      //     },
+      //   );
+      // }
 
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
@@ -1371,6 +1373,10 @@ export class OrdersService {
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       return this.itgCreate({ order_code: +order_code, ...data });
+    }
+
+    if (order.s_lastname) {
+      delete convertedData['s_lastname'];
     }
 
     let result = { ...order };

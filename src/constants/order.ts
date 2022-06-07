@@ -97,12 +97,42 @@ export const convertDataToIntegrate = (data) => {
     itgData['orderType'] = data['order_type'] == 1 ? 1 : 5; //Loại đơn
   }
 
+  if (data['installed_prepaid_amount']) {
+    itgData['prepaidAmount'] = data['installed_prepaid_amount'];
+    loanInformation['prepaidAmount'] = data['installed_prepaid_amount'];
+    itgData['installedMoneyAmount'] = data['installed_prepaid_amount'];
+    loanInformation['installedMoneyAmount'] = data['installed_prepaid_amount'];
+  }
+
+  if (data['installed_interest_rate']) {
+    itgData['installmentInterestRateValue'] = data['installed_interest_rate'];
+    loanInformation['installmentInterestRateValue'] =
+      data['installed_interest_rate'];
+  }
+
+  if (data['installed_payment_per_month']) {
+    itgData['emi'] = data['installed_payment_per_month'];
+    loanInformation['emi'] = data['installed_payment_per_month'];
+  }
+
+  if (data['installed_tenor']) {
+    itgData['installmentTenorCode'] = data['installed_tenor'];
+    loanInformation['installmentTenorCode'] = data['installed_tenor'];
+  }
+
   if (data['installed_money_account_id']) {
-    itgData['installmentAccountId'] = data['installed_money_account_id'];
+    itgData['installMoneyAccountId'] = data['installed_money_account_id'];
+    loanInformation['installMoneyAccountId'] =
+      data['installed_money_account_id'];
   }
 
   if (data['installed_money_code']) {
     itgData['installmentCode'] = data['installed_money_code'];
+    loanInformation['installmentCode'] = data['installed_money_code'];
+  }
+
+  if (data['installed_money_account_id']) {
+    itgData['installMoneyAccountId'] = data['installed_money_account_id'];
   }
 
   if (data['payment_status'] == 2) {

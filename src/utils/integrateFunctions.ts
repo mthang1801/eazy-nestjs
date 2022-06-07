@@ -443,7 +443,7 @@ export const convertOrderDataFromAppcore = (coreData) => {
   if (coreData['b_firstname']) {
     delete cmsData['b_firstname'];
     cmsData['b_lastname'] = coreData['b_firstname'];
-    // cmsData['s_lastname'] = coreData['b_firstname'];
+    cmsData['s_lastname'] = coreData['b_firstname'];
   }
   if (coreData['s_firstname']) {
     delete cmsData['s_firstname'];
@@ -689,14 +689,14 @@ export const itgConvertProductsFromAppcore = (data) => {
       convertedData['short_description'] = convertedData[fromData];
       convertedData['page_title'] = convertedData[fromData];
       convertedData['promo_text'] = convertedData[fromData];
+      convertedData['product'] = convertedData[fromData];
     }
 
-    convertedData[toData] = { ...convertedData[fromData] };
+    convertedData[toData] = convertedData[fromData];
   }
 
   const mappingComboData = new Map([
     ['product_id', 'product_appcore_id'],
-
     ['quantity', 'amount'],
   ]);
 
@@ -718,12 +718,11 @@ export const itgConvertProductsFromAppcore = (data) => {
 
   convertedData['product_function'] =
     +convertedData['product_type'] < 3
-      ? !convertedData['parent_product_appcore_id'] ||
-        !convertedData['parent_product_appcore_id'] == null
+      ? !convertedData['parent_product_appcore_id']
         ? 4
         : 2
       : convertedData['product_type'];
-
+  console.log(convertedData);
   return convertedData;
 };
 
