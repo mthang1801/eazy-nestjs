@@ -10,7 +10,7 @@ export class CronService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   handleCronAtMidnight() {
     this.logger.debug('Called everyday at midnight');
-    this.productService.syncGetProductsStores();
+    //this.productService.syncGetProductsStores();
     this.productService.standardizeProducts();
   }
 
@@ -24,5 +24,10 @@ export class CronService {
   handleCronAt6PM() {
     this.logger.debug('Called everyday at 6PM');
     this.productService.syncGetProductsStores();
+  }
+
+  @Timeout(5000)
+  standard() {
+    this.productService.standardizeProducts();
   }
 }
