@@ -2618,7 +2618,9 @@ export class ProductService {
     if (!isConverted) {
       convertedData = itgConvertProductsFromAppcore(data);
     }
+
     delete convertedData['product_appcore_id'];
+    delete convertedData['slug'];
 
     if (convertedData.combo_items && convertedData.combo_items.length) {
       for (let comboItem of convertedData.combo_items) {
