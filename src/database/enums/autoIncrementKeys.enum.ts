@@ -90,6 +90,7 @@ export enum AutoIncrementKeys {
   ddv_product_stores = 'auto_increment_id',
   ddv_product_store_histories = 'history_id',
   ddv_product_variation_index_groups = 'index_id',
+  ddv_product_previews = 'id',
 
   //============== Order status ==============
   ddv_statuses = 'status_id',
