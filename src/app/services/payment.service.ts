@@ -379,7 +379,7 @@ export class PaymentService {
         installed_prepaid_amount: prepaidAmount,
         installed_payment_per_month: paymentPerMonth,
         installment_interest_rate_code: totalInterest,
-        installed_interest_rate: totalInterest,
+        installed_interest_rate: responseData.interestRate,
         installed_money_amount: paymentPerMonth,
         installed_money_account_id,
         ref_order_id: refOrderId,

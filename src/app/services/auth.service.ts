@@ -85,7 +85,8 @@ export class AuthService {
     private authRepository: AuthProviderRepository<AuthProviderEntity>,
     private userProfileRepository: UserProfileRepository<UserProfileEntity>,
     private userRepository: UserRepository<UserEntity>,
-    private userDataRepository: UserDataRepository<UserDataEntity>,
+    private userDataRepo: UserDataRepository<UserDataEntity>,
+    private userRepo: UserRepository<UserEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private imageLinksRepository: ImagesLinksRepository<ImagesLinksEntity>,
     private userMailingListRepository: UserMailingListRepository<UserMailingListsEntity>,
@@ -94,6 +95,7 @@ export class AuthService {
     private functRepo: FunctRepository<FunctEntity>,
     private userRoleRepo: UserRoleRepository<UserRoleEntity>,
     private roleFunctRepo: RoleFunctionRepository<RoleFunctionEntity>,
+    private userProfileRepo: UserProfileRepository<UserProfileEntity>,
   ) {}
 
   generateToken(user: UserEntity, uuid): string {
@@ -133,6 +135,7 @@ export class AuthService {
           status: 'D',
           user_type: UserTypeEnum.Customer,
         },
+        true,
       );
 
       let userProfile = await this.userProfileRepository.findOne({
@@ -161,11 +164,11 @@ export class AuthService {
       return;
     }
 
-    if (checkPhoneExist) {
+    if (checkPhoneExist && checkPhoneExist.account_type === 1) {
       throw new HttpException('Số điện thoại đã tồn tại.', 409);
     }
 
-    user = await this.userService.createUser({
+    user = await this.userRepo.create({
       firstname,
       lastname,
       user_login: AuthProviderEnum.SYSTEM,
@@ -181,7 +184,7 @@ export class AuthService {
     let result = { ...user };
 
     //create a new record at ddv_user_profiles
-    const newUserProfile = await this.userService.createUserProfile({
+    const newUserProfile = await this.userProfileRepo.create({
       user_id: user['user_id'],
       b_lastname: firstname + ' ' + lastname,
       b_phone: phone,
@@ -195,7 +198,7 @@ export class AuthService {
       user_id: result['user_id'],
     };
     // Create a new record at ddv_user_data
-    const newUserData = await this.userService.createUserData(userData);
+    const newUserData = await this.userDataRepo.create(userData);
 
     result = { ...result, ...newUserData };
 
