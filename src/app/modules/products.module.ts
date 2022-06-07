@@ -61,6 +61,7 @@ import { QueueModule } from './queue.module';
 import { CatalogRepository } from '../repositories/catalog.repository';
 import { AudioProducerService } from '../microservices/queue/producers/audio.producer';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
+import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
+    ProductPreviewsRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
     LogRepository,
@@ -123,6 +125,7 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
     ProductFeatureVariantDescriptionRepository,
     ProductStoreRepository,
     ProductStoreHistoryRepository,
+    ProductPreviewsRepository,
     ReviewRepository,
     ReviewCommentItemRepository,
     CatalogFeatureValueProductRepository,

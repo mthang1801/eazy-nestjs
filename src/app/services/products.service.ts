@@ -239,7 +239,7 @@ import {
   cacheTables,
   prefixCacheKey,
 } from '../../utils/cache.utils';
-import { convertQueryParamsIntoCachedString } from '../../utils/helper';
+import { convertQueryParamsIntoCachedString, generateRandomString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
@@ -270,6 +270,8 @@ import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.ent
 import { CDN_URL } from '../../constants/api.appcore';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { BannerItemEntity } from '../entities/bannerItem.entity';
+import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
+import { ProductPreviewEntity } from '../entities/productPreview.entity';
 
 @Injectable()
 export class ProductService {
@@ -302,6 +304,7 @@ export class ProductService {
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
+    private productPreviewRepo: ProductPreviewsRepository<ProductPreviewEntity>,
     private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
@@ -5456,5 +5459,26 @@ export class ProductService {
       prefixCacheKey.product,
       cacheProductKey,
     );
+  }
+
+  async getProductPreview(product_id) {
+    const res = await this.productPreviewRepo.findOne({where: [{product_id}, {token: product_id}]});
+
+    return res;
+  }
+
+  async createProductPreview(data) {
+    const checkExist = await this.productPreviewRepo.findOne({product_id: data.product_id});
+    if (checkExist) {
+      await this.productPreviewRepo.delete({product_id: data.product_id});
+    }
+    const token = generateRandomString();
+    const productPreviewData = {
+      ...new ProductPreviewEntity,
+      ...this.productPreviewRepo.setData(data),
+      token: token,
+    }
+    const productPreview = await this.productPreviewRepo.create(productPreviewData);
+    return productPreview;
   }
 }
