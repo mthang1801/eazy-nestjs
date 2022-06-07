@@ -57,6 +57,12 @@ export class PageController extends BaseController {
     return this.responseSuccess(res);
   }
 
+  @Get()
+  async getPages(@Res() res: Response, @Query() params): Promise<IResponse> {
+    const result = await this.service.getPages(params);
+    return this.responseSuccess(res, result);
+  }
+
   @Get('page-details/:page_detail_id')
   async getPageDetailInfo(
     @Res() res: Response,
