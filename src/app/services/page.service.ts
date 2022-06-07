@@ -56,6 +56,7 @@ import { FlashSaleEntity } from '../entities/flashSale.entity';
 import { FlashSalesService } from './flashSale.service';
 import { RedisCacheService } from './redisCache.service';
 import * as _ from 'lodash';
+import { CDN_URL } from '../../constants/api.appcore';
 @Injectable()
 export class PageService {
   constructor(

@@ -268,6 +268,8 @@ import { CatalogFeatureEntity } from '../entities/catalogFeature.entity';
 import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
 import { CDN_URL } from '../../constants/api.appcore';
+import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
+import { BannerItemEntity } from '../entities/bannerItem.entity';
 
 @Injectable()
 export class ProductService {
@@ -292,6 +294,7 @@ export class ProductService {
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private productGroupIndexRepo: ProductVariationGroupIndexRepository<ProductVariationGroupIndexEntity>,
+    private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
@@ -5013,12 +5016,12 @@ export class ProductService {
   }
 
   async testSql() {
-    const images = await this.imageRepo.find();
-    for (let [i, image] of images.entries()) {
-      let newImagePath = image.image_path.replace(CDN_URL, '');
-      await this.imageRepo.update(
-        { image_id: image.image_id },
-        { image_path: newImagePath },
+    const bannerItems = await this.bannerItemRepo.find();
+    for (let [i, bannerItem] of bannerItems.entries()) {
+      let newImagePath = bannerItem.image_url.replace(CDN_URL, '');
+      await this.bannerItemRepo.update(
+        { banner_item_id: bannerItem.banner_item_id },
+        { image_url: newImagePath },
       );
     }
 

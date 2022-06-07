@@ -60,6 +60,7 @@ import { MessageProducerService } from '../microservices/queue/producers/message
 import { QueueModule } from './queue.module';
 import { CatalogRepository } from '../repositories/catalog.repository';
 import { AudioProducerService } from '../microservices/queue/producers/audio.producer';
+import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { AudioProducerService } from '../microservices/queue/producers/audio.pro
     LogRepository,
     CategoryFeaturesRepository,
     CatalogFeatureValueProductRepository,
+    BannerItemRepository,
   ],
   exports: [
     ProductService,
