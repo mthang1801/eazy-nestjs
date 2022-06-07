@@ -27,6 +27,7 @@ import { UpdateProductDto } from '../../../dto/product/update-product.dto';
 import { CreateCommentDto } from '../../../dto/reviewComment/create-comment.dto';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { CreateCommentReviewCMSDto } from '../../../dto/reviewComment/create-commentReview.cms.dto';
+import { ProductPreviewDto } from '../../../dto/product/create-productPreview.dto';
 @Controller('be/v1/products')
 export class ProductsController extends BaseController {
   constructor(private service: ProductService) {
@@ -100,6 +101,24 @@ export class ProductsController extends BaseController {
   ): Promise<IResponse> {
     await this.service.groupingProducts(start_product_id, dest_product_id);
     return this.responseSuccess(res);
+  }
+
+  @Post('/product-preview')
+  async createProductPreview(
+    @Res() res: Response,
+    @Body() data: ProductPreviewDto,
+  ): Promise<IResponse> {
+    const result = await this.service.createProductPreview(data);
+    return this.responseSuccess(res, result, "Thành công.");
+  }
+
+  @Get('product-preview/:product_id')
+  async getProductPreview(
+    @Res() res: Response,
+    @Param ('product_id') product_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getProductPreview(product_id);
+    return this.responseSuccess(res, result, "Thành công.");
   }
 
   @Get('/parents')

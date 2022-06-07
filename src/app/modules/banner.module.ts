@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Global } from '@nestjs/common';
 import { bannerController as bannerControllerBE } from '../controllers/be/v1/banner.controller';
 import { bannerController as bannerControllerFE } from '../controllers/fe/v1/banner.controller';
 import { bannerService } from '../services/banner.service';
@@ -9,6 +9,7 @@ import { BannerLocationDescriptionRepository } from '../repositories/bannerLocat
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { BannerTargetDescriptionRepository } from '../repositories/bannerTargetDescription.repository';
 
+@Global()
 @Module({
   controllers: [bannerControllerBE, bannerControllerFE],
   providers: [

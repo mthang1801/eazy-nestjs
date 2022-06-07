@@ -45,6 +45,7 @@ import {
   prefixCacheKey,
 } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
+import { CDN_URL } from '../../constants/api.appcore';
 import {
   Between,
   MoreThanOrEqual,
@@ -147,6 +148,15 @@ export class bannerService {
       },
       banners,
     };
+
+    const bannerItems = await this.bannerItemRepo.find();
+    for (let [i, bannerItem] of bannerItems.entries()) {
+      let newImagePath = bannerItem.image_url.replace(CDN_URL, '');
+      await this.bannerItemRepo.update(
+        { banner_item_id: bannerItem.banner_item_id },
+        { image_url: newImagePath },
+      );
+    }
 
     return result;
   }

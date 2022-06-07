@@ -25,7 +25,7 @@ import {
 import { sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { getDetailProductsListSelectorFE } from '../../utils/tableSelector';
-import { formatStandardTimeStamp } from '../../utils/helper';
+import { formatStandardTimeStamp, convertToSlug } from '../../utils/helper';
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewEntity } from '../entities/review.entity';
 import {
@@ -545,8 +545,10 @@ export class FlashSalesService {
     ).toString();
     const today = formatStandardTimeStamp();
     const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
-    const timeout = setTimeout(callback, milliseconds);
+    //const timeout = setTimeout(callback, milliseconds);
     console.log("flash sale will start after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout("turn_on_flash_sale", timeout);
+    //this.schedulerRegistry.addTimeout(convertToSlug(flashSale.name), timeout);
+    const name = convertToSlug(flashSale.name);
+    console.log(name);
   }
 }

@@ -239,7 +239,7 @@ import {
   cacheTables,
   prefixCacheKey,
 } from '../../utils/cache.utils';
-import { convertQueryParamsIntoCachedString } from '../../utils/helper';
+import { convertQueryParamsIntoCachedString, generateRandomString } from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
@@ -268,6 +268,10 @@ import { CatalogFeatureEntity } from '../entities/catalogFeature.entity';
 import { CatalogFeatureDetailRepository } from '../repositories/catalogFeatureDetail.repository';
 import { CatalogFeatureDetailEntity } from '../entities/catalogFeatureDetail.entity';
 import { CDN_URL } from '../../constants/api.appcore';
+import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
+import { BannerItemEntity } from '../entities/bannerItem.entity';
+import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
+import { ProductPreviewEntity } from '../entities/productPreview.entity';
 
 @Injectable()
 export class ProductService {
@@ -292,6 +296,7 @@ export class ProductService {
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private productGroupIndexRepo: ProductVariationGroupIndexRepository<ProductVariationGroupIndexEntity>,
+    private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
@@ -299,6 +304,7 @@ export class ProductService {
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
+    private productPreviewRepo: ProductPreviewsRepository<ProductPreviewEntity>,
     private stickerRepo: StickerRepository<StickerEntity>,
     private databaseService: DatabaseService,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
@@ -5019,12 +5025,12 @@ export class ProductService {
   }
 
   async testSql() {
-    const images = await this.imageRepo.find();
-    for (let [i, image] of images.entries()) {
-      let newImagePath = image.image_path.replace(CDN_URL, '');
-      await this.imageRepo.update(
-        { image_id: image.image_id },
-        { image_path: newImagePath },
+    const bannerItems = await this.bannerItemRepo.find();
+    for (let [i, bannerItem] of bannerItems.entries()) {
+      let newImagePath = bannerItem.image_url.replace(CDN_URL, '');
+      await this.bannerItemRepo.update(
+        { banner_item_id: bannerItem.banner_item_id },
+        { image_url: newImagePath },
       );
     }
 
@@ -5453,5 +5459,26 @@ export class ProductService {
       prefixCacheKey.product,
       cacheProductKey,
     );
+  }
+
+  async getProductPreview(product_id) {
+    const res = await this.productPreviewRepo.findOne({where: [{product_id}, {token: product_id}]});
+
+    return res;
+  }
+
+  async createProductPreview(data) {
+    const checkExist = await this.productPreviewRepo.findOne({product_id: data.product_id});
+    if (checkExist) {
+      await this.productPreviewRepo.delete({product_id: data.product_id});
+    }
+    const token = generateRandomString();
+    const productPreviewData = {
+      ...new ProductPreviewEntity,
+      ...this.productPreviewRepo.setData(data),
+      token: token,
+    }
+    const productPreview = await this.productPreviewRepo.create(productPreviewData);
+    return productPreview;
   }
 }
