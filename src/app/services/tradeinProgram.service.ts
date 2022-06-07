@@ -319,6 +319,12 @@ export class TradeinProgramService {
       select: `DISTINCT(${Table.TRADEIN_OLD_RECEIPT}.old_receipt_id), code, store_id, description, created_at, created_by`,
       join: tradeinOldReceiptJoiner,
       where: tradeinOldReceiptSearchFilter(search, filterConditions),
+      orderBy: [
+        {
+          field: `${Table.TRADEIN_OLD_RECEIPT}.imported_at`,
+          sortBy: SortBy.DESC,
+        },
+      ],
       skip,
       limit,
     });
