@@ -234,7 +234,7 @@ export class OrdersService {
       status: OrderStatus.new,
       shipping_cost: data.shipping_cost ? data.shipping_cost : 0,
       pay_credit_type: data.pay_credit_type ? data.pay_credit_type : 1,
-      ref_order_id: generateRandomString(),
+      ref_order_id: `${generateRandomString()}a`,
       total: 0,
       subtotal: data.shipping_cost ? +data.shipping_cost : 0,
       created_date: formatStandardTimeStamp(),

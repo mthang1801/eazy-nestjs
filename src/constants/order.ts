@@ -98,9 +98,9 @@ export const convertDataToIntegrate = (data) => {
   }
 
   if (data['installed_prepaid_amount']) {
-    itgData['prepaidAmount'] = data['installed_prepaid_amount'];
+    itgData['prepaidAmount'] = +data['installed_prepaid_amount'];
 
-    itgData['installedMoneyAmount'] = data['installed_prepaid_amount'];
+    itgData['installedMoneyAmount'] = +data['installed_prepaid_amount'];
   }
 
   if (data['installed_interest_rate']) {
@@ -108,7 +108,7 @@ export const convertDataToIntegrate = (data) => {
   }
 
   if (data['installed_payment_per_month']) {
-    itgData['emi'] = data['installed_payment_per_month'];
+    itgData['emi'] = +data['installed_payment_per_month'];
   }
 
   if (data['installed_tenor']) {
