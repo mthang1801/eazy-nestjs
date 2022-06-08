@@ -4775,15 +4775,17 @@ export class ProductService {
               productStoreItem['store_location_id'],
           },
         });
-        let storeObj = {
-          productId: id,
-          storeId: store['store_location_id'],
-          storeName: store['store_name'],
-          storeAddress: store['pickup_address'],
-          storeLatitude: store['latitude'],
-          storeLongitude: store['longitude'],
-        };
-        result = [...result, { ...productStoreItem, ...storeObj }];
+        if (store) {
+          let storeObj = {
+            productId: id,
+            storeId: store['store_location_id'],
+            storeName: store['store_name'],
+            storeAddress: store['pickup_address'],
+            storeLatitude: store['latitude'],
+            storeLongitude: store['longitude'],
+          };
+          result = [...result, { ...productStoreItem, ...storeObj }];
+        }
       }
     }
     return result;
