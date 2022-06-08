@@ -76,17 +76,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ProductsModule,
     ShippingFeeModule,
     ShippingModule,
-    ClientsModule.register([
-      {
-        name: 'ORDER_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://localhost:5672/orders'],
-          queue: 'orders',
-          queueOptions: { durable: false },
-        },
-      },
-    ]),
   ],
 })
 export class OrdersModule implements NestModule {

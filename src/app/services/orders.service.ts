@@ -186,11 +186,11 @@ export class OrdersService {
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
     private shippingRepo: ShippingRepository<ShippingsEntity>,
-    @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
-  ) {}
+  ) // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
+  {}
 
   async testQueue(data) {
-    await this.client.emit('create-order', data);
+    // await this.client.emit('create-order', data);
   }
 
   async CMScreate(data) {
