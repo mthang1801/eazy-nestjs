@@ -185,9 +185,8 @@ export class OrdersService {
     private shippingFeeService: ShippingFeeService,
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
-    private shippingRepo: ShippingRepository<ShippingsEntity>,
-  ) // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
-  {}
+    private shippingRepo: ShippingRepository<ShippingsEntity>, // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
   async testQueue(data) {
     // await this.client.emit('create-order', data);
@@ -401,7 +400,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-      console.log(response);
+
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },

@@ -21,7 +21,6 @@ import { OrdersService } from 'src/app/services/orders.service';
 import { AuthGuard } from '../../../../middlewares/be.auth';
 import { Response } from 'express';
 import { UpdateOrderDto } from 'src/app/dto/orders/update-order.dto';
-import { ClientProxy } from '@nestjs/microservices';
 
 @Controller('/be/v1/orders')
 export class OrderController extends BaseController {

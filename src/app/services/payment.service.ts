@@ -64,8 +64,14 @@ import { ProductsEntity } from '../entities/products.entity';
 import { Not, Equal } from '../../database/operators/operators';
 import { CreatePayooInstallmentDto } from '../dto/orders/create-payooInstallment.dto';
 import { CreateInstallmentDto } from '../dto/payment/create-installment.dto';
-import { UPDATE_ORDER_PAYMENT } from '../../constants/api.appcore';
-import { PaymentStatus } from '../../utils/services/payment.helper';
+import {
+  UPDATE_ORDER_PAYMENT,
+  GET_SHINHAN_INSTALLMENT,
+} from '../../constants/api.appcore';
+import {
+  PaymentStatus,
+  calculateInstallmentInterestRateShinhan,
+} from '../../utils/services/payment.helper';
 import { CreatePaymentSelfTransportDto } from '../dto/orders/create-paymentSelfTransport.dto';
 import { ShippingFeeService } from './shippingFee.service';
 import { ShippingFeeLocationRepository } from '../repositories/shippingFeeLocation.repository';
@@ -110,7 +116,7 @@ import { UserLoyaltyRepository } from '../repositories/userLoyalty.repository';
 import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
-
+import * as _ from 'lodash';
 @Injectable()
 export class PaymentService {
   constructor(
@@ -841,57 +847,89 @@ export class PaymentService {
         400,
       );
     }
-    let product = await this.productRepo.findOne({
-      select: '*',
-      join: productLeftJoiner,
-      where: {
-        [`${Table.PRODUCTS}.product_id`]: product_id,
-      },
-    });
+    try {
+      let product = await this.productRepo.findOne({
+        select: '*',
+        join: productLeftJoiner,
+        where: {
+          [`${Table.PRODUCTS}.product_id`]: product_id,
+        },
+      });
 
-    let totalPrice = product.price;
-    let results = [];
+      let totalPrice = product.price;
+      let results = [];
+      let tenors = [6, 9, 12];
+      switch (+company_id) {
+        case 1: {
+          // HD Saigon
 
-    switch (+company_id) {
-      case 1: {
-        // HD Saigon
-        let tenors = [6, 9, 12];
-        for (let tenor of tenors) {
-          let result = calculateInstallmentInterestRateHDSaiGon(
-            totalPrice,
-            prepaid_percentage,
-            tenor,
-          );
-          results.push(result);
+          for (let tenor of tenors) {
+            let result = calculateInstallmentInterestRateHDSaiGon(
+              totalPrice,
+              prepaid_percentage,
+              tenor,
+            );
+            results.push(result);
+          }
+          return results;
         }
-        return results;
-      }
-      case 2: {
-        // HOME Credit
-        let tenors = [6, 9, 12];
-        for (let tenor of tenors) {
-          let result = calculateInstallmentInterestRateHomeCredit(
-            totalPrice,
-            prepaid_percentage,
-            tenor,
-          );
-          results.push(result);
+        case 2: {
+          // HOME Credit
+          for (let tenor of tenors) {
+            let result = calculateInstallmentInterestRateHomeCredit(
+              totalPrice,
+              prepaid_percentage,
+              tenor,
+            );
+            results.push(result);
+          }
+          return results;
         }
-        return results;
-      }
-      case 3: {
-        // Shinhan
-        let tenors = [6, 9, 12];
-        for (let tenor of tenors) {
-          let result = calculateInstallmentInterestRateHDSaiGon(
-            totalPrice,
-            prepaid_percentage,
-            tenor,
+        case 3: {
+          // Shinhan
+          const response = await axios(GET_SHINHAN_INSTALLMENT);
+          if (!response?.data?.data) {
+            throw new HttpException(
+              'Không tìm thấy mã tài khoản trả góp.',
+              404,
+            );
+          }
+          console.log(totalPrice);
+          const programs = response?.data?.data?.shinhan?.programs;
+          let programInstallments = programs.filter(
+            (program) =>
+              program.tenorFrom <= tenors[0] &&
+              program.tenorTo >= tenors.slice(-1)[0] &&
+              program.minLoanAmount <= totalPrice &&
+              program.maxLoanAmount >= totalPrice,
           );
-          results.push(result);
+
+          if (!programInstallments.length) {
+            return results;
+          }
+          programInstallments = _.sortBy(
+            programInstallments,
+            'interest',
+            'asc',
+          );
+          let programInstallment = programInstallments[0];
+          for (let tenor of tenors) {
+            let result = calculateInstallmentInterestRateShinhan(
+              totalPrice,
+              prepaid_percentage,
+              tenor,
+              programInstallment,
+            );
+            results.push(result);
+          }
+          return results;
         }
-        return results;
       }
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
     }
   }
 

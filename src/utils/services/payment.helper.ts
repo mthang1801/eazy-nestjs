@@ -95,6 +95,28 @@ export const calculateInstallmentInterestRateHomeCredit = (
   };
 };
 
+export const calculateInstallmentInterestRateShinhan = (
+  amount,
+  prepaidPercentage,
+  tenor,
+  program,
+) => {
+  let interestRate = program.interest;
+  let prepaidAmount = (amount * prepaidPercentage) / 100;
+  let restAmount = amount - prepaidAmount;
+  let paymentPerMonth = (restAmount * (1 + interestRate / 100)) / tenor;
+  return {
+    price: +amount,
+    tenor: +tenor,
+    prepaidAmount: +prepaidAmount,
+    paymentPerMonth,
+    restAmount,
+    interestRate,
+    totalPriceAfterInstallment: +(paymentPerMonth * tenor + prepaidAmount),
+    installment_interest_rate_code: program.campaignCode,
+  };
+};
+
 export const PaymentStatus = {
   new: 1,
   success: 2,

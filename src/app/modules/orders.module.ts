@@ -66,6 +66,20 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     OrderPaymentRepository,
   ],
   imports: [
+    ClientsModule.register([
+      {
+        name: 'ORDER_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: ['amqp://localhost:5672'],
+          queue: 'orders',
+          noAck: false,
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
     OrderStatusModule,
     UsersModule,
     StatusModule,
