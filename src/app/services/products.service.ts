@@ -239,7 +239,10 @@ import {
   cacheTables,
   prefixCacheKey,
 } from '../../utils/cache.utils';
-import { convertQueryParamsIntoCachedString, generateRandomString } from '../../utils/helper';
+import {
+  convertQueryParamsIntoCachedString,
+  generateRandomString,
+} from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
@@ -4624,13 +4627,18 @@ export class ProductService {
     return product;
   }
 
-  async getChildrenProducts(product_appcore_id, role = 0) {
+  async getChildrenProducts(product_appcore_id, source = 0) {
+    // 0 : CMS, 1 Website
+    let filterConditions = {
+      [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
+    };
+
+    if (source === 1) filterConditions[`${Table.PRODUCTS}.status`] = 'A';
+
     let childrenProducts = await this.productRepo.find({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: {
-        [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
-      },
+      where: filterConditions,
     });
 
     if (childrenProducts.length) {
@@ -4650,7 +4658,7 @@ export class ProductService {
           childProduct['promotion_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['promotion_accessory_id'],
-              role,
+              source,
             );
         }
 
@@ -4659,7 +4667,7 @@ export class ProductService {
           childProduct['free_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['free_accessory_id'],
-              role,
+              source,
             );
         }
 
@@ -4668,7 +4676,7 @@ export class ProductService {
           childProduct['warranty_package_products'] =
             await this.getAccessoriesByProductId(
               childProduct['warranty_package_id'],
-              role,
+              source,
             );
         }
 
@@ -5462,23 +5470,29 @@ export class ProductService {
   }
 
   async getProductPreview(product_id) {
-    const res = await this.productPreviewRepo.findOne({where: [{product_id}, {token: product_id}]});
+    const res = await this.productPreviewRepo.findOne({
+      where: [{ product_id }, { token: product_id }],
+    });
 
     return res;
   }
 
   async createProductPreview(data) {
-    const checkExist = await this.productPreviewRepo.findOne({product_id: data.product_id});
+    const checkExist = await this.productPreviewRepo.findOne({
+      product_id: data.product_id,
+    });
     if (checkExist) {
-      await this.productPreviewRepo.delete({product_id: data.product_id});
+      await this.productPreviewRepo.delete({ product_id: data.product_id });
     }
     const token = generateRandomString();
     const productPreviewData = {
-      ...new ProductPreviewEntity,
+      ...new ProductPreviewEntity(),
       ...this.productPreviewRepo.setData(data),
       token: token,
-    }
-    const productPreview = await this.productPreviewRepo.create(productPreviewData);
+    };
+    const productPreview = await this.productPreviewRepo.create(
+      productPreviewData,
+    );
     return productPreview;
   }
 }
