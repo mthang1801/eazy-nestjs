@@ -11,7 +11,7 @@ import {
   tradeinDetailLeftJoiner,
 } from '../../utils/joinTable';
 import { Table } from 'src/database/enums';
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import {
   getPageSkipLimit,
   formatStandardTimeStamp,
@@ -41,7 +41,7 @@ import {
   tradeinOldReceiptJoiner,
   storeLocationJoiner,
 } from '../../utils/joinTable';
-import { userSelector } from '../../utils/tableSelector';
+import { userSelector, getProductListByTradeinProgram } from '../../utils/tableSelector';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import {
@@ -94,8 +94,10 @@ import {
 } from '../../utils/integrateFunctions';
 import { appliedProductsTradeinProgramSearchFilter } from '../../utils/tableConditioner';
 import { isNull } from 'lodash';
+import { SchedulerRegistry } from '@nestjs/schedule';
 @Injectable()
 export class TradeinProgramService {
+  private logger = new Logger();
   constructor(
     private tradeinProgramRepo: TradeinProgramRepository<TradeinProgramEntity>,
     private tradeinProgramDetailRepo: TradeinProgramDetailRepository<TradeinProgramDetailEntity>,
@@ -115,6 +117,7 @@ export class TradeinProgramService {
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private storeLocationRepo: StoreLocationRepository<StoreLocationEntity>,
     private customerService: CustomerService,
+    private schedulerRegistry: SchedulerRegistry,
   ) {}
   async cmsCreate(data: CreateTradeinProgramDto, user) {
     const tradeinProgramData = {
@@ -361,7 +364,7 @@ export class TradeinProgramService {
     };
   }
 
-  async getListFE(params) {
+  async getCurrentProgram(params) {
     let { page, skip, limit } = getPageSkipLimit(params);
     let { search } = params;
     let filterCondition = {
@@ -376,7 +379,7 @@ export class TradeinProgramService {
 
     let tradeinProgram = await this.tradeinProgramRepo.findOne({
       select: '*',
-      where: tradeinProgramSearchFilter((search = ''), filterCondition),
+      where: tradeinProgramSearchFilter(search, filterCondition),
       orderBy: [
         { field: `${Table.TRADEIN_PROGRAM}.created_at`, sortBy: SortBy.DESC },
       ],
@@ -442,6 +445,73 @@ export class TradeinProgramService {
       tradeinProgram,
       appliedProducts,
       appliedCriteriaList,
+    };
+  }
+
+  async getListFE() {
+    const tradeinPrograms = await this.tradeinProgramRepo.find({status: 'A'});
+    return tradeinPrograms;
+  }
+
+  async getById(tradein_id, params) {
+    let { page, skip, limit } = getPageSkipLimit(params);
+    let { search } = params;
+    let filterCondition = {
+      [`${Table.TRADEIN_PROGRAM}.status`]: 'A',
+      [`${Table.TRADEIN_PROGRAM}.start_at`]: LessThanOrEqual(
+        formatStandardTimeStamp(),
+      ),
+      [`${Table.TRADEIN_PROGRAM}.end_at`]: MoreThanOrEqual(
+        formatStandardTimeStamp(),
+      ),
+    };
+
+    const tradeinProgram = await this.tradeinProgramRepo.findOne({tradein_id});
+    let appliedProducts = await this.tradeinProgramDetailRepo.find(
+      {
+        where: { [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]: tradein_id },
+        skip,
+        limit,
+      },
+    );
+
+    let appliedProductFilterConditions = {
+      [`${Table.TRADEIN_PROGRAM_DETAIL}.tradein_id`]:
+        tradein_id,
+      [`${Table.TRADEIN_PROGRAM_DETAIL}.detail_status`]: 'A',
+    };
+    let _count = await this.tradeinProgramDetailRepo.find({
+      select: `COUNT(${Table.TRADEIN_PROGRAM_DETAIL}.product_id) as total`,
+      join: tradeinDetailLeftJoiner,
+      where: appliedProductsTradeinProgramSearchFilter(
+        search,
+        appliedProductFilterConditions,
+      ),
+    });
+
+    let count = 0;
+    if (_count[0].total) {
+      count = _count[0].total;
+    }
+
+    let tempAppliedProducts = []
+    for (let appliedProduct of appliedProducts) {
+      const tempAppliedproduct = await this.productRepo.findOne({
+        select: getProductListByTradeinProgram,
+        join: productLeftJoiner,
+        where: { [`${Table.PRODUCTS}.product_id`]: appliedProduct.product_id },
+      });
+      tempAppliedProducts.push(tempAppliedproduct);
+    }
+    let resTradeinProgram = {...tradeinProgram, applied_products: tempAppliedProducts}
+    //return resTradeinProgram;
+    return {
+      productsPaging: {
+        currentPage: page,
+        pageSize: limit,
+        total: count,
+      },
+      resTradeinProgram
     };
   }
 
@@ -1920,5 +1990,63 @@ export class TradeinProgramService {
         valuationBillData,
       );
     }
+  }
+
+  async testCron() {
+    await this.addTimeoutTurnOnTradeinProgram(8);
+  } 
+
+  async turnOnTradeinProgram(tradein_id) {
+    console.log("Turn on tradein program");
+    this.tradeinProgramRepo.update(
+      {tradein_id},
+      {status: 'A'}
+    )
+    const tradeinProgram = await this.tradeinProgramRepo.findOne({tradein_id});
+    await this.schedulerRegistry.deleteTimeout(convertToSlug(tradeinProgram.name));
+    await this.addTimeoutTurnOffTradeinProgram(tradein_id);
+  }
+
+  async turnOffTradeinProgram(tradein_id) {
+    console.log("Turn off tradein program");
+    this.tradeinProgramRepo.update(
+      {tradein_id},
+      {status: 'D'}
+    )
+    const tradeinProgram = await this.tradeinProgramRepo.findOne({tradein_id});
+    await this.schedulerRegistry.deleteTimeout(convertToSlug(tradeinProgram.name));
+    await this.logger.warn(`Timeout ${convertToSlug(tradeinProgram.name)} deleted!`);
+  }
+
+  async addTimeoutTurnOffTradeinProgram(tradein_id) {
+    const callback = () => {
+      this.turnOffTradeinProgram(tradein_id);
+    };
+  
+    const tradeinProgram = await this.tradeinProgramRepo.findOne({tradein_id});
+    const endDate = formatStandardTimeStamp(
+      tradeinProgram['end_at'],
+    ).toString();
+    const today = formatStandardTimeStamp();
+    const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
+    const timeout = setTimeout(callback, milliseconds);
+    console.log("flash sale will end after " + milliseconds/3600000 + " hours.");
+    this.schedulerRegistry.addTimeout(convertToSlug(tradeinProgram.name), timeout);
+  }
+
+  async addTimeoutTurnOnTradeinProgram(tradein_id) {
+    const callback = () => {
+      this.turnOnTradeinProgram(tradein_id);
+    };
+    
+    const tradeinProgram = await this.tradeinProgramRepo.findOne({tradein_id});
+    const startDate = formatStandardTimeStamp(
+      tradeinProgram['start_at'],
+    ).toString();
+    const today = formatStandardTimeStamp();
+    const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+    const timeout = setTimeout(callback, milliseconds);
+    console.log("tradein program will start after " + milliseconds/3600000 + " hours.");
+    this.schedulerRegistry.addTimeout(convertToSlug(tradeinProgram.name), timeout);
   }
 }

@@ -21,9 +21,20 @@ export class TradeinProgramController extends BaseController {
   constructor(private service: TradeinProgramService) {
     super();
   }
+
   @Get()
-  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const result = await this.service.getListFE(params);
+  async getList(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.getListFE();
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':tradein_id')
+  async getById(
+    @Res() res: Response,
+    @Param('tradein_id') tradein_id: number,
+    @Query() params,
+  ): Promise <IResponse> {
+    const result = await this.service.getById(tradein_id, params);
     return this.responseSuccess(res, result);
   }
 

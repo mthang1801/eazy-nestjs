@@ -19,8 +19,8 @@ export class DiscountProgramController extends BaseController {
     super();
   }
   @Get()
-  async getList(@Res() res: Response, @Query() params): Promise<IResponse> {
-    const result = await this.service.getList(params);
+  async getList(@Res() res: Response): Promise<IResponse> {
+    const result = await this.service.FEGetList();
     return this.responseSuccess(res, result);
   }
 

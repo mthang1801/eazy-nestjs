@@ -115,6 +115,22 @@ export const getProductListByVariantsInCategory = [
   `${Table.CATEGORIES}.slug`,
 ];
 
+export const getProductListByDiscountProgram = [
+  `${Table.PRODUCTS}.product_id`,
+  `${Table.PRODUCTS}.product_code`,
+  `${Table.PRODUCTS}.barcode`,
+  `${Table.PRODUCTS}.slug as productSlug`,
+  `${Table.PRODUCTS}.thumbnail`,
+  `${Table.CATEGORIES}.slug`,
+  `${Table.PRODUCT_PRICES}.price`,
+  `${Table.PRODUCT_PRICES}.list_price`,
+  `${Table.PRODUCT_DESCRIPTION}.product`,
+];
+
+export const getProductListByTradeinProgram = [
+  ...getProductListByDiscountProgram,
+];
+
 export const getTradeinDetailProductsListSelectorBE = [
   ...getProductsListSelectorBE,
   `${Table.CATEGORIES}.slug`,

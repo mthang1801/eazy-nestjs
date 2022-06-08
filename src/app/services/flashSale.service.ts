@@ -516,15 +516,20 @@ export class FlashSalesService {
     await this.addTimeoutTurnOffFlashSale(flash_sale_id);
   }
 
+  async turnOffFlashSale(flash_sale_id) {
+    console.log("Turn off flash sale");
+    await this.flashSaleRepo.update(
+      {flash_sale_id: flash_sale_id},
+      {status: 'D'}
+    );
+    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
+    await this.schedulerRegistry.deleteTimeout(convertToSlug(flashSale.name));
+    await this.logger.warn(`Timeout ${convertToSlug(flashSale.name)} deleted!`);
+  }
+
   async addTimeoutTurnOffFlashSale(flash_sale_id) {
     const callback = () => {
-      console.log("Turn off flash sale");
-      this.flashSaleRepo.update(
-        {flash_sale_id: flash_sale_id},
-        {status: 'D'}
-      );
-      this.schedulerRegistry.deleteTimeout(convertToSlug(flashSale.name));
-      this.logger.warn(`Timeout ${convertToSlug(flashSale.name)} deleted!`);
+      this.turnOffFlashSale(flash_sale_id);
     };
   
     const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});

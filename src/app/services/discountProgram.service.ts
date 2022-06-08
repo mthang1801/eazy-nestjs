@@ -17,7 +17,7 @@ import {
   getPageSkipLimit,
 } from '../../utils/helper';
 import { get, sortBy } from 'lodash';
-import { getProductAccessorySelector } from '../../utils/tableSelector';
+import { getProductAccessorySelector, getProductListByDiscountProgram } from '../../utils/tableSelector';
 import {
   discountProgramsSearchFilter,
   discountProgramsDetailSearchFilter,
@@ -26,6 +26,7 @@ import { UpdateDiscountProgramDto } from '../dto/discountProgram/update-discount
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { CacheRepository } from '../repositories/cache.repository';
 import { RedisCacheService } from './redisCache.service';
+import { productLeftJoiner } from '../../utils/joinTable';
 import {
   MoreThan,
   LessThan,
@@ -428,5 +429,25 @@ export class DiscountProgramService {
       }
     }
     return this.getById(discountProgram.discount_id);
+  }
+
+  async FEGetList() {
+    const discountProgramList = await this.discountProgramRepo.find({status: 'A'});
+    let resDiscountProgramList = [];
+    for (let discountProgram of discountProgramList) {
+      let appliedProducts = await this.discountProgramDetailRepo.find({discount_id: discountProgram.discount_id, status: 'A'});
+      let tempAppliedProducts = []
+      for (let appliedProduct of appliedProducts) {
+        const tempAppliedproduct = await this.productRepo.findOne({
+          select: getProductListByDiscountProgram,
+          join: productLeftJoiner,
+          where: { [`${Table.PRODUCTS}.product_id`]: appliedProduct.product_id },
+        });
+        tempAppliedProducts.push(tempAppliedproduct);
+      }
+      let tempDiscountProgram = {...discountProgram, applied_products: tempAppliedProducts}
+      resDiscountProgramList.push(tempDiscountProgram);
+    }
+    return resDiscountProgramList;
   }
 }
