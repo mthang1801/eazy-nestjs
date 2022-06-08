@@ -17,7 +17,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "start:microservice": "npm run start:dev --prefix microservices",
-    "start:dev:all": "concurrently \"npm run start:dev\" \"npm run start:microservice",
+    "start:dev:all": "concurrently \"npm run start:dev\" \"npm run start:microservice\" ",
     "start:all": "concurrently \"npm start\" \"npm start --prefix microservices\" ",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
