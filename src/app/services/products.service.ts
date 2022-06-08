@@ -4716,7 +4716,9 @@ export class ProductService {
         let image = await this.imageRepo.findOne({
           image_id: imageLinkItem.image_id,
         });
-        result = [...result, { ...imageLinkItem, ...image }];
+        if (image) {
+          result = [...result, { ...imageLinkItem, ...image }];
+        }
       }
     }
 
