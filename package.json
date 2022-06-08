@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "install:all": "npm install -f & npm install -f prefix microservices",
     "redis": "redis-server",
     "prebuild": "rimraf dist",
     "build": "tsc",

@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   HttpException,
+  Inject,
 } from '@nestjs/common';
 
 import { Table, JoinTable, SortBy } from '../../database/enums/index';
@@ -150,6 +151,7 @@ import { ShippingServiceRepository } from '../repositories/shippingsService.repo
 import { ShippingsServiceEntity } from '../entities/shippingsService.entity';
 import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingsEntity } from '../entities/shippings.entity';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrdersService {
@@ -184,7 +186,12 @@ export class OrdersService {
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
     private shippingRepo: ShippingRepository<ShippingsEntity>,
+    @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
   ) {}
+
+  async testQueue(data) {
+    await this.client.emit('create-order', data);
+  }
 
   async CMScreate(data) {
     let user: any = await this.userRepo.findById(data.user_id);

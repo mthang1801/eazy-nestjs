@@ -3639,7 +3639,7 @@ export class ProductService {
           [`${Table.PRODUCTS}.product_id`]: Not(Equal(product['product_id'])),
         })),
         skip: 0,
-        limt: 20,
+        limt: 7,
       });
       productsList = _.uniqBy(productsList, 'product_id');
 

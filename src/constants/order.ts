@@ -1,5 +1,7 @@
 import * as moment from 'moment';
 import { formatStandardTimeStamp, formatDateTime } from '../utils/helper';
+import { HttpException } from '@nestjs/common';
+import { loanTenorId } from './payment.constant';
 const orderSampleData = {
   b_firstname: 'Mai Van',
   b_lastname: 'Thang',
@@ -86,8 +88,6 @@ const orderSampleData = {
 
 export const convertDataToIntegrate = (data) => {
   let itgData = {};
-  itgData['loanInformation'] = {};
-  let loanInformation = itgData['loanInformation'];
 
   itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
 
@@ -99,36 +99,32 @@ export const convertDataToIntegrate = (data) => {
 
   if (data['installed_prepaid_amount']) {
     itgData['prepaidAmount'] = data['installed_prepaid_amount'];
-    loanInformation['prepaidAmount'] = data['installed_prepaid_amount'];
+
     itgData['installedMoneyAmount'] = data['installed_prepaid_amount'];
-    loanInformation['installedMoneyAmount'] = data['installed_prepaid_amount'];
   }
 
   if (data['installed_interest_rate']) {
     itgData['installmentInterestRateValue'] = data['installed_interest_rate'];
-    loanInformation['installmentInterestRateValue'] =
-      data['installed_interest_rate'];
   }
 
   if (data['installed_payment_per_month']) {
     itgData['emi'] = data['installed_payment_per_month'];
-    loanInformation['emi'] = data['installed_payment_per_month'];
   }
 
   if (data['installed_tenor']) {
-    itgData['installmentTenorCode'] = data['installed_tenor'];
-    loanInformation['installmentTenorCode'] = data['installed_tenor'];
+    if (!loanTenorId[data['installed_tenor']]) {
+      throw new HttpException('Kỳ hạn không đúng.', 400);
+    }
+    itgData['installmentTenorCode'] =
+      loanTenorId[data['installed_tenor']].toString();
   }
 
   if (data['installed_money_account_id']) {
     itgData['installMoneyAccountId'] = data['installed_money_account_id'];
-    loanInformation['installMoneyAccountId'] =
-      data['installed_money_account_id'];
   }
 
   if (data['installed_money_code']) {
     itgData['installmentCode'] = data['installed_money_code'];
-    loanInformation['installmentCode'] = data['installed_money_code'];
   }
 
   if (data['installed_money_account_id']) {

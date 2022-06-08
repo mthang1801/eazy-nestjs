@@ -29,7 +29,6 @@ import { OrdersModule } from './orders.module';
 import { ProductsModule } from './products.module';
 import { CustomerModule } from './customer.module';
 import { ProductFeaturesModule } from './productFeatures.module';
-import { QueueModule } from './queue.module';
 import { StoreModule } from './store.module';
 import { UserSystemModule } from './userSystem.module';
 import { MulterModule } from '@nestjs/platform-express';
@@ -73,7 +72,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     RedisCacheModule,
     CronModule,
-    QueueModule,
     DashboardModule,
     UploadModule,
     AuthModule,
