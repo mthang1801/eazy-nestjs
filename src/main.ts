@@ -11,6 +11,7 @@ import { join } from 'path';
 import * as hbs from 'hbs';
 import { ConfigService } from '@nestjs/config';
 import { ValidationConfig } from './config/validation.config';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as requestIp from 'request-ip';
 
 async function bootstrap() {
@@ -18,10 +19,10 @@ async function bootstrap() {
     AppModule,
     new ExpressAdapter(),
   );
+
   const configService = app.get(ConfigService);
 
   app.useGlobalPipes(new ValidationPipe(ValidationConfig));
-  app.setGlobalPrefix(configService.get<string>('apiPrefix'));
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
