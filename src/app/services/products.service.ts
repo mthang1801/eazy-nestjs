@@ -1108,7 +1108,7 @@ export class ProductService {
         amount_start,
         amount_end,
       );
-    } else if (amount_start) {
+    } else if (amount_start && amount_start > 1) {
       filterCondition[`${Table.PRODUCTS}.amount`] =
         MoreThanOrEqual(amount_start);
     } else if (amount_end) {
