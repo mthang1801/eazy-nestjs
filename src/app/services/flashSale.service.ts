@@ -111,7 +111,7 @@ export class FlashSalesService {
           let tempStartDate = formatStandardTimeStamp(
             flashSaleDetail['start_at'],
           );
-          let tempEndDate = formatStandardTimeStamp(flashSaleDetail['end_at']);
+          //let tempEndDate = formatStandardTimeStamp(flashSaleDetail['end_at']);
           if (new Date(tempStartDate).getTime() > new Date(today).getTime()) {
             console.log(
               'Không thay đổi trạng thái của chương trình flash sale có id: ' +

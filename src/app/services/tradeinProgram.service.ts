@@ -41,7 +41,7 @@ import {
   tradeinOldReceiptJoiner,
   storeLocationJoiner,
 } from '../../utils/joinTable';
-import { userSelector, getProductListByTradeinProgram } from '../../utils/tableSelector';
+import { userSelector, getProductListByTradeinProgram, getTradeinDetailProductsListSelectorBE } from '../../utils/tableSelector';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import { ProductPricesEntity } from '../entities/productPrices.entity';
 import {
@@ -2043,7 +2043,26 @@ export class TradeinProgramService {
     const startDate = formatStandardTimeStamp(
       tradeinProgram['start_at'],
     ).toString();
+    const endDate = formatStandardTimeStamp(
+      tradeinProgram['end_at'],
+    ).toString();
     const today = formatStandardTimeStamp();
+
+    if (new Date(today).getTime() < new Date(endDate).getTime()) {
+      console.log("Chương trình thu cũ đổi mới đã quá hạn.");
+      return;
+    }
+
+    if (new Date(today).getTime() > new Date(startDate).getTime() && new Date(today).getTime() < new Date(endDate).getTime()) {
+      console.log("Turn on tradein program");
+      this.tradeinProgramRepo.update(
+        {tradein_id},
+        {status: 'A'}
+      )
+      await this.addTimeoutTurnOffTradeinProgram(tradein_id);
+      return;
+    }
+
     const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
     console.log("tradein program will start after " + milliseconds/3600000 + " hours.");

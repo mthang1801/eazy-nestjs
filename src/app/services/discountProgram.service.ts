@@ -469,7 +469,55 @@ export class DiscountProgramService {
     const startDate = formatStandardTimeStamp(
       discountProgram['start_at'],
     ).toString();
+    const endDate = formatStandardTimeStamp(
+      discountProgram['end_at'],
+    ).toString();
     const today = formatStandardTimeStamp();
+
+    if (new Date(endDate).getTime() < new Date(today).getTime()) {
+      console.log("Chương trình chiết khấu đã quá hạn.");
+      return;
+    }
+
+    if (new Date(today).getTime() > new Date(startDate).getTime() && new Date(today).getTime() < new Date(endDate).getTime()) {
+      console.log("Chương trình chiết khấu đang trong thời gian diễn ra.");
+
+      const startTime = await this.configTime(discountProgram.time_start_at);
+      const endTime = await this.configTime(discountProgram.time_end_at);
+      const now = await this.configTime(formatTime()); 
+      if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
+        console.log("Chương trình được bắt đầu trong khung giờ diễn ra");
+        this.discountProgramRepo.update(
+          {discount_id},
+          {status: 'A'}
+        )
+      }
+      else {
+        console.log("Chương trình được bắt đầu không trong khung giờ diễn ra");
+      }
+  
+      const jobOn = new CronJob(`${startTime.second} ${startTime.minute} ${startTime.hour} * * *`, () => {
+        this.discountProgramRepo.update(
+          {discount_id},
+          {status: 'A'}
+        )
+      });
+      const jobOff = new CronJob(`${endTime.second} ${endTime.minute} ${endTime.hour} * * *`, () => {
+        this.discountProgramRepo.update(
+          {discount_id},
+          {status: 'D'}
+        )
+      });
+  
+      this.schedulerRegistry.addCronJob("on-at-"+convertToSlug(discountProgram.time_start_at), jobOn);
+      jobOn.start();
+      this.schedulerRegistry.addCronJob("off-at-"+convertToSlug(discountProgram.time_end_at), jobOff);
+      jobOff.start();
+      
+      await this.addTimeoutTurnOffDiscountProgram(discount_id);
+      return;
+    }
+
     const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
     console.log("Discount program will start after " + milliseconds/3600000 + " hours.");
