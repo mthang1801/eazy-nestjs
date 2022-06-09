@@ -4,7 +4,7 @@ export class TradeinProgramEntity {
   tradein_appcore_id: number = null;
   name: string = '';
   description: string = '';
-  status: string = 'A';
+  status: string = 'D';
   discount_rate: number = 0;
   start_at: string = null;
   end_at: string = null;
