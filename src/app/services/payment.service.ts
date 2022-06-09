@@ -54,7 +54,11 @@ import {
   payooPaynowURL,
   payooInstallmentURL,
 } from '../../constants/payooPayment';
-import { OrderStatus, OrderType } from '../../constants/order';
+import {
+  OrderStatus,
+  OrderType,
+  convertOrderDataToAppcore,
+} from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
 import { OrderPaymentRepository } from '../repositories/orderPayment.repository';
@@ -84,7 +88,7 @@ import {
   shippingFeeLocationsJoiner,
   userPaymentJoiner,
 } from '../../utils/joinTable';
-import { userSelector } from '../../utils/tableSelector';
+import { userSelector, productCartItem } from '../../utils/tableSelector';
 import { CreateMomoPaymentDto } from '../dto/orders/create-momoPayment.dto';
 import { Cryptography } from '../../utils/cryptography';
 import * as crypto from 'crypto';
@@ -259,7 +263,7 @@ export class PaymentService {
   async paymentInstallment(data: CreateInstallmentDto, userAuth) {
     try {
       let product = await this.productRepo.findOne({
-        select: '*',
+        select: productCartItem,
         join: productLeftJoiner,
         where: {
           [`${Table.PRODUCTS}.product_id`]: data.product_id,
@@ -310,21 +314,50 @@ export class PaymentService {
       let subtotal = +totalPrice;
       let cartItems = [{ ...product, amount: 1 }];
 
-      if (data.shipping_fee_location_id) {
+      let refOrderId = generateRandomString();
+      let sendData = {
+        b_phone: user.b_phone || data.s_phone,
+        b_lastname: user.b_lastname || data.s_lastname,
+        b_city: user.b_city || data.s_city,
+        b_district: user.b_district || data.s_district,
+        b_ward: user.b_ward || data.s_ward,
+        b_address: user.b_address || data.s_address,
+        s_phone: data.s_phone,
+        s_lastname: data.s_lastname,
+        s_city: data.s_city,
+        s_district: data.s_district,
+        s_ward: data.s_ward,
+        s_address: data.s_address,
+        order_items: cartItems,
+        total_price: totalPrice,
+        transfer_amount: subtotal,
+        subtotal,
+        pay_credit_type: 4,
+        installed_tenor: data.tenor,
+        ref_order_id: refOrderId,
+        installmentCode: refOrderId,
+        status: OrderStatus.new,
+        payment_status: PaymentStatus.new,
+      };
+
+      if (data.s_city) {
         let shippingFeeLocation = await this.shippingFeeLocationRepo.findOne({
           select: '*',
           join: shippingFeeLocationsJoiner,
           where: {
-            [`${Table.SHIPPING_FEE_LOCATION}.shipping_fee_location_id`]:
-              data.shipping_fee_location_id,
+            [`${Table.SHIPPING_FEE_LOCATION}.city_id`]: data.s_city,
+            [`${Table.SHIPPING_FEE_LOCATION}.fee_location_status`]: 'A',
+            [`${Table.SHIPPING_FEE}.status`]: 'A',
           },
         });
 
-        if (
-          shippingFeeLocation &&
-          +totalPrice < +shippingFeeLocation.max_value
-        ) {
+        console.log(shippingFeeLocation);
+
+        if (shippingFeeLocation && +subtotal < +shippingFeeLocation.max_value) {
           subtotal = +subtotal + +shippingFeeLocation.value_fee;
+          sendData['subtotal'] =
+            +sendData['subtotal'] + +shippingFeeLocation.value_fee;
+          sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
         }
       }
 
@@ -353,46 +386,65 @@ export class PaymentService {
           break; // Home Credit
         case 3:
           installed_money_account_id = GatewayAppcoreId.Shinhan;
-          responseData = calculateInstallmentInterestRateHDSaiGon(
+          const response = await axios(GET_SHINHAN_INSTALLMENT);
+          if (!response?.data?.data) {
+            throw new HttpException(
+              'Không tìm thấy mã tài khoản trả góp.',
+              404,
+            );
+          }
+
+          const programs = response?.data?.data?.shinhan?.programs;
+          let programInstallments = programs.filter(
+            (program) =>
+              program.tenorFrom <= data.tenor &&
+              program.tenorTo >= data.tenor &&
+              program.minLoanAmount <= totalPrice &&
+              program.maxLoanAmount >= totalPrice,
+          );
+
+          if (!programInstallments.length) {
+            throw new HttpException(
+              'Không thể tạo đơn, mã trả góp không phù hợp',
+              404,
+            );
+          }
+          programInstallments = _.sortBy(
+            programInstallments,
+            'interest',
+            'asc',
+          );
+          let programInstallment = programInstallments[0];
+          responseData = calculateInstallmentInterestRateShinhan(
             subtotal,
             data.prepaid_percentage,
             data.tenor,
+            programInstallment,
           );
           gatewayName = GatewayName.Shinhan;
           break; //Shinhan
       }
 
-      let paymentPerMonth = responseData.paymentPerMonth;
-      let totalInterest = responseData.totalInterest;
-      let interestPerMonth = responseData.interestPerMonth;
-      let prepaidAmount = responseData.prepaidAmount;
+      sendData['installed_prepaid_amount'] = responseData.prepaidAmount;
+      sendData['installed_interest_rate'] = responseData.interestRate;
+      sendData['installed_money_amount'] = responseData.restAmount;
+      sendData['installed_money_account_id'] = installed_money_account_id;
+      sendData['installed_payment_per_month'] = responseData.paymentPerMonth;
+      sendData['installed_prepaid_percentage'] = data.prepaid_percentage;
 
-      let refOrderId = generateRandomString();
-      let sendData = {
-        ...user,
-        s_phone: data.s_phone,
-        s_lastname: data.s_lastname,
-        s_city: data.s_city,
-        s_district: data.s_district,
-        s_ward: data.s_ward,
-        s_address: data.s_address,
-        order_items: cartItems,
-        total_price: totalPrice,
-        transfer_amount: subtotal,
-        subtotal,
-        pay_credit_type: 4,
-        installed_tenor: data.tenor,
-        installed_prepaid_amount: prepaidAmount,
-        installed_payment_per_month: paymentPerMonth,
-        installment_interest_rate_code: totalInterest,
-        installed_interest_rate: responseData.interestRate,
-        installed_money_amount: paymentPerMonth,
-        installed_money_account_id,
-        ref_order_id: refOrderId,
-        installmentCode: refOrderId,
-        payment_status: PaymentStatus.success,
-      };
+      if (
+        gatewayName === GatewayName.Shinhan &&
+        responseData.installment_interest_rate_code
+      ) {
+        sendData['installment_interest_rate_code'] =
+          responseData.installment_interest_rate_code;
+      } else {
+        sendData['installment_interest_rate_code'] = 'ELEBAS10';
+      }
 
+      console.log(sendData);
+
+      console.log(JSON.parse(convertOrderDataToAppcore(sendData)));
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({
@@ -401,27 +453,6 @@ export class PaymentService {
         gateway_name: gatewayName,
         amount: subtotal,
       });
-
-      const paymentAppcoreData = {
-        installmentAccountId: installed_money_account_id,
-        installmentCode: refOrderId,
-        paymentStatus: 'success',
-        totalAmount: +subtotal,
-      };
-
-      await axios({
-        method: 'PUT',
-        url: UPDATE_ORDER_PAYMENT(result['order_code']),
-        data: paymentAppcoreData,
-      });
-
-      await this.orderRepo.update(
-        { order_id: result['order_id'] },
-        {
-          status: OrderStatus.new,
-          updated_date: formatStandardTimeStamp(),
-        },
-      );
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

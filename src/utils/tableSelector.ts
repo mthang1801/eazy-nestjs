@@ -176,3 +176,10 @@ export const catalogSelector = [
   `${Table.CATALOG_FEATURE_DETAIL}.status as catalogFeatureDetailStatus`,
   `${Table.CATALOG_FEATURE_VALUE_PRODUCT}.*`,
 ];
+
+export const productCartItem = [
+  `${Table.PRODUCTS}.product_id`,
+  `${Table.PRODUCTS}.product_appcore_id`,
+  `${Table.PRODUCT_PRICES}.price`,
+  `${Table.PRODUCT_DESCRIPTION}.product`,
+];

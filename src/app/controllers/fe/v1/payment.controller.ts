@@ -44,7 +44,7 @@ export class PaymentControllerFE extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('/installment')
+  @Post('installment')
   async paymentInstallment(
     @Res() res: Response,
     @Body() data: CreateInstallmentDto,
@@ -69,7 +69,7 @@ export class PaymentControllerFE extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Get('/installment/')
+  @Get('/installment')
   async getProductInstallment(@Res() res: Response, @Query() params) {
     const result = await this.service.getProductInstallment(params);
     return this.responseSuccess(res, result);

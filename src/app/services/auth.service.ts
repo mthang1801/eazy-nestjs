@@ -627,8 +627,12 @@ export class AuthService {
       {
         password: passwordHash,
         salt,
+        user_type: 'C',
+        account_type: 1,
+        status: 'A',
         updated_at: formatStandardTimeStamp(),
       },
+      true,
     );
 
     const userLogin = { email: updatedUser.email, password };

@@ -135,7 +135,7 @@ export class AuthController extends BaseController {
     );
   }
 
-  @Post('restore-password')
+  @Put('update-password-by-email')
   async restorePassword(
     @Body() data: AuthRestoreDto,
     @Res() res: Response,

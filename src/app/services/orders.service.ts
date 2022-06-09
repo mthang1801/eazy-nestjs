@@ -18,7 +18,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { UpdateOrderDto } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
-import { convertDataToIntegrate } from 'src/constants/order';
+import { convertOrderDataToAppcore } from 'src/constants/order';
 import axios from 'axios';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
@@ -312,7 +312,8 @@ export class OrdersService {
       orderData['installed_tenor'] = data.installed_tenor;
       orderData['installed_prepaid_amount'] = data.installed_prepaid_amount;
       orderData['installed_interest_rate'] = data.installed_interest_rate;
-      orderData['installed_money_amount'] = data.payment_per_month;
+      orderData['installed_money_amount'] =
+        orderData['subtotal'] - data.installed_prepaid_amount;
       orderData['payment_status'] = PaymentStatus.success;
 
       switch (+data.company_id) {
@@ -395,7 +396,7 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertDataToIntegrate(result),
+      data: convertOrderDataToAppcore(result),
     };
 
     try {
@@ -866,9 +867,9 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertDataToIntegrate(result),
+      data: convertOrderDataToAppcore(result),
     };
-    console.log(result);
+
     try {
       const response = await axios(configPushOrderToAppcore);
 
@@ -999,7 +1000,7 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertDataToIntegrate(order),
+      data: convertOrderDataToAppcore(order),
     };
 
     try {

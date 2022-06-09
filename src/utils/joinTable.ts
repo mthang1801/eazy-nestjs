@@ -994,7 +994,7 @@ export const flashSaleProductCacheJoiner = {
 };
 
 export const shippingFeeLocationsJoiner = {
-  [JoinTable.leftJoin]: {
+  [JoinTable.innerJoin]: {
     [Table.SHIPPING_FEE]: {
       fieldJoin: `${Table.SHIPPING_FEE}.shipping_fee_id`,
       rootJoin: `${Table.SHIPPING_FEE_LOCATION}.shipping_fee_id`,

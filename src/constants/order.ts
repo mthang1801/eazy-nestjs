@@ -86,7 +86,7 @@ const orderSampleData = {
   s_ward: '11787',
 };
 
-export const convertDataToIntegrate = (data) => {
+export const convertOrderDataToAppcore = (data) => {
   let itgData = {};
 
   itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
@@ -107,10 +107,6 @@ export const convertDataToIntegrate = (data) => {
 
   if (data['installed_interest_rate']) {
     itgData['installmentInterestRateValue'] = +data['installed_interest_rate'];
-  }
-
-  if (data['installed_payment_per_month']) {
-    itgData['emi'] = +data['installed_payment_per_month'];
   }
 
   if (data['installed_payment_per_month']) {
@@ -258,10 +254,6 @@ export const convertDataToIntegrate = (data) => {
 
   if (data['credit_card_no']) {
     itgData['creditCardNo'] = data['credit_card_no']; // Mã 4 số cuối của thẻ
-  }
-
-  if (data['installed_money_amount']) {
-    itgData['installedMoneyAmount'] = data['installed_money_amount']; // Tiền trả góp
   }
 
   if (data['installed_money_account_id']) {
