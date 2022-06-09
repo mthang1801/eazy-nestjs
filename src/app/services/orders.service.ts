@@ -1651,22 +1651,22 @@ export class OrdersService {
         if (store) {
           orderItem['store'] = store;
         }
+      }
 
-        // Lấy thông tin trạng thái đơn hàng
-        const status = await this.statusRepo.findOne({
-          select: ['*'],
-          join: {
-            [JoinTable.leftJoin]: statusJoiner,
-          },
-          where: {
-            [`${Table.STATUS}.status_value`]: orderItem.status,
-            [`${Table.STATUS}.type`]: StatusType.Order,
-          },
-        });
+      // Lấy thông tin trạng thái đơn hàng
+      const status = await this.statusRepo.findOne({
+        select: ['*'],
+        join: {
+          [JoinTable.leftJoin]: statusJoiner,
+        },
+        where: {
+          [`${Table.STATUS}.status_value`]: orderItem.status,
+          [`${Table.STATUS}.type`]: StatusType.Order,
+        },
+      });
 
-        if (status) {
-          orderItem['status'] = status;
-        }
+      if (status) {
+        orderItem['status'] = status;
       }
 
       // Lấy địa chỉ theo id
