@@ -12,7 +12,7 @@ export class SearchService {
     });
   }
 
-  async searchMulti(text: string, index: string, fields: string[]) {
+  async searchMultiMatch(text: string, index: string, fields: string[]) {
     try {
       const data: any = await this.searchService.search({
         index,
