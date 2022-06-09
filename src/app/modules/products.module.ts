@@ -28,7 +28,6 @@ import { ProductFeatureDescriptionsRepository } from '../repositories/productFea
 import { ProductFeatureVariantsRepository } from '../repositories/productFeatureVariants.repository';
 import { ProductFeatureVariantDescriptionRepository } from '../repositories/productFeatureVariantDescriptions.repository';
 import { ProductIntegrationController } from '../controllers/integration/v1/products.controller';
-import { StoreModule } from './store.module';
 import { ProductStoreRepository } from '../repositories/productStore.repository';
 import { ProductStoreHistoryRepository } from '../repositories/productStoreHistory.repository';
 import { ProductSyncController } from '../controllers/sync/v1/product.controller';
@@ -36,29 +35,16 @@ import { StickerModule } from './sticker.module';
 import { ProductTesterController } from '../controllers/tester/product.controller';
 import { ProductVariationGroupIndexRepository } from '../repositories/productVariationGroupIndex.respository';
 import { ProductsReportController } from '../controllers/report/v1/product.controller';
-
-import { getUserFromToken } from '../../middlewares/getUserFromToken';
-
 import { ReviewRepository } from '../repositories/review.repository';
 import { ReviewCommentItemRepository } from '../repositories/reviewCommentItem.repository';
 import { ReviewsCommentsModule } from './reviewsComment.module';
 import { LogRepository } from '../repositories/log.repository';
 import { CategoryFeaturesRepository } from '../repositories/categoryFeatures.repository';
-import { TradeinProgramService } from '../services/tradeinProgram.service';
-import { TradeinProgramRepository } from '../repositories/tradeinProgram.repository';
-import { TradeinProgramDetailRepository } from '../repositories/tradeinProgramDetail.repository';
-import { TradeinProgramCriteriaDetailEntity } from '../entities/tradeinProgramCriteriaDetail.entity';
-import { TradeinProgramCriteriaRepository } from '../repositories/tradeinProgramCriteria.repository';
-import { TradeinProgramCriteriaDetailRepository } from '../repositories/tradeinProgramCriteriaDetail.repository';
-import { ValuationBillRepository } from '../repositories/valuationBill.repository';
-import { ValuationBillCriteriaDetailEntity } from '../entities/valuationBillCriteriaDetail.entity';
-import { ValuationBillCriteriaDetailRepository } from '../repositories/valuationBillCriteriaDetail.repository';
-import { TradeinProgramModule } from './tradeinProgram.module';
 import { CatalogModule } from './catalog.module';
 import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
-import { CatalogRepository } from '../repositories/catalog.repository';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
+import { SearchModule } from './search.module';
 
 @Module({
   imports: [

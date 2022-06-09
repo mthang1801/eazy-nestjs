@@ -275,6 +275,7 @@ import { BannerItemRepository } from '../repositories/bannerItemDescription.repo
 import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
 import { ProductPreviewEntity } from '../entities/productPreview.entity';
+import { SearchService } from './search.service';
 
 @Injectable()
 export class ProductService {
@@ -285,25 +286,17 @@ export class ProductService {
     private productVariationGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
     private productVariationGroupFeatureRepo: ProductVariationGroupFeaturesRepository<ProductVariationGroupFeaturesEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
-    private productPointPriceRepo: ProductPointPriceRepository<ProductPointPriceEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
-    private productOptionsInventoryRepo: ProductOptionsInventoryRepository<ProductOptionsInventoryEntity>,
     private productFeatureValueRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
-    private productOptionsRepo: ProductOptionsRepository<ProductOptionsEntity>,
-    private productOptionDescriptionRepo: ProductOptionDescriptionRepository<ProductOptionDescriptionEntity>,
-    private productOptionVariantsRepo: ProductOptionVariantsRepository<ProductOptionVariantsEntity>,
-    private productOptionVariantDescriptionRepo: ProductOptionVariantDescriptionRepository<ProductOptionVariantDescriptionEntity>,
     private categoryRepo: CategoryRepository<CategoryEntity>,
     private productFeaturesRepo: ProductFeaturesRepository<ProductFeatureEntity>,
     private productFeatureDescriptionRepo: ProductFeatureDescriptionsRepository<ProductFeatureDescriptionEntity>,
     private productFeatureVariantDescriptionRepo: ProductFeatureVariantDescriptionRepository<ProductFeatureVariantDescriptionEntity>,
     private productFeatureVariantRepo: ProductFeatureVariantsRepository<ProductFeatureVariantEntity>,
     private productGroupIndexRepo: ProductVariationGroupIndexRepository<ProductVariationGroupIndexEntity>,
-    private bannerItemRepo: BannerItemRepository<BannerItemEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private storeRepo: StoreLocationRepository<StoreLocationDescriptionEntity>,
-    private storeDescRepo: StoreLocationDescriptionsRepository<StoreLocationDescriptionEntity>,
     private productStoreRepo: ProductStoreRepository<ProductStoreEntity>,
     private productStoreHistoryRepo: ProductStoreHistoryRepository<ProductStoreHistoryEntity>,
     private productStickerRepo: ProductStickerRepository<ProductStickerEntity>,
@@ -317,14 +310,13 @@ export class ProductService {
     private reviewRepo: ReviewRepository<ReviewEntity>,
     private reviewCommentItemsRepo: ReviewCommentItemRepository<ReviewCommentItemsEntity>,
     private reviewCommentService: ReviewsCommentService,
-    private logRepo: LogRepository<LogEntity>,
     private categoryFeatureRepo: CategoryFeaturesRepository<CategoryFeatureEntity>,
-    private discountProgramRepo: DiscountProgramRepository<DiscountProgramEntity>,
     private discountProgramDetailRepo: DiscountProgramDetailRepository<DiscountProgramDetailEntity>,
     private catalogFeatureValueProductRepo: CatalogFeatureValueProductRepository<CatalogFeatureValueProductEntity>,
     private catalogRepo: CatalogRepository<CatalogEntity>,
     private catalogFeatureRepo: CatalogFeatureRepository<CatalogFeatureEntity>,
     private catalogFeatureDetailRepo: CatalogFeatureDetailRepository<CatalogFeatureDetailEntity>,
+    private searchService: SearchService,
     private cache: RedisCacheService,
   ) {}
 
@@ -5037,15 +5029,36 @@ export class ProductService {
   }
 
   async testSql() {
-    const bannerItems = await this.bannerItemRepo.find();
-    for (let [i, bannerItem] of bannerItems.entries()) {
-      let newImagePath = bannerItem.image_url.replace(CDN_URL, '');
-      await this.bannerItemRepo.update(
-        { banner_item_id: bannerItem.banner_item_id },
-        { image_url: newImagePath },
-      );
-    }
+    const productsList = await this.productRepo.find({
+      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+      join: productSearchJoiner,
+      skip: 0,
+      limit: 10,
+    });
 
+    console.time('run');
+    let result = productsList.map(async (productItem, i) => {
+      this.searchService.createIndex('products', {
+        name: productItem.product,
+        product_code: productItem.product_code,
+        description: productItem.description,
+        slug: productItem.slug || '',
+        productSlug: productItem.productSlug,
+        price: productItem.price,
+        thumbnail: productItem.thumbnail,
+      });
+      return i;
+    });
+    await Promise.all(result);
+    console.timeEnd('run');
+
+    // await this.searchService.createIndex('products', {
+    //   name: productItem.product,
+    //   product_code: productItem.product_code,
+    //   description: productItem.description,
+    // });
+
+    // await this.searchService.searchMulti('a', 'products', ['name', 'description']);
     // let config: any = {
     //   method: 'get',
     //   url: "https://ddvcmsdev.ntlogistics.vn/products",

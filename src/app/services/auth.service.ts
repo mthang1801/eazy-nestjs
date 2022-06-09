@@ -289,6 +289,7 @@ export class AuthService {
         menuItem['children'] = menu;
       }
     }
+
     const cryptography = new Cryptography();
     const encryptedData = cryptography.encrypt(`${uuid()}-${user['user_id']}`);
 

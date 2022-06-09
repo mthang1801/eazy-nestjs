@@ -106,7 +106,8 @@ export const convertOrderDataToAppcore = (data) => {
   }
 
   if (data['installed_interest_rate']) {
-    itgData['installmentInterestRateValue'] = +data['installed_interest_rate'];
+    itgData['installmentInterestRateValue'] =
+      data['installed_interest_rate'].toString();
   }
 
   if (data['installed_payment_per_month']) {

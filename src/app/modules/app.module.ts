@@ -57,13 +57,22 @@ import { DiscountProgramModule } from './discountProgram.module';
 import { CatalogModule } from './catalog.module';
 import { CronModule } from './cron.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SearchModule } from './search.module';
+import searchConfig from 'src/config/search.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfig, databaseConfig, authConfig, mailConfig, redisConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        authConfig,
+        mailConfig,
+        redisConfig,
+        searchConfig,
+      ],
     }),
     MulterModule.registerAsync({
       useFactory: () => ({
@@ -72,6 +81,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     RedisCacheModule,
     CronModule,
+    SearchModule,
     DashboardModule,
     UploadModule,
     AuthModule,
