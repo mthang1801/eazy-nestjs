@@ -239,7 +239,10 @@ import {
   cacheTables,
   prefixCacheKey,
 } from '../../utils/cache.utils';
-import { convertQueryParamsIntoCachedString, generateRandomString } from '../../utils/helper';
+import {
+  convertQueryParamsIntoCachedString,
+  generateRandomString,
+} from '../../utils/helper';
 import { RedisCacheService } from './redisCache.service';
 import {
   categoryFeatureJoiner,
@@ -1105,7 +1108,7 @@ export class ProductService {
         amount_start,
         amount_end,
       );
-    } else if (amount_start) {
+    } else if (amount_start && amount_start > 1) {
       filterCondition[`${Table.PRODUCTS}.amount`] =
         MoreThanOrEqual(amount_start);
     } else if (amount_end) {
@@ -3636,7 +3639,7 @@ export class ProductService {
           [`${Table.PRODUCTS}.product_id`]: Not(Equal(product['product_id'])),
         })),
         skip: 0,
-        limt: 20,
+        limt: 7,
       });
       productsList = _.uniqBy(productsList, 'product_id');
 
@@ -4624,13 +4627,18 @@ export class ProductService {
     return product;
   }
 
-  async getChildrenProducts(product_appcore_id, role = 0) {
+  async getChildrenProducts(product_appcore_id, source = 0) {
+    // 0 : CMS, 1 Website
+    let filterConditions = {
+      [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
+    };
+
+    if (source === 1) filterConditions[`${Table.PRODUCTS}.status`] = 'A';
+
     let childrenProducts = await this.productRepo.find({
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
-      where: {
-        [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
-      },
+      where: filterConditions,
     });
 
     if (childrenProducts.length) {
@@ -4650,7 +4658,7 @@ export class ProductService {
           childProduct['promotion_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['promotion_accessory_id'],
-              role,
+              source,
             );
         }
 
@@ -4659,7 +4667,7 @@ export class ProductService {
           childProduct['free_accessory_products'] =
             await this.getAccessoriesByProductId(
               childProduct['free_accessory_id'],
-              role,
+              source,
             );
         }
 
@@ -4668,7 +4676,7 @@ export class ProductService {
           childProduct['warranty_package_products'] =
             await this.getAccessoriesByProductId(
               childProduct['warranty_package_id'],
-              role,
+              source,
             );
         }
 
@@ -4708,7 +4716,9 @@ export class ProductService {
         let image = await this.imageRepo.findOne({
           image_id: imageLinkItem.image_id,
         });
-        result = [...result, { ...imageLinkItem, ...image }];
+        if (image) {
+          result = [...result, { ...imageLinkItem, ...image }];
+        }
       }
     }
 
@@ -4767,15 +4777,17 @@ export class ProductService {
               productStoreItem['store_location_id'],
           },
         });
-        let storeObj = {
-          productId: id,
-          storeId: store['store_location_id'],
-          storeName: store['store_name'],
-          storeAddress: store['pickup_address'],
-          storeLatitude: store['latitude'],
-          storeLongitude: store['longitude'],
-        };
-        result = [...result, { ...productStoreItem, ...storeObj }];
+        if (store) {
+          let storeObj = {
+            productId: id,
+            storeId: store['store_location_id'],
+            storeName: store['store_name'],
+            storeAddress: store['pickup_address'],
+            storeLatitude: store['latitude'],
+            storeLongitude: store['longitude'],
+          };
+          result = [...result, { ...productStoreItem, ...storeObj }];
+        }
       }
     }
     return result;
@@ -5462,23 +5474,29 @@ export class ProductService {
   }
 
   async getProductPreview(product_id) {
-    const res = await this.productPreviewRepo.findOne({where: [{product_id}, {token: product_id}]});
+    const res = await this.productPreviewRepo.findOne({
+      where: [{ product_id }, { token: product_id }],
+    });
 
     return res;
   }
 
   async createProductPreview(data) {
-    const checkExist = await this.productPreviewRepo.findOne({product_id: data.product_id});
+    const checkExist = await this.productPreviewRepo.findOne({
+      product_id: data.product_id,
+    });
     if (checkExist) {
-      await this.productPreviewRepo.delete({product_id: data.product_id});
+      await this.productPreviewRepo.delete({ product_id: data.product_id });
     }
     const token = generateRandomString();
     const productPreviewData = {
-      ...new ProductPreviewEntity,
+      ...new ProductPreviewEntity(),
       ...this.productPreviewRepo.setData(data),
       token: token,
-    }
-    const productPreview = await this.productPreviewRepo.create(productPreviewData);
+    };
+    const productPreview = await this.productPreviewRepo.create(
+      productPreviewData,
+    );
     return productPreview;
   }
 }

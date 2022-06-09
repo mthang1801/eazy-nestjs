@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   HttpException,
+  Inject,
 } from '@nestjs/common';
 
 import { Table, JoinTable, SortBy } from '../../database/enums/index';
@@ -150,6 +151,7 @@ import { ShippingServiceRepository } from '../repositories/shippingsService.repo
 import { ShippingsServiceEntity } from '../entities/shippingsService.entity';
 import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingsEntity } from '../entities/shippings.entity';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrdersService {
@@ -183,8 +185,12 @@ export class OrdersService {
     private shippingFeeService: ShippingFeeService,
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
-    private shippingRepo: ShippingRepository<ShippingsEntity>,
+    private shippingRepo: ShippingRepository<ShippingsEntity>, // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
   ) {}
+
+  async testQueue(data) {
+    // await this.client.emit('create-order', data);
+  }
 
   async CMScreate(data) {
     let user: any = await this.userRepo.findById(data.user_id);
@@ -227,7 +233,7 @@ export class OrdersService {
       status: OrderStatus.new,
       shipping_cost: data.shipping_cost ? data.shipping_cost : 0,
       pay_credit_type: data.pay_credit_type ? data.pay_credit_type : 1,
-      ref_order_id: generateRandomString(),
+      ref_order_id: `${generateRandomString()}a`,
       total: 0,
       subtotal: data.shipping_cost ? +data.shipping_cost : 0,
       created_date: formatStandardTimeStamp(),
@@ -394,7 +400,7 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-      console.log(response);
+
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
         { order_id: result.order_id },

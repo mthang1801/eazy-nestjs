@@ -56,10 +56,7 @@ import { ValuationBillCriteriaDetailRepository } from '../repositories/valuation
 import { TradeinProgramModule } from './tradeinProgram.module';
 import { CatalogModule } from './catalog.module';
 import { CatalogFeatureValueProductRepository } from '../repositories/catalogFetureValueProduct.repository';
-import { MessageProducerService } from '../microservices/queue/producers/message.producer';
-import { QueueModule } from './queue.module';
 import { CatalogRepository } from '../repositories/catalog.repository';
-import { AudioProducerService } from '../microservices/queue/producers/audio.producer';
 import { BannerItemRepository } from '../repositories/bannerItemDescription.repository';
 import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
 
@@ -69,7 +66,6 @@ import { ProductPreviewsRepository } from '../repositories/productPreviews.repos
     forwardRef(() => StickerModule),
     ReviewsCommentsModule,
     CatalogModule,
-    QueueModule,
   ],
   providers: [
     ProductService,

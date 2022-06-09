@@ -79,6 +79,7 @@ export class OrderHistoryEntity {
   installed_tenor: number = 0;
   installed_prepaid_amount: number = 0;
   installed_payment_per_month: number = 0;
+  installed_prepaid_percentage: number = 0;
   installed_money_code: string = '';
   installed_money_account_id: number = 0;
   installed_interest_rate: number = 0;

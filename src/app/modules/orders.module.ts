@@ -32,6 +32,7 @@ import { ShippingFeeModule } from './shippingFee.module';
 import { ShippingModule } from './shippings.module';
 import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
 import { ShippingRepository } from '../repositories/shippings.repository';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 @Module({
   controllers: [
     OrderControllerBE,
@@ -65,6 +66,20 @@ import { ShippingRepository } from '../repositories/shippings.repository';
     OrderPaymentRepository,
   ],
   imports: [
+    // ClientsModule.register([
+    //   {
+    //     name: 'ORDER_SERVICE',
+    //     transport: Transport.RMQ,
+    //     options: {
+    //       urls: ['amqp://localhost:5672'],
+    //       queue: 'orders',
+    //       noAck: false,
+    //       queueOptions: {
+    //         durable: false,
+    //       },
+    //     },
+    //   },
+    // ]),
     OrderStatusModule,
     UsersModule,
     StatusModule,
