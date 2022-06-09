@@ -90,6 +90,68 @@ export class SearchService {
       return;
     }
   }
+  async searchTerms(texts: string[], index: string, field: string) {
+    try {
+      const data: any = await this.searchService.search({
+        index,
+        body: {
+          query: {
+            terms: {
+              [field]: texts,
+            },
+          },
+        },
+      });
+      if (!data.body.hits.hits) {
+        throw new HttpException('No Result', 404);
+      }
+      const hits = data?.body?.hits?.hits;
+      if (!hits) {
+        return [];
+      }
+      return hits.map((item) => item._source);
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+  }
 
-  // async updateIndex(index: string, field : string )
+  async remove(key: string, value: string, index: string) {
+    try {
+      await this.searchService.deleteByQuery({
+        index,
+        body: {
+          query: {
+            term: {
+              [key]: value,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      return;
+    }
+  }
+
+  async update(key: string, keyVal: string, body: any, index: string) {
+    const script = Object.entries(body).reduce(
+      (result, [k, v]) => `${result} ctx._source.${k}='${v}';`,
+      '',
+    );
+
+    return this.searchService.updateByQuery({
+      index,
+      body: {
+        query: {
+          match: {
+            [key]: keyVal,
+          },
+        },
+        script: {
+          inline: script,
+        },
+      },
+    });
+  }
 }
