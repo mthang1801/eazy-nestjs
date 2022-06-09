@@ -167,6 +167,7 @@ export class FlashSalesService {
     let flashSale = await this.flashSaleRepo.findOne({
       status: 'A',
       end_at: MoreThanOrEqual(formatStandardTimeStamp()),
+      start_at: LessThanOrEqual(formatStandardTimeStamp()),
     });
 
     if (!flashSale) {
@@ -482,13 +483,11 @@ export class FlashSalesService {
   }
 
   async turnOnFlashSale(flash_sale_id) {
-    console.log("Turn on flash sale");
+    console.log('Turn on flash sale');
     const today = formatStandardTimeStamp();
     const flashSaleList = await this.flashSaleRepo.find({ status: 'A' });
     for (let flashSaleDetail of flashSaleList) {
-      let tempStartDate = formatStandardTimeStamp(
-        flashSaleDetail['start_at'],
-      );
+      let tempStartDate = formatStandardTimeStamp(flashSaleDetail['start_at']);
       //let tempEndDate = formatStandardTimeStamp(flashSaleDetail['end_at']);
       if (new Date(tempStartDate).getTime() > new Date(today).getTime()) {
         console.log(
@@ -516,37 +515,43 @@ export class FlashSalesService {
 
   async addTimeoutTurnOffFlashSale(flash_sale_id) {
     const callback = () => {
-      console.log("Turn off flash sale");
+      console.log('Turn off flash sale');
       this.flashSaleRepo.update(
-        {flash_sale_id: flash_sale_id},
-        {status: 'D'}
+        { flash_sale_id: flash_sale_id },
+        { status: 'D' },
       );
     };
-  
-    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
-    const endDate = formatStandardTimeStamp(
-      flashSale['end_at'],
-    ).toString();
+
+    const flashSale = await this.flashSaleRepo.findOne({
+      flash_sale_id: flash_sale_id,
+    });
+    const endDate = formatStandardTimeStamp(flashSale['end_at']).toString();
     const today = formatStandardTimeStamp();
-    const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(endDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("flash sale will end after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout("turn_off_flash_sale", timeout);
+    console.log(
+      'flash sale will end after ' + milliseconds / 3600000 + ' hours.',
+    );
+    this.schedulerRegistry.addTimeout('turn_off_flash_sale', timeout);
   }
 
   async addTimeoutTurnOnFlashSale(flash_sale_id) {
     const callback = () => {
       this.turnOnFlashSale(flash_sale_id);
     };
-    
-    const flashSale = await this.flashSaleRepo.findOne({flash_sale_id: flash_sale_id});
-    const startDate = formatStandardTimeStamp(
-      flashSale['start_at'],
-    ).toString();
+
+    const flashSale = await this.flashSaleRepo.findOne({
+      flash_sale_id: flash_sale_id,
+    });
+    const startDate = formatStandardTimeStamp(flashSale['start_at']).toString();
     const today = formatStandardTimeStamp();
-    const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(startDate).getTime() - new Date(today).getTime();
     //const timeout = setTimeout(callback, milliseconds);
-    console.log("flash sale will start after " + milliseconds/3600000 + " hours.");
+    console.log(
+      'flash sale will start after ' + milliseconds / 3600000 + ' hours.',
+    );
     //this.schedulerRegistry.addTimeout(convertToSlug(flashSale.name), timeout);
     const name = convertToSlug(flashSale.name);
     console.log(name);
