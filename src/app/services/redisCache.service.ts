@@ -312,6 +312,11 @@ export class RedisCacheService {
     return this.get(searchCacheKey);
   }
 
+  async removeSearchProducts(q) {
+    let searchCacheKey = cacheKeys.search(convertToSlug(q));
+    return this.removeCache(null, null, searchCacheKey);
+  }
+
   async setSearchProducts(q, data) {
     let searchCacheKey = cacheKeys.search(convertToSlug(q));
     await this.set(searchCacheKey, data);

@@ -45,6 +45,7 @@ export class SearchService {
       const data: any = await this.searchService.search({
         index,
         body: {
+          size: 5,
           query: {
             match: {
               [field]: {query: text, fuzziness: "auto"},
