@@ -25,11 +25,9 @@ export class TradeinProgramController extends BaseController {
   }
 
   @Get('/test-cron')
-  async testCron(
-    @Res() res: Response,
-  ): Promise <IResponse> {
+  async testCron(@Res() res: Response): Promise<IResponse> {
     await this.service.testCron();
-    return this.responseSuccess(res, null, "Thành công.");
+    return this.responseSuccess(res, null, 'Thành công.');
   }
 
   @Post('/valuation-bills/log-request-sync')

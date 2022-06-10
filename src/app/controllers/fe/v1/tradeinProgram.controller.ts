@@ -33,7 +33,7 @@ export class TradeinProgramController extends BaseController {
     @Res() res: Response,
     @Param('tradein_id') tradein_id: number,
     @Query() params,
-  ): Promise <IResponse> {
+  ): Promise<IResponse> {
     const result = await this.service.getById(tradein_id, params);
     return this.responseSuccess(res, result);
   }
@@ -65,6 +65,15 @@ export class TradeinProgramController extends BaseController {
     @Query() params,
   ): Promise<IResponse> {
     const result = await this.service.FEgetValuationBills(req.user, params);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get('/:product_id/criteria-set')
+  async getListCriteria(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.getCriteriaList(product_id);
     return this.responseSuccess(res, result);
   }
 
