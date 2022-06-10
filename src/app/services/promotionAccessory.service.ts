@@ -234,7 +234,7 @@ export class PromotionAccessoryService {
         { accessory_id },
         true,
       );
-      if (oldPromotionProducts.length) {
+      if (oldPromotionProducts && oldPromotionProducts.length) {
         // ======= Remove product cache =========
         for (let oldPromotionProduct of oldPromotionProducts) {
           await this.cache.removeRelatedServicesWithCachedProduct(
@@ -243,29 +243,27 @@ export class PromotionAccessoryService {
         }
       }
 
-      if (data.products.length) {
-        for (let productItem of data.products) {
-          const product = await this.productRepo.findOne({
-            select: '*',
-            join: productLeftJoiner,
-            where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
-          });
+      for (let productItem of data.products) {
+        const product = await this.productRepo.findOne({
+          select: '*',
+          join: productLeftJoiner,
+          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
+        });
 
-          const newProductData = {
-            ...new PromotionAccessoryDetailEntity(),
-            ...this.promoAccessoryDetailRepo.setData(productItem),
-            sale_price: product['price'],
-            created_by: user.user_id,
-            updated_by: user.user_id,
-            accessory_id: accessory_id,
-          };
-          await this.promoAccessoryDetailRepo.create(newProductData, false);
+        const newProductData = {
+          ...new PromotionAccessoryDetailEntity(),
+          ...this.promoAccessoryDetailRepo.setData(productItem),
+          sale_price: product['price'],
+          created_by: user.user_id,
+          updated_by: user.user_id,
+          accessory_id: accessory_id,
+        };
+        await this.promoAccessoryDetailRepo.create(newProductData, false);
 
-          //============== remove new promotion product cache ==============
-          await this.cache.removeRelatedServicesWithCachedProduct(
-            product.product_id,
-          );
-        }
+        //============== remove new promotion product cache ==============
+        await this.cache.removeRelatedServicesWithCachedProduct(
+          product.product_id,
+        );
       }
     }
 
@@ -326,6 +324,7 @@ export class PromotionAccessoryService {
         select: `COUNT(${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id) as total `,
         where: { accessory_id: accessoryItem.accessory_id },
       });
+
       accessoryItem['display_at'] = moment(accessoryItem['display_at']).format(
         'YYYY-DD-MM HH:mm:ss',
       );
@@ -430,8 +429,8 @@ export class PromotionAccessoryService {
           );
 
           //============== remove new promotion product cache ==============
-          let productCacheKey = cacheKeys.product(product.product_id);
-          await this.cache.delete(productCacheKey);
+
+          await this.cache.removeCachedProductById(product.product_id);
         }
       }
     }
@@ -477,8 +476,8 @@ export class PromotionAccessoryService {
           );
 
           //============== remove new promotion product cache ==============
-          let productCacheKey = cacheKeys.product(product.product_id);
-          await this.cache.delete(productCacheKey);
+
+          await this.cache.removeCachedProductById(product.product_id);
         }
       }
     }
