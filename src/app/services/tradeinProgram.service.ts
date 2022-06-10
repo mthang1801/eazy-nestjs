@@ -506,7 +506,7 @@ export class TradeinProgramService {
     let resTradeinProgram = {...tradeinProgram, applied_products: tempAppliedProducts}
     //return resTradeinProgram;
     return {
-      productsPaging: {
+      paging: {
         currentPage: page,
         pageSize: limit,
         total: count,
