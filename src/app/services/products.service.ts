@@ -448,6 +448,7 @@ export class ProductService {
     // }
     let parentProducts = await this.productRepo.find({
       product_function: 1,
+      product_id: MoreThanOrEqual(24200),
     });
     if (parentProducts.length) {
       for (let parentProduct of parentProducts) {
@@ -650,16 +651,16 @@ export class ProductService {
     }
 
     if (result['product_function'] == 1) {
+      let childrenProducts = await this.getChildrenProducts(
+        result['product_appcore_id'],
+      );
+      result['children_products'] = childrenProducts;
+
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: result.product_id,
       });
 
       if (group) {
-        let childrenProducts = await this.getChildrenProducts(
-          result['product_appcore_id'],
-          1,
-        );
-        result['children_products'] = childrenProducts;
         result['relevantProducts'] = [];
         // Find relevant products
         if (group.index_id) {
@@ -4625,7 +4626,7 @@ export class ProductService {
       [`${Table.PRODUCTS}.parent_product_appcore_id`]: product_appcore_id,
     };
 
-    if (source === 1) filterConditions[`${Table.PRODUCTS}.status`] = 'A';
+    if (source == 1) filterConditions[`${Table.PRODUCTS}.status`] = 'A';
 
     let childrenProducts = await this.productRepo.find({
       select: productDetailSelector,

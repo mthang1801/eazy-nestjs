@@ -427,35 +427,14 @@ export class OrdersService {
       // update order history
       await this.orderHistoryRepo.create(updatedOrder, false);
 
-      // if (data.pay_credit_type == 4) {
-      //   await this.orderPaymentRepo.create({
-      //     order_id: result['order_id'],
-      //     order_no: result['ref_order_id'],
-      //     gateway_name: gatewayName,
-      //     amount: +result['subtotal'] + +result['discount'],
-      //   });
-
-      //   const paymentAppcoreData = {
-      //     installmentAccountId: installed_money_account_id,
-      //     installmentCode: result['ref_order_id'],
-      //     paymentStatus: 'success',
-      //     totalAmount: +result['subtotal'] + +result['discount'],
-      //   };
-
-      //   await axios({
-      //     method: 'PUT',
-      //     url: UPDATE_ORDER_PAYMENT(result['order_code']),
-      //     data: paymentAppcoreData,
-      //   });
-
-      //   await this.orderRepo.update(
-      //     { order_id: result['order_id'] },
-      //     {
-      //       status: OrderStatus.new,
-      //       updated_date: formatStandardTimeStamp(),
-      //     },
-      //   );
-      // }
+      if (data.pay_credit_type == 4) {
+        await this.orderPaymentRepo.create({
+          order_id: result['order_id'],
+          order_no: result['ref_order_id'],
+          gateway_name: gatewayName,
+          amount: +result['subtotal'] + +result['discount'],
+        });
+      }
 
       return this.getByOrderCode(updatedOrder.order_code);
     } catch (error) {
