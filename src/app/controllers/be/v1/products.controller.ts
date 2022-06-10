@@ -283,7 +283,7 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, null, 'Xoá thành công.');
   }
 
-  @Put('/:product_id/delete-images')
+  @Put(':product_id/delete-images')
   @UseGuards(AuthGuard)
   async deleteProductImage(
     @Param('product_id') product_id: number,
