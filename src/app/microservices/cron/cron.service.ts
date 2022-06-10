@@ -31,8 +31,8 @@ export class CronService {
   //   this.productService.standardizeProducts();
   // }
 
-  @Timeout(5000)
-  standard() {
-    this.productService.testSql();
-  }
+  // @Timeout(5000)
+  // standard() {
+  //   this.productService.testSql();
+  // }
 }
