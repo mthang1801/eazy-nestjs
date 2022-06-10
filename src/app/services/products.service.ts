@@ -5029,28 +5029,32 @@ export class ProductService {
   }
 
   async testSql() {
-    const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
-      join: productSearchJoiner,
-      skip: 0,
-      limit: 10,
-    });
+    // const productsList = await this.productRepo.find({
+    //   select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+    //   join: productSearchJoiner,
+    //   skip: 0,
+    //   limit: 10,
+    // });
 
-    console.time('run');
-    let result = productsList.map(async (productItem, i) => {
-      this.searchService.createIndex('products', {
-        name: productItem.product,
-        product_code: productItem.product_code,
-        description: productItem.description,
-        slug: productItem.slug || '',
-        productSlug: productItem.productSlug,
-        price: productItem.price,
-        thumbnail: productItem.thumbnail,
-      });
-      return i;
-    });
-    await Promise.all(result);
-    console.timeEnd('run');
+    // console.time('run');
+    // let result = productsList.map(async (productItem, i) => {
+    //   this.searchService.createIndex('products', {
+    //     name: productItem.product,
+    //     product_code: productItem.product_code,
+    //     description: productItem.description,
+    //     slug: productItem.slug || '',
+    //     productSlug: productItem.productSlug,
+    //     price: productItem.price,
+    //     thumbnail: productItem.thumbnail,
+    //   });
+    //   return i;
+    // });
+    // await Promise.all(result);
+    // console.timeEnd('run');
+
+    const search = await this.searchService.searchMatch("appp", "products", "name");
+    console.log(search);
+    return search;
 
     // await this.searchService.createIndex('products', {
     //   name: productItem.product,

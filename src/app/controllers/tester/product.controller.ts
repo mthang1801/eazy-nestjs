@@ -76,7 +76,7 @@ export class ProductTesterController extends BaseController {
     // await this.messageService.sendMessage(data);
     // await this.audioService.sendAudio(data);
 
-    await this.service.testSql();
-    return this.responseSuccess(res);
+    const result = await this.service.testSql();
+    return this.responseSuccess(res, result);
   }
 }
