@@ -109,16 +109,16 @@ export class ProductsController extends BaseController {
     @Body() data: ProductPreviewDto,
   ): Promise<IResponse> {
     const result = await this.service.createProductPreview(data);
-    return this.responseSuccess(res, result, "Thành công.");
+    return this.responseSuccess(res, result, 'Thành công.');
   }
 
   @Get('product-preview/:product_id')
   async getProductPreview(
     @Res() res: Response,
-    @Param ('product_id') product_id: number,
+    @Param('product_id') product_id: number,
   ): Promise<IResponse> {
     const result = await this.service.getProductPreview(product_id);
-    return this.responseSuccess(res, result, "Thành công.");
+    return this.responseSuccess(res, result, 'Thành công.');
   }
 
   @Get('/parents')

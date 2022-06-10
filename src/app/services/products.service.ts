@@ -651,10 +651,9 @@ export class ProductService {
     }
 
     if (result['product_function'] == 1) {
-      let childrenProducts = await this.getChildrenProducts(
+      result['children_products'] = await this.getChildrenProducts(
         result['product_appcore_id'],
       );
-      result['children_products'] = childrenProducts;
 
       let group = await this.productVariationGroupRepo.findOne({
         product_root_id: result.product_id,

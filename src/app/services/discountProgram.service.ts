@@ -17,7 +17,10 @@ import {
   getPageSkipLimit,
 } from '../../utils/helper';
 import { get, sortBy } from 'lodash';
-import { getProductAccessorySelector, getProductListByDiscountProgram } from '../../utils/tableSelector';
+import {
+  getProductAccessorySelector,
+  getProductListByDiscountProgram,
+} from '../../utils/tableSelector';
 import {
   discountProgramsSearchFilter,
   discountProgramsDetailSearchFilter,
@@ -107,7 +110,7 @@ export class DiscountProgramService {
       filterConditions[`${Table.DISCOUNT_PROGRAM}.priority`] = priority;
     }
 
-    const result = await this.discountProgramRepo.find({
+    let result = this.discountProgramRepo.find({
       select: '*',
       where: discountProgramsSearchFilter(search, filterConditions),
       orderBy: [
@@ -117,18 +120,20 @@ export class DiscountProgramService {
       limit,
     });
 
-    const count = await this.discountProgramRepo.find({
+    let count = this.discountProgramRepo.find({
       select: `COUNT(DISTINCT(${Table.DISCOUNT_PROGRAM}.discount_id)) as total`,
       where: discountProgramsSearchFilter(search, filterConditions),
     });
+
+    let dataRepsonse = await Promise.all([result, count]);
 
     return {
       paging: {
         currentPage: page,
         pageSize: limit,
-        total: count[0].total,
+        total: dataRepsonse[1][0].total,
       },
-      data: result,
+      data: dataRepsonse[0],
     };
   }
 
@@ -437,20 +442,28 @@ export class DiscountProgramService {
   }
 
   async FEGetList() {
-    const discountProgramList = await this.discountProgramRepo.find({status: 'A'});
+    const discountProgramList = await this.discountProgramRepo.find();
     let resDiscountProgramList = [];
     for (let discountProgram of discountProgramList) {
-      let appliedProducts = await this.discountProgramDetailRepo.find({discount_id: discountProgram.discount_id, status: 'A'});
-      let tempAppliedProducts = []
+      let appliedProducts = await this.discountProgramDetailRepo.find({
+        discount_id: discountProgram.discount_id,
+        status: 'A',
+      });
+      let tempAppliedProducts = [];
       for (let appliedProduct of appliedProducts) {
         const tempAppliedproduct = await this.productRepo.findOne({
           select: getProductListByDiscountProgram,
           join: productLeftJoiner,
-          where: { [`${Table.PRODUCTS}.product_id`]: appliedProduct.product_id },
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: appliedProduct.product_id,
+          },
         });
         tempAppliedProducts.push(tempAppliedproduct);
       }
-      let tempDiscountProgram = {...discountProgram, applied_products: tempAppliedProducts}
+      let tempDiscountProgram = {
+        ...discountProgram,
+        applied_products: tempAppliedProducts,
+      };
       resDiscountProgramList.push(tempDiscountProgram);
     }
     return resDiscountProgramList;
@@ -458,14 +471,16 @@ export class DiscountProgramService {
 
   async testCron() {
     await this.addTimeoutTurnOnDiscountProgram(6);
-  } 
+  }
 
   async addTimeoutTurnOnDiscountProgram(discount_id) {
     const callback = () => {
       this.turnOnDiscountProgram(discount_id);
     };
 
-    const discountProgram = await this.discountProgramRepo.findOne({discount_id});
+    const discountProgram = await this.discountProgramRepo.findOne({
+      discount_id,
+    });
     const startDate = formatStandardTimeStamp(
       discountProgram['start_at'],
     ).toString();
@@ -475,106 +490,126 @@ export class DiscountProgramService {
     const today = formatStandardTimeStamp();
 
     if (new Date(endDate).getTime() < new Date(today).getTime()) {
-      console.log("Chương trình chiết khấu đã quá hạn.");
+      console.log('Chương trình chiết khấu đã quá hạn.');
       return;
     }
 
-    if (new Date(today).getTime() > new Date(startDate).getTime() && new Date(today).getTime() < new Date(endDate).getTime()) {
-      console.log("Chương trình chiết khấu đang trong thời gian diễn ra.");
+    if (
+      new Date(today).getTime() > new Date(startDate).getTime() &&
+      new Date(today).getTime() < new Date(endDate).getTime()
+    ) {
+      console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
 
       const startTime = await this.configTime(discountProgram.time_start_at);
       const endTime = await this.configTime(discountProgram.time_end_at);
-      const now = await this.configTime(formatTime()); 
-      if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
-        console.log("Chương trình được bắt đầu trong khung giờ diễn ra");
-        this.discountProgramRepo.update(
-          {discount_id},
-          {status: 'A'}
-        )
+      const now = await this.configTime(formatTime());
+      if (
+        now.toSecond > startTime.toSecond &&
+        now.toSecond < endTime.toSecond
+      ) {
+        console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
+        this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+      } else {
+        console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
       }
-      else {
-        console.log("Chương trình được bắt đầu không trong khung giờ diễn ra");
-      }
-  
-      const jobOn = new CronJob(`${startTime.second} ${startTime.minute} ${startTime.hour} * * *`, () => {
-        this.discountProgramRepo.update(
-          {discount_id},
-          {status: 'A'}
-        )
-      });
-      const jobOff = new CronJob(`${endTime.second} ${endTime.minute} ${endTime.hour} * * *`, () => {
-        this.discountProgramRepo.update(
-          {discount_id},
-          {status: 'D'}
-        )
-      });
-  
-      this.schedulerRegistry.addCronJob("on-at-"+convertToSlug(discountProgram.time_start_at), jobOn);
+
+      const jobOn = new CronJob(
+        `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
+        () => {
+          this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        },
+      );
+      const jobOff = new CronJob(
+        `${endTime.second} ${endTime.minute} ${endTime.hour} * * *`,
+        () => {
+          this.discountProgramRepo.update({ discount_id }, { status: 'D' });
+        },
+      );
+
+      this.schedulerRegistry.addCronJob(
+        'on-at-' + convertToSlug(discountProgram.time_start_at),
+        jobOn,
+      );
       jobOn.start();
-      this.schedulerRegistry.addCronJob("off-at-"+convertToSlug(discountProgram.time_end_at), jobOff);
+      this.schedulerRegistry.addCronJob(
+        'off-at-' + convertToSlug(discountProgram.time_end_at),
+        jobOff,
+      );
       jobOff.start();
-      
+
       await this.addTimeoutTurnOffDiscountProgram(discount_id);
       return;
     }
 
-    const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(startDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("Discount program will start after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout(convertToSlug(discountProgram.discount_name), timeout);
+    console.log(
+      'Discount program will start after ' + milliseconds / 3600000 + ' hours.',
+    );
+    this.schedulerRegistry.addTimeout(
+      convertToSlug(discountProgram.discount_name),
+      timeout,
+    );
   }
 
   async configTime(hh_mm_ss) {
-    const time = hh_mm_ss.split(":");
+    const time = hh_mm_ss.split(':');
     let hour = parseInt(time[0]);
     let minute = parseInt(time[1]);
     let second = parseInt(time[2]);
-    let toSecond = hour*3600 + minute*60 + second;
+    let toSecond = hour * 3600 + minute * 60 + second;
     return {
       hour,
       minute,
       second,
-      toSecond
+      toSecond,
     };
   }
 
   async turnOnDiscountProgram(discount_id) {
-    console.log("Discount program start");
-    const discountProgram = await this.discountProgramRepo.findOne({discount_id});
+    console.log('Discount program start');
+    const discountProgram = await this.discountProgramRepo.findOne({
+      discount_id,
+    });
 
     const startTime = await this.configTime(discountProgram.time_start_at);
     const endTime = await this.configTime(discountProgram.time_end_at);
-    const now = await this.configTime(formatTime()); 
+    const now = await this.configTime(formatTime());
     if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
-      console.log("Chương trình được bắt đầu trong khung giờ diễn ra");
-      this.discountProgramRepo.update(
-        {discount_id},
-        {status: 'A'}
-      )
-    }
-    else {
-      console.log("Chương trình được bắt đầu không trong khung giờ diễn ra");
+      console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
+      this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+    } else {
+      console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
     }
 
-    const jobOn = new CronJob(`${startTime.second} ${startTime.minute} ${startTime.hour} * * *`, () => {
-      this.discountProgramRepo.update(
-        {discount_id},
-        {status: 'A'}
-      )
-    });
-    const jobOff = new CronJob(`${endTime.second} ${endTime.minute} ${endTime.hour} * * *`, () => {
-      this.discountProgramRepo.update(
-        {discount_id},
-        {status: 'D'}
-      )
-    });
+    const jobOn = new CronJob(
+      `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
+      () => {
+        this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+      },
+    );
+    const jobOff = new CronJob(
+      `${endTime.second} ${endTime.minute} ${endTime.hour} * * *`,
+      () => {
+        this.discountProgramRepo.update({ discount_id }, { status: 'D' });
+      },
+    );
 
-    this.schedulerRegistry.addCronJob("on-at-"+convertToSlug(discountProgram.time_start_at), jobOn);
+    this.schedulerRegistry.addCronJob(
+      'on-at-' + convertToSlug(discountProgram.time_start_at),
+      jobOn,
+    );
     jobOn.start();
-    this.schedulerRegistry.addCronJob("off-at-"+convertToSlug(discountProgram.time_end_at), jobOff);
+    this.schedulerRegistry.addCronJob(
+      'off-at-' + convertToSlug(discountProgram.time_end_at),
+      jobOff,
+    );
     jobOff.start();
-    
-    await this.schedulerRegistry.deleteTimeout(convertToSlug(discountProgram.discount_name));
+
+    await this.schedulerRegistry.deleteTimeout(
+      convertToSlug(discountProgram.discount_name),
+    );
     await this.addTimeoutTurnOffDiscountProgram(discount_id);
   }
 
@@ -582,33 +617,52 @@ export class DiscountProgramService {
     const callback = () => {
       this.turnOffDiscountProgram(discount_id);
     };
-  
-    const discountProgram = await this.discountProgramRepo.findOne({discount_id});
+
+    const discountProgram = await this.discountProgramRepo.findOne({
+      discount_id,
+    });
     const endDate = formatStandardTimeStamp(
       discountProgram['end_at'],
     ).toString();
     const today = formatStandardTimeStamp();
-    const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(endDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("Discount program will end after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout(convertToSlug(discountProgram.discount_name), timeout);
+    console.log(
+      'Discount program will end after ' + milliseconds / 3600000 + ' hours.',
+    );
+    this.schedulerRegistry.addTimeout(
+      convertToSlug(discountProgram.discount_name),
+      timeout,
+    );
   }
 
   async turnOffDiscountProgram(discount_id) {
-    console.log("Turn off tradein program");
-    const discountProgram = await this.discountProgramRepo.findOne({discount_id});
+    console.log('Turn off tradein program');
+    const discountProgram = await this.discountProgramRepo.findOne({
+      discount_id,
+    });
 
-    this.schedulerRegistry.deleteCronJob("on-at-"+convertToSlug(discountProgram.time_start_at));
-    this.schedulerRegistry.deleteCronJob("off-at-"+convertToSlug(discountProgram.time_end_at));
-    this.logger.warn(`job ${"on-at-"+convertToSlug(discountProgram.time_start_at)} deleted!`);
-    this.logger.warn(`job ${"on-at-"+convertToSlug(discountProgram.time_end_at)} deleted!`);
+    this.schedulerRegistry.deleteCronJob(
+      'on-at-' + convertToSlug(discountProgram.time_start_at),
+    );
+    this.schedulerRegistry.deleteCronJob(
+      'off-at-' + convertToSlug(discountProgram.time_end_at),
+    );
+    this.logger.warn(
+      `job ${'on-at-' + convertToSlug(discountProgram.time_start_at)} deleted!`,
+    );
+    this.logger.warn(
+      `job ${'on-at-' + convertToSlug(discountProgram.time_end_at)} deleted!`,
+    );
 
-    this.discountProgramRepo.update(
-      {discount_id},
-      {status: 'D'}
-    )
+    this.discountProgramRepo.update({ discount_id }, { status: 'D' });
 
-    await this.schedulerRegistry.deleteTimeout(convertToSlug(discountProgram.discount_name));
-    await this.logger.warn(`Timeout ${convertToSlug(discountProgram.discount_name)} deleted!`);
+    await this.schedulerRegistry.deleteTimeout(
+      convertToSlug(discountProgram.discount_name),
+    );
+    await this.logger.warn(
+      `Timeout ${convertToSlug(discountProgram.discount_name)} deleted!`,
+    );
   }
 }

@@ -20,16 +20,14 @@ export class DiscountProgramController extends BaseController {
   }
 
   @Get('/test-cron')
-  async testCron(
-    @Res() res: Response,
-  ): Promise <IResponse> {
+  async testCron(@Res() res: Response): Promise<IResponse> {
     await this.service.testCron();
-    return this.responseSuccess(res, null, "Thành công.");
+    return this.responseSuccess(res, null, 'Thành công.');
   }
-  
+
   @Get()
   async getList(@Res() res: Response): Promise<IResponse> {
-    const result = await this.service.FEGetList();
+    const result = await this.service.getList();
     return this.responseSuccess(res, result);
   }
 
