@@ -25,10 +25,10 @@ export class CreateFlashSaleDto {
   @IsOptional()
   status: string = 'A';
 
-  @IsOptional()
+  @IsNotEmpty()
   start_at: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   end_at: string;
 
   @IsOptional()
