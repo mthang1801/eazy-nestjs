@@ -30,4 +30,9 @@ export class CronService {
   // standard() {
   //   this.productService.standardizeProducts();
   // }
+
+  @Timeout(5000)
+  standard() {
+    this.productService.testSql();
+  }
 }
