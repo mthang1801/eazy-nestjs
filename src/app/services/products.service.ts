@@ -3970,16 +3970,13 @@ export class ProductService {
 
   async searchList(params) {
     let { page, limit, category_ids, q } = params;
+    console.log(q);
 
     page = +page || 1;
     limit = +limit || 10;
     let skip = (page - 1) * limit;
     let filterConditions = {};
-    let searchResult = await this.cache.getSearchProducts(q);
-
-    if (searchResult) {
-      return searchResult;
-    }
+  
 
     if (category_ids) {
       filterConditions = {
@@ -3989,25 +3986,30 @@ export class ProductService {
       };
     }
 
-    const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
-      join: productSearchJoiner,
-      where: productSearch(q, filterConditions),
-      skip,
-      limit,
-    });
+    // const productsList = await this.productRepo.find({
+    //   select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+    //   join: productSearchJoiner,
+    //   where: productSearch(q, filterConditions),
+    //   skip,
+    //   limit,
+    // });
 
-    let categoriesList = await this.categoryRepo.find({
-      select: '*',
-      join: categoryJoiner,
-      where: categorySearch(q),
-      skip,
-      limit,
-    });
+    // let categoriesList = await this.categoryRepo.find({
+    //   select: '*',
+    //   join: categoryJoiner,
+    //   where: categorySearch(q),
+    //   skip,
+    //   limit,
+    // });
 
-    searchResult = { categoriesList, productsList };
-    await this.cache.setSearchProducts(q, searchResult);
+    let productsList = await this.searchService.searchMatch(q, "products", "name");
+    console.log(productsList);
+    
+    let categoriesList = await this.searchService.searchMatch(q, "categories", "name");
+    console.log(categoriesList);
 
+    let searchResult = { categoriesList, productsList };
+  
     return searchResult;
   }
 
@@ -5029,32 +5031,57 @@ export class ProductService {
   }
 
   async testSql() {
-    // const productsList = await this.productRepo.find({
-    //   select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
-    //   join: productSearchJoiner,
-    //   skip: 0,
-    //   limit: 10,
-    // });
+    const productsList = await this.productRepo.find({
+      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+      join: productSearchJoiner,
+      skip: 0,
+      limit: 1000,
+    });
 
-    // console.time('run');
-    // let result = productsList.map(async (productItem, i) => {
-    //   this.searchService.createIndex('products', {
-    //     name: productItem.product,
-    //     product_code: productItem.product_code,
-    //     description: productItem.description,
-    //     slug: productItem.slug || '',
-    //     productSlug: productItem.productSlug,
-    //     price: productItem.price,
-    //     thumbnail: productItem.thumbnail,
-    //   });
-    //   return i;
-    // });
-    // await Promise.all(result);
-    // console.timeEnd('run');
+    console.time('run');
+    let products = productsList.map(async (productItem, i) => {
+      this.searchService.createIndex('products', {
+        name: productItem.product,
+        product_code: productItem.product_code,
+        description: productItem.description,
+        slug: productItem.slug || '',
+        productSlug: productItem.productSlug,
+        price: productItem.price,
+        thumbnail: productItem.thumbnail,
+      });
+      return i;
+    });
 
-    const search = await this.searchService.searchMatch("appp", "products", "name");
-    console.log(search);
-    return search;
+
+    const categoriesList = await this.categoryRepo.find({
+      select: `*`,
+      join: categoryJoiner,
+      skip: 0,
+      limit: 1000
+    });
+    console.log(categoriesList);
+
+    console.time('run');
+    let categories = categoriesList.map(async (categoryItem, i) => {
+      this.searchService.createIndex('categories', {
+        name: categoryItem.category,
+        slug: categoryItem.slug || '',
+        icon: categoryItem.icon,
+      });
+      return i;
+    });
+
+    const res = await Promise.all([products, categories]);
+    console.log(res);
+    console.timeEnd('run');
+
+    // const search = await this.searchService.searchMatch("appp", "products", "name");
+    // console.log(search);
+    // return search;
+
+    // const search = await this.searchService.searchMatch("iphone", "categories", "name");
+    // console.log(search);
+    // return search;
 
     // await this.searchService.createIndex('products', {
     //   name: productItem.product,
