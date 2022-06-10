@@ -537,6 +537,8 @@ export class RoleService {
     if (!userRole) {
       return false;
     }
+
+    console.log(method, path);
     let roleGroup = await this.roleFunctRepo.findOne({
       select: '*',
       join: roleFunctJoiner,
