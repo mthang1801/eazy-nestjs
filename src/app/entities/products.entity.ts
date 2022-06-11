@@ -1,4 +1,5 @@
 import { formatStandardTimeStamp } from 'src/utils/helper';
+import { thumbnailDefault } from '../../constants/product';
 
 export class ProductsEntity {
   product_appcore_id: string = '';
@@ -12,7 +13,7 @@ export class ProductsEntity {
   company_id: number = 0;
   approved: string = 'Y';
   combo_amount: number = 0;
-  thumbnail: string = '';
+  thumbnail: string = thumbnailDefault;
   category_feature_id: number = 0;
   discount_id: number = 0;
   amount: number = 0;
