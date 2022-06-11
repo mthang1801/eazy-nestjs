@@ -696,17 +696,25 @@ export const itgConvertProductsFromAppcore = (data) => {
   }
 
   const mappingComboData = new Map([
+    ['product_appcore_id', 'product_appcore_id'],
+    ['product_combo_id', 'product_combo_id'],
     ['product_id', 'product_appcore_id'],
+    ['appcore_combo_setting_id', 'appcore_combo_setting_id'],
     ['quantity', 'amount'],
+    ['amount', 'amount'],
   ]);
-
+  let _comboItems = [];
   if (convertedData['combo_items'] && convertedData['combo_items'].length) {
     for (let convertedDataItem of convertedData['combo_items']) {
+      let _comboItem = {};
       for (let [fromData, toData] of mappingComboData) {
-        convertedDataItem[toData] = convertedDataItem[fromData];
-        delete convertedDataItem[fromData];
+        if (convertedDataItem[fromData]) {
+          _comboItem[toData] = convertedDataItem[fromData];
+        }
       }
+      _comboItems.push(_comboItem);
     }
+    convertedData['combo_items'] = _comboItems;
   }
 
   if (convertedData['product']) {
@@ -722,7 +730,7 @@ export const itgConvertProductsFromAppcore = (data) => {
         ? 4
         : 2
       : convertedData['product_type'];
-  console.log(convertedData);
+
   return convertedData;
 };
 
