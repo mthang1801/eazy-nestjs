@@ -605,7 +605,7 @@ export class OrdersService {
     }
 
     let cartItems = await this.cartItemRepo.find({
-      select: `*, ${Table.CART_ITEMS}.amount`,
+      select: `*, ${Table.CART_ITEMS}.product_id, ${Table.CART_ITEMS}.amount`,
       join: cartPaymentJoiner,
       where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     });
@@ -669,6 +669,7 @@ export class OrdersService {
   }
 
   async createOrder(user, data, sendToAppcore = true) {
+    
     if (data['store_id']) {
       const checkStore = await this.storeLocationRepo.findOne({
         store_location_id: data['store_id'],
@@ -695,9 +696,10 @@ export class OrdersService {
 
     orderData['user_appcore_id'] = user['user_appcore_id'];
     orderData['user_id'] = user['user_id'];
-
+    
     orderData['total'] = 0;
     for (let orderItem of data.order_items) {
+      console.log(orderItem)
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
         join: productLeftJoiner,

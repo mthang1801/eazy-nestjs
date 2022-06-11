@@ -2304,7 +2304,6 @@ export class ProductService {
     const productData = {
       ...new ProductsEntity(),
       ...this.productRepo.setData(convertedData),
-      updated_at: formatStandardTimeStamp(),
     };
 
     let result = await this.productRepo.create(productData);
@@ -4316,12 +4315,12 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
-    const productCacheResult = await this.cache.getProductCacheById(
-      product.product_id,
-    );
-    if (productCacheResult) {
-      return productCacheResult;
-    }
+    // const productCacheResult = await this.cache.getProductCacheById(
+    //   product.product_id,
+    // );
+    // if (productCacheResult) {
+    //   return productCacheResult;
+    // }
 
     let result: any = { ...product };
 
@@ -4425,7 +4424,7 @@ export class ProductService {
     }
 
     // Get stores
-    let _stores: any = this.getProductsStores(result.product_id);
+    let _stores: any = this.checkProductsStores(result.product_id);
 
     // get Image
     let _images: any = this.getProductImages(result.product_id);
@@ -4953,7 +4952,9 @@ export class ProductService {
             });
             let storeObj = {
               productId: product.product_id,
+              product_id: product.product_id,
               storeId: store['store_location_id'],
+              store_location_id: store['store_location_id'],
               storeName: store['store_name'],
               storeAddress: store['pickup_address'],
               storeLatitude: store['latitude'],

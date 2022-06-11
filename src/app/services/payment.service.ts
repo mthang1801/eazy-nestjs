@@ -476,7 +476,7 @@ export class PaymentService {
       let cart;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
         });
