@@ -2133,21 +2133,22 @@ export class ProductService {
     // Update product category
     if (data?.category_id?.length) {
       for (let categoryId of data.category_id) {
-        const newProductCategoryData = {
-          ...new ProductsCategoriesEntity(),
-          category_id: categoryId,
-          product_id: result.product_id,
-        };
-        await this.productCategoryRepo.create(newProductCategoryData);
-        let currentCategory = await this.categoryRepo.findOne({
-          category_id: categoryId,
-        });
+        // const newProductCategoryData = {
+        //   ...new ProductsCategoriesEntity(),
+        //   category_id: categoryId,
+        //   product_id: result.product_id,
+        // };
+        // await this.productCategoryRepo.create(newProductCategoryData);
+        // let currentCategory = await this.categoryRepo.findOne({
+        //   category_id: categoryId,
+        // });
         // await this.categoryRepo.update(
         //   { category_id: categoryId },
         //   { product_count: currentCategory.product_count + 1 },
         // );
+        await this.updateProductCategory(result.product_id, categoryId);
         await this.categoryService.updateProductCount(categoryId, 1);
-        await this.cache.removeCategoryById(newProductCategoryData.category_id);
+        await this.cache.removeCategoryById(categoryId);
       }
     }
 
@@ -5628,5 +5629,24 @@ export class ProductService {
       productPreviewData,
     );
     return productPreview;
+  }
+
+  async updateProductCategory(product_id, category_id) {
+    let checkProductCategory = await this.productCategoryRepo.findOne({
+      product_id: product_id,
+      category_id: category_id
+    });
+    if (!checkProductCategory) {
+      const productCategoryData = {
+        ...new ProductsCategoriesEntity(),
+        category_id: category_id,
+        product_id: product_id,
+      };
+      await this.productCategoryRepo.create(productCategoryData);
+    }
+    const checkParent = await this.categoryRepo.findOne({category_id: category_id});
+    if (checkParent.parent_id) {
+      await this.updateProductCategory(product_id, checkParent.parent_id);
+    }
   }
 }

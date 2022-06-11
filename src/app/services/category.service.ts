@@ -1872,4 +1872,23 @@ export class CategoryService {
       await this.updateProductCount(category.parent_id, amount);
     }
   }
+
+  async updateProductCategory(product_id, category_id) {
+    let checkProductCategory = await this.productCategoryRepository.findOne({
+      product_id: product_id,
+      category_id: category_id
+    });
+    if (!checkProductCategory) {
+      const productCategoryData = {
+        ...new ProductsCategoriesEntity(),
+        category_id: category_id,
+        product_id: product_id,
+      };
+      await this.productCategoryRepository.create(productCategoryData);
+    }
+    const checkParent = await this.categoryRepo.findOne({category_id: category_id});
+    if (checkParent.parent_id) {
+      await this.updateProductCategory(product_id, checkParent.parent_id);
+    }
+  }
 }
