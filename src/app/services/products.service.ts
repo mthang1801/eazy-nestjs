@@ -4450,8 +4450,9 @@ export class ProductService {
           });
 
           if (relevantGroups.length) {
-            for (let relevantGroupItem of relevantGroups) {
-              if (relevantGroupItem.product_root_id) {
+            let _relevantGroups = relevantGroups
+              .filter((relevantGroupItem) => relevantGroupItem.product_root_id)
+              .map(async (relevantGroupItem) => {
                 let productRoot = await this.productRepo.findOne({
                   select: [
                     ...getDetailProductsListSelectorFE,
@@ -4464,88 +4465,82 @@ export class ProductService {
                       relevantGroupItem.product_root_id,
                   },
                 });
+                return productRoot;
+              });
 
-                if (productRoot) {
-                  result['relevantProducts'] = [
-                    ...result['relevantProducts'],
-                    productRoot,
-                  ];
-                }
-              }
-            }
+            let resRelevantGroups = await Promise.all(_relevantGroups);
+            result['relevantProducts'] = resRelevantGroups;
           }
         }
       }
     }
 
     // Get stores
-    result['stores'] = await this.getProductsStores(result.product_id);
+    let _stores: any = this.getProductsStores(result.product_id);
 
     // get Image
-    result['images'] = await this.getProductImages(result.product_id);
+    let _images: any = this.getProductImages(result.product_id);
 
     // Get Color, Size
+    let _color: any = null;
     if (result['color'] && !isNaN(+result['color'])) {
-      let featureColor = await this.productFeatureVariantRepo.findOne({
+      _color = this.productFeatureVariantRepo.findOne({
         variant_code: result['color'],
       });
-      if (featureColor) {
-        result['color'] = featureColor['variant'];
-      }
     }
+
+    let _size: any = null;
     if (result['size'] && !isNaN(+result['size'])) {
-      let featureSize = await this.productFeatureVariantRepo.findOne({
+      _size = this.productFeatureVariantRepo.findOne({
         variant_code: result['size'],
       });
-      if (featureSize) {
-        result['size'] = featureSize['variant'];
-      }
     }
 
     //============= Get Features ===============
-    result['productFeatures'] = [];
+    let _productFeatures: any = [];
     if (result['catalog_category_id']) {
-      result['productFeatures'] =
-        await this.FEGetCatalogFeatureValuesForProduct(
-          result.catalog_category_id,
-          result.product_id,
-        );
+      _productFeatures = this.FEGetCatalogFeatureValuesForProduct(
+        result.catalog_category_id,
+        result.product_id,
+      );
     }
 
     //=========== Get accessory ============
-    result['promotion_accessory_products'] = [];
+    let _promotion_accessory_products: any = [];
     if (result['promotion_accessory_id']) {
-      result['promotion_accessory_products'] =
-        await this.getAccessoriesByProductId(
-          result['promotion_accessory_id'],
-          1,
-        );
+      _promotion_accessory_products = this.getAccessoriesByProductId(
+        result['promotion_accessory_id'],
+        1,
+      );
     }
 
-    result['free_accessory_products'] = [];
+    let _free_accessory_products: any = [];
     if (result['free_accessory_id']) {
-      result['free_accessory_products'] = await this.getAccessoriesByProductId(
+      _free_accessory_products = this.getAccessoriesByProductId(
         result['free_accessory_id'],
         1,
       );
     }
 
-    result['warranty_package_products'] = [];
+    let _warranty_package_products: any = [];
     if (result['warranty_package_id']) {
-      result['warranty_package_products'] =
-        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
+      _warranty_package_products = this.getAccessoriesByProductId(
+        result['warranty_package_id'],
+        1,
+      );
     }
 
     //============== Get ratings ================
-    result['ratings'] = await this.reviewRepo.findOne({
+    let _ratings = this.reviewRepo.findOne({
       product_id: result.product_id,
     });
 
-    result['currentCategory'] = null;
-    result['parentCategories'] = [];
+    let _currentCategory: any = null;
+    let _parentCategories: any = [];
+    let _relative_prouducts: any = [];
     // Get Current category info
     if (product['category_feature_id']) {
-      result['currentCategory'] = await this.categoryRepo.findOne({
+      _currentCategory = this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: {
@@ -4553,48 +4548,75 @@ export class ProductService {
         },
       });
 
-      // Get parent categories info
-      if (result['currentCategory']) {
-        result['parentCategories'] =
-          await this.categoryService.parentCategories(
-            result['currentCategory'],
-          );
-        result['parentCategories'] = _.sortBy(result['parentCategories'], [
-          (o) => o.level,
-        ]);
-      }
-
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-        product,
-      );
+      _relative_prouducts = this.getRelativeProductsByCategory(product);
     } else if (product['category_id']) {
-      result['currentCategory'] = await this.categoryRepo.findOne({
+      _currentCategory = this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
 
-      if (result['currentCategory']) {
-        // Get parent categories info
-        result['parentCategories'] =
-          await this.categoryService.parentCategories(
-            result['currentCategory'],
-          );
-        result['parentCategories'] = _.sortBy(result['parentCategories'], [
-          (o) => o.level,
-        ]);
-      }
-
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-        product,
-      );
+      _relative_prouducts = this.getRelativeProductsByCategory(product);
     }
 
-    result['discount_programs'] = await this.getDiscountProgramApplyProduct(
+    let _discount_programs = this.getDiscountProgramApplyProduct(
       result['product_id'],
     );
+
+    let [
+      stores,
+      images,
+      color,
+      size,
+      productFeatures,
+      promotion_accessory_products,
+      free_accessory_products,
+      warranty_package_products,
+      ratings,
+      currentCategory,
+      parentCategories,
+      relative_prouducts,
+      discount_programs,
+    ] = await Promise.all([
+      _stores,
+      _images,
+      _color,
+      _size,
+      _productFeatures,
+      _promotion_accessory_products,
+      _free_accessory_products,
+      _warranty_package_products,
+      _ratings,
+      _currentCategory,
+      _parentCategories,
+      _relative_prouducts,
+      _discount_programs,
+    ]);
+
+    result['stores'] = stores;
+    result['images'] = images;
+    result['color'] = color ? color['variant'] : null;
+    result['size'] = size ? size['variant'] : null;
+    result['productFeatures'] = productFeatures;
+    result['promotion_accessory_products'] = promotion_accessory_products;
+    result['free_accessory_products'] = free_accessory_products;
+    result['warranty_package_products'] = warranty_package_products;
+    result['ratings'] = ratings;
+    result['currentCategory'] = currentCategory;
+    result['parentCategories'] = parentCategories;
+    if (currentCategory) {
+      result['parentCategories'] = await this.categoryService.parentCategories(
+        currentCategory,
+      );
+      result['parentCategories'] = _.sortBy(result['parentCategories'], [
+        (o) => o.level,
+      ]);
+    }
+
+    result['relative_prouducts'] = relative_prouducts;
+    result['discount_programs'] = discount_programs;
 
     await this.cache.setProductCacheById(result.product_id, result);
 
