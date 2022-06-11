@@ -2304,6 +2304,7 @@ export class ProductService {
     const productData = {
       ...new ProductsEntity(),
       ...this.productRepo.setData(convertedData),
+      updated_at: formatStandardTimeStamp(),
     };
 
     let result = await this.productRepo.create(productData);
@@ -2660,7 +2661,7 @@ export class ProductService {
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
     console.log('Update Product Itg');
-    console.log(2663, data);
+
     const product = await this.productRepo.findOne({
       select: `${Table.PRODUCTS}.*`,
       join: productLeftJoiner,
@@ -2719,8 +2720,10 @@ export class ProductService {
       }
     }
 
-    const productData = this.productRepo.setData(convertedData);
-    console.log(2768, productData);
+    const productData = {
+      ...this.productRepo.setData(convertedData),
+      updated_at: formatStandardTimeStamp(),
+    };
     if (Object.entries(productData).length) {
       await this.productRepo.update(
         { product_id: result.product_id },
