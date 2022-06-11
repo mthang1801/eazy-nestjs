@@ -800,22 +800,21 @@ export class ProductService {
       _productFeatures,
       _catalog_feature_values,
       _promotion_accessory_products,
-      _free_accessory_products, 
+      _free_accessory_products,
       _warranty_package_products,
       _currentCategories,
       _relative_products,
     ]);
 
-    result["stores"] = stores ;
-    result["images"] = images; 
-    result["productFeatures"] = productFeatures || [];
-    result["catalog_feature_values"] = catalog_feature_values || []; 
-    result["promotion_accessory_products"] = promotion_accessory_products || []; 
-    result["free_accessory_products"] = free_accessory_products || []; 
-    result["warranty_package_products"] = warranty_package_products || []; 
-    result["currentCategories"] = currentCategories || []; 
-    result["relative_products"] = relative_products || []; 
-
+    result['stores'] = stores;
+    result['images'] = images;
+    result['productFeatures'] = productFeatures || [];
+    result['catalog_feature_values'] = catalog_feature_values || [];
+    result['promotion_accessory_products'] = promotion_accessory_products || [];
+    result['free_accessory_products'] = free_accessory_products || [];
+    result['warranty_package_products'] = warranty_package_products || [];
+    result['currentCategories'] = currentCategories || [];
+    result['relative_products'] = relative_products || [];
 
     return result;
   }
@@ -1178,9 +1177,7 @@ export class ProductService {
           await this.categoryService.getCategoriesChildrenRecursive(
             arrCategories[0],
           );
-
         categoriesList = categoriesList.map(({ category_id }) => category_id);
-        console.log(1117, categoriesList);
       } else {
         // Theo danh mục
         categoriesList = arrCategories.map((category_id) => category_id);
@@ -1205,6 +1202,7 @@ export class ProductService {
       skip,
       limit,
     };
+
     if (store_location_id && isContinued) {
       ({ productsList, count } = await this.findProductsListAndCountFromStore(
         productSearchFilterParams,
@@ -1247,7 +1245,8 @@ export class ProductService {
     }
 
     // determine product type and  get Image
-    for (let productItem of productsList) {
+
+    let _responseProductsList = productsList.map(async (productItem) => {
       let currentCategory = await this.productCategoryRepo.findOne({
         select: '*',
         join: productCategoryJoiner,
@@ -1256,18 +1255,20 @@ export class ProductService {
             productItem['product_id'],
         },
       });
-
       if (stickers) {
         productItem['stickers'] = await this.getProductStickers(productItem);
       }
-
       if (ratings) {
         productItem['ratings'] = await this.reviewRepo.findOne({
           product_id: productItem['product_id'],
         });
       }
       productItem['currentCategory'] = currentCategory;
-    }
+
+      return productItem;
+    });
+
+    productsList = await Promise.all(_responseProductsList);
 
     return {
       paging: {
@@ -1304,8 +1305,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productStoreRepo.find({
+      _productsList = this.productStoreRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1316,7 +1318,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productStoreRepo.find({
+    let _count = this.productStoreRepo.find({
       select: countDistinctProduct,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1328,7 +1330,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromCategory(params) {
@@ -1378,8 +1385,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productRepo.find({
+      _productsList = this.productRepo.find({
         select: '*',
         join: {
           [JoinTable.leftJoin]: {
@@ -1411,7 +1419,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productCategoryRepo.find({
+    let _count = this.productCategoryRepo.find({
       select: countDistinctProductCategory,
       join: {
         [JoinTable.leftJoin]: {
@@ -1444,7 +1452,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromSticker(params) {
@@ -1457,6 +1470,7 @@ export class ProductService {
       skip,
       limit,
     } = params;
+
     let productsList = await this.productStickerRepo.find({
       select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
       join: productJoiner(filterJoiner),
@@ -1472,8 +1486,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productStickerRepo.find({
+      _productsList = this.productStickerRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1484,7 +1499,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productStickerRepo.find({
+    let _count = this.productStickerRepo.find({
       select: countDistinctProduct,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1496,7 +1511,15 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return {
+      productsList: resProductsList,
+      count: resCount[0]?.total,
+    };
   }
 
   async findProductsListAndCountFromCatalog(params) {
@@ -1524,8 +1547,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.catalogCategoryRepo.find({
+      _productsList = this.catalogCategoryRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1536,7 +1560,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.catalogCategoryRepo.find({
+    let _count = this.catalogCategoryRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1548,7 +1572,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromFeatureValue(params) {
@@ -1576,8 +1605,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productFeatureValueRepo.find({
+      _productsList = this.productFeatureValueRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1588,7 +1618,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productFeatureValueRepo.find({
+    let _count = this.productFeatureValueRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1600,7 +1630,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCount(params) {
@@ -1613,7 +1648,8 @@ export class ProductService {
       skip,
       limit,
     } = params;
-    let productsList = await this.productRepo.find({
+
+    let _productsList = await this.productRepo.find({
       select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
       join: productJoiner(filterJoiner),
       orderBy: filterOrders,
@@ -1628,18 +1664,20 @@ export class ProductService {
       limit,
     });
 
-    if (productsList.length) {
-      productsList = await this.productRepo.find({
+    let _productsListTemp;
+    if (_productsList.length) {
+      _productsListTemp = this.productRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
           [`${Table.PRODUCTS}.product_id`]: In(
-            productsList.map(({ product_id }) => product_id),
+            _productsList.map(({ product_id }) => product_id),
           ),
         },
       });
     }
-    let count = await this.productRepo.find({
+
+    let _count = this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1651,7 +1689,9 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [productsList, count] = await Promise.all([_productsListTemp, _count]);
+
+    return { productsList: productsList || [], count: count[0].total };
   }
 
   async groupingProducts(start_product_id: number, dest_product_id: number) {
@@ -3669,6 +3709,8 @@ export class ProductService {
       where: {
         [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product['product_id'],
       },
+      skip: 0,
+      limit: 3,
     });
 
     let listCategoriesId = categories
@@ -3676,6 +3718,7 @@ export class ProductService {
       .map(({ category_id }) => category_id);
 
     let productsList = [];
+
     if (listCategoriesId.length) {
       productsList = await this.productCategoryRepo.find({
         select: `*, ${Table.PRODUCTS}.slug as productSlug`,
@@ -3691,17 +3734,17 @@ export class ProductService {
       });
       productsList = _.uniqBy(productsList, 'product_id');
 
-      for (let productItem of productsList) {
-        productItem['discount_program'] =
-          await this.discountProgramDetailRepo.findOne({
-            select: '*',
-            join: discountProgramDetailJoiner,
-            where: {
-              [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
-                productItem.product_id,
-            },
-          });
-      }
+      // for (let productItem of productsList) {
+      //   productItem['discount_program'] =
+      //     await this.discountProgramDetailRepo.findOne({
+      //       select: '*',
+      //       join: discountProgramDetailJoiner,
+      //       where: {
+      //         [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
+      //           productItem.product_id,
+      //       },
+      //     });
+      // }
     }
 
     return productsList;

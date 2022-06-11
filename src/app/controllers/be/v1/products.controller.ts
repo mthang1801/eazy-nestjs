@@ -109,7 +109,7 @@ export class ProductsController extends BaseController {
     @Body() data: ProductPreviewDto,
   ): Promise<IResponse> {
     const result = await this.service.createProductPreview(data);
-    return this.responseSuccess(res, result, 'Thành công.');
+    return this.responseSuccess(res, result);
   }
 
   @Get('product-preview/:product_id')
