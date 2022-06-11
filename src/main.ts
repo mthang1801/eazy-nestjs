@@ -24,6 +24,8 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe(ValidationConfig));
 
+  app.use(require('helmet')());
+
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('hbs');
