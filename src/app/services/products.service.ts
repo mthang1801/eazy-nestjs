@@ -4367,12 +4367,12 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
-    // const productCacheResult = await this.cache.getProductCacheById(
-    //   product.product_id,
-    // );
-    // if (productCacheResult) {
-    //   return productCacheResult;
-    // }
+    const productCacheResult = await this.cache.getProductCacheById(
+      product.product_id,
+    );
+    if (productCacheResult) {
+      return productCacheResult;
+    }
 
     let result: any = { ...product };
 
