@@ -568,7 +568,6 @@ export class OrdersService {
           b_address: data.s_address,
           s_address: data.s_address,
           user_id: newUser.user_id,
-          is_sync: 'Y',
         };
         await this.userProfileRepo.create(userProfileData, false);
 

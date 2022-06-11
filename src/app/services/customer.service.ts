@@ -1183,48 +1183,50 @@ export class CustomerService {
         join: userJoiner,
         where: { [`${Table.USERS}.user_appcore_id`]: IsNull() },
       });
-      if (customersUnsync.length) {
-        for (let customer of customersUnsync) {
-          let customerProfile = await this.userProfileRepo.findOne({
+
+      let _res = customersUnsync.map(async (customer) => {
+        let customerProfile = await this.userProfileRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!customerProfile) {
+          const newCustomerProfileData = {
+            ...new UserProfileEntity(),
+            b_firstname: customer.fistname,
+            b_lastname: customer.lastname,
+            b_phone: customer.phone,
             user_id: customer.user_id,
-          });
-          if (!customerProfile) {
-            const newCustomerProfileData = {
-              ...new UserProfileEntity(),
-              b_firstname: customer.fistname,
-              b_lastname: customer.lastname,
-              b_phone: customer.phone,
-              user_id: customer.user_id,
-            };
-            await this.userProfileRepo.create(newCustomerProfileData);
-          }
-          let customerLoyalty = await this.userLoyalRepo.findOne({
-            user_id: customer.user_id,
-          });
-          if (!customerLoyalty) {
-            const newCustomerLoyaltyData = {
-              ...new UserLoyaltyEntity(),
-              user_id: customer.user_id,
-            };
-            await this.userLoyalRepo.create(newCustomerLoyaltyData);
-          }
-          let userData = await this.userDataRepo.findOne({
-            user_id: customer.user_id,
-          });
-          if (!userData) {
-            const userDataData = {
-              ...new UserDataEntity(),
-              user_id: customer.user_id,
-            };
-            await this.userDataRepo.create(userDataData);
-          }
-          await this.createCustomerToAppcore(customer);
+          };
+          await this.userProfileRepo.create(newCustomerProfileData);
         }
-      }
-      await this.userRepo.update(
-        { user_appcore_id: Not(IsNull()) },
-        { is_sync: 'N' },
-      );
+        let customerLoyalty = await this.userLoyalRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!customerLoyalty) {
+          const newCustomerLoyaltyData = {
+            ...new UserLoyaltyEntity(),
+            user_id: customer.user_id,
+          };
+          await this.userLoyalRepo.create(newCustomerLoyaltyData);
+        }
+        let userData = await this.userDataRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!userData) {
+          const userDataData = {
+            ...new UserDataEntity(),
+            user_id: customer.user_id,
+          };
+          await this.userDataRepo.create(userDataData);
+        }
+        await this.createCustomerToAppcore(customer);
+
+        await this.userRepo.update(
+          { user_appcore_id: Not(IsNull()) },
+          { is_sync: 'N' },
+        );
+      });
+
+      await Promise.all(_res);
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error?.response,

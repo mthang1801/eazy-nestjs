@@ -284,7 +284,6 @@ export class ProductService {
     private productDescriptionsRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
     private productVariationGroupProductsRepo: ProductVariationGroupProductsRepository<ProductVariationGroupFeaturesEntity>,
     private productVariationGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
-    private productVariationGroupFeatureRepo: ProductVariationGroupFeaturesRepository<ProductVariationGroupFeaturesEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private productFeatureValueRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
@@ -393,34 +392,6 @@ export class ProductService {
           select: ['feature_id', 'variant_id'],
           where: { product_id },
         });
-
-        // Đưa vào product group features
-        if (featuresList.length) {
-          // Kiểm tra xem trong product_group_features với group_id đã tồn tại feature_id này hay chưa
-
-          for (let { feature_id, variant_id } of featuresList) {
-            if (!feature_id || !variant_id) {
-              continue;
-            }
-            let featureValueInGroup =
-              await this.productVariationGroupFeatureRepo.findOne({
-                feature_id,
-                variant_id,
-                group_id,
-              });
-            // Nếu trong group features không tìm thấy thì sẽ thêm feature này vào group, ngược lại bỏ qua
-            if (!featureValueInGroup) {
-              await this.productVariationGroupFeatureRepo.create(
-                {
-                  feature_id,
-                  variant_id,
-                  group_id,
-                },
-                false,
-              );
-            }
-          }
-        }
       }
     }
   }
@@ -526,23 +497,6 @@ export class ProductService {
             value_int: !isNaN(+productFeatureVariant.variant * 1)
               ? +productFeatureVariant.variant
               : 0,
-          });
-        }
-
-        // Check group feature by feature_id and group_id, if not exists, create new record
-        let checkProductGroupFeatureExist =
-          await this.productVariationGroupFeatureRepo.findOne({
-            feature_id,
-            group_id: groupId,
-          });
-
-        if (!checkProductGroupFeatureExist) {
-          const feature: ProductFeatureDescriptionEntity =
-            await this.productFeatureDescriptionRepo.findOne({ feature_id });
-          await this.productVariationGroupFeatureRepo.create({
-            feature_id,
-            group_id: groupId,
-            purpose: purpose || feature.description,
           });
         }
       }
@@ -2706,8 +2660,9 @@ export class ProductService {
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
     console.log('Update Product Itg');
+    console.log(2663, data);
     const product = await this.productRepo.findOne({
-      select: '*',
+      select: `${Table.PRODUCTS}.*`,
       join: productLeftJoiner,
       where: { product_appcore_id: identifier },
     });
@@ -2765,7 +2720,7 @@ export class ProductService {
     }
 
     const productData = this.productRepo.setData(convertedData);
-
+    console.log(2768, productData);
     if (Object.entries(productData).length) {
       await this.productRepo.update(
         { product_id: result.product_id },
@@ -2820,81 +2775,81 @@ export class ProductService {
 
     await this.productCategoryRepo.delete({ product_id: result['product_id'] });
 
-    let productCategory = await this.productCategoryRepo.findOne({
-      product_id: result['product_id'],
-      category_appcore_id: convertedData['category_appcore_id'],
-    });
+    // let productCategory = await this.productCategoryRepo.findOne({
+    //   product_id: result['product_id'],
+    //   category_appcore_id: convertedData['category_appcore_id'],
+    // });
 
-    if (productCategory) {
-      const productCategoryData =
-        this.productCategoryRepo.setData(convertedData);
-      if (Object.entries(productCategoryData).length) {
-        await this.productCategoryRepo.update(
-          {
-            category_appcore_id: convertedData['category_appcore_id'],
-            product_id: result['product_id'],
-          },
-          productCategoryData,
-        );
-      }
-    } else {
-      const newProductCategoryData = {
-        ...new ProductsCategoriesEntity(),
-        ...this.productCategoryRepo.setData(convertedData),
-        product_id: result.product_id,
-        category_id: convertedData.category_id,
-      };
-      await this.productCategoryRepo.create(newProductCategoryData, false);
-    }
+    // if (productCategory) {
+    //   const productCategoryData =
+    //     this.productCategoryRepo.setData(convertedData);
+    //   if (Object.entries(productCategoryData).length) {
+    //     await this.productCategoryRepo.update(
+    //       {
+    //         category_appcore_id: convertedData['category_appcore_id'],
+    //         product_id: result['product_id'],
+    //       },
+    //       productCategoryData,
+    //     );
+    //   }
+    // } else {
+    //   const newProductCategoryData = {
+    //     ...new ProductsCategoriesEntity(),
+    //     ...this.productCategoryRepo.setData(convertedData),
+    //     product_id: result.product_id,
+    //     category_id: convertedData.category_id,
+    //   };
+    //   await this.productCategoryRepo.create(newProductCategoryData, false);
+    // }
 
-    if (
-      convertedData['product_features'] &&
-      convertedData['product_features'].length
-    ) {
-      await this.productFeatureValueRepo.delete({
-        product_id: result.product_id,
-      });
+    // if (
+    //   convertedData['product_features'] &&
+    //   convertedData['product_features'].length
+    // ) {
+    //   await this.productFeatureValueRepo.delete({
+    //     product_id: result.product_id,
+    //   });
 
-      for (let { feature_code, variant_code } of data.product_features) {
-        const productFeature = await this.productFeaturesRepo.findOne({
-          feature_code,
-        });
+    //   for (let { feature_code, variant_code } of data.product_features) {
+    //     const productFeature = await this.productFeaturesRepo.findOne({
+    //       feature_code,
+    //     });
 
-        const productFeatureVariant =
-          await this.productFeatureVariantRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                  fieldJoin: 'variant_id',
-                  rootJoin: 'variant_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
-            },
-          });
+    //     const productFeatureVariant =
+    //       await this.productFeatureVariantRepo.findOne({
+    //         select: ['*'],
+    //         join: {
+    //           [JoinTable.leftJoin]: {
+    //             [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    //               fieldJoin: 'variant_id',
+    //               rootJoin: 'variant_id',
+    //             },
+    //           },
+    //         },
+    //         where: {
+    //           [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+    //         },
+    //       });
 
-        const productFeatureValueData = {
-          feature_id: productFeature ? productFeature.feature_id : null,
-          variant_id: productFeatureVariant
-            ? productFeatureVariant?.variant_id
-            : null,
-          feature_code: productFeature ? feature_code : null,
-          variant_code: productFeatureVariant ? variant_code : null,
-          product_id: result.product_id,
-          value: isNaN(+productFeatureVariant?.variant * 1)
-            ? productFeatureVariant?.variant
-            : '',
-          value_int: !isNaN(+productFeatureVariant?.variant * 1)
-            ? +productFeatureVariant?.variant
-            : 0,
-        };
+    //     const productFeatureValueData = {
+    //       feature_id: productFeature ? productFeature.feature_id : null,
+    //       variant_id: productFeatureVariant
+    //         ? productFeatureVariant?.variant_id
+    //         : null,
+    //       feature_code: productFeature ? feature_code : null,
+    //       variant_code: productFeatureVariant ? variant_code : null,
+    //       product_id: result.product_id,
+    //       value: isNaN(+productFeatureVariant?.variant * 1)
+    //         ? productFeatureVariant?.variant
+    //         : '',
+    //       value_int: !isNaN(+productFeatureVariant?.variant * 1)
+    //         ? +productFeatureVariant?.variant
+    //         : 0,
+    //     };
 
-        await this.productFeatureValueRepo.create(productFeatureValueData);
-      }
-    }
+    //     await this.productFeatureValueRepo.create(productFeatureValueData);
+    //   }
+    // }
 
     if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Delete old group
@@ -2907,9 +2862,6 @@ export class ProductService {
           group_id: oldGroup.group_id,
         });
         await this.productVariationGroupProductsRepo.delete({
-          group_id: oldGroup.group_id,
-        });
-        await this.productVariationGroupFeatureRepo.delete({
           group_id: oldGroup.group_id,
         });
       }
@@ -2930,12 +2882,12 @@ export class ProductService {
       });
 
       result['combo_items'] = [];
-
+      console.log(2884, convertedData.combo_items);
       for (let [i, productItem] of convertedData.combo_items.entries()) {
         let productComboItem = await this.productRepo.findOne({
           product_appcore_id: productItem.product_appcore_id,
         });
-
+        console.log(productComboItem);
         if (!productComboItem) {
           const productComboItemData = {
             ...new ProductsEntity(),
@@ -3028,12 +2980,6 @@ export class ProductService {
     // );
     // await this.productVariationGroupProductsRepo.writeExec(
     //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
-    // );
-    // await this.productVariationGroupFeatureRepo.writeExec(
-    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
-    // );
-    // await this.productVariationGroupFeatureRepo.writeExec(
-    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_INDEX}`,
     // );
   }
 
