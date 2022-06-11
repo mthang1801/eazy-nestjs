@@ -2368,69 +2368,69 @@ export class ProductService {
     await this.productPriceRepo.create(productPriceData);
 
     // category
-    if (convertedData['category_appcore_id']) {
-      let category = await this.categoryRepo.findOne({
-        category_appcore_id: convertedData['category_appcore_id'],
-      });
-      if (category) {
-        convertedData['category_id'] = category['category_id'];
-      }
-    }
-    const productCategoryData = {
-      ...new ProductsCategoriesEntity(),
-      ...this.productCategoryRepo.setData(convertedData),
-      product_id: result.product_id,
-    };
+    // if (convertedData['category_appcore_id']) {
+    //   let category = await this.categoryRepo.findOne({
+    //     category_appcore_id: convertedData['category_appcore_id'],
+    //   });
+    //   if (category) {
+    //     convertedData['category_id'] = category['category_id'];
+    //   }
+    // }
+    // const productCategoryData = {
+    //   ...new ProductsCategoriesEntity(),
+    //   ...this.productCategoryRepo.setData(convertedData),
+    //   product_id: result.product_id,
+    // };
 
-    await this.productCategoryRepo.create(productCategoryData);
+    // await this.productCategoryRepo.create(productCategoryData);
 
-    if (
-      convertedData['product_features'] &&
-      convertedData['product_features'].length
-    ) {
-      for (let {
-        feature_code,
-        variant_code,
-      } of convertedData.product_features) {
-        const productFeature = await this.productFeaturesRepo.findOne({
-          feature_code,
-        });
+    // if (
+    //   convertedData['product_features'] &&
+    //   convertedData['product_features'].length
+    // ) {
+    //   for (let {
+    //     feature_code,
+    //     variant_code,
+    //   } of convertedData.product_features) {
+    //     const productFeature = await this.productFeaturesRepo.findOne({
+    //       feature_code,
+    //     });
 
-        const productFeatureVariant =
-          await this.productFeatureVariantRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                  fieldJoin: 'variant_id',
-                  rootJoin: 'variant_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
-            },
-          });
+    //     const productFeatureVariant =
+    //       await this.productFeatureVariantRepo.findOne({
+    //         select: ['*'],
+    //         join: {
+    //           [JoinTable.leftJoin]: {
+    //             [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    //               fieldJoin: 'variant_id',
+    //               rootJoin: 'variant_id',
+    //             },
+    //           },
+    //         },
+    //         where: {
+    //           [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+    //         },
+    //       });
 
-        const productFeatureValueData = {
-          feature_id: productFeature ? productFeature.feature_id : null,
-          variant_id: productFeatureVariant
-            ? productFeatureVariant?.variant_id
-            : null,
-          feature_code: productFeature ? feature_code : null,
-          variant_code: productFeatureVariant ? variant_code : null,
-          product_id: result.product_id,
-          value: isNaN(+productFeatureVariant?.variant * 1)
-            ? productFeatureVariant?.variant
-            : '',
-          value_int: !isNaN(+productFeatureVariant?.variant * 1)
-            ? +productFeatureVariant?.variant
-            : 0,
-        };
+    //     const productFeatureValueData = {
+    //       feature_id: productFeature ? productFeature.feature_id : null,
+    //       variant_id: productFeatureVariant
+    //         ? productFeatureVariant?.variant_id
+    //         : null,
+    //       feature_code: productFeature ? feature_code : null,
+    //       variant_code: productFeatureVariant ? variant_code : null,
+    //       product_id: result.product_id,
+    //       value: isNaN(+productFeatureVariant?.variant * 1)
+    //         ? productFeatureVariant?.variant
+    //         : '',
+    //       value_int: !isNaN(+productFeatureVariant?.variant * 1)
+    //         ? +productFeatureVariant?.variant
+    //         : 0,
+    //     };
 
-        await this.productFeatureValueRepo.create(productFeatureValueData);
-      }
-    }
+    //     await this.productFeatureValueRepo.create(productFeatureValueData);
+    //   }
+    // }
 
     if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Nếu là SP combo, tạo group
@@ -4318,9 +4318,6 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
-    // if (product.status !== 'A') {
-    //   throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
-    // }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
@@ -4365,12 +4362,12 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
-    const productCacheResult = await this.cache.getProductCacheById(
-      product.product_id,
-    );
-    if (productCacheResult) {
-      return productCacheResult;
-    }
+    // const productCacheResult = await this.cache.getProductCacheById(
+    //   product.product_id,
+    // );
+    // if (productCacheResult) {
+    //   return productCacheResult;
+    // }
 
     let result: any = { ...product };
 
