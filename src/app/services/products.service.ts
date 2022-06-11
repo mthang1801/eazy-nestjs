@@ -608,13 +608,18 @@ export class ProductService {
         product_root_id: product.product_id,
       });
       if (!group) {
-        let groupProducts =
-          await this.productVariationGroupProductsRepo.findOne({
+        let groupProduct = await this.productVariationGroupProductsRepo.findOne(
+          {
             product_id: product.product_id,
+          },
+        );
+
+        if (groupProduct) {
+          group = await this.productVariationGroupRepo.findOne({
+            group_id: groupProduct.group_id,
           });
-        group = await this.productVariationGroupRepo.findOne({
-          group_id: groupProducts.group_id,
-        });
+        }
+
         if (!group) {
           throw new HttpException('Không tìm thấy SP combo', 404);
         }
