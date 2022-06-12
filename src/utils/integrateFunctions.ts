@@ -1130,3 +1130,25 @@ export const convertCatelogoIntoCategory = (catalog) => {
 
   return category;
 };
+
+export const convertCustomerDataFromAppcoreAfterSearching = (coreData) => ({
+  b_lastname: coreData['fullName'],
+  s_lastname: coreData['fullName'],
+  lastname: coreData['fullName'],
+  phone: coreData['phoneNo'],
+  email: coreData['email'] || '',
+  birthday: coreData['dateOfBirth']
+    ? formatStandardTimeStamp(coreData['dateOfBirth'])
+    : null,
+  b_address: coreData['address'],
+  s_address: coreData['address'],
+  status: coreData['deleted'] ? 'D' : 'A',
+  created_at: coreData['createdAt']
+    ? formatStandardTimeStamp(coreData['createdAt'])
+    : null,
+  updated_at: coreData['updatedAt']
+    ? formatStandardTimeStamp(coreData['updatedAt'])
+    : null,
+  user_appcore_id: coreData['id'],
+  total_purchase_amount: coreData['totalBuyedAmount'] || 0,
+});

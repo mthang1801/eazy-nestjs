@@ -21,6 +21,10 @@ import {
 } from '../../utils/cache.utils';
 import { RedisCacheService } from './redisCache.service';
 import * as _ from 'lodash';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
+
+import { Equal, Not } from 'src/database/operators/operators';
 @Injectable()
 export class CartService {
   constructor(
@@ -29,6 +33,7 @@ export class CartService {
     private imageLinkRepo: ImagesLinksRepository<ImagesLinksEntity>,
     private imageRepo: ImagesRepository<ImagesEntity>,
     private cache: RedisCacheService,
+    private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
   async create(user_id: number, product_id: number) {
@@ -39,6 +44,15 @@ export class CartService {
       const cartData = { ...new CartEntity(), user_id };
       cart = await this.cartRepo.create(cartData);
     }
+    const checkProduct = await this.productRepo.findOne({
+      product_id,
+      product_function: Not(Equal(1)),
+    });
+
+    if (!checkProduct) {
+      throw new HttpException('Không thể thêm SP này vào giỏ hàng.', 400);
+    }
+
     const cartItem = await this.cartItemRepo.findOne({
       cart_id: cart.cart_id,
       product_id,

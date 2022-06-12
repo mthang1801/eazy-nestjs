@@ -4721,7 +4721,7 @@ export class ProductService {
         childProduct['productFeatures'] = [];
 
         // Get stores
-        let _promiseStores = this.getProductsStores(childProduct.product_id);
+        let _promiseStores = this.checkProductsStores(childProduct.product_id);
         // Get accessory
         childProduct['promotion_accessory_products'] = [];
         let _promisePromotionAccessoryProducts;
@@ -4894,7 +4894,7 @@ export class ProductService {
     if (!product) {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
     }
-
+    console.log(product);
     try {
       let response;
 
@@ -4921,12 +4921,14 @@ export class ProductService {
         typeof productsStocks === 'object' &&
         Object.entries(productsStocks).length
       ) {
+        console.log(1);
         for (let [key, val] of Object.entries(productsStocks)) {
           let resVal: any = val;
           result = [...result, { ...resVal, productId: id }];
         }
         return result;
       } else {
+        console.log(2);
         const productsStores = await this.productStoreRepo.find({
           select: '*',
           orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],

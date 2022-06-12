@@ -57,7 +57,7 @@ import {
 import {
   OrderStatus,
   OrderType,
-  convertOrderDataToAppcore,
+  convertOrderDataFromCMSToAppcore,
 } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
@@ -444,7 +444,7 @@ export class PaymentService {
 
       console.log(sendData);
 
-      console.log(JSON.parse(convertOrderDataToAppcore(sendData)));
+      console.log(JSON.parse(convertOrderDataFromCMSToAppcore(sendData)));
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({

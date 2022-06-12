@@ -67,7 +67,9 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async findOne(options: any): Promise<any> {
-    this.logger.log('=============== [MYSQL] FIND ONE ================');
+    this.logger.log(
+      `=============== [MYSQL] FIND ONE ON ${this.table} ================`,
+    );
 
     if (typeof options !== 'object') {
       throw new HttpException(
@@ -98,7 +100,9 @@ export class BaseRepositorty<T> {
    */
   async find(options: any = {}, showLog = true) {
     if (showLog) {
-      this.logger.log('=============== [MYSQL] FIND ================');
+      this.logger.log(
+        `=============== [MYSQL] FIND ON ${this.table} ================`,
+      );
     }
 
     const optionKeys = Object.keys(options);
@@ -140,7 +144,9 @@ export class BaseRepositorty<T> {
 
   async count(params, showLog: boolean = true): Promise<any> {
     if (showLog) {
-      this.logger.log('=============== [MYSQL] COUNT ================');
+      this.logger.log(
+        `=============== [MYSQL] COUNT ON ${this.table} ================`,
+      );
     }
 
     if (
@@ -188,7 +194,9 @@ export class BaseRepositorty<T> {
     showLog: boolean = true,
   ): Promise<any> {
     if (showLog) {
-      this.logger.log('=============== [MYSQL] CREATE ================');
+      this.logger.log(
+        `=============== [MYSQL] CREATE ON ${this.table} ================`,
+      );
     }
 
     if (Array.isArray(inputData) || typeof inputData !== 'object') {
@@ -240,7 +248,9 @@ export class BaseRepositorty<T> {
    * @returns
    */
   async findById(id: number | any): Promise<T> {
-    this.logger.log('=============== [MYSQL] FIND BY ID ================');
+    this.logger.log(
+      `=============== [MYSQL] FIND BY ID ON ${this.table} ================`,
+    );
 
     const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
 
@@ -271,7 +281,9 @@ export class BaseRepositorty<T> {
     showLog = true,
   ) {
     if (showLog) {
-      this.logger.log('=============== [MYSQL] UPDATE ================');
+      this.logger.warn(
+        `=============== [MYSQL] UPDATE ON ${this.table} ================`,
+      );
     }
 
     if (typeof inputData !== 'object') {
@@ -332,7 +344,9 @@ export class BaseRepositorty<T> {
     showLog: boolean = true,
   ) {
     if (showLog) {
-      this.logger.log('=============== [MYSQL] DELETE ================');
+      this.logger.error(
+        `=============== [MYSQL] DELETE ON ${this.table} ================`,
+      );
     }
 
     let queryString = `DELETE FROM ${this.table} WHERE `;

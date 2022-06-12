@@ -49,4 +49,14 @@ export class CustomerController extends BaseController {
     const result = await this.orderService.getByCustomerId(user_id, params);
     return this.responseSuccess(res, result);
   }
+
+  @Get('search')
+  async checkCustomer(
+    @Query('phone') phone: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.searchCustomterAppcoreByPhone(phone);
+
+    return this.responseSuccess(res, result);
+  }
 }

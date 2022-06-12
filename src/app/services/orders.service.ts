@@ -18,7 +18,7 @@ import { UserProfileRepository } from '../repositories/userProfile.repository';
 import { UserProfileEntity } from '../entities/userProfile.entity';
 import { UpdateOrderDto } from '../dto/orders/update-order.dto';
 import { CreateOrderDto } from '../dto/orders/create-order.dto';
-import { convertOrderDataToAppcore } from 'src/constants/order';
+import { convertOrderDataFromCMSToAppcore } from 'src/constants/order';
 import axios from 'axios';
 import { UserRepository } from '../repositories/user.repository';
 import { UserEntity } from '../entities/user.entity';
@@ -396,7 +396,7 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertOrderDataToAppcore(result),
+      data: convertOrderDataFromCMSToAppcore(result),
     };
 
     try {
@@ -462,22 +462,41 @@ export class OrdersService {
         user = await this.userRepo.findOne({
           user_id: authUser.user_id,
         });
+
         if (!user.phone) {
-          throw new HttpException('Vui lòng cập nhập số điện thoại', 400);
+          await this.userRepo.update(
+            { user_id: authUser.user_id },
+            { phone: data.b_phone },
+          );
+          user = await this.userRepo.findOne({
+            select: '*',
+            join: userJoiner,
+            where: { user_id: authUser.user_id },
+          });
+          user = await this.customerService.createCustomerToAppcore(user);
         }
         cart = await this.cartRepo.findOne({ user_id: user.user_id });
       } else {
         user = await this.userRepo.findOne({ phone: data.b_phone });
         if (!user) {
-          let userData = {
-            phone: data.b_phone,
-            email: data.email,
-            lastname: data.b_lastname,
-            b_lastname: data.b_lastname,
-            b_phone: data.b_phone,
-          };
+          const checkUserAppcore =
+            await this.customerService.searchCustomterAppcoreByPhone(
+              data.b_phone,
+            );
 
-          user = await this.customerService.createUserSelfTransport(userData);
+          if (checkUserAppcore) {
+            user = await this.customerService.createCustomer(checkUserAppcore);
+          } else {
+            let userData = {
+              phone: data.b_phone,
+              email: data.email,
+              lastname: data.b_lastname,
+              b_lastname: data.b_lastname,
+              b_phone: data.b_phone,
+            };
+
+            user = await this.customerService.createUserSelfTransport(userData);
+          }
         }
 
         cart = await this.cartRepo.findOne({ user_id: data.user_id });
@@ -494,12 +513,13 @@ export class OrdersService {
       if (!cartItems.length) {
         throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
       }
-      let userProfile = await this.userProfileRepo.findOne({
-        user_id: user.user_id,
-      });
+      const userAppcore =
+        await this.customerService.searchCustomterAppcoreByPhone(user.phone);
 
       const sendData = {
-        ...userProfile,
+        b_address: userAppcore.b_address,
+        user_id: user.user_id,
+        user_appcore_id: user.user_appcore_id,
         b_phone: data.b_phone,
         b_lastname: data.b_lastname,
         email: data.email || '',
@@ -507,6 +527,7 @@ export class OrdersService {
         store_id: data.store_id,
         pay_credit_type: 1,
         order_type: data.order_type || OrderType.buyAtStore,
+        coupon_code: data.coupon_code || '',
       };
       let result = await this.createOrder(user, sendData);
     } catch (error) {
@@ -525,6 +546,10 @@ export class OrdersService {
       }
 
       if (!user['user_appcore_id']) {
+        user = await this.customerService.searchCustomterAppcoreByPhone(
+          user['phone'],
+        );
+
         await this.customerService.createCustomerToAppcore(user);
         user = await this.userRepo.findOne({ user_id: userAuth.user_id });
       }
@@ -542,51 +567,59 @@ export class OrdersService {
       });
 
       if (!user) {
-        let { passwordHash, salt } = saltHashPassword(defaultPassword);
-        let userData = {
-          ...new UserEntity(),
-          lastname: data.s_lastname,
-          password: passwordHash,
-          phone: data.s_phone,
-          salt,
-          user_type: UserTypeEnum.Customer,
-        };
-        let newUser = await this.userRepo.create(userData);
+        const customerCMS =
+          await this.customerService.searchCustomterAppcoreByPhone(
+            data.s_phone,
+          );
+        if (customerCMS) {
+          user = await this.customerService.createCustomer(customerCMS);
+        } else {
+          let { passwordHash, salt } = saltHashPassword(defaultPassword);
+          let userData = {
+            ...new UserEntity(),
+            lastname: data.s_lastname,
+            password: passwordHash,
+            phone: data.s_phone,
+            salt,
+            user_type: UserTypeEnum.Customer,
+          };
+          let newUser = await this.userRepo.create(userData);
 
-        let userProfileData = {
-          ...new UserProfileEntity(),
-          b_lastname: data.s_lastname,
-          s_lastname: data.s_lastname,
-          b_phone: data.s_phone,
-          s_phone: data.s_phone,
-          b_city: data.s_city,
-          s_city: data.s_city,
-          b_district: data.s_district,
-          s_district: data.s_district,
-          b_ward: data.s_ward,
-          s_ward: data.s_ward,
-          b_address: data.s_address,
-          s_address: data.s_address,
-          user_id: newUser.user_id,
-        };
-        await this.userProfileRepo.create(userProfileData, false);
+          let userProfileData = {
+            ...new UserProfileEntity(),
+            b_lastname: data.s_lastname,
+            s_lastname: data.s_lastname,
+            b_phone: data.s_phone,
+            s_phone: data.s_phone,
+            b_city: data.s_city,
+            s_city: data.s_city,
+            b_district: data.s_district,
+            s_district: data.s_district,
+            b_ward: data.s_ward,
+            s_ward: data.s_ward,
+            b_address: data.s_address,
+            s_address: data.s_address,
+            user_id: newUser.user_id,
+          };
+          await this.userProfileRepo.create(userProfileData, false);
 
-        await this.userLoyaltyRepo.create({
-          ...new UserLoyaltyEntity(),
-          user_id: newUser.user_id,
-        });
-        await this.userDataRepo.create({
-          ...new UserDataEntity(),
-          user_id: newUser.user_id,
-        });
+          await this.userLoyaltyRepo.create({
+            ...new UserLoyaltyEntity(),
+            user_id: newUser.user_id,
+          });
+          await this.userDataRepo.create({
+            ...new UserDataEntity(),
+            user_id: newUser.user_id,
+          });
 
-        user = await this.userRepo.findOne({
-          select: '*',
-          join: userPaymentJoiner,
-          where: { [`${Table.USERS}.user_id`]: newUser.user_id },
-        });
+          user = await this.userRepo.findOne({
+            select: '*',
+            join: userPaymentJoiner,
+            where: { [`${Table.USERS}.user_id`]: newUser.user_id },
+          });
 
-        user = await this.customerService.createCustomerToAppcore(user);
+          user = await this.customerService.createCustomerToAppcore(user);
+        }
       }
     }
 
@@ -669,7 +702,6 @@ export class OrdersService {
   }
 
   async createOrder(user, data, sendToAppcore = true) {
-    
     if (data['store_id']) {
       const checkStore = await this.storeLocationRepo.findOne({
         store_location_id: data['store_id'],
@@ -696,16 +728,14 @@ export class OrdersService {
 
     orderData['user_appcore_id'] = user['user_appcore_id'];
     orderData['user_id'] = user['user_id'];
-    
+
     orderData['total'] = 0;
     for (let orderItem of data.order_items) {
-      console.log(orderItem)
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*`,
         join: productLeftJoiner,
         where: {
           [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
-          [`${Table.PRODUCTS}.product_type`]: Not(Equal('4')),
         },
       });
 
@@ -732,6 +762,7 @@ export class OrdersService {
         ? orderData['total'] - orderData['discount']
         : (orderData['total'] * (100 - orderData['discount'])) / 100;
 
+    orderData['subtotal'] = +orderData['total'];
     if (data['coupon_code']) {
       //Check coupon
       let checkCouponData = {
@@ -750,13 +781,15 @@ export class OrdersService {
       );
 
       if (checkResult['isValid']) {
-        orderData['total'] -= checkResult['discountMoney'];
+        orderData['subtotal'] -= +checkResult['discountMoney'];
+        orderData['coupon_code'] = data['coupon_code'];
+        orderData['discount'] = +checkResult['discountMoney'];
       }
     }
 
-    orderData['subtotal'] = +orderData['total'];
     if (data.shipping_cost) {
       orderData['subtotal'] = +orderData['total'] + +data.shipping_cost;
+      orderData['shipping_cost'] = +data.shipping_cost;
     }
 
     //Check order bill info
@@ -847,11 +880,13 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertOrderDataToAppcore(result),
+      data: convertOrderDataFromCMSToAppcore(result),
     };
 
     try {
       const response = await axios(configPushOrderToAppcore);
+
+      console.log(response);
 
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(
@@ -980,7 +1015,7 @@ export class OrdersService {
       headers: {
         'Content-Type': 'application/json',
       },
-      data: convertOrderDataToAppcore(order),
+      data: convertOrderDataFromCMSToAppcore(order),
     };
 
     try {

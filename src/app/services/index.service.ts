@@ -36,7 +36,7 @@ export class IndexService {
     // await this.productService.reportCountTotalFromCategories();
     // // Determine product functions
     // await this.productService.determineProductFunction();
-    await this.productService.standardizeProducts();
+    // await this.productService.standardizeProducts();
     // await this.productService.syncProductsIntoGroup();
     // await this.productService.syncGetProductsStores();
   }

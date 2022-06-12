@@ -36,7 +36,7 @@ export class CustomerController extends BaseController {
     @Req() req,
     @Body() data: CreateCustomerDto,
   ): Promise<IResponse> {
-    await this.service.create(req.user, data);
+    await this.service.CMScreate(req.user, data);
     return this.responseSuccess(res);
   }
 
