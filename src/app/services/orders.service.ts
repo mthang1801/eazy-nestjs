@@ -1390,6 +1390,7 @@ export class OrdersService {
 
   async itgUpdate(order_code: string, data) {
     console.log('itg update');
+    console.log(data);
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
