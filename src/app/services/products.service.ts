@@ -397,72 +397,167 @@ export class ProductService {
   }
 
   async standardizeProducts() {
-    // let childrenProducts = await this.productRepo.find({
-    //   parent_product_id: '0',
-    //   parent_product_appcore_id: Not(IsNull()),
-    // });
-    // for (let childProduct of childrenProducts) {
-    //   let parentProduct = await this.productRepo.update(
-    //     { product_appcore_id: childProduct.parent_product_appcore_id },
-    //     { product_function: 1 },
-    //     true,
-    //   );
-    //   if (parentProduct) {
-    //     await this.productRepo.update(
-    //       { product_id: childProduct.product_id },
-    //       {
-    //         parent_product_id: parentProduct['product_id'],
-    //         product_function: 2,
-    //       },
-    //     );
-    //   }
-    // }
-    let parentProducts = await this.productRepo.find({
-      product_function: 1,
-      product_id: MoreThanOrEqual(24200),
-    });
-    if (parentProducts.length) {
-      for (let parentProduct of parentProducts) {
-        const childrenProducts = await this.productRepo.find({
-          parent_product_appcore_id: parentProduct['product_appcore_id'],
-        });
-        if (!childrenProducts.length) {
+    let productsList = await this.productRepo.find({ tracking: 'Y' });
+    for (let [i, productItem] of productsList.entries()) {
+      if (productItem['parent_product_appcore_id']) {
+        let parentProduct = await this.productRepo.update(
+          { product_appcore_id: productItem.parent_product_appcore_id },
+          { product_function: 1 },
+          true,
+        );
+        if (parentProduct) {
+          let group = await this.productVariationGroupRepo.findOne({
+            product_root_id: parentProduct.product_id,
+          });
+          if (!group) {
+            group = await this.productVariationGroupRepo.create({
+              product_root_id: parentProduct.product_id,
+            });
+            await this.productVariationGroupProductsRepo.create(
+              {
+                product_id: parentProduct.product_id,
+                group_id: group.group_id,
+              },
+              false,
+            );
+          }
+
+          const childrenProducts = await this.productRepo.find({
+            parent_product_appcore_id: parentProduct.product_appcore_id,
+          });
+          for (let childProduct of childrenProducts) {
+            const groupProduct =
+              await this.productVariationGroupProductsRepo.findOne({
+                group_id: group.group_id,
+                product_id: childProduct.product_id,
+              });
+            if (!groupProduct) {
+              await this.productVariationGroupProductsRepo.create(
+                {
+                  product_id: childProduct.product_id,
+                  parent_product_id: parentProduct.product_id,
+                  group_id: group.group_id,
+                },
+                false,
+              );
+            }
+          }
+
           await this.productRepo.update(
-            { product_id: parentProduct['product_id'] },
-            { product_function: 4 },
+            { product_id: productItem.product_id },
+            {
+              parent_product_id: parentProduct['product_id'],
+              product_function: 2,
+            },
           );
-          continue;
+
+          const childProductLowestPrice = await this.productRepo.findOne({
+            select: `price, list_price`,
+            join: productPriceJoiner,
+            where: {
+              [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+                parentProduct['product_appcore_id'],
+              [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+            },
+            orderBy: [
+              { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+            ],
+          });
+
+          if (childProductLowestPrice) {
+            await this.productPriceRepo.update(
+              { product_id: parentProduct['product_id'] },
+              {
+                price: childProductLowestPrice['price'],
+                list_price: childProductLowestPrice['list_price'],
+              },
+            );
+          }
         }
 
-        let childProduct = await this.productRepo.findOne({
-          select: '*',
-          join: productPriceJoiner,
-          orderBy: [
-            { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
-          ],
-          where: {
-            [`${Table.PRODUCTS}.parent_product_appcore_id`]:
-              parentProduct.product_appcore_id,
-            [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-          },
-        });
-        if (childProduct) {
-          let productPriceData = {
-            price: childProduct.price,
-            list_price: childProduct.list_price,
-            buy_price: childProduct.buy_price,
-            collect_price: childProduct.collect_price,
-            whole_price: childProduct.whole_price,
-            percentage_discount: childProduct.percentage_discount,
-            selling_price_program: childProduct.selling_price_program,
-            original_price_program: childProduct.price_discount,
-            time_start_at: childProduct.time_start_at,
-            time_end_at: childProduct.time_end_at,
-          };
-          await this.productPriceRepo.update(
-            { product_id: parentProduct.product_id },
-            productPriceData,
-          );
+        await this.productRepo.update(
+          { product_id: productItem.product_id },
+          { tracking: 'N' },
+        );
+      } else {
+        if (productItem.product_function == 4) {
+          const childrenProducts = await this.productRepo.find({
+            parent_product_appcore_id: productItem.product_appcore_id,
+          });
+          if (childrenProducts.length) {
+            await this.productRepo.update(
+              { product_id: productItem.product_id },
+              { product_function: 1, tracking: 'N' },
+            );
+
+            //
+            let group = await this.productVariationGroupRepo.findOne({
+              product_root_id: productItem.product_id,
+            });
+            if (!group) {
+              group = await this.productVariationGroupRepo.create({
+                product_root_id: productItem.product_id,
+              });
+              await this.productVariationGroupProductsRepo.create(
+                {
+                  product_id: productItem.product_id,
+                  group_id: group.group_id,
+                },
+                false,
+              );
+            }
+
+            //
+
+            for (let childProduct of childrenProducts) {
+              await this.productRepo.update(
+                { product_id: childProduct.product_id },
+                {
+                  parent_product_id: productItem['product_id'],
+                  product_function: 2,
+                  tracking: 'N',
+                },
+              );
+
+              const groupProduct =
+                await this.productVariationGroupProductsRepo.findOne({
+                  group_id: group.group_id,
+                  product_id: childProduct.product_id,
+                });
+              if (!groupProduct) {
+                await this.productVariationGroupProductsRepo.create(
+                  {
+                    product_id: childProduct.product_id,
+                    parent_product_id: productItem.product_id,
+                    group_id: group.group_id,
+                  },
+                  false,
+                );
+              }
+            }
+            const childProductLowestPrice = await this.productRepo.findOne({
+              select: `price, list_price`,
+              join: productPriceJoiner,
+              where: {
+                [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+                  productItem['product_appcore_id'],
+                [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+              },
+              orderBy: [
+                { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+              ],
+            });
+
+            if (childProductLowestPrice) {
+              await this.productPriceRepo.update(
+                { product_id: productItem.product_id },
+                {
+                  price: childProductLowestPrice.price,
+                  list_price: childProductLowestPrice.list_price,
+                },
+              );
+            }
+          }
         }
       }
     }
@@ -4711,6 +4806,7 @@ export class ProductService {
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: filterConditions,
+      orderBy: [{ field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC }],
     });
 
     if (childrenProducts.length) {

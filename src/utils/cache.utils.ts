@@ -19,6 +19,7 @@ export const cacheKeys = {
   search: (q) => `search-${q}`,
   functs: 'functs',
   page: (id) => `page-${id}`,
+  stockAmount: (productId) => `stock-amount-${productId}`,
 };
 
 export const cacheTables = {
@@ -33,6 +34,7 @@ export const cacheTables = {
   search: 'Search',
   functs: 'Functs',
   page: 'Page',
+  stockAmount: 'Stock Amount',
 };
 
 export const prefixCacheKey = {
@@ -53,5 +55,6 @@ export const prefixCacheKey = {
   flashSale: 'flashSale',
   search: 'search',
   functs: 'functs',
+  stockAmount: 'stock-amount',
   pageId: (pageId) => `page-${pageId}`,
 };

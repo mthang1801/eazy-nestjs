@@ -186,7 +186,7 @@ export class CustomerService {
     }
   }
 
-  async createCustomer(data) {
+  async createCustomer(data, syncToAppcore = true) {
     if (!data.lastname) {
       throw new HttpException('Tên khách hàng không được để trống', 422);
     }
@@ -258,14 +258,16 @@ export class CustomerService {
 
     await Promise.all([_newUserProfile, _newUserData, _newUserLoyalty]);
 
-    user = await this.userRepo.findOne({
-      join: userJoiner,
-      where: { user_id: newUser.user_id },
-    });
-    try {
-      return this.createCustomerToAppcore(user);
-    } catch (error) {
-      throw new HttpException(error.response, error.status);
+    if (syncToAppcore) {
+      user = await this.userRepo.findOne({
+        join: userJoiner,
+        where: { user_id: newUser.user_id },
+      });
+      try {
+        return this.createCustomerToAppcore(user);
+      } catch (error) {
+        throw new HttpException(error.response, error.status);
+      }
     }
   }
 
@@ -632,7 +634,7 @@ export class CustomerService {
     };
   }
 
-  async update(user_id: string, data: UpdateCustomerDTO) {
+  async update(user_id: string, data) {
     const user = await this.userRepo.findOne({ user_id });
 
     if (!user) {

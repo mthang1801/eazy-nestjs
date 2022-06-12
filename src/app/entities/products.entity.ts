@@ -27,7 +27,7 @@ export class ProductsEntity {
   is_edp: string = 'N';
   edp_shipping: string = 'N';
   unlimited_download: string = 'N';
-  tracking: string = 'N';
+  tracking: string = 'Y';
   free_shipping: string = 'N';
   zero_price_action: string = 'R';
   is_pbp: string = 'N';

@@ -144,7 +144,11 @@ import {
 } from '../../utils/joinTable';
 import { UserTypeEnum } from '../../database/enums/tableFieldEnum/user.enum';
 import { GatewayName, GatewayAppcoreId } from '../../constants/paymentGateway';
-import { paymentType, paymentTypeId } from '../../constants/payment.constant';
+import {
+  paymentType,
+  paymentTypeId,
+  loanTenorId,
+} from '../../constants/payment.constant';
 import { uuid } from '../../utils/cipherHelper';
 import { calculateInstallmentInterestRateHomeCredit } from '../../utils/services/payment.helper';
 import { ShippingServiceRepository } from '../repositories/shippingsService.repository';
@@ -572,7 +576,7 @@ export class OrdersService {
             data.s_phone,
           );
         if (customerCMS) {
-          user = await this.customerService.createCustomer(customerCMS);
+          user = await this.customerService.createCustomer(customerCMS, false);
         } else {
           let { passwordHash, salt } = saltHashPassword(defaultPassword);
           let userData = {
@@ -1390,7 +1394,7 @@ export class OrdersService {
 
   async itgUpdate(order_code: string, data) {
     console.log('itg update');
-    console.log(data);
+
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({ order_code });
@@ -1458,6 +1462,58 @@ export class OrdersService {
       // create order histories
       const orderHistoryData = { ...new OrderHistoryEntity(), ...result };
       await this.orderHistoryRepo.create(orderHistoryData, false);
+    }
+
+    if (convertedData['installed_money_account_id']) {
+      let gatewayName = Object.entries(paymentTypeId).filter(
+        ([key, val]) => val == convertedData['installed_money_account_id'],
+      )[0][0];
+      if (gatewayName) {
+        const orderPayment = await this.orderPaymentRepo.findOne({
+          order_id: order.order_id,
+        });
+        if (orderPayment) {
+          this.orderPaymentRepo.update(
+            { order_id: order.order_id },
+            { gateway_name: gatewayName },
+          );
+        } else {
+          await this.orderPaymentRepo.create(
+            {
+              order_id: order.order_id,
+              gateway_name: gatewayName,
+              amount: order.installed_payment_per_month || 0,
+            },
+            false,
+          );
+        }
+      }
+    }
+
+    if (convertedData['installed_money_account_id']) {
+      let gatewayName = Object.entries(paymentTypeId).filter(
+        ([key, val]) => val == convertedData['installed_money_account_id'],
+      )[0][0];
+      if (gatewayName) {
+        const orderPayment = await this.orderPaymentRepo.findOne({
+          order_id: order.order_id,
+        });
+        if (orderPayment) {
+          this.orderPaymentRepo.update(
+            { order_id: order.order_id },
+            { gateway_name: gatewayName },
+          );
+        } else {
+          await this.orderPaymentRepo.create(
+            {
+              order_id: order.order_id,
+              gateway_name: gatewayName,
+              amount: order.installed_payment_per_month || 0,
+            },
+            false,
+          );
+        }
+      }
     }
 
     const orderItemsList = await this.orderDetailRepo.find({
@@ -1919,7 +1975,6 @@ export class OrdersService {
               {
                 status: OrderStatus.invalid,
                 reason_fail: error.response,
-                updated_date: formatStandardTimeStamp(),
               },
               true,
             );
@@ -1935,7 +1990,7 @@ export class OrdersService {
       }
       await this.orderRepo.update(
         { order_code: Not(IsNull()) },
-        { is_sync: 'N', updated_date: formatStandardTimeStamp() },
+        { is_sync: 'N' },
       );
     } catch (error) {
       throw new HttpException(
