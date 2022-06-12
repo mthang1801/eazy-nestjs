@@ -1284,7 +1284,7 @@ export class OrdersService {
 
   async itgCreate(data) {
     console.log('itg create Order');
-
+    console.log(data);
     const convertedData = convertOrderDataFromAppcore(data);
 
     const order = await this.orderRepo.findOne({
