@@ -269,6 +269,7 @@ export class AuthService {
       join: userRoleFunctJoiner,
       where: {
         level: 0,
+        status: 'A',
         [`${Table.USER_ROLES}.user_id`]: user['user_id'],
       },
       orderBy: sortFilter,
@@ -281,6 +282,7 @@ export class AuthService {
           join: userRoleFunctJoiner,
           where: {
             level: 1,
+            status: 'A',
             parent_id: menuItem['funct_id'],
             [`${Table.USER_ROLES}.user_id`]: user['user_id'],
           },

@@ -2,6 +2,7 @@ import { formatStandardTimeStamp } from '../../utils/helper';
 export class FunctEntity {
   funct_id: number = 0;
   parent_id: number = 0;
+  status: string = 'A';
   funct_code: string = '';
   funct_name: string = '';
   route: string = '';
