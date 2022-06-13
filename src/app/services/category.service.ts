@@ -452,14 +452,13 @@ export class CategoryService {
       const willDeleteProducts = currentProductsLists.filter(
         ({ product_code }) => !data.products_list.includes(product_code),
       );
-
+      console.log("Cb delete.");
       if (willDeleteProducts.length) {
         for (let willDeleteProductItem of willDeleteProducts) {
-          // await this.productCategoryRepository.delete({
-          //   category_id: result.category_id,
-          //   product_id: willDeleteProductItem.product_id,
-          // });
-          await this.deleteProductCategory(willDeleteProductItem.product_id, result.category_id);
+          await this.productCategoryRepository.delete({
+            category_id: result.category_id,
+            product_id: willDeleteProductItem.product_id,
+          });
         }
       }
 
@@ -486,16 +485,15 @@ export class CategoryService {
             category_id: result.category_id,
           });
 
-          // if (!productCategory) {
-          //   await this.productCategoryRepository.create({
-          //     product_id: product.product_id,
-          //     category_id: result.category_id,
-          //     link_type: result.category_type,
-          //     position: product.parent_product_id,
-          //     category_position: result.position,
-          //   });
-          // }
-          await this.createProductCategory(product.product_id, result.category_id)
+          if (!productCategory) {
+            await this.productCategoryRepository.create({
+              product_id: product.product_id,
+              category_id: result.category_id,
+              link_type: result.category_type,
+              position: product.parent_product_id,
+              category_position: result.position,
+            });
+          }
         }
       }
     }
@@ -550,10 +548,11 @@ export class CategoryService {
 
     if (data.removed_products && data.removed_products.length) {
       for (let productId of data.removed_products) {
-        await this.productCategoryRepository.delete({
-          product_id: productId,
-          category_id: id,
-        });
+        // await this.productCategoryRepository.delete({
+        //   product_id: productId,
+        //   category_id: id,
+        // });
+        await this.deleteProductCategory(productId, id);
         await this.updateProductCount(id, -1);
       }
     }
@@ -580,7 +579,8 @@ export class CategoryService {
             newProductCategory['category_appcore_id'] =
               result['category_appcore_id'];
           }
-          await this.productCategoryRepository.create(newProductCategory);
+          //await this.productCategoryRepository.create(newProductCategory);
+          await this.createProductCategory(product_id, id)
           await this.updateProductCount(newProductCategory.category_id, 1);
         }
       }
@@ -1880,6 +1880,7 @@ export class CategoryService {
       product_id: product_id,
       category_id: category_id
     });
+    console.log(product_id + " " + category_id);
     if (!checkProductCategory) {
       const productCategoryData = {
         ...new ProductsCategoriesEntity(),
