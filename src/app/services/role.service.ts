@@ -548,6 +548,7 @@ export class RoleService {
         [`${Table.ROLE_FUNC}.role_id`]: userRole.role_id,
         [`${Table.FUNC}.method`]: method,
         [`${Table.FUNC}.be_route`]: path,
+        [`${Table.FUNC}.status`]: 'A',
       },
     });
 

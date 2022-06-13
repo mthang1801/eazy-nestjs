@@ -1175,8 +1175,8 @@ export class CategoryService {
   }
 
   async getAll(level = Infinity) {
-    let categoryCacheKey = cacheKeys.categoryLevel(level);
-    let categoryCacheResult = await this.cache.get(categoryCacheKey);
+    // let categoryCacheKey = cacheKeys.categoryLevel(level);
+    // let categoryCacheResult = await this.cache.get(categoryCacheKey);
 
     // if (categoryCacheResult) {
     //   return categoryCacheResult;
@@ -1195,12 +1195,12 @@ export class CategoryService {
       category = categoriesList;
     }
 
-    await this.cache.set(categoryCacheKey, categories);
-    await this.cache.saveCache(
-      cacheTables.category,
-      prefixCacheKey.categoriesLevel,
-      categoryCacheKey,
-    );
+    // await this.cache.set(categoryCacheKey, categories);
+    // await this.cache.saveCache(
+    //   cacheTables.category,
+    //   prefixCacheKey.categoriesLevel,
+    //   categoryCacheKey,
+    // );
 
     return categories;
   }
@@ -1305,6 +1305,9 @@ export class CategoryService {
     getCategoryListId = false,
     categoriesIdList = [],
   ) {
+    if (!currentCategory.category_id) {
+      return currentCategory;
+    }
     const categoriesChildrenList = await this.categoryRepo.find({
       select: '*',
       join: categoryJoiner,

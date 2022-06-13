@@ -398,7 +398,7 @@ export class ProductService {
 
   async standardizeProducts() {
     let productsList = await this.productRepo.find({ tracking: 'Y' });
-    for (let [i, productItem] of productsList.entries()) {
+    for (let productItem of productsList) {
       if (productItem['parent_product_appcore_id']) {
         let parentProduct = await this.productRepo.update(
           { product_appcore_id: productItem.parent_product_appcore_id },
