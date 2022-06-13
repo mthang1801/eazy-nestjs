@@ -38,7 +38,7 @@ export class CartService {
 
   async create(user_id: number, product_id: number) {
     // Kiểm tra xem giỏ hàng đã tồn tại hay chưa
-    this.cache.removeCartByUserId(user_id);
+    await this.cache.removeCartByUserId(user_id);
     let cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       const cartData = { ...new CartEntity(), user_id };
