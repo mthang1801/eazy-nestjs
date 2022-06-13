@@ -500,7 +500,8 @@ export class DiscountProgramService {
         now.toSecond < endTime.toSecond
       ) {
         console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-        this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.removeCache(discount_id);
       } else {
         console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
       }
@@ -509,6 +510,7 @@ export class DiscountProgramService {
         `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
         () => {
           this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          this.removeCache(discount_id);
         },
       );
       const jobOff = new CronJob(
@@ -544,7 +546,8 @@ export class DiscountProgramService {
           now.toSecond < endTime.toSecond
         ) {
           console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-          this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          await this.removeCache(discount_id);
         } else {
           console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
         }
@@ -553,6 +556,7 @@ export class DiscountProgramService {
           `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
           () => {
             this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+            this.removeCache(discount_id);
           },
         );
         const jobOff = new CronJob(
@@ -606,7 +610,8 @@ export class DiscountProgramService {
         now.toSecond < endTime.toSecond
       ) {
         console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-        this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.removeCache(discount_id);
       } else {
         console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
       }
@@ -614,6 +619,7 @@ export class DiscountProgramService {
         `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
         () => {
           this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          this.removeCache(discount_id);
         },
       );
       const jobOff = new CronJob(
@@ -655,6 +661,7 @@ export class DiscountProgramService {
       ) {
         console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
         this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.removeCache(discount_id);
       } else {
         console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
       }
@@ -663,6 +670,7 @@ export class DiscountProgramService {
         `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
         () => {
           this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          this.removeCache(discount_id);
         },
       );
       const jobOff = new CronJob(
@@ -725,6 +733,7 @@ export class DiscountProgramService {
     if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
       console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
       this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+      this.removeCache(discount_id);
     } else {
       console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
     }
@@ -733,6 +742,7 @@ export class DiscountProgramService {
       `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
       () => {
         this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        this.removeCache(discount_id);
       },
     );
     const jobOff = new CronJob(
@@ -813,5 +823,14 @@ export class DiscountProgramService {
     await this.logger.warn(
       `Timeout ${convertToSlug(discountProgram.discount_name)} deleted!`,
     );
+  }
+
+  async removeCache(discount_id) {
+    const productList = await this.discountProgramDetailRepo.find({discount_id});
+    if (productList && productList.length) {
+      for (let productItem of productList) {
+        await this.cache.removeCachedProductById(productItem.product_id);
+      }
+    }
   }
 }
