@@ -287,10 +287,10 @@ export class PromotionAccessoryService {
         productFieldNameByAccessory = 'warranty_package_id';
         break;
     }
-    await this.productRepo.update(
-      { [productFieldNameByAccessory]: accessory_id },
-      { [productFieldNameByAccessory]: 0 },
-    );
+    // await this.productRepo.update(
+    //   { [productFieldNameByAccessory]: accessory_id },
+    //   { [productFieldNameByAccessory]: 0 },
+    // );
     if (data.applied_products && data.applied_products.length) {
       for (let productId of data.applied_products) {
         // await this.productRepo.update(
