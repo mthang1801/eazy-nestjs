@@ -1211,11 +1211,12 @@ export class PaymentService {
         sendData['discount'] = +checkCouponCode['discountMoney'];
         sendData['discount_type'] = 1;
         sendData['coupon_code'] = data.coupon_code;
-        sendData['subtotal'] -= +checkCouponCode['discountMoney'];
+        sendData['subtotal'] =
+          +sendData['subtotal'] - +checkCouponCode['discountMoney'];
       }
     }
 
-    sendData['transfer_amount'] = +totalPrice;
+    sendData['transfer_amount'] = +sendData['subtotal'];
 
     let momoData = { ...sendData };
 
@@ -1230,13 +1231,15 @@ export class PaymentService {
         order_id: newOrder['order_id'],
         order_no: responseData['orderId'],
         gateway_name: GatewayName.Momo,
-        amount: +totalPrice,
+        amount: +sendData['subtotal'],
         payment_code: responseData.resultCode,
         errormsg: responseData.message,
         payment_url: responseData.payUrl,
       });
 
-      await this.cartService.clearAll(cart.cart_id);
+      if (cart.cart_id) {
+        await this.cartService.clearAll(cart.cart_id);
+      }
 
       return responseData;
     } catch (error) {

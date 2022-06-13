@@ -20,7 +20,7 @@ export class CronService {
     // this.productService.standardizeProducts();
   }
 
-  @Cron(CronExpression.EVERY_2_HOURS)
+  @Cron(CronExpression.EVERY_6_HOURS)
   handleCronEvery2Hours() {
     this.logger.debug('Called everyday at 6PM');
     this.productService.syncGetProductsStores();
