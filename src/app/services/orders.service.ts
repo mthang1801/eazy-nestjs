@@ -534,6 +534,9 @@ export class OrdersService {
         coupon_code: data.coupon_code || '',
       };
       let result = await this.createOrder(user, sendData);
+
+      await this.cartRepo.delete({ cart_id: cart.cart_id });
+      await this.cartItemRepo.delete({ cart_id: cart.cart_id });
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, error.status);
