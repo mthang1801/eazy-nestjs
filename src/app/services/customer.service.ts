@@ -1395,4 +1395,16 @@ export class CustomerService {
       );
     }
   }
+
+  async checkCustomerExistAndSave(phone) {
+    const userAppcore = await this.searchCustomterAppcoreByPhone(phone);
+    if (userAppcore) {
+      await this.createCustomer(userAppcore, false);
+    }
+    return this.userRepo.findOne({
+      select: '*',
+      join: userJoiner,
+      where: { [`${Table.USERS}.phone`]: phone },
+    });
+  }
 }
