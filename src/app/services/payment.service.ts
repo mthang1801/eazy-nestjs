@@ -121,6 +121,7 @@ import { UserLoyaltyEntity } from '../entities/userLoyalty.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import * as _ from 'lodash';
+import { CartService } from './cart.service';
 @Injectable()
 export class PaymentService {
   constructor(
@@ -141,6 +142,7 @@ export class PaymentService {
     private userProfileRepo: UserProfileRepository<UserProfileEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
+    private cartService: CartService,
   ) {}
 
   async getList(params) {
@@ -351,8 +353,6 @@ export class PaymentService {
           },
         });
 
-        console.log(shippingFeeLocation);
-
         if (shippingFeeLocation && +subtotal < +shippingFeeLocation.max_value) {
           subtotal = +subtotal + +shippingFeeLocation.value_fee;
           sendData['subtotal'] =
@@ -442,9 +442,6 @@ export class PaymentService {
         sendData['installment_interest_rate_code'] = 'ELEBAS10';
       }
 
-      console.log(sendData);
-
-      console.log(JSON.parse(convertOrderDataFromCMSToAppcore(sendData)));
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({
@@ -790,8 +787,7 @@ export class PaymentService {
       );
 
       if (cart) {
-        await this.cartRepo.delete({ cart_id: cart.cart_id });
-        await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+        await this.cartService.clearAll(cart.cart_id);
       }
 
       return response.data;
@@ -1225,21 +1221,27 @@ export class PaymentService {
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
-    const newOrder = await this.orderService.createOrder(user, sendData);
+    try {
+      const newOrder = await this.orderService.createOrder(user, sendData);
 
-    const responseData = await this.requestPaymentMomo(momoData);
+      const responseData = await this.requestPaymentMomo(momoData);
 
-    await this.orderPaymentRepo.create({
-      order_id: newOrder['order_id'],
-      order_no: responseData['orderId'],
-      gateway_name: GatewayName.Momo,
-      amount: +totalPrice,
-      payment_code: responseData.resultCode,
-      errormsg: responseData.message,
-      payment_url: responseData.payUrl,
-    });
+      await this.orderPaymentRepo.create({
+        order_id: newOrder['order_id'],
+        order_no: responseData['orderId'],
+        gateway_name: GatewayName.Momo,
+        amount: +totalPrice,
+        payment_code: responseData.resultCode,
+        errormsg: responseData.message,
+        payment_url: responseData.payUrl,
+      });
 
-    return responseData;
+      await this.cartService.clearAll(cart.cart_id);
+
+      return responseData;
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
   }
 
   async requestPaymentMomo(data) {
