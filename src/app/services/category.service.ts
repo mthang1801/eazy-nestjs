@@ -785,13 +785,13 @@ export class CategoryService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    let categoryCacheResult = await this.cache.getCategoryById(
-      category.category_id,
-    );
+    // let categoryCacheResult = await this.cache.getCategoryById(
+    //   category.category_id,
+    // );
 
-    if (categoryCacheResult) {
-      return categoryCacheResult;
-    }
+    // if (categoryCacheResult) {
+    //   return categoryCacheResult;
+    // }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.childrenCategories(categoryId);
@@ -802,12 +802,13 @@ export class CategoryService {
       ['asc'],
     );
 
-    let filterCategories = [
-      ...new Set([
-        categoryId,
-        ...categoriesListByLevel.map(({ category_id }) => category_id),
-      ]),
-    ];
+    // let filterCategories = [
+    //   ...new Set([
+    //     categoryId,
+    //     ...categoriesListByLevel.map(({ category_id }) => category_id),
+    //   ]),
+    // ];
+    let filterCategories = [categoryId];
 
     let features = await this.getFeaturesSetByCategoryId(
       category['category_id'],
@@ -1879,7 +1880,7 @@ export class CategoryService {
   async updateProductCategory(product_id, category_id) {
     let checkProductCategory = await this.productCategoryRepository.findOne({
       product_id: product_id,
-      category_id: category_id
+      category_id: category_id,
     });
     if (!checkProductCategory) {
       const productCategoryData = {
@@ -1889,20 +1890,26 @@ export class CategoryService {
       };
       await this.productCategoryRepository.create(productCategoryData);
     }
-    const checkParent = await this.categoryRepo.findOne({category_id: category_id});
+    const checkParent = await this.categoryRepo.findOne({
+      category_id: category_id,
+    });
     if (checkParent.parent_id) {
       await this.updateProductCategory(product_id, checkParent.parent_id);
     }
   }
 
   async setChildrenFeature(category_id) {
-    const parentCategory = await this.categoryRepo.findOne({category_id});
-    const categories1 = await this.categoryRepo.find({parent_id: parentCategory.category_id});
+    const parentCategory = await this.categoryRepo.findOne({ category_id });
+    const categories1 = await this.categoryRepo.find({
+      parent_id: parentCategory.category_id,
+    });
 
     if (categories1 && categories1.length) {
       for (let category1 of categories1) {
         //console.log(category1);
-        const parentFeatures1 = await this.categoryFeatureRepo.find({category_id: category1.parent_id});
+        const parentFeatures1 = await this.categoryFeatureRepo.find({
+          category_id: category1.parent_id,
+        });
         if (parentFeatures1 && parentFeatures1.length) {
           for (let parentFeature1 of parentFeatures1) {
             const categoryFeatureData = {
@@ -1910,16 +1917,20 @@ export class CategoryService {
               category_id: category1.category_id,
               feature_id: parentFeature1.feature_id,
               position: parentFeature1.position,
-            }
+            };
             await this.categoryFeatureRepo.create(categoryFeatureData);
           }
         }
         //console.log(parentFeature1);
-        const categories2 = await this.categoryRepo.find({parent_id: category1.category_id});
+        const categories2 = await this.categoryRepo.find({
+          parent_id: category1.category_id,
+        });
         if (categories2 && categories2.length) {
           for (let category2 of categories2) {
             //console.log(category2);
-            const parentFeatures2 = await this.categoryFeatureRepo.find({category_id: category2.parent_id});
+            const parentFeatures2 = await this.categoryFeatureRepo.find({
+              category_id: category2.parent_id,
+            });
             if (parentFeatures2 && parentFeatures2.length) {
               for (let parentFeature2 of parentFeatures2) {
                 const categoryFeatureData = {
@@ -1927,16 +1938,20 @@ export class CategoryService {
                   category_id: category2.category_id,
                   feature_id: parentFeature2.feature_id,
                   position: parentFeature2.position,
-                }
+                };
                 await this.categoryFeatureRepo.create(categoryFeatureData);
               }
             }
             //console.log(parentFeature2);
-            const categories3 = await this.categoryRepo.find({parent_id: category2.category_id});
+            const categories3 = await this.categoryRepo.find({
+              parent_id: category2.category_id,
+            });
             if (categories3 && categories3.length) {
               for (let category3 of categories3) {
                 //console.log(category3);
-                const parentFeatures3 = await this.categoryFeatureRepo.find({category_id: category3.parent_id});
+                const parentFeatures3 = await this.categoryFeatureRepo.find({
+                  category_id: category3.parent_id,
+                });
                 if (parentFeatures3 && parentFeatures3.length) {
                   for (let parentFeature3 of parentFeatures3) {
                     const categoryFeatureData = {
@@ -1944,7 +1959,7 @@ export class CategoryService {
                       category_id: category3.category_id,
                       feature_id: parentFeature3.feature_id,
                       position: parentFeature3.position,
-                    }
+                    };
                     await this.categoryFeatureRepo.create(categoryFeatureData);
                   }
                 }
