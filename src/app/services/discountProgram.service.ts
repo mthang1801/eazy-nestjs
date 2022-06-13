@@ -481,7 +481,7 @@ export class DiscountProgramService {
     const discountProgram = await this.discountProgramRepo.findOne({
       discount_id,
     });
-    
+
     const startDate = formatStandardTimeStamp(
       discountProgram['start_at'],
     ).toString();
@@ -489,7 +489,7 @@ export class DiscountProgramService {
       discountProgram['end_at'],
     ).toString();
     const today = formatStandardTimeStamp();
-    
+
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!discountProgram.start_at && !discountProgram.end_at) {
       const startTime = await this.configTime(discountProgram.time_start_at);
@@ -519,12 +519,16 @@ export class DiscountProgramService {
       );
 
       this.schedulerRegistry.addCronJob(
-        convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at),
+        convertToSlug(discountProgram.discount_name) +
+          '-on-at-' +
+          convertToSlug(discountProgram.time_start_at),
         jobOn,
       );
       jobOn.start();
       this.schedulerRegistry.addCronJob(
-        convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at),
+        convertToSlug(discountProgram.discount_name) +
+          '-off-at-' +
+          convertToSlug(discountProgram.time_end_at),
         jobOff,
       );
       jobOff.start();
@@ -535,7 +539,7 @@ export class DiscountProgramService {
     if (!discountProgram.end_at) {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
         console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
-  
+
         const startTime = await this.configTime(discountProgram.time_start_at);
         const endTime = await this.configTime(discountProgram.time_end_at);
         const now = await this.configTime(formatTime());
@@ -546,9 +550,11 @@ export class DiscountProgramService {
           console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
           this.discountProgramRepo.update({ discount_id }, { status: 'A' });
         } else {
-          console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
+          console.log(
+            'Chương trình được bắt đầu không trong khung giờ diễn ra',
+          );
         }
-  
+
         const jobOn = new CronJob(
           `${startTime.second} ${startTime.minute} ${startTime.hour} * * *`,
           () => {
@@ -561,14 +567,18 @@ export class DiscountProgramService {
             this.discountProgramRepo.update({ discount_id }, { status: 'D' });
           },
         );
-  
+
         this.schedulerRegistry.addCronJob(
-          convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at),
+          convertToSlug(discountProgram.discount_name) +
+            '-on-at-' +
+            convertToSlug(discountProgram.time_start_at),
           jobOn,
         );
         jobOn.start();
         this.schedulerRegistry.addCronJob(
-          convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at),
+          convertToSlug(discountProgram.discount_name) +
+            '-off-at-' +
+            convertToSlug(discountProgram.time_end_at),
           jobOff,
         );
         jobOff.start();
@@ -579,10 +589,13 @@ export class DiscountProgramService {
         this.turnOnDiscountProgram(discount_id);
       };
 
-      const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+      const milliseconds =
+        new Date(startDate).getTime() - new Date(today).getTime();
       const timeout = setTimeout(callback, milliseconds);
       console.log(
-        'Discount program will start after ' + milliseconds / 3600000 + ' hours.',
+        'Discount program will start after ' +
+          milliseconds / 3600000 +
+          ' hours.',
       );
       this.schedulerRegistry.addTimeout(
         convertToSlug(discountProgram.discount_name),
@@ -624,12 +637,16 @@ export class DiscountProgramService {
       );
 
       this.schedulerRegistry.addCronJob(
-        convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at),
+        convertToSlug(discountProgram.discount_name) +
+          '-on-at-' +
+          convertToSlug(discountProgram.time_start_at),
         jobOn,
       );
       jobOn.start();
       this.schedulerRegistry.addCronJob(
-        convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at),
+        convertToSlug(discountProgram.discount_name) +
+          '-off-at-' +
+          convertToSlug(discountProgram.time_end_at),
         jobOff,
       );
       jobOff.start();
@@ -743,12 +760,16 @@ export class DiscountProgramService {
     );
 
     this.schedulerRegistry.addCronJob(
-      convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at),
+      convertToSlug(discountProgram.discount_name) +
+        '-on-at-' +
+        convertToSlug(discountProgram.time_start_at),
       jobOn,
     );
     jobOn.start();
     this.schedulerRegistry.addCronJob(
-      convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at),
+      convertToSlug(discountProgram.discount_name) +
+        '-off-at-' +
+        convertToSlug(discountProgram.time_end_at),
       jobOff,
     );
     jobOff.start();
@@ -793,16 +814,28 @@ export class DiscountProgramService {
     });
 
     this.schedulerRegistry.deleteCronJob(
-      convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at),
+      convertToSlug(discountProgram.discount_name) +
+        '-on-at-' +
+        convertToSlug(discountProgram.time_start_at),
     );
     this.schedulerRegistry.deleteCronJob(
-      convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at),
+      convertToSlug(discountProgram.discount_name) +
+        '-off-at-' +
+        convertToSlug(discountProgram.time_end_at),
     );
     this.logger.warn(
-      `job ${convertToSlug(discountProgram.discount_name) + '-on-at-' + convertToSlug(discountProgram.time_start_at)} deleted!`,
+      `job ${
+        convertToSlug(discountProgram.discount_name) +
+        '-on-at-' +
+        convertToSlug(discountProgram.time_start_at)
+      } deleted!`,
     );
     this.logger.warn(
-      `job ${convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at)} deleted!`,
+      `job ${
+        convertToSlug(discountProgram.discount_name) +
+        '-off-at-' +
+        convertToSlug(discountProgram.time_end_at)
+      } deleted!`,
     );
 
     this.discountProgramRepo.update({ discount_id }, { status: 'D' });

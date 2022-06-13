@@ -9,7 +9,7 @@ import { CDN_URL } from '../../constants/api.appcore';
 export class UploadService {
   async upload(files) {
     if (!files?.length) return;
-
+    console.log(files);
     let data = new FormData();
     for (let file of files) {
       data.append('files', fs.createReadStream(file.path));
