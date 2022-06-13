@@ -245,6 +245,8 @@ export class DiscountProgramService {
         );
       }
     }
+
+    await this.addTimeoutTurnOnDiscountProgram(discount_id);
   }
 
   async itgCreateDiscountPrograms(data) {
