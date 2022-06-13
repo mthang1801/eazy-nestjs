@@ -1381,10 +1381,14 @@ export class CustomerService {
       }
 
       const customerAppcore = res.data.data.customers[0];
-      const customerCMS =
-        convertCustomerDataFromAppcoreAfterSearching(customerAppcore);
-      return customerCMS;
+      if (customerAppcore) {
+        const customerCMS =
+          convertCustomerDataFromAppcoreAfterSearching(customerAppcore);
+        return customerCMS;
+      }
+      return null;
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         error.response.data.message,
         error.response.status,

@@ -541,6 +541,7 @@ export class OrdersService {
   }
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
+    console.log(data);
     let user: any;
     if (userAuth) {
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
@@ -587,6 +588,7 @@ export class OrdersService {
             salt,
             user_type: UserTypeEnum.Customer,
           };
+
           let newUser = await this.userRepo.create(userData);
 
           let userProfileData = {

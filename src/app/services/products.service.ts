@@ -4990,7 +4990,7 @@ export class ProductService {
     if (!product) {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
     }
-    console.log(product);
+
     try {
       let response;
 
@@ -5020,7 +5020,14 @@ export class ProductService {
         console.log(1);
         for (let [key, val] of Object.entries(productsStocks)) {
           let resVal: any = val;
-          result = [...result, { ...resVal, productId: id }];
+          result = [
+            ...result,
+            {
+              ...resVal,
+              product_id: resVal.productId,
+              amount: resVal.inStockQuantity,
+            },
+          ];
         }
         return result;
       } else {
