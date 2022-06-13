@@ -1294,7 +1294,6 @@ export class PaymentService {
       lang: 'vi',
     };
     try {
-      console.log('4');
       const response = await axios({
         url: MOMO_PAYMENT,
         method: 'POST',

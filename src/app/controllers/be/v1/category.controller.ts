@@ -67,15 +67,15 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  // @Get(':product_id/:category_id')
-  // async productCategory(
-  //   @Res() res: Response,
-  //   @Param('product_id') product_id: number,
-  //   @Param('category_id') category_id: number,
-  // ): Promise<IResponse> {
-  //   await this.service.updateProductCategory(product_id, category_id);
-  //   return this.responseSuccess(res, null)
-  // }
+  @Get(':product_id/:category_id')
+  async productCategory(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+    @Param('category_id') category_id: number,
+  ): Promise<IResponse> {
+    await this.service.deleteProductCategory(product_id, category_id);
+    return this.responseSuccess(res, null)
+  }
 
   /**
    * Danh muc ngành hàng

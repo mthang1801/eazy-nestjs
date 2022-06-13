@@ -1898,11 +1898,12 @@ export class CategoryService {
       };
       await this.productCategoryRepository.create(productCategoryData);
     }
-    const checkParent = await this.categoryRepo.findOne({
+    const category = await this.categoryRepo.findOne({
       category_id: category_id,
     });
-    if (checkParent.parent_id) {
-      await this.createProductCategory(product_id, checkParent.category_id);
+    let checkParent = category.parent_id;
+    if (checkParent) {
+      await this.createProductCategory(product_id, category.parent_id);
     }
   }
 
@@ -1911,17 +1912,19 @@ export class CategoryService {
       product_id: product_id,
       category_id: category_id,
     });
+    console.log(product_id + ' ' + category_id);
     if (checkProductCategory) {
       await this.productCategoryRepository.delete({
         product_id: product_id,
         category_id: category_id,
       });
     }
-    const checkParent = await this.categoryRepo.findOne({
+    const category = await this.categoryRepo.findOne({
       category_id: category_id,
     });
-    if (checkParent.parent_id) {
-      await this.createProductCategory(product_id, checkParent.category_id);
+    let checkParent = category.parent_id;
+    if (checkParent) {
+      await this.deleteProductCategory(product_id, category.parent_id);
     }
   }
 
