@@ -25,7 +25,6 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 
 import { Equal, Not } from 'src/database/operators/operators';
-import { cartItemCacheJoiner } from '../../utils/joinTable';
 @Injectable()
 export class CartService {
   constructor(
@@ -80,10 +79,10 @@ export class CartService {
   }
 
   async get(user_id) {
-    // let cartCacheResult = await this.cache.getCartByUserId(user_id);
-    // if (cartCacheResult) {
-    //   return cartCacheResult;
-    // }
+    let cartCacheResult = await this.cache.getCartByUserId(user_id);
+    if (cartCacheResult) {
+      return cartCacheResult;
+    }
     const cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       return {
@@ -113,7 +112,7 @@ export class CartService {
 
     result['cart_items'] = cartItems;
 
-    // await this.cache.setCartByUserId(user_id, result);
+    await this.cache.setCartByUserId(user_id, result);
     return result;
   }
 
@@ -170,10 +169,10 @@ export class CartService {
       await this.cartItemRepo.create(cartItemData);
     }
 
-    // await this.cache.removeCartByUserId(user_id);
-    // await this.cache.removeCartByUserId(alter_user_id);
+    await this.cache.removeCartByUserId(user_id);
+    await this.cache.removeCartByUserId(alter_user_id);
     let result = await this.get(alter_user_id);
-    // await this.cache.setCartByUserId(alter_user_id, result);
+    await this.cache.setCartByUserId(alter_user_id, result);
     return result;
   }
 
@@ -197,30 +196,15 @@ export class CartService {
     let cart = await this.cartRepo.findOne({ cart_id: cartItem.cart_id });
     if (!cart) return;
 
-    // await this.cache.removeCartByUserId(cart.user_id);
+    await this.cache.removeCartByUserId(cart.user_id);
     let result = await this.get(cart.user_id);
-    // await this.cache.setCartByUserId(cart.user_id, result);
+    await this.cache.setCartByUserId(cart.user_id, result);
 
     return result;
   }
 
   async delete(cart_item_id: number) {
-    // await this.cache.removeCartByCartItemId(cart_item_id);
-
-    let cartItem = await this.cartItemRepo.findOne({
-      select: '*',
-      join: cartItemCacheJoiner,
-      where: { [`${Table.CART_ITEMS}.cart_item_id`]: cart_item_id },
-    });
-    await this.cartItemRepo.delete({ cart_item_id }, true);
-
-    let cart = await this.cartItemRepo.find({
-      cart_id: cartItem.cart_id,
-    });
-
-    if (!cart.length) {
-      await this.cartRepo.delete({ cart_id: cartItem.cart_id });
-    }
+    await this.cache.removeCartByCartItemId(cart_item_id);
   }
 
   async clearAll(cart_id) {

@@ -54,6 +54,15 @@ export class ProductsController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get(':product_id/stocks-amount')
+  async checkProductStores(
+    @Param('product_id') product_id: string,
+    @Res() res: Response,
+  ): Promise<IResponse> {
+    const result = await this.service.checkProductsStores(product_id);
+    return this.responseSuccess(res, result);
+  }
+
   @Get()
   async getList(@Query() params, @Res() res: Response): Promise<IResponse> {
     const result = await this.service.getListFE(params);

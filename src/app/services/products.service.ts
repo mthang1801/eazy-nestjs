@@ -4996,7 +4996,7 @@ export class ProductService {
     try {
       let response;
 
-      if (product.product_type === 3) {
+      if (product.product_type == 3) {
         response = await axios({
           url: GET_PRODUCTS_COMBO_STORES_API(product.product_appcore_id),
         });
@@ -5014,12 +5014,48 @@ export class ProductService {
 
       let result = [];
 
+      const productsStores = await this.productStoreRepo.find({
+        select: '*',
+        orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
+        where: { product_id: id, amount: MoreThan(0) },
+      });
+
+      if (productsStores.length) {
+        for (let productStoreItem of productsStores) {
+          const store = await this.storeRepo.findOne({
+            select: '*',
+            join: {
+              [JoinTable.leftJoin]: {
+                [Table.STORE_LOCATION_DESCRIPTIONS]: {
+                  fieldJoin: 'store_location_id',
+                  rootJoin: 'store_location_id',
+                },
+              },
+            },
+            where: {
+              [`${Table.STORE_LOCATIONS}.store_location_id`]:
+                productStoreItem['store_location_id'],
+            },
+          });
+          let storeObj = {
+            productId: product.product_id,
+            product_id: product.product_id,
+            storeId: store['store_location_id'],
+            store_location_id: store['store_location_id'],
+            storeName: store['store_name'],
+            storeAddress: store['pickup_address'],
+            storeLatitude: store['latitude'],
+            storeLongitude: store['longitude'],
+          };
+          result = [...result, { ...productStoreItem, ...storeObj }];
+        }
+      }
+
       if (
         productsStocks &&
         typeof productsStocks === 'object' &&
         Object.entries(productsStocks).length
       ) {
-        console.log(1);
         for (let [key, val] of Object.entries(productsStocks)) {
           let resVal: any = val;
           result = [
@@ -5028,12 +5064,16 @@ export class ProductService {
               ...resVal,
               product_id: resVal.productId,
               amount: resVal.inStockQuantity,
+              store_location_id: resVal['storeId'],
+              store_name: resVal['storeName'],
+              pickup_address: resVal['storeAddress'],
+              latitude: resVal['storeLatitude'],
+              longitude: resVal['storeLongitude'],
             },
           ];
         }
-        return result;
+        return result.filter((item) => item.amount > 0);
       } else {
-        console.log(2);
         const productsStores = await this.productStoreRepo.find({
           select: '*',
           orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
@@ -5072,7 +5112,7 @@ export class ProductService {
         }
       }
 
-      return result;
+      return result.filter((item) => item.amount > 0);
     } catch (error) {
       return [];
     }
