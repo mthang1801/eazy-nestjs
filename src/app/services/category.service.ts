@@ -459,7 +459,10 @@ export class CategoryService {
           //   category_id: result.category_id,
           //   product_id: willDeleteProductItem.product_id,
           // });
-          await this.deleteProductCategory(willDeleteProductItem.product_id, result.category_id);
+          await this.deleteProductCategory(
+            willDeleteProductItem.product_id,
+            result.category_id,
+          );
         }
       }
 
@@ -495,7 +498,10 @@ export class CategoryService {
           //     category_position: result.position,
           //   });
           // }
-          await this.createProductCategory(product.product_id, result.category_id)
+          await this.createProductCategory(
+            product.product_id,
+            result.category_id,
+          );
         }
       }
     }
@@ -1896,21 +1902,26 @@ export class CategoryService {
       category_id: category_id,
     });
     if (checkParent.parent_id) {
-      await this.createProductCategory(product_id, checkParent.parent_id);
+      await this.createProductCategory(product_id, checkParent.category_id);
     }
   }
 
   async deleteProductCategory(product_id, category_id) {
     let checkProductCategory = await this.productCategoryRepository.findOne({
       product_id: product_id,
-      category_id: category_id
+      category_id: category_id,
     });
     if (checkProductCategory) {
-      await this.productCategoryRepository.delete({product_id: product_id, category_id: category_id});
+      await this.productCategoryRepository.delete({
+        product_id: product_id,
+        category_id: category_id,
+      });
     }
-    const checkParent = await this.categoryRepo.findOne({category_id: category_id});
+    const checkParent = await this.categoryRepo.findOne({
+      category_id: category_id,
+    });
     if (checkParent.parent_id) {
-      await this.createProductCategory(product_id, checkParent.parent_id);
+      await this.createProductCategory(product_id, checkParent.category_id);
     }
   }
 

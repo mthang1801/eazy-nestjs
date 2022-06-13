@@ -3141,16 +3141,17 @@ export class ProductService {
       }
 
       //============ remove cache ============
-      let productCacheKey = cacheKeys.product(product.product_id);
-      await this.cache.delete(productCacheKey);
+
+      await this.cache.removeCachedProductById(product.product_id);
 
       return results;
     } catch (error) {
       // delete files
+      console.log(error);
       for (let image of images) {
         await fsExtra.unlink(image.path);
       }
-      if (error.response.status == 413) {
+      if (error?.response?.status == 413) {
         throw new HttpException(
           'Upload không thành công, kích thước file quá lớn.',
           413,
@@ -3162,7 +3163,7 @@ export class ProductService {
           error?.response?.data ||
           error.message
         }`,
-        error.response.status,
+        error?.response?.status || error.status,
       );
     }
   }
@@ -5756,7 +5757,7 @@ export class ProductService {
   async updateProductCategory(product_id, category_id) {
     let checkProductCategory = await this.productCategoryRepo.findOne({
       product_id: product_id,
-      category_id: category_id
+      category_id: category_id,
     });
     if (!checkProductCategory) {
       const productCategoryData = {
@@ -5766,7 +5767,9 @@ export class ProductService {
       };
       await this.productCategoryRepo.create(productCategoryData);
     }
-    const checkParent = await this.categoryRepo.findOne({category_id: category_id});
+    const checkParent = await this.categoryRepo.findOne({
+      category_id: category_id,
+    });
     if (checkParent.parent_id) {
       await this.updateProductCategory(product_id, checkParent.parent_id);
     }
