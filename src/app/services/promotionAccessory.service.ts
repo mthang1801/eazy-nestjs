@@ -187,40 +187,39 @@ export class PromotionAccessoryService {
         { description: data.description },
       );
     }
-    return;
 
-    if (data.products) {
-      for (let productItem of data.products) {
-        const product = await this.productRepo.findOne({
-          select: '*',
-          join: productLeftJoiner,
-          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
-        });
+    // if (data.products) {
+    //   for (let productItem of data.products) {
+    //     const product = await this.productRepo.findOne({
+    //       select: '*',
+    //       join: productLeftJoiner,
+    //       where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
+    //     });
 
-        if (!product) {
-          throw new HttpException(
-            `Sản phẩm có id ${productItem.product_id} tồn tại`,
-            404,
-          );
-        }
+    //     if (!product) {
+    //       throw new HttpException(
+    //         `Sản phẩm có id ${productItem.product_id} tồn tại`,
+    //         404,
+    //       );
+    //     }
 
-        if (
-          productItem.promotion_price < 0 ||
-          productItem.promotion_price > product['price']
-        ) {
-          throw new HttpException(
-            `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp, không được lớn hơn giá gốc `,
-            400,
-          );
-        }
-        if (productItem.sale_price_from > productItem.sale_price_to) {
-          throw new HttpException(
-            `Giá áp dụng bảo hành của ${product.product_id} từ ${productItem.sale_price_from} - ${productItem.sale_price_from} không phù hợp `,
-            400,
-          );
-        }
-      }
-    }
+    //     if (
+    //       productItem.promotion_price < 0 ||
+    //       productItem.promotion_price > product['price']
+    //     ) {
+    //       throw new HttpException(
+    //         `Giá ưu đãi của id : ${product.product_id} ${productItem.promotion_price} không phù hợp, không được lớn hơn giá gốc `,
+    //         400,
+    //       );
+    //     }
+    //     if (productItem.sale_price_from > productItem.sale_price_to) {
+    //       throw new HttpException(
+    //         `Giá áp dụng bảo hành của ${product.product_id} từ ${productItem.sale_price_from} - ${productItem.sale_price_from} không phù hợp `,
+    //         400,
+    //       );
+    //     }
+    //   }
+    // }
 
     const updatePromoAccessoryData = {
       ...this.promoAccessoryRepo.setData(data),
@@ -228,14 +227,14 @@ export class PromotionAccessoryService {
       updated_by: user.user_id,
     };
 
-    await this.promoAccessoryRepo.update(
-      { accessory_id },
-      updatePromoAccessoryData,
-    );
+    // await this.promoAccessoryRepo.update(
+    //   { accessory_id },
+    //   updatePromoAccessoryData,
+    // );
 
-    if (data.display_at) {
-      data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
-    }
+    // if (data.display_at) {
+    //   data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
+    // }
 
     if (data.products && data.products.length) {
       let oldPromotionProducts = await this.promoAccessoryDetailRepo.delete(
@@ -266,7 +265,7 @@ export class PromotionAccessoryService {
           updated_by: user.user_id,
           accessory_id: accessory_id,
         };
-        await this.promoAccessoryDetailRepo.create(newProductData, false);
+        // await this.promoAccessoryDetailRepo.create(newProductData, false);
 
         //============== remove new promotion product cache ==============
         await this.cache.removeRelatedServicesWithCachedProduct(
@@ -294,10 +293,10 @@ export class PromotionAccessoryService {
     );
     if (data.applied_products && data.applied_products.length) {
       for (let productId of data.applied_products) {
-        await this.productRepo.update(
-          { product_id: productId },
-          { [productFieldNameByAccessory]: accessory_id },
-        );
+        // await this.productRepo.update(
+        //   { product_id: productId },
+        //   { [productFieldNameByAccessory]: accessory_id },
+        // );
         await this.cache.removeRelatedServicesWithCachedProduct(productId);
       }
     }
