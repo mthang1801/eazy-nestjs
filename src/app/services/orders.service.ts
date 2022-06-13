@@ -996,6 +996,13 @@ export class OrdersService {
         },
       );
     } catch (error) {
+      await this.orderRepo.update(
+        { order_id },
+        {
+          status: OrderStatus.invalid,
+          reason_fail: error?.response?.data?.message || '',
+        },
+      );
       console.log(error);
       throw new HttpException('Something went wrong', 409);
     }
