@@ -237,7 +237,7 @@ export class PromotionAccessoryService {
     // }
 
     if (data.products && data.products.length) {
-      let oldPromotionProducts = await this.promoAccessoryDetailRepo.delete(
+      let oldPromotionProducts = await this.promoAccessoryDetailRepo.find(
         { accessory_id },
         true,
       );
