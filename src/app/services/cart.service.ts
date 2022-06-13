@@ -50,7 +50,7 @@ export class CartService {
     });
 
     if (!checkProduct) {
-      throw new HttpException('Không thể thêm SP này vào giỏ hàng.', 400);
+      throw new HttpException('Không thể thêm SP cha vào giỏ hàng.', 400);
     }
 
     const cartItem = await this.cartItemRepo.findOne({
