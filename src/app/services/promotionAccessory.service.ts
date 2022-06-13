@@ -166,7 +166,7 @@ export class PromotionAccessoryService {
           accessory_id,
       },
     });
-    console.log(productLists);
+
     promoAccessory['products'] = productLists;
 
     return promoAccessory;
@@ -181,12 +181,13 @@ export class PromotionAccessoryService {
       );
     }
 
-    if (promoAccessory.app_core_id) {
-      throw new HttpException(
-        'Không thể cập nhật dữ liệu được tạo từ Appcore',
-        400,
+    if (data.description) {
+      await this.productPriceRepo.update(
+        { accessory_id },
+        { description: data.description },
       );
     }
+    return;
 
     if (data.products) {
       for (let productItem of data.products) {
