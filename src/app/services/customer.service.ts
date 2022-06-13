@@ -46,7 +46,10 @@ import {
 } from 'src/database/enums/tableFieldEnum/user.enum';
 import { CreateCustomerAppcoreDto } from '../dto/customer/create-customerAppcore.dto';
 import { CreateCustomerDto } from '../dto/customer/create-customer.dto';
-import { itgCustomerToAppcore } from '../../utils/integrateFunctions';
+import {
+  itgCustomerToAppcore,
+  convertCustomerDataFromAppcoreAfterSearching,
+} from '../../utils/integrateFunctions';
 import { filter, sortBy } from 'lodash';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { defaultPassword } from '../../constants/defaultPassword';
@@ -80,6 +83,7 @@ import {
 } from '../../utils/helper';
 import { logModules, logSources, logThreads } from '../../constants/logs';
 import { Response } from 'express';
+import { SEARCH_CUSTOMER_APPCORE_BY_PHONE } from '../../constants/api.appcore';
 
 @Injectable()
 export class CustomerService {
@@ -96,7 +100,7 @@ export class CustomerService {
     private logService: LogsService,
   ) {}
 
-  async create(creator, data: CreateCustomerDto) {
+  async CMScreate(creator, data: CreateCustomerDto) {
     if (!data.firstname && !data.lastname) {
       throw new HttpException('Tên khách hàng không được để trống', 422);
     }
@@ -179,6 +183,91 @@ export class CustomerService {
       return this.createCustomerToAppcore(result);
     } catch (error) {
       throw new HttpException(error.response, error.status);
+    }
+  }
+
+  async createCustomer(data, syncToAppcore = true) {
+    if (!data.lastname) {
+      throw new HttpException('Tên khách hàng không được để trống', 422);
+    }
+
+    const { passwordHash, salt } = saltHashPassword(defaultPassword);
+
+    let user = await this.userRepo.findOne({ phone: data.phone });
+
+    if (user) {
+      throw new HttpException('Số điện thoại này đã có trong hệ thống', 409);
+    }
+
+    if (data.email) {
+      const userEmail = await this.userRepo.findOne({
+        email: data.email.trim().toLowerCase(),
+      });
+      if (userEmail) {
+        throw new HttpException('Email đã tồn tại', 409);
+      }
+    }
+
+    const userData = {
+      ...new UserEntity(),
+      ...this.userRepo.setData(data),
+      password: passwordHash,
+      salt: salt,
+      status: UserStatusEnum.Active,
+      is_sync: 'N',
+    };
+
+    const newUser = await this.userRepo.create(userData);
+
+    data['b_phone'] = data['phone'];
+    data['s_phone'] = data['s_phone'] || data['phone'];
+    data['b_lastname'] = data['lastname'] || '';
+    data['b_district'] = data['b_district'] || '';
+    data['b_city'] = data['b_city'] || '';
+    data['b_ward'] = data['b_ward'] || '';
+    data['b_address'] = data['b_address'] || '';
+    data['s_lastname'] = data['s_lastname'] || data['lastname'] || '';
+    data['s_district'] = data['s_district'] || data['b_district'] || '';
+    data['s_city'] = data['s_city'] || data['b_city'] || '';
+    data['s_ward'] = data['s_ward'] || data['b_ward'] || '';
+    data['s_address'] = data['s_address'] || data['b_address'] || '';
+
+    const userProfileData = {
+      ...new UserProfileEntity(),
+      ...this.userProfileRepo.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    const _newUserProfile = this.userProfileRepo.create(userProfileData);
+
+    const userDataData = {
+      ...new UserDataEntity(),
+      ...this.userDataRepo.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    const _newUserData = this.userDataRepo.create(userDataData);
+
+    const userLoyaltyData = {
+      ...new UserLoyaltyEntity(),
+      ...this.userLoyalRepo.setData(data),
+      user_id: newUser.user_id,
+    };
+
+    const _newUserLoyalty = await this.userLoyalRepo.create(userLoyaltyData);
+
+    await Promise.all([_newUserProfile, _newUserData, _newUserLoyalty]);
+
+    if (syncToAppcore) {
+      user = await this.userRepo.findOne({
+        join: userJoiner,
+        where: { user_id: newUser.user_id },
+      });
+      try {
+        return this.createCustomerToAppcore(user);
+      } catch (error) {
+        throw new HttpException(error.response, error.status);
+      }
     }
   }
 
@@ -545,7 +634,7 @@ export class CustomerService {
     };
   }
 
-  async update(user_id: string, data: UpdateCustomerDTO) {
+  async update(user_id: string, data) {
     const user = await this.userRepo.findOne({ user_id });
 
     if (!user) {
@@ -1183,48 +1272,50 @@ export class CustomerService {
         join: userJoiner,
         where: { [`${Table.USERS}.user_appcore_id`]: IsNull() },
       });
-      if (customersUnsync.length) {
-        for (let customer of customersUnsync) {
-          let customerProfile = await this.userProfileRepo.findOne({
+
+      let _res = customersUnsync.map(async (customer) => {
+        let customerProfile = await this.userProfileRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!customerProfile) {
+          const newCustomerProfileData = {
+            ...new UserProfileEntity(),
+            b_firstname: customer.fistname,
+            b_lastname: customer.lastname,
+            b_phone: customer.phone,
             user_id: customer.user_id,
-          });
-          if (!customerProfile) {
-            const newCustomerProfileData = {
-              ...new UserProfileEntity(),
-              b_firstname: customer.fistname,
-              b_lastname: customer.lastname,
-              b_phone: customer.phone,
-              user_id: customer.user_id,
-            };
-            await this.userProfileRepo.create(newCustomerProfileData);
-          }
-          let customerLoyalty = await this.userLoyalRepo.findOne({
-            user_id: customer.user_id,
-          });
-          if (!customerLoyalty) {
-            const newCustomerLoyaltyData = {
-              ...new UserLoyaltyEntity(),
-              user_id: customer.user_id,
-            };
-            await this.userLoyalRepo.create(newCustomerLoyaltyData);
-          }
-          let userData = await this.userDataRepo.findOne({
-            user_id: customer.user_id,
-          });
-          if (!userData) {
-            const userDataData = {
-              ...new UserDataEntity(),
-              user_id: customer.user_id,
-            };
-            await this.userDataRepo.create(userDataData);
-          }
-          await this.createCustomerToAppcore(customer);
+          };
+          await this.userProfileRepo.create(newCustomerProfileData);
         }
-      }
-      await this.userRepo.update(
-        { user_appcore_id: Not(IsNull()) },
-        { is_sync: 'N' },
-      );
+        let customerLoyalty = await this.userLoyalRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!customerLoyalty) {
+          const newCustomerLoyaltyData = {
+            ...new UserLoyaltyEntity(),
+            user_id: customer.user_id,
+          };
+          await this.userLoyalRepo.create(newCustomerLoyaltyData);
+        }
+        let userData = await this.userDataRepo.findOne({
+          user_id: customer.user_id,
+        });
+        if (!userData) {
+          const userDataData = {
+            ...new UserDataEntity(),
+            user_id: customer.user_id,
+          };
+          await this.userDataRepo.create(userDataData);
+        }
+        await this.createCustomerToAppcore(customer);
+
+        await this.userRepo.update(
+          { user_appcore_id: Not(IsNull()) },
+          { is_sync: 'N' },
+        );
+      });
+
+      await Promise.all(_res);
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error?.response,
@@ -1279,5 +1370,25 @@ export class CustomerService {
       throw new HttpException(error.response, error.status);
     }
     //return res;
+  }
+
+  async searchCustomterAppcoreByPhone(phone) {
+    try {
+      const res = await axios.get(SEARCH_CUSTOMER_APPCORE_BY_PHONE(phone));
+
+      if (!res?.data?.data?.customers) {
+        return null;
+      }
+
+      const customerAppcore = res.data.data.customers[0];
+      const customerCMS =
+        convertCustomerDataFromAppcoreAfterSearching(customerAppcore);
+      return customerCMS;
+    } catch (error) {
+      throw new HttpException(
+        error.response.data.message,
+        error.response.status,
+      );
+    }
   }
 }

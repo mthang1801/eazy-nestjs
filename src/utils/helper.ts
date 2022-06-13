@@ -184,11 +184,13 @@ export const isNumeric = (value: string | number) => {
   return !isNaN(1 * fmtValue);
 };
 
-export const startToday = moment(new Date().toLocaleDateString()).format(
-  'YYYY-MM-DD HH:mm:ss',
+export const startToday = moment(
+  new Date().toLocaleDateString(),
+  'YYYY-MM-DD hh:mm:ss',
+  true,
 );
 
-export function distance(lat1, lon1, lat2, lon2, unit) {
+export const distance = (lat1, lon1, lat2, lon2, unit) => {
   var radlat1 = (Math.PI * lat1) / 180;
   var radlat2 = (Math.PI * lat2) / 180;
   var theta = lon1 - lon2;
@@ -209,7 +211,7 @@ export function distance(lat1, lon1, lat2, lon2, unit) {
     dist = dist * 0.8684;
   }
   return dist;
-}
+};
 
 export const checkRestrictedCommentsListIntoRegularExpress = (str) =>
   str

@@ -1,3 +1,6 @@
+export const thumbnailDefault =
+  'ddv_nhat_tin_storage/website/1654677145640_1654676803651-528058048-No_Image.jpg';
+
 export const productsData = [
   {
     product_id: '50000173',

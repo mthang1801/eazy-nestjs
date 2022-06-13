@@ -284,7 +284,6 @@ export class ProductService {
     private productDescriptionsRepo: ProductDescriptionsRepository<ProductDescriptionsEntity>,
     private productVariationGroupProductsRepo: ProductVariationGroupProductsRepository<ProductVariationGroupFeaturesEntity>,
     private productVariationGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
-    private productVariationGroupFeatureRepo: ProductVariationGroupFeaturesRepository<ProductVariationGroupFeaturesEntity>,
     private productCategoryRepo: ProductsCategoriesRepository<ProductsCategoriesEntity>,
     private productPriceRepo: ProductPricesRepository<ProductPricesEntity>,
     private productFeatureValueRepo: ProductFeatureValueRepository<ProductFeatureValueEntity>,
@@ -393,105 +392,172 @@ export class ProductService {
           select: ['feature_id', 'variant_id'],
           where: { product_id },
         });
-
-        // Đưa vào product group features
-        if (featuresList.length) {
-          // Kiểm tra xem trong product_group_features với group_id đã tồn tại feature_id này hay chưa
-
-          for (let { feature_id, variant_id } of featuresList) {
-            if (!feature_id || !variant_id) {
-              continue;
-            }
-            let featureValueInGroup =
-              await this.productVariationGroupFeatureRepo.findOne({
-                feature_id,
-                variant_id,
-                group_id,
-              });
-            // Nếu trong group features không tìm thấy thì sẽ thêm feature này vào group, ngược lại bỏ qua
-            if (!featureValueInGroup) {
-              await this.productVariationGroupFeatureRepo.create(
-                {
-                  feature_id,
-                  variant_id,
-                  group_id,
-                },
-                false,
-              );
-            }
-          }
-        }
       }
     }
   }
 
   async standardizeProducts() {
-    // let childrenProducts = await this.productRepo.find({
-    //   parent_product_id: '0',
-    //   parent_product_appcore_id: Not(IsNull()),
-    // });
-    // for (let childProduct of childrenProducts) {
-    //   let parentProduct = await this.productRepo.update(
-    //     { product_appcore_id: childProduct.parent_product_appcore_id },
-    //     { product_function: 1 },
-    //     true,
-    //   );
-    //   if (parentProduct) {
-    //     await this.productRepo.update(
-    //       { product_id: childProduct.product_id },
-    //       {
-    //         parent_product_id: parentProduct['product_id'],
-    //         product_function: 2,
-    //       },
-    //     );
-    //   }
-    // }
-    let parentProducts = await this.productRepo.find({
-      product_function: 1,
-      product_id: MoreThanOrEqual(24200),
-    });
-    if (parentProducts.length) {
-      for (let parentProduct of parentProducts) {
-        const childrenProducts = await this.productRepo.find({
-          parent_product_appcore_id: parentProduct['product_appcore_id'],
-        });
-        if (!childrenProducts.length) {
+    let productsList = await this.productRepo.find({ tracking: 'Y' });
+    for (let [i, productItem] of productsList.entries()) {
+      if (productItem['parent_product_appcore_id']) {
+        let parentProduct = await this.productRepo.update(
+          { product_appcore_id: productItem.parent_product_appcore_id },
+          { product_function: 1 },
+          true,
+        );
+        if (parentProduct) {
+          let group = await this.productVariationGroupRepo.findOne({
+            product_root_id: parentProduct.product_id,
+          });
+          if (!group) {
+            group = await this.productVariationGroupRepo.create({
+              product_root_id: parentProduct.product_id,
+            });
+            await this.productVariationGroupProductsRepo.create(
+              {
+                product_id: parentProduct.product_id,
+                group_id: group.group_id,
+              },
+              false,
+            );
+          }
+
+          const childrenProducts = await this.productRepo.find({
+            parent_product_appcore_id: parentProduct.product_appcore_id,
+          });
+          for (let childProduct of childrenProducts) {
+            const groupProduct =
+              await this.productVariationGroupProductsRepo.findOne({
+                group_id: group.group_id,
+                product_id: childProduct.product_id,
+              });
+            if (!groupProduct) {
+              await this.productVariationGroupProductsRepo.create(
+                {
+                  product_id: childProduct.product_id,
+                  parent_product_id: parentProduct.product_id,
+                  group_id: group.group_id,
+                },
+                false,
+              );
+            }
+          }
+
           await this.productRepo.update(
-            { product_id: parentProduct['product_id'] },
-            { product_function: 4 },
+            { product_id: productItem.product_id },
+            {
+              parent_product_id: parentProduct['product_id'],
+              product_function: 2,
+            },
           );
-          continue;
+
+          const childProductLowestPrice = await this.productRepo.findOne({
+            select: `price, list_price`,
+            join: productPriceJoiner,
+            where: {
+              [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+                parentProduct['product_appcore_id'],
+              [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+            },
+            orderBy: [
+              { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+            ],
+          });
+
+          if (childProductLowestPrice) {
+            await this.productPriceRepo.update(
+              { product_id: parentProduct['product_id'] },
+              {
+                price: childProductLowestPrice['price'],
+                list_price: childProductLowestPrice['list_price'],
+              },
+            );
+          }
         }
 
-        let childProduct = await this.productRepo.findOne({
-          select: '*',
-          join: productPriceJoiner,
-          orderBy: [
-            { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
-          ],
-          where: {
-            [`${Table.PRODUCTS}.parent_product_appcore_id`]:
-              parentProduct.product_appcore_id,
-            [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
-          },
-        });
-        if (childProduct) {
-          let productPriceData = {
-            price: childProduct.price,
-            list_price: childProduct.list_price,
-            buy_price: childProduct.buy_price,
-            collect_price: childProduct.collect_price,
-            whole_price: childProduct.whole_price,
-            percentage_discount: childProduct.percentage_discount,
-            selling_price_program: childProduct.selling_price_program,
-            original_price_program: childProduct.price_discount,
-            time_start_at: childProduct.time_start_at,
-            time_end_at: childProduct.time_end_at,
-          };
-          await this.productPriceRepo.update(
-            { product_id: parentProduct.product_id },
-            productPriceData,
-          );
+        await this.productRepo.update(
+          { product_id: productItem.product_id },
+          { tracking: 'N' },
+        );
+      } else {
+        if (productItem.product_function == 4) {
+          const childrenProducts = await this.productRepo.find({
+            parent_product_appcore_id: productItem.product_appcore_id,
+          });
+          if (childrenProducts.length) {
+            await this.productRepo.update(
+              { product_id: productItem.product_id },
+              { product_function: 1, tracking: 'N' },
+            );
+
+            //
+            let group = await this.productVariationGroupRepo.findOne({
+              product_root_id: productItem.product_id,
+            });
+            if (!group) {
+              group = await this.productVariationGroupRepo.create({
+                product_root_id: productItem.product_id,
+              });
+              await this.productVariationGroupProductsRepo.create(
+                {
+                  product_id: productItem.product_id,
+                  group_id: group.group_id,
+                },
+                false,
+              );
+            }
+
+            //
+
+            for (let childProduct of childrenProducts) {
+              await this.productRepo.update(
+                { product_id: childProduct.product_id },
+                {
+                  parent_product_id: productItem['product_id'],
+                  product_function: 2,
+                  tracking: 'N',
+                },
+              );
+
+              const groupProduct =
+                await this.productVariationGroupProductsRepo.findOne({
+                  group_id: group.group_id,
+                  product_id: childProduct.product_id,
+                });
+              if (!groupProduct) {
+                await this.productVariationGroupProductsRepo.create(
+                  {
+                    product_id: childProduct.product_id,
+                    parent_product_id: productItem.product_id,
+                    group_id: group.group_id,
+                  },
+                  false,
+                );
+              }
+            }
+            const childProductLowestPrice = await this.productRepo.findOne({
+              select: `price, list_price`,
+              join: productPriceJoiner,
+              where: {
+                [`${Table.PRODUCTS}.parent_product_appcore_id`]:
+                  productItem['product_appcore_id'],
+                [`${Table.PRODUCT_PRICES}.price`]: MoreThan(0),
+              },
+              orderBy: [
+                { field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC },
+              ],
+            });
+
+            if (childProductLowestPrice) {
+              await this.productPriceRepo.update(
+                { product_id: productItem.product_id },
+                {
+                  price: childProductLowestPrice.price,
+                  list_price: childProductLowestPrice.list_price,
+                },
+              );
+            }
+          }
         }
       }
     }
@@ -526,23 +592,6 @@ export class ProductService {
             value_int: !isNaN(+productFeatureVariant.variant * 1)
               ? +productFeatureVariant.variant
               : 0,
-          });
-        }
-
-        // Check group feature by feature_id and group_id, if not exists, create new record
-        let checkProductGroupFeatureExist =
-          await this.productVariationGroupFeatureRepo.findOne({
-            feature_id,
-            group_id: groupId,
-          });
-
-        if (!checkProductGroupFeatureExist) {
-          const feature: ProductFeatureDescriptionEntity =
-            await this.productFeatureDescriptionRepo.findOne({ feature_id });
-          await this.productVariationGroupFeatureRepo.create({
-            feature_id,
-            group_id: groupId,
-            purpose: purpose || feature.description,
           });
         }
       }
@@ -608,13 +657,18 @@ export class ProductService {
         product_root_id: product.product_id,
       });
       if (!group) {
-        let groupProducts =
-          await this.productVariationGroupProductsRepo.findOne({
+        let groupProduct = await this.productVariationGroupProductsRepo.findOne(
+          {
             product_id: product.product_id,
+          },
+        );
+
+        if (groupProduct) {
+          group = await this.productVariationGroupRepo.findOne({
+            group_id: groupProduct.group_id,
           });
-        group = await this.productVariationGroupRepo.findOne({
-          group_id: groupProducts.group_id,
-        });
+        }
+
         if (!group) {
           throw new HttpException('Không tìm thấy SP combo', 404);
         }
@@ -800,22 +854,21 @@ export class ProductService {
       _productFeatures,
       _catalog_feature_values,
       _promotion_accessory_products,
-      _free_accessory_products, 
+      _free_accessory_products,
       _warranty_package_products,
       _currentCategories,
       _relative_products,
     ]);
 
-    result["stores"] = stores ;
-    result["images"] = images; 
-    result["productFeatures"] = productFeatures || [];
-    result["catalog_feature_values"] = catalog_feature_values || []; 
-    result["promotion_accessory_products"] = promotion_accessory_products || []; 
-    result["free_accessory_products"] = free_accessory_products || []; 
-    result["warranty_package_products"] = warranty_package_products || []; 
-    result["currentCategories"] = currentCategories || []; 
-    result["relative_products"] = relative_products || []; 
-
+    result['stores'] = stores;
+    result['images'] = images;
+    result['productFeatures'] = productFeatures || [];
+    result['catalog_feature_values'] = catalog_feature_values || [];
+    result['promotion_accessory_products'] = promotion_accessory_products || [];
+    result['free_accessory_products'] = free_accessory_products || [];
+    result['warranty_package_products'] = warranty_package_products || [];
+    result['currentCategories'] = currentCategories || [];
+    result['relative_products'] = relative_products || [];
 
     return result;
   }
@@ -1178,9 +1231,7 @@ export class ProductService {
           await this.categoryService.getCategoriesChildrenRecursive(
             arrCategories[0],
           );
-
         categoriesList = categoriesList.map(({ category_id }) => category_id);
-        console.log(1117, categoriesList);
       } else {
         // Theo danh mục
         categoriesList = arrCategories.map((category_id) => category_id);
@@ -1205,6 +1256,7 @@ export class ProductService {
       skip,
       limit,
     };
+
     if (store_location_id && isContinued) {
       ({ productsList, count } = await this.findProductsListAndCountFromStore(
         productSearchFilterParams,
@@ -1247,7 +1299,8 @@ export class ProductService {
     }
 
     // determine product type and  get Image
-    for (let productItem of productsList) {
+
+    let _responseProductsList = productsList.map(async (productItem) => {
       let currentCategory = await this.productCategoryRepo.findOne({
         select: '*',
         join: productCategoryJoiner,
@@ -1256,18 +1309,20 @@ export class ProductService {
             productItem['product_id'],
         },
       });
-
       if (stickers) {
         productItem['stickers'] = await this.getProductStickers(productItem);
       }
-
       if (ratings) {
         productItem['ratings'] = await this.reviewRepo.findOne({
           product_id: productItem['product_id'],
         });
       }
       productItem['currentCategory'] = currentCategory;
-    }
+
+      return productItem;
+    });
+
+    productsList = await Promise.all(_responseProductsList);
 
     return {
       paging: {
@@ -1304,8 +1359,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productStoreRepo.find({
+      _productsList = this.productStoreRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1316,7 +1372,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productStoreRepo.find({
+    let _count = this.productStoreRepo.find({
       select: countDistinctProduct,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1328,7 +1384,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromCategory(params) {
@@ -1378,8 +1439,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productRepo.find({
+      _productsList = this.productRepo.find({
         select: '*',
         join: {
           [JoinTable.leftJoin]: {
@@ -1411,7 +1473,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productCategoryRepo.find({
+    let _count = this.productCategoryRepo.find({
       select: countDistinctProductCategory,
       join: {
         [JoinTable.leftJoin]: {
@@ -1444,7 +1506,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromSticker(params) {
@@ -1457,6 +1524,7 @@ export class ProductService {
       skip,
       limit,
     } = params;
+
     let productsList = await this.productStickerRepo.find({
       select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
       join: productJoiner(filterJoiner),
@@ -1472,8 +1540,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productStickerRepo.find({
+      _productsList = this.productStickerRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1484,7 +1553,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productStickerRepo.find({
+    let _count = this.productStickerRepo.find({
       select: countDistinctProduct,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1496,7 +1565,15 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return {
+      productsList: resProductsList,
+      count: resCount[0]?.total,
+    };
   }
 
   async findProductsListAndCountFromCatalog(params) {
@@ -1524,8 +1601,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.catalogCategoryRepo.find({
+      _productsList = this.catalogCategoryRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1536,7 +1614,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.catalogCategoryRepo.find({
+    let _count = this.catalogCategoryRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1548,7 +1626,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCountFromFeatureValue(params) {
@@ -1576,8 +1659,9 @@ export class ProductService {
       limit,
     });
 
+    let _productsList: any = [];
     if (productsList.length) {
-      productsList = await this.productFeatureValueRepo.find({
+      _productsList = this.productFeatureValueRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
@@ -1588,7 +1672,7 @@ export class ProductService {
       });
     }
 
-    let count = await this.productFeatureValueRepo.find({
+    let _count = this.productFeatureValueRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1600,7 +1684,12 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [resProductsList, resCount] = await Promise.all([
+      _productsList,
+      _count,
+    ]);
+
+    return { productsList: resProductsList, count: resCount[0].total };
   }
 
   async findProductsListAndCount(params) {
@@ -1613,7 +1702,8 @@ export class ProductService {
       skip,
       limit,
     } = params;
-    let productsList = await this.productRepo.find({
+
+    let _productsList = await this.productRepo.find({
       select: `DISTINCT(${Table.PRODUCTS}.product_id)`,
       join: productJoiner(filterJoiner),
       orderBy: filterOrders,
@@ -1628,18 +1718,20 @@ export class ProductService {
       limit,
     });
 
-    if (productsList.length) {
-      productsList = await this.productRepo.find({
+    let _productsListTemp;
+    if (_productsList.length) {
+      _productsListTemp = this.productRepo.find({
         select: getProductsListSelectorBE,
         join: productJoiner(filterJoiner),
         where: {
           [`${Table.PRODUCTS}.product_id`]: In(
-            productsList.map(({ product_id }) => product_id),
+            _productsList.map(({ product_id }) => product_id),
           ),
         },
       });
     }
-    let count = await this.productRepo.find({
+
+    let _count = this.productRepo.find({
       select: `COUNT(DISTINCT(${Table.PRODUCTS}.product_id)) as total`,
       join: productJoiner(filterJoiner),
       where: categoriesList.length
@@ -1651,7 +1743,9 @@ export class ProductService {
         : productsListsSearchFilter(search, filterCondition),
     });
 
-    return { productsList, count: count[0].total };
+    let [productsList, count] = await Promise.all([_productsListTemp, _count]);
+
+    return { productsList: productsList || [], count: count[0].total };
   }
 
   async groupingProducts(start_product_id: number, dest_product_id: number) {
@@ -2329,69 +2423,69 @@ export class ProductService {
     await this.productPriceRepo.create(productPriceData);
 
     // category
-    if (convertedData['category_appcore_id']) {
-      let category = await this.categoryRepo.findOne({
-        category_appcore_id: convertedData['category_appcore_id'],
-      });
-      if (category) {
-        convertedData['category_id'] = category['category_id'];
-      }
-    }
-    const productCategoryData = {
-      ...new ProductsCategoriesEntity(),
-      ...this.productCategoryRepo.setData(convertedData),
-      product_id: result.product_id,
-    };
+    // if (convertedData['category_appcore_id']) {
+    //   let category = await this.categoryRepo.findOne({
+    //     category_appcore_id: convertedData['category_appcore_id'],
+    //   });
+    //   if (category) {
+    //     convertedData['category_id'] = category['category_id'];
+    //   }
+    // }
+    // const productCategoryData = {
+    //   ...new ProductsCategoriesEntity(),
+    //   ...this.productCategoryRepo.setData(convertedData),
+    //   product_id: result.product_id,
+    // };
 
-    await this.productCategoryRepo.create(productCategoryData);
+    // await this.productCategoryRepo.create(productCategoryData);
 
-    if (
-      convertedData['product_features'] &&
-      convertedData['product_features'].length
-    ) {
-      for (let {
-        feature_code,
-        variant_code,
-      } of convertedData.product_features) {
-        const productFeature = await this.productFeaturesRepo.findOne({
-          feature_code,
-        });
+    // if (
+    //   convertedData['product_features'] &&
+    //   convertedData['product_features'].length
+    // ) {
+    //   for (let {
+    //     feature_code,
+    //     variant_code,
+    //   } of convertedData.product_features) {
+    //     const productFeature = await this.productFeaturesRepo.findOne({
+    //       feature_code,
+    //     });
 
-        const productFeatureVariant =
-          await this.productFeatureVariantRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                  fieldJoin: 'variant_id',
-                  rootJoin: 'variant_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
-            },
-          });
+    //     const productFeatureVariant =
+    //       await this.productFeatureVariantRepo.findOne({
+    //         select: ['*'],
+    //         join: {
+    //           [JoinTable.leftJoin]: {
+    //             [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    //               fieldJoin: 'variant_id',
+    //               rootJoin: 'variant_id',
+    //             },
+    //           },
+    //         },
+    //         where: {
+    //           [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+    //         },
+    //       });
 
-        const productFeatureValueData = {
-          feature_id: productFeature ? productFeature.feature_id : null,
-          variant_id: productFeatureVariant
-            ? productFeatureVariant?.variant_id
-            : null,
-          feature_code: productFeature ? feature_code : null,
-          variant_code: productFeatureVariant ? variant_code : null,
-          product_id: result.product_id,
-          value: isNaN(+productFeatureVariant?.variant * 1)
-            ? productFeatureVariant?.variant
-            : '',
-          value_int: !isNaN(+productFeatureVariant?.variant * 1)
-            ? +productFeatureVariant?.variant
-            : 0,
-        };
+    //     const productFeatureValueData = {
+    //       feature_id: productFeature ? productFeature.feature_id : null,
+    //       variant_id: productFeatureVariant
+    //         ? productFeatureVariant?.variant_id
+    //         : null,
+    //       feature_code: productFeature ? feature_code : null,
+    //       variant_code: productFeatureVariant ? variant_code : null,
+    //       product_id: result.product_id,
+    //       value: isNaN(+productFeatureVariant?.variant * 1)
+    //         ? productFeatureVariant?.variant
+    //         : '',
+    //       value_int: !isNaN(+productFeatureVariant?.variant * 1)
+    //         ? +productFeatureVariant?.variant
+    //         : 0,
+    //     };
 
-        await this.productFeatureValueRepo.create(productFeatureValueData);
-      }
-    }
+    //     await this.productFeatureValueRepo.create(productFeatureValueData);
+    //   }
+    // }
 
     if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Nếu là SP combo, tạo group
@@ -2662,8 +2756,9 @@ export class ProductService {
 
   async itgUpdate(identifier, data, isConverted = false): Promise<any> {
     console.log('Update Product Itg');
+
     const product = await this.productRepo.findOne({
-      select: '*',
+      select: `${Table.PRODUCTS}.*`,
       join: productLeftJoiner,
       where: { product_appcore_id: identifier },
     });
@@ -2720,8 +2815,10 @@ export class ProductService {
       }
     }
 
-    const productData = this.productRepo.setData(convertedData);
-
+    const productData = {
+      ...this.productRepo.setData(convertedData),
+      updated_at: formatStandardTimeStamp(),
+    };
     if (Object.entries(productData).length) {
       await this.productRepo.update(
         { product_id: result.product_id },
@@ -2776,81 +2873,81 @@ export class ProductService {
 
     await this.productCategoryRepo.delete({ product_id: result['product_id'] });
 
-    let productCategory = await this.productCategoryRepo.findOne({
-      product_id: result['product_id'],
-      category_appcore_id: convertedData['category_appcore_id'],
-    });
+    // let productCategory = await this.productCategoryRepo.findOne({
+    //   product_id: result['product_id'],
+    //   category_appcore_id: convertedData['category_appcore_id'],
+    // });
 
-    if (productCategory) {
-      const productCategoryData =
-        this.productCategoryRepo.setData(convertedData);
-      if (Object.entries(productCategoryData).length) {
-        await this.productCategoryRepo.update(
-          {
-            category_appcore_id: convertedData['category_appcore_id'],
-            product_id: result['product_id'],
-          },
-          productCategoryData,
-        );
-      }
-    } else {
-      const newProductCategoryData = {
-        ...new ProductsCategoriesEntity(),
-        ...this.productCategoryRepo.setData(convertedData),
-        product_id: result.product_id,
-        category_id: convertedData.category_id,
-      };
-      await this.productCategoryRepo.create(newProductCategoryData, false);
-    }
+    // if (productCategory) {
+    //   const productCategoryData =
+    //     this.productCategoryRepo.setData(convertedData);
+    //   if (Object.entries(productCategoryData).length) {
+    //     await this.productCategoryRepo.update(
+    //       {
+    //         category_appcore_id: convertedData['category_appcore_id'],
+    //         product_id: result['product_id'],
+    //       },
+    //       productCategoryData,
+    //     );
+    //   }
+    // } else {
+    //   const newProductCategoryData = {
+    //     ...new ProductsCategoriesEntity(),
+    //     ...this.productCategoryRepo.setData(convertedData),
+    //     product_id: result.product_id,
+    //     category_id: convertedData.category_id,
+    //   };
+    //   await this.productCategoryRepo.create(newProductCategoryData, false);
+    // }
 
-    if (
-      convertedData['product_features'] &&
-      convertedData['product_features'].length
-    ) {
-      await this.productFeatureValueRepo.delete({
-        product_id: result.product_id,
-      });
+    // if (
+    //   convertedData['product_features'] &&
+    //   convertedData['product_features'].length
+    // ) {
+    //   await this.productFeatureValueRepo.delete({
+    //     product_id: result.product_id,
+    //   });
 
-      for (let { feature_code, variant_code } of data.product_features) {
-        const productFeature = await this.productFeaturesRepo.findOne({
-          feature_code,
-        });
+    //   for (let { feature_code, variant_code } of data.product_features) {
+    //     const productFeature = await this.productFeaturesRepo.findOne({
+    //       feature_code,
+    //     });
 
-        const productFeatureVariant =
-          await this.productFeatureVariantRepo.findOne({
-            select: ['*'],
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
-                  fieldJoin: 'variant_id',
-                  rootJoin: 'variant_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
-            },
-          });
+    //     const productFeatureVariant =
+    //       await this.productFeatureVariantRepo.findOne({
+    //         select: ['*'],
+    //         join: {
+    //           [JoinTable.leftJoin]: {
+    //             [Table.PRODUCT_FEATURES_VARIANT_DESCRIPTIONS]: {
+    //               fieldJoin: 'variant_id',
+    //               rootJoin: 'variant_id',
+    //             },
+    //           },
+    //         },
+    //         where: {
+    //           [`${Table.PRODUCT_FEATURES_VARIANTS}.variant_code`]: variant_code,
+    //         },
+    //       });
 
-        const productFeatureValueData = {
-          feature_id: productFeature ? productFeature.feature_id : null,
-          variant_id: productFeatureVariant
-            ? productFeatureVariant?.variant_id
-            : null,
-          feature_code: productFeature ? feature_code : null,
-          variant_code: productFeatureVariant ? variant_code : null,
-          product_id: result.product_id,
-          value: isNaN(+productFeatureVariant?.variant * 1)
-            ? productFeatureVariant?.variant
-            : '',
-          value_int: !isNaN(+productFeatureVariant?.variant * 1)
-            ? +productFeatureVariant?.variant
-            : 0,
-        };
+    //     const productFeatureValueData = {
+    //       feature_id: productFeature ? productFeature.feature_id : null,
+    //       variant_id: productFeatureVariant
+    //         ? productFeatureVariant?.variant_id
+    //         : null,
+    //       feature_code: productFeature ? feature_code : null,
+    //       variant_code: productFeatureVariant ? variant_code : null,
+    //       product_id: result.product_id,
+    //       value: isNaN(+productFeatureVariant?.variant * 1)
+    //         ? productFeatureVariant?.variant
+    //         : '',
+    //       value_int: !isNaN(+productFeatureVariant?.variant * 1)
+    //         ? +productFeatureVariant?.variant
+    //         : 0,
+    //     };
 
-        await this.productFeatureValueRepo.create(productFeatureValueData);
-      }
-    }
+    //     await this.productFeatureValueRepo.create(productFeatureValueData);
+    //   }
+    // }
 
     if (convertedData['combo_items'] && convertedData['combo_items'].length) {
       // Delete old group
@@ -2863,9 +2960,6 @@ export class ProductService {
           group_id: oldGroup.group_id,
         });
         await this.productVariationGroupProductsRepo.delete({
-          group_id: oldGroup.group_id,
-        });
-        await this.productVariationGroupFeatureRepo.delete({
           group_id: oldGroup.group_id,
         });
       }
@@ -2886,12 +2980,12 @@ export class ProductService {
       });
 
       result['combo_items'] = [];
-
+      console.log(2884, convertedData.combo_items);
       for (let [i, productItem] of convertedData.combo_items.entries()) {
         let productComboItem = await this.productRepo.findOne({
           product_appcore_id: productItem.product_appcore_id,
         });
-
+        console.log(productComboItem);
         if (!productComboItem) {
           const productComboItemData = {
             ...new ProductsEntity(),
@@ -2984,12 +3078,6 @@ export class ProductService {
     // );
     // await this.productVariationGroupProductsRepo.writeExec(
     //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_PRODUCTS}`,
-    // );
-    // await this.productVariationGroupFeatureRepo.writeExec(
-    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_FEATURES}`,
-    // );
-    // await this.productVariationGroupFeatureRepo.writeExec(
-    //   `TRUNCATE TABLE ${Table.PRODUCT_VARIATION_GROUP_INDEX}`,
     // );
   }
 
@@ -3670,6 +3758,8 @@ export class ProductService {
       where: {
         [`${Table.PRODUCTS_CATEGORIES}.product_id`]: product['product_id'],
       },
+      skip: 0,
+      limit: 3,
     });
 
     let listCategoriesId = categories
@@ -3677,6 +3767,7 @@ export class ProductService {
       .map(({ category_id }) => category_id);
 
     let productsList = [];
+
     if (listCategoriesId.length) {
       productsList = await this.productCategoryRepo.find({
         select: `*, ${Table.PRODUCTS}.slug as productSlug`,
@@ -3692,17 +3783,17 @@ export class ProductService {
       });
       productsList = _.uniqBy(productsList, 'product_id');
 
-      for (let productItem of productsList) {
-        productItem['discount_program'] =
-          await this.discountProgramDetailRepo.findOne({
-            select: '*',
-            join: discountProgramDetailJoiner,
-            where: {
-              [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
-                productItem.product_id,
-            },
-          });
-      }
+      // for (let productItem of productsList) {
+      //   productItem['discount_program'] =
+      //     await this.discountProgramDetailRepo.findOne({
+      //       select: '*',
+      //       join: discountProgramDetailJoiner,
+      //       where: {
+      //         [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]:
+      //           productItem.product_id,
+      //       },
+      //     });
+      // }
     }
 
     return productsList;
@@ -4276,9 +4367,6 @@ export class ProductService {
     if (!product) {
       throw new HttpException('Không tìm thấy SP', 404);
     }
-    // if (product.status !== 'A') {
-    //   throw new HttpException('Sản phẩm này đã không còn hoạt động.', 409);
-    // }
 
     if (product['product_function'] == 2) {
       let parentProduct = await this.productRepo.findOne({
@@ -4323,12 +4411,12 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
-    const productCacheResult = await this.cache.getProductCacheById(
-      product.product_id,
-    );
-    if (productCacheResult) {
-      return productCacheResult;
-    }
+    // const productCacheResult = await this.cache.getProductCacheById(
+    //   product.product_id,
+    // );
+    // if (productCacheResult) {
+    //   return productCacheResult;
+    // }
 
     let result: any = { ...product };
 
@@ -4406,8 +4494,9 @@ export class ProductService {
           });
 
           if (relevantGroups.length) {
-            for (let relevantGroupItem of relevantGroups) {
-              if (relevantGroupItem.product_root_id) {
+            let _relevantGroups = relevantGroups
+              .filter((relevantGroupItem) => relevantGroupItem.product_root_id)
+              .map(async (relevantGroupItem) => {
                 let productRoot = await this.productRepo.findOne({
                   select: [
                     ...getDetailProductsListSelectorFE,
@@ -4420,88 +4509,82 @@ export class ProductService {
                       relevantGroupItem.product_root_id,
                   },
                 });
+                return productRoot;
+              });
 
-                if (productRoot) {
-                  result['relevantProducts'] = [
-                    ...result['relevantProducts'],
-                    productRoot,
-                  ];
-                }
-              }
-            }
+            let resRelevantGroups = await Promise.all(_relevantGroups);
+            result['relevantProducts'] = resRelevantGroups;
           }
         }
       }
     }
 
     // Get stores
-    result['stores'] = await this.getProductsStores(result.product_id);
+    let _stores: any = this.checkProductsStores(result.product_id);
 
     // get Image
-    result['images'] = await this.getProductImages(result.product_id);
+    let _images: any = this.getProductImages(result.product_id);
 
     // Get Color, Size
+    let _color: any = null;
     if (result['color'] && !isNaN(+result['color'])) {
-      let featureColor = await this.productFeatureVariantRepo.findOne({
+      _color = this.productFeatureVariantRepo.findOne({
         variant_code: result['color'],
       });
-      if (featureColor) {
-        result['color'] = featureColor['variant'];
-      }
     }
+
+    let _size: any = null;
     if (result['size'] && !isNaN(+result['size'])) {
-      let featureSize = await this.productFeatureVariantRepo.findOne({
+      _size = this.productFeatureVariantRepo.findOne({
         variant_code: result['size'],
       });
-      if (featureSize) {
-        result['size'] = featureSize['variant'];
-      }
     }
 
     //============= Get Features ===============
-    result['productFeatures'] = [];
+    let _productFeatures: any = [];
     if (result['catalog_category_id']) {
-      result['productFeatures'] =
-        await this.FEGetCatalogFeatureValuesForProduct(
-          result.catalog_category_id,
-          result.product_id,
-        );
+      _productFeatures = this.FEGetCatalogFeatureValuesForProduct(
+        result.catalog_category_id,
+        result.product_id,
+      );
     }
 
     //=========== Get accessory ============
-    result['promotion_accessory_products'] = [];
+    let _promotion_accessory_products: any = [];
     if (result['promotion_accessory_id']) {
-      result['promotion_accessory_products'] =
-        await this.getAccessoriesByProductId(
-          result['promotion_accessory_id'],
-          1,
-        );
+      _promotion_accessory_products = this.getAccessoriesByProductId(
+        result['promotion_accessory_id'],
+        1,
+      );
     }
 
-    result['free_accessory_products'] = [];
+    let _free_accessory_products: any = [];
     if (result['free_accessory_id']) {
-      result['free_accessory_products'] = await this.getAccessoriesByProductId(
+      _free_accessory_products = this.getAccessoriesByProductId(
         result['free_accessory_id'],
         1,
       );
     }
 
-    result['warranty_package_products'] = [];
+    let _warranty_package_products: any = [];
     if (result['warranty_package_id']) {
-      result['warranty_package_products'] =
-        await this.getAccessoriesByProductId(result['warranty_package_id'], 1);
+      _warranty_package_products = this.getAccessoriesByProductId(
+        result['warranty_package_id'],
+        1,
+      );
     }
 
     //============== Get ratings ================
-    result['ratings'] = await this.reviewRepo.findOne({
+    let _ratings = this.reviewRepo.findOne({
       product_id: result.product_id,
     });
 
-    result['currentCategory'] = null;
-    result['parentCategories'] = [];
+    let _currentCategory: any = null;
+    let _parentCategories: any = [];
+    let _relative_prouducts: any = [];
     // Get Current category info
     if (product['category_feature_id']) {
-      result['currentCategory'] = await this.categoryRepo.findOne({
+      _currentCategory = this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: {
@@ -4509,48 +4592,75 @@ export class ProductService {
         },
       });
 
-      // Get parent categories info
-      if (result['currentCategory']) {
-        result['parentCategories'] =
-          await this.categoryService.parentCategories(
-            result['currentCategory'],
-          );
-        result['parentCategories'] = _.sortBy(result['parentCategories'], [
-          (o) => o.level,
-        ]);
-      }
-
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-        product,
-      );
+      _relative_prouducts = this.getRelativeProductsByCategory(product);
     } else if (product['category_id']) {
-      result['currentCategory'] = await this.categoryRepo.findOne({
+      _currentCategory = this.categoryRepo.findOne({
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
       });
 
-      if (result['currentCategory']) {
-        // Get parent categories info
-        result['parentCategories'] =
-          await this.categoryService.parentCategories(
-            result['currentCategory'],
-          );
-        result['parentCategories'] = _.sortBy(result['parentCategories'], [
-          (o) => o.level,
-        ]);
-      }
-
       // Get relative products
-      result['relative_prouducts'] = await this.getRelativeProductsByCategory(
-        product,
-      );
+      _relative_prouducts = this.getRelativeProductsByCategory(product);
     }
 
-    result['discount_programs'] = await this.getDiscountProgramApplyProduct(
+    let _discount_programs = this.getDiscountProgramApplyProduct(
       result['product_id'],
     );
+
+    let [
+      stores,
+      images,
+      color,
+      size,
+      productFeatures,
+      promotion_accessory_products,
+      free_accessory_products,
+      warranty_package_products,
+      ratings,
+      currentCategory,
+      parentCategories,
+      relative_prouducts,
+      discount_programs,
+    ] = await Promise.all([
+      _stores,
+      _images,
+      _color,
+      _size,
+      _productFeatures,
+      _promotion_accessory_products,
+      _free_accessory_products,
+      _warranty_package_products,
+      _ratings,
+      _currentCategory,
+      _parentCategories,
+      _relative_prouducts,
+      _discount_programs,
+    ]);
+
+    result['stores'] = stores;
+    result['images'] = images;
+    result['color'] = color ? color['variant'] : null;
+    result['size'] = size ? size['variant'] : null;
+    result['productFeatures'] = productFeatures;
+    result['promotion_accessory_products'] = promotion_accessory_products;
+    result['free_accessory_products'] = free_accessory_products;
+    result['warranty_package_products'] = warranty_package_products;
+    result['ratings'] = ratings;
+    result['currentCategory'] = currentCategory;
+    result['parentCategories'] = parentCategories;
+    if (currentCategory) {
+      result['parentCategories'] = await this.categoryService.parentCategories(
+        currentCategory,
+      );
+      result['parentCategories'] = _.sortBy(result['parentCategories'], [
+        (o) => o.level,
+      ]);
+    }
+
+    result['relative_prouducts'] = relative_prouducts;
+    result['discount_programs'] = discount_programs;
 
     await this.cache.setProductCacheById(result.product_id, result);
 
@@ -4697,6 +4807,7 @@ export class ProductService {
       select: productDetailSelector,
       join: { [JoinTable.leftJoin]: productFullJoiner },
       where: filterConditions,
+      orderBy: [{ field: `${Table.PRODUCT_PRICES}.price`, sortBy: SortBy.ASC }],
     });
 
     if (childrenProducts.length) {
@@ -4707,7 +4818,7 @@ export class ProductService {
         childProduct['productFeatures'] = [];
 
         // Get stores
-        let _promiseStores = this.getProductsStores(childProduct.product_id);
+        let _promiseStores = this.checkProductsStores(childProduct.product_id);
         // Get accessory
         childProduct['promotion_accessory_products'] = [];
         let _promisePromotionAccessoryProducts;
@@ -4880,7 +4991,7 @@ export class ProductService {
     if (!product) {
       throw new HttpException(`Không tìm thấy SP có id : ${id}`, 404);
     }
-
+    console.log(product);
     try {
       let response;
 
@@ -4907,12 +5018,14 @@ export class ProductService {
         typeof productsStocks === 'object' &&
         Object.entries(productsStocks).length
       ) {
+        console.log(1);
         for (let [key, val] of Object.entries(productsStocks)) {
           let resVal: any = val;
           result = [...result, { ...resVal, productId: id }];
         }
         return result;
       } else {
+        console.log(2);
         const productsStores = await this.productStoreRepo.find({
           select: '*',
           orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
@@ -4938,7 +5051,9 @@ export class ProductService {
             });
             let storeObj = {
               productId: product.product_id,
+              product_id: product.product_id,
               storeId: store['store_location_id'],
+              store_location_id: store['store_location_id'],
               storeName: store['store_name'],
               storeAddress: store['pickup_address'],
               storeLatitude: store['latitude'],

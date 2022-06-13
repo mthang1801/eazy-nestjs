@@ -1,5 +1,9 @@
 import * as moment from 'moment';
-import { formatStandardTimeStamp, formatDateTime } from '../utils/helper';
+import {
+  formatStandardTimeStamp,
+  formatDateTime,
+  checkValidTimestamp,
+} from '../utils/helper';
 import { HttpException } from '@nestjs/common';
 import { loanTenorId } from './payment.constant';
 const orderSampleData = {
@@ -86,7 +90,7 @@ const orderSampleData = {
   s_ward: '11787',
 };
 
-export const convertOrderDataToAppcore = (data) => {
+export const convertOrderDataFromCMSToAppcore = (data) => {
   let itgData = {};
 
   itgData['storeId'] = data['store_id'] || 67107; //Mã cửa hàng *
@@ -129,6 +133,12 @@ export const convertOrderDataToAppcore = (data) => {
 
   if (data['installed_money_account_id']) {
     itgData['installMoneyAccountId'] = data['installed_money_account_id'];
+    if (data['s_lastname']) {
+      itgData['installmentUserFullName'] = data['s_lastname'];
+    }
+    if (data['s_phone']) {
+      itgData['installmentUserMobile'] = data['s_phone'];
+    }
   }
 
   if (data['installed_money_code']) {
@@ -221,6 +231,10 @@ export const convertOrderDataToAppcore = (data) => {
     itgData['customerShipFee'] = +data['shipping_cost']; // Phí trả khách hàng phải trả
   }
 
+  if (data['payment_date'] && checkValidTimestamp(data['payment_date'])) {
+    itgData['payment_date'] = formatStandardTimeStamp(data['payment_date']);
+  }
+
   if (data['disposit_amount']) {
     itgData['depositAmount'] = data['disposit_amount']; // Tiền đặt cọc (Tiền mặt)
   }
@@ -303,13 +317,6 @@ export const convertOrderDataToAppcore = (data) => {
     itgData['discountAmount'] = data['discount']; //Số tiền chiết khấu hoặc phần trăm
   }
 
-  // if (data['payment_date']) {
-  //   itgData['paymentDate'] = moment(data['payment_date']).format('YYYY-MM-DD');
-  // }
-
-  itgData['isSentToCustomerAddress'] =
-    data['is_sent_customer_address'] == 0 ? false : true; // có gửi địa chỉ khác hay ko
-
   // Lấy danh sách Order Items
   for (let orderItem of data['order_items']) {
     let cvOrderItem = {};
@@ -338,6 +345,10 @@ export const convertOrderDataToAppcore = (data) => {
 
     if (orderItem['note']) {
       cvOrderItem['note'] = orderItem['note']; // Ghi chú SP
+    }
+
+    if (orderItem['belong_order_detail_id']) {
+      cvOrderItem['belongOrderItemId'] = orderItem['belong_order_detail_id'];
     }
 
     itgData['orderItems'] = itgData['orderItems']

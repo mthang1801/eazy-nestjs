@@ -38,6 +38,7 @@ import { UpdateRoleGroupDto } from '../dto/role/update-roleGroup.dto';
 import { groupListSearchFilter } from '../../utils/tableConditioner';
 import { AuthorizeRoleFunctionDto } from '../dto/userRole/authorizeRoleFunct';
 import { userRoleJoiner, roleFunctJoiner } from '../../utils/joinTable';
+import { MoreThan } from '../../database/operators/operators';
 import {
   userRoleFunctJoiner,
   userRoleFunctInfoJoiner,
@@ -343,10 +344,8 @@ export class RoleService {
       },
     });
 
-    console.log(currentRoleFunct);
-
     let filterCondition = {
-      [`${Table.ROLE}.level`]: MoreThanOrEqual(currentRoleFunct.level),
+      [`${Table.ROLE}.level`]: MoreThan(currentRoleFunct.level),
     };
 
     let groupList = await this.roleRepo.find({

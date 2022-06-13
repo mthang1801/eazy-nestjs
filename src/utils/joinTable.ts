@@ -21,10 +21,6 @@ export const productFullJoiner = {
     fieldJoin: `${Table.PRODUCTS}.product_id`,
     rootJoin: `${Table.PRODUCT_PRICES}.product_id`,
   },
-  [Table.PRODUCT_SALES]: {
-    fieldJoin: `${Table.PRODUCTS}.product_id`,
-    rootJoin: `${Table.PRODUCT_SALES}.product_id`,
-  },
   [Table.PRODUCTS_CATEGORIES]: {
     fieldJoin: `${Table.PRODUCTS}.product_id`,
     rootJoin: `${Table.PRODUCTS_CATEGORIES}.product_id`,

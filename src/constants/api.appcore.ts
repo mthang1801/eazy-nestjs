@@ -59,3 +59,6 @@ export const FIND_TRADEIN_PROGRAM = (product_appcore_id) =>
 export const CREATE_VALUATION_BILL_TO_APPCORE = `${CORE_API}/trade-in/evaluation`;
 
 export const GET_SHINHAN_INSTALLMENT = `${CORE_API}/installment/programs`;
+
+export const SEARCH_CUSTOMER_APPCORE_BY_PHONE = (phone) =>
+  `${CORE_API}/customers/search?mobile=${phone}`;

@@ -57,7 +57,7 @@ import {
 import {
   OrderStatus,
   OrderType,
-  convertOrderDataToAppcore,
+  convertOrderDataFromCMSToAppcore,
 } from '../../constants/order';
 import { DatabaseService } from '../../database/database.service';
 
@@ -444,7 +444,7 @@ export class PaymentService {
 
       console.log(sendData);
 
-      console.log(JSON.parse(convertOrderDataToAppcore(sendData)));
+      console.log(JSON.parse(convertOrderDataFromCMSToAppcore(sendData)));
       const result = await this.orderService.createOrder(user, sendData);
 
       await this.orderPaymentRepo.create({
@@ -476,7 +476,7 @@ export class PaymentService {
       let cart;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
         });
@@ -513,6 +513,28 @@ export class PaymentService {
         if (!user) {
           throw new HttpException('Không tìm thấy người dùng', 404);
         }
+
+        if (!user['user_appcore_id']) {
+          if (!user['phone']) {
+            throw new HttpException(
+              'Tài khoản hiện tại cần nhập số điện thoại',
+              400,
+            );
+          }
+
+          const checkUserAppcore =
+            await this.customerService.searchCustomterAppcoreByPhone(
+              user.phone,
+            );
+          if (checkUserAppcore) {
+            await this.customerService.update(user.user_id, checkUserAppcore);
+            user = await this.userRepo.findOne({
+              select: userSelector,
+              join: userJoiner,
+              where: { [`${Table.USERS}.user_id`]: userAuth.user_id },
+            });
+          }
+        }
       } else {
         if (data.user_id) {
           user = await this.userRepo.findOne({
@@ -532,17 +554,42 @@ export class PaymentService {
             },
           });
           if (!user) {
-            await this.customerService.createCustomerFromWebPayment(data);
-            user = await this.userRepo.findOne({
-              select: userSelector,
-              join: userJoiner,
-              where: {
-                phone:
-                  method === 'selfTransport'
-                    ? data['b_phone']
-                    : data['s_phone'],
-              },
-            });
+            const checkUserAppcore =
+              method === 'selfTransport'
+                ? await this.customerService.searchCustomterAppcoreByPhone(
+                    data['b_phone'],
+                  )
+                : await this.customerService.searchCustomterAppcoreByPhone(
+                    data['s_phone'],
+                  );
+            if (checkUserAppcore) {
+              await this.customerService.createCustomer(
+                checkUserAppcore,
+                false,
+              );
+              user = await this.userRepo.findOne({
+                select: userSelector,
+                join: userJoiner,
+                where: {
+                  [`${Table.USERS}.phone`]:
+                    method === 'selfTransport'
+                      ? data['b_phone']
+                      : data['s_phone'],
+                },
+              });
+            } else {
+              await this.customerService.createCustomerFromWebPayment(data);
+              user = await this.userRepo.findOne({
+                select: userSelector,
+                join: userJoiner,
+                where: {
+                  phone:
+                    method === 'selfTransport'
+                      ? data['b_phone']
+                      : data['s_phone'],
+                },
+              });
+            }
           }
         }
       }
