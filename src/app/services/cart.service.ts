@@ -73,7 +73,7 @@ export class CartService {
       );
     }
     let result = await this.get(user_id);
-    await this.cache.setCartByUserId(user_id, result);
+    await this.cache.removeCartByUserId(user_id);
 
     return this.get(user_id);
   }
