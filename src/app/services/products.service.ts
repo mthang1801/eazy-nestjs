@@ -276,6 +276,8 @@ import { BannerItemEntity } from '../entities/bannerItem.entity';
 import { ProductPreviewsRepository } from '../repositories/productPreviews.repository';
 import { ProductPreviewEntity } from '../entities/productPreview.entity';
 import { SearchService } from './search.service';
+import { productDiscountDetailJoiner } from '../../utils/joinTable';
+import { formatDateTime, formatTime } from '../../utils/helper';
 
 @Injectable()
 export class ProductService {
@@ -4388,12 +4390,12 @@ export class ProductService {
       );
 
       // await this.cache.removeCachedProductById(product.product_id);
-      const productCacheResult = await this.cache.getProductCacheById(
-        product.product_id,
-      );
-      if (productCacheResult) {
-        return productCacheResult;
-      }
+      // const productCacheResult = await this.cache.getProductCacheById(
+      //   product.product_id,
+      // );
+      // if (productCacheResult) {
+      //   return productCacheResult;
+      // }
     } else {
       product = await this.productRepo.findOne({
         select: productDetailSelector,
@@ -4606,9 +4608,7 @@ export class ProductService {
       _relative_prouducts = this.getRelativeProductsByCategory(product);
     }
 
-    let _discount_programs = this.getDiscountProgramApplyProduct(
-      result['product_id'],
-    );
+    let _discount_programs = this.getDiscountProgram(result['product_id']);
 
     let [
       stores,
@@ -4662,10 +4662,69 @@ export class ProductService {
 
     result['relative_prouducts'] = relative_prouducts;
     result['discount_programs'] = discount_programs;
+    result['is_discount_program'] = false;
+    if (discount_programs) {
+      result['price'] = discount_programs.selling_price;
+      result['list_price'] = discount_programs.original_price;
+      result['discount_program_start_at'] = discount_programs.start_at;
+      result['discount_program_end_at'] = discount_programs.end_at;
+      result['is_discount_program'] = true;
+    }
 
     await this.cache.setProductCacheById(result.product_id, result);
 
     return result;
+  }
+
+  async getDiscountProgram(product_id) {
+    const productDiscountProgram = await this.discountProgramDetailRepo.findOne(
+      {
+        join: productDiscountDetailJoiner,
+        where: [
+          {
+            [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]: product_id,
+            [`${Table.DISCOUNT_PROGRAM_DETAIL}.status`]: 'A',
+            [`${Table.DISCOUNT_PROGRAM}.status`]: 'A',
+            [`${Table.DISCOUNT_PROGRAM}.start_at`]: LessThanOrEqual(
+              formatStandardTimeStamp(),
+            ),
+            [`${Table.DISCOUNT_PROGRAM}.end_at`]: MoreThanOrEqual(
+              formatStandardTimeStamp(),
+            ),
+            [`${Table.DISCOUNT_PROGRAM}.time_start_at`]: LessThanOrEqual(
+              formatTime(),
+            ),
+            [`${Table.DISCOUNT_PROGRAM}.time_end_at`]: MoreThanOrEqual(
+              formatTime(),
+            ),
+          },
+          {
+            [`${Table.DISCOUNT_PROGRAM_DETAIL}.product_id`]: product_id,
+            [`${Table.DISCOUNT_PROGRAM_DETAIL}.status`]: 'A',
+            [`${Table.DISCOUNT_PROGRAM}.status`]: 'A',
+            [`${Table.DISCOUNT_PROGRAM}.start_at`]: LessThanOrEqual(
+              formatStandardTimeStamp(),
+            ),
+            [`${Table.DISCOUNT_PROGRAM}.end_at`]: IsNull(),
+            [`${Table.DISCOUNT_PROGRAM}.time_start_at`]: LessThanOrEqual(
+              formatTime(),
+            ),
+            [`${Table.DISCOUNT_PROGRAM}.time_end_at`]: MoreThanOrEqual(
+              formatTime(),
+            ),
+          },
+        ],
+        orderBy: [
+          { field: `${Table.DISCOUNT_PROGRAM}.priority`, sortBy: SortBy.ASC },
+          {
+            field: `${Table.DISCOUNT_PROGRAM}.created_at`,
+            sortBy: SortBy.DESC,
+          },
+        ],
+      },
+    );
+
+    return productDiscountProgram;
   }
 
   async FEGetCatalogFeatureValuesForProduct(catalog_id, product_id) {
@@ -4862,7 +4921,7 @@ export class ProductService {
           });
         }
 
-        let _discountPrograms = this.getDiscountProgramApplyProduct(
+        let _discountPrograms = this.getDiscountProgram(
           childProduct['product_id'],
         );
 
@@ -4894,6 +4953,14 @@ export class ProductService {
         childProduct['color'] = color?.variant || childProduct['color'];
 
         childProduct['size'] = size?.variant || childProduct['size'];
+        childProduct['is_discount_program'] = false;
+        if (discountPrograms) {
+          childProduct['price'] = discountPrograms.selling_price;
+          childProduct['list_price'] = discountPrograms.original_price;
+          childProduct['discount_program_start_at'] = discountPrograms.start_at;
+          childProduct['discount_program_end_at'] = discountPrograms.end_at;
+          childProduct['is_discount_program'] = true;
+        }
       }
     }
 

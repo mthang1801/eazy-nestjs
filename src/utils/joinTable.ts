@@ -1194,3 +1194,12 @@ export const catalogFeatureDetailJoiner = {
     },
   },
 };
+
+export const productDiscountDetailJoiner = {
+  [JoinTable.innerJoin]: {
+    [Table.DISCOUNT_PROGRAM]: {
+      fieldJoin: `${Table.DISCOUNT_PROGRAM}.discount_id`,
+      rootJoin: `${Table.DISCOUNT_PROGRAM_DETAIL}.discount_id`,
+    },
+  },
+};
