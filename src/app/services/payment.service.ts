@@ -1212,11 +1212,13 @@ export class PaymentService {
 
     sendData['transfer_amount'] = +totalPrice;
 
-    const responseData = await this.requestPaymentMomo(sendData);
+    let momoData = { ...sendData };
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
     const newOrder = await this.orderService.createOrder(user, sendData);
+
+    const responseData = await this.requestPaymentMomo(momoData);
 
     await this.orderPaymentRepo.create({
       order_id: newOrder['order_id'],
@@ -1227,6 +1229,7 @@ export class PaymentService {
       errormsg: responseData.message,
       payment_url: responseData.payUrl,
     });
+
     return responseData;
   }
 
