@@ -58,6 +58,25 @@ export class CategoryController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
+  @Get('set-children-feature/:category_id')
+  async setChildrenFeature(
+    @Res() res: Response,
+    @Param('category_id') category_id: number,
+  ): Promise<IResponse> {
+    const result = await this.service.setChildrenFeature(category_id);
+    return this.responseSuccess(res, result);
+  }
+
+  @Get(':product_id/:category_id')
+  async productCategory(
+    @Res() res: Response,
+    @Param('product_id') product_id: number,
+    @Param('category_id') category_id: number,
+  ): Promise<IResponse> {
+    await this.service.updateProductCategory(product_id, category_id);
+    return this.responseSuccess(res, null)
+  }
+
   /**
    * Danh muc ngành hàng
    * @param res

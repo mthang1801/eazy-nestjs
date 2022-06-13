@@ -2048,6 +2048,25 @@ export class TradeinProgramService {
     ).toString();
     const today = formatStandardTimeStamp();
 
+    //Không có cả ngày bắt đầu và ngày kết thúc
+    if (!tradeinProgram.start_at && !tradeinProgram.end_at) {
+
+      return;
+    }
+
+    //Chỉ có ngày bắt đầu
+    if (!tradeinProgram.end_at) {
+
+      return;
+    }
+
+    //Chỉ có ngày kết thúc
+    if (!tradeinProgram.start_at) {
+
+      return;
+    }
+
+    // Có cả ngày bắt đầu và kết thúc
     if (new Date(today).getTime() < new Date(endDate).getTime()) {
       console.log("Chương trình thu cũ đổi mới đã quá hạn.");
       return;
