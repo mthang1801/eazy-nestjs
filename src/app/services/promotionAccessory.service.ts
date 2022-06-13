@@ -166,7 +166,7 @@ export class PromotionAccessoryService {
           accessory_id,
       },
     });
-
+    console.log(productLists);
     promoAccessory['products'] = productLists;
 
     return promoAccessory;
