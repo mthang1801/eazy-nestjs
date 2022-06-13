@@ -72,7 +72,6 @@ export class CartService {
         { amount: cartItem.amount + 1 },
       );
     }
-    await this.cache.removeCartByUserId(user_id);
     let result = await this.get(user_id);
     await this.cache.setCartByUserId(user_id, result);
 
