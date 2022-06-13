@@ -181,6 +181,13 @@ export class PromotionAccessoryService {
       );
     }
 
+    if (promoAccessory.app_core_id) {
+      throw new HttpException(
+        'Không thể cập nhật dữ liệu được tạo từ Appcore',
+        400,
+      );
+    }
+
     if (data.products) {
       for (let productItem of data.products) {
         const product = await this.productRepo.findOne({
