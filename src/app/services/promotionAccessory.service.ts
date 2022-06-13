@@ -182,7 +182,7 @@ export class PromotionAccessoryService {
     }
 
     if (data.description) {
-      await this.productPriceRepo.update(
+      await this.promoAccessoryRepo.update(
         { accessory_id },
         { description: data.description },
       );

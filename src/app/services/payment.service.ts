@@ -631,6 +631,8 @@ export class PaymentService {
           sendData['coupon_code'] = data.coupon_code;
           sendData['subtotal'] =
             sendData['subtotal'] - +checkCouponCode['discountMoney'];
+          sendData['transfer_amount'] =
+            sendData['transfer_amount'] - +checkCouponCode['discountMoney'];
         }
       }
 
@@ -1067,6 +1069,9 @@ export class PaymentService {
       s_address: data.s_address,
       order_items: cartItems,
       ref_order_id,
+      totalPrice,
+      subtotal: +totalPrice,
+      transfer_amount: +totalPrice,
       pay_credit_type: payCreditType,
       coupon_code: data.coupon_code ? data.coupon_code : null,
       order_type: OrderType.online,
@@ -1088,7 +1093,13 @@ export class PaymentService {
         checkCouponData,
       );
       if (checkResult['isValid']) {
-        // totalPrice -= checkResult['discountMoney'];
+        sendData['discount'] = +checkResult['discountMoney'];
+        sendData['discount_type'] = 1;
+        sendData['coupon_code'] = data.coupon_code;
+        sendData['subtotal'] =
+          sendData['subtotal'] - +checkResult['discountMoney'];
+        sendData['transfer_amount'] =
+          sendData['transfer_amount'] - +checkResult['discountMoney'];
       }
     }
     //Check shipping fee
@@ -1104,11 +1115,9 @@ export class PaymentService {
       if (shippingFeeLocation && +totalPrice < +shippingFeeLocation.max_value) {
         sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
         sendData['transfer_amount'] =
-          +totalPrice + +shippingFeeLocation.value_fee;
-        totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
+          +sendData['transfer_amount'] + +shippingFeeLocation.value_fee;
       }
     }
-    sendData['transfer_amount'] = +totalPrice;
 
     const responseData = await this.requestPaymentMomo(sendData);
 
