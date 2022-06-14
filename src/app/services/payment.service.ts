@@ -886,6 +886,7 @@ export class PaymentService {
   }
 
   async momoNotify(data) {
+    console.log(data);
     if (data.resultCode != 0) {
       const order = await this.orderPaymentRepo.update(
         {
@@ -894,12 +895,11 @@ export class PaymentService {
         {
           errormsg: data['message'],
           checksum: data['signature'],
-          payment_code: data['transId'],
           amount: data['amount'],
+          payment_type: data['payType'],
           expiry_date: formatStandardTimeStamp(
             new Date(data['responseTime'] + 30 * 86400 * 1000),
           ),
-          payment_type: data['payType'],
         },
         true,
       );
@@ -910,6 +910,8 @@ export class PaymentService {
           { status: OrderStatus.failed, reason_fail: data['message'] },
         );
       }
+
+      return;
     }
     const updatedOrderPayment = await this.orderPaymentRepo.update(
       { order_no: data['orderId'] },
