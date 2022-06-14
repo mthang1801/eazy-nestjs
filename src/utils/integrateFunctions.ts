@@ -754,6 +754,8 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
     if (['start_date', 'end_date'].includes(core)) {
       if (checkValidTimestamp(coreData[core])) {
         cmsData[cms] = formatStandardTimeStamp(coreData[core]);
+      } else {
+        cmsData[cms] = null;
       }
       continue;
     }
