@@ -296,12 +296,14 @@ export class PromotionAccessoryService {
     });
     console.log(appliedProducts);
     if (appliedProducts.length) {
-      for (let productId of appliedProducts) {
+      for (let { product_id } of appliedProducts) {
         // await this.productRepo.update(
         //   { product_id: productId },
         //   { [productFieldNameByAccessory]: accessory_id },
         // );
-        await this.cache.removeRelatedServicesWithCachedProduct(productId);
+        if (product_id) {
+          await this.cache.removeRelatedServicesWithCachedProduct(product_id);
+        }
       }
     }
   }
