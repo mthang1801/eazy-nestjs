@@ -886,7 +886,31 @@ export class PaymentService {
   }
 
   async momoNotify(data) {
-    console.log(data);
+    if (data.resultCode != 0) {
+      const order = await this.orderPaymentRepo.update(
+        {
+          order_no: data['orderId'],
+        },
+        {
+          errormsg: data['message'],
+          checksum: data['signature'],
+          payment_code: data['transId'],
+          amount: data['amount'],
+          expiry_date: formatStandardTimeStamp(
+            new Date(data['responseTime'] + 30 * 86400 * 1000),
+          ),
+          payment_type: data['payType'],
+        },
+        true,
+      );
+
+      if (order) {
+        await this.orderRepo.update(
+          { order_id: order.order_id },
+          { status: OrderStatus.failed, reason_fail: data['message'] },
+        );
+      }
+    }
     const updatedOrderPayment = await this.orderPaymentRepo.update(
       { order_no: data['orderId'] },
       {
