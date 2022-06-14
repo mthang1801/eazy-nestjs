@@ -610,8 +610,8 @@ export class PromotionAccessoryService {
           );
 
           //============== remove new promotion product cache ==============
-          let productCacheKey = cacheKeys.product(product.product_id);
-          await this.cache.delete(productCacheKey);
+
+          await this.cache.removeCachedProductById(product.product_id);
         }
       }
     }
@@ -660,9 +660,7 @@ export class PromotionAccessoryService {
           );
 
           //============== remove new promotion product cache ==============
-          await this.cache.removeRelatedServicesWithCachedProduct(
-            product.product_id,
-          );
+          await this.cache.removeCachedProductById(product.product_id);
         }
       }
     }
