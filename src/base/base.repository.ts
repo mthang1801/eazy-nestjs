@@ -348,6 +348,13 @@ export class BaseRepositorty<T> {
         `=============== [MYSQL] DELETE ON ${this.table} ================`,
       );
     }
+    let deletedData;
+    if (returnable) {
+      deletedData =
+        typeof conditions === 'object'
+          ? await this.findOne(conditions)
+          : await this.findById(conditions);
+    }
 
     let queryString = `DELETE FROM ${this.table} WHERE `;
 
@@ -393,11 +400,6 @@ export class BaseRepositorty<T> {
     }
 
     if (returnable) {
-      const deletedData =
-        typeof conditions === 'object'
-          ? await this.findOne(conditions)
-          : await this.findById(conditions);
-
       return deletedData;
     }
 
