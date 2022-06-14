@@ -523,13 +523,13 @@ export class CustomerService {
       ];
     }
 
-    let count = await this.userRepo.find({
+    let _count = this.userRepo.find({
       select: `COUNT(${Table.USERS}.user_id) as total`,
       join: userJoiner,
       where: customersListSearchFilter(search, filterConditions),
     });
 
-    let customersList = await this.userRepo.find({
+    let _customersList = this.userRepo.find({
       select: userSelector,
       join: userJoiner,
       orderBy: [{ field: `${Table.USERS}.updated_at`, sortBy: SortBy.DESC }],
@@ -537,6 +537,8 @@ export class CustomerService {
       skip,
       limit,
     });
+
+    let [customersList, count] = await Promise.all([_customersList, _count]);
 
     return {
       paging: {

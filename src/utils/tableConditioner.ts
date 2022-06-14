@@ -115,11 +115,11 @@ export const customersListSearchFilter = (
   let arraySearch = [];
 
   if (search) {
-    arraySearch = [{ [`${Table.USERS}.phone`]: Like(search) }];
+    arraySearch = [{ [`${Table.USERS}.phone`]: Like(search.trim()) }];
+    arraySearch = [{ [`${Table.USERS}.b_phone`]: Like(search.trim()) }];
     if (firstName) {
       arraySearch = [
         ...arraySearch,
-        { [`${Table.USER_PROFILES}.b_firstname`]: Like(firstName) },
         { [`${Table.USER_PROFILES}.b_lastname`]: Like(firstName) },
       ];
     }
@@ -127,7 +127,6 @@ export const customersListSearchFilter = (
       arraySearch = [
         ...arraySearch,
         { [`${Table.USER_PROFILES}.b_lastname`]: Like(lastName) },
-        { [`${Table.USER_PROFILES}.b_firstname`]: Like(lastName) },
       ];
     }
   }
