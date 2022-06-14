@@ -584,6 +584,9 @@ export class CustomerService {
       user['creator'] = preprocessUserResult(creator);
     }
 
+    delete user['password'];
+    delete user['salt'];
+
     return formatCustomerTimestamp(user);
   }
 

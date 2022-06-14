@@ -409,6 +409,7 @@ export class RedisCacheService {
   }
 
   async removeCachedProductById(product_id) {
+    if (!product_id) return;
     let productCacheKey = cacheKeys.product(product_id);
     await this.removeCache(null, null, productCacheKey);
     await this.delete(productCacheKey);

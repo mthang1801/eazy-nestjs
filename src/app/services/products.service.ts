@@ -4661,7 +4661,9 @@ export class ProductService {
     }
 
     result['relative_prouducts'] = relative_prouducts;
-    result['discount_programs'] = discount_programs;
+    result['discount_programs'] = discount_programs
+      ? { ...discount_programs }
+      : null;
     result['is_discount_program'] = false;
     if (discount_programs) {
       result['price'] = discount_programs.selling_price;
@@ -4948,7 +4950,9 @@ export class ProductService {
           promotionAccessoryProducts;
         childProduct['free_accessory_products'] = freeAccessoryProducts;
         childProduct['warranty_package_products'] = warrantyAccessoryProducts;
-        childProduct['discountPrograms'] = discountPrograms;
+        childProduct['discountPrograms'] = discountPrograms
+          ? { ...discountPrograms }
+          : null;
 
         childProduct['color'] = color?.variant || childProduct['color'];
 

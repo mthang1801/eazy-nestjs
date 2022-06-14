@@ -354,6 +354,7 @@ export class AuthService {
         firstname: user['firstname'],
         lastname: user['lastname'],
         avatar: user['avatar'],
+        birthday: user['birthday'],
       },
     };
 

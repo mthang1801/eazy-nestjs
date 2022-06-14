@@ -43,6 +43,7 @@ import { userLoyaltyHistorySearchFilter } from 'src/database/sqlQuery/where/cust
 import { UserLoyaltyHistoryRepository } from '../repositories/userLoyaltyHistory.repository';
 import { UserLoyaltyHistoryEntity } from '../entities/userLoyaltyHistory.entity';
 import { userSelector } from '../../utils/tableSelector';
+import { Equal, Not } from '../../database/operators/operators';
 
 @Injectable()
 export class UsersService {
@@ -163,10 +164,10 @@ export class UsersService {
       } else {
         const checkCurrentPhone = await this.userRepository.findOne({
           phone: data.b_phone,
-          user_id,
+          user_id: Not(Equal(user_id)),
         });
 
-        if (!checkCurrentPhone) {
+        if (checkCurrentPhone) {
           throw new HttpException('Số điện thoại không thể thay đổi.', 401);
         }
       }
