@@ -75,7 +75,45 @@ export class CartService {
     let result = await this.get(user_id);
     await this.cache.setCartByUserId(user_id, result);
 
-    return this.get(user_id);
+    return result;
+  }
+
+  async createCart(user_id: number, product_ids: number[]) {
+    let cart = await this.cartRepo.findOne({ user_id });
+    if (!cart) {
+      const cartData = { ...new CartEntity(), user_id };
+      cart = await this.cartRepo.create(cartData);
+    }
+    for (let product_id of product_ids) {
+      let checkProduct = await this.productRepo.findOne({
+        product_id,
+        product_function: Not(Equal(1)),
+      });
+      if (!checkProduct) {
+        throw new HttpException('Không thể thêm SP cha vào giỏ hàng.', 400);
+      }
+      let cartItem = await this.cartItemRepo.findOne({
+        cart_id: cart.cart_id,
+        product_id,
+      });
+      if (!cartItem) {
+        await this.cartItemRepo.create({
+          cart_id: cart.cart_id,
+          product_id,
+          amount: 1,
+        });
+      }
+      if (cartItem && cartItem.amount < 3) {
+        await this.cartItemRepo.update(
+          { cart_item_id: cartItem.cart_item_id },
+          { amount: cartItem.amount + 1 },
+        );
+      }
+    }
+
+    let result = await this.get(user_id);
+    await this.cache.setCartByUserId(user_id, result);
+    return result;
   }
 
   async get(user_id) {
