@@ -886,6 +886,7 @@ export class PaymentService {
   }
 
   async momoNotify(data) {
+    console.log(data);
     const updatedOrderPayment = await this.orderPaymentRepo.update(
       { order_no: data['orderId'] },
       {
