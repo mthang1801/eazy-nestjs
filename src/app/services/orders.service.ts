@@ -1844,7 +1844,7 @@ export class OrdersService {
         s_cityName: '',
         s_districtName: '',
         s_wardName: '',
-        s_address: 'Giao tận nhà',
+        s_address: 'Nhận tại cửa hàng',
       };
     }
 
