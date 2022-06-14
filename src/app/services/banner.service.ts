@@ -403,7 +403,12 @@ export class bannerService {
         await this.bannerItemRepo.create(newBannerItemData);
       }
     }
-
+    const newBannerItems = await this.bannerItemRepo.find({banner_id: id});
+    if (newBannerItems && newBannerItems.length) {
+      for (let newBannerItem of newBannerItems) {
+        await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
+      }
+    }
     await this.cache.removeAllCachedBanners();
 
     return this.getById(id);

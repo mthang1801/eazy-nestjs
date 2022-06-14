@@ -601,6 +601,7 @@ export class DiscountProgramService {
     if (!discountProgram.start_at) {
       if (new Date(endDate).getTime() < new Date(today).getTime()) {
         console.log('Chương trình chiết khấu đã quá hạn.');
+        await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
         return;
       }
 
@@ -648,6 +649,7 @@ export class DiscountProgramService {
     //Có ngày bắt đầu và ngày kết thúc
     if (new Date(endDate).getTime() < new Date(today).getTime()) {
       console.log('Chương trình chiết khấu đã quá hạn.');
+      await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
       return;
     }
 
@@ -817,7 +819,7 @@ export class DiscountProgramService {
       `job ${convertToSlug(discountProgram.discount_name) + '-off-at-' + convertToSlug(discountProgram.time_end_at)} deleted!`,
     );
 
-    this.discountProgramRepo.update({ discount_id }, { status: 'D' });
+    await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
 
     await this.schedulerRegistry.deleteTimeout(
       convertToSlug(discountProgram.discount_name),
