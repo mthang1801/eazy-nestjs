@@ -496,7 +496,7 @@ export class ReviewsCommentService {
 
   async getReviewsCommentsListWebsite(product_id: number, params, type) {
     let { page, skip, limit } = getPageSkipLimit(params);
-
+    let { point } = params;
     const checkAllowComment = await this.productRepo.findOne({
       product_id,
       allow_comment: 'Y',
@@ -507,15 +507,22 @@ export class ReviewsCommentService {
         403,
       );
     }
+
+    let filterConditions = {
+      product_id,
+      [`${Table.REVIEW_COMMENT_ITEMS}.type`]: type,
+      [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
+      parent_item_id: IsNull(),
+    };
+
+    if (point >= 0 && point <= 5) {
+      filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.point`] = point;
+    }
+
     const _reviewCommentItems = this.reviewCommentItemRepo.find({
       select: `*`,
       join: reviewCommentJoiner,
-      where: {
-        product_id,
-        [`${Table.REVIEW_COMMENT_ITEMS}.type`]: type,
-        [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
-        parent_item_id: IsNull(),
-      },
+      where: filterConditions,
       orderBy: [
         {
           field: `${Table.REVIEW_COMMENT_ITEMS}.updated_at`,
@@ -529,12 +536,7 @@ export class ReviewsCommentService {
     const _count = this.reviewCommentItemRepo.find({
       select: 'COUNT(item_id) as total',
       join: reviewCommentJoiner,
-      where: {
-        product_id,
-        [`${Table.REVIEW_COMMENT_ITEMS}.type`]: type,
-        [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
-        parent_item_id: IsNull(),
-      },
+      where: filterConditions,
     });
 
     let [reviewCommentItems, count] = await Promise.all([

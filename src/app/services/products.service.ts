@@ -4388,6 +4388,8 @@ export class ProductService {
         { view_count: product.view_count + 1 },
       );
 
+      // await this.cache.removeCachedProductById(product.product_id);
+
       const productCacheResult = await this.cache.getProductCacheById(
         product.product_id,
       );
@@ -5194,17 +5196,44 @@ export class ProductService {
     };
 
     if (source == 1) {
-      condition = {
-        ...condition,
-        [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
-          formatStandardTimeStamp(new Date()),
-        ),
-        [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
-          formatStandardTimeStamp(new Date()),
-        ),
-        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-        [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
-      };
+      condition = [
+        {
+          ...condition,
+          [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+            formatStandardTimeStamp(new Date()),
+          ),
+          [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+            formatStandardTimeStamp(new Date()),
+          ),
+          [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
+        },
+        {
+          ...condition,
+          [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+            formatStandardTimeStamp(new Date()),
+          ),
+          [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+          [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
+        },
+        {
+          ...condition,
+          [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+          [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+          [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
+        },
+        {
+          ...condition,
+          [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+          [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+            formatStandardTimeStamp(),
+          ),
+          [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
+        },
+      ];
     }
     return this.productPromoAccessoryRepo.find({
       select: '*',

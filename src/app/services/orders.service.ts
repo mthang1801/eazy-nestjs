@@ -1839,6 +1839,13 @@ export class OrdersService {
       if (store) {
         order['store'] = store;
       }
+    } else {
+      order['store'] = {
+        s_cityName: '',
+        s_districtName: '',
+        s_wardName: '',
+        s_address: 'Giao tận nhà',
+      };
     }
 
     const status = await this.statusRepo.findOne({

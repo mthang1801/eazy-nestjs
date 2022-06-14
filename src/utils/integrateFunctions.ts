@@ -780,7 +780,8 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
       let cmsAccessoryItem = {};
       for (let [core, cms] of mappingAccessoryItems) {
         if (core == 'is_active') {
-          cmsAccessoryItem[cms] = accessoryItem[core] == 1 ? 'A' : 'D';
+          cmsAccessoryItem[cms] =
+            accessoryItem[core] == 1 || accessoryItem[core] == true ? 'A' : 'D';
           continue;
         }
         cmsAccessoryItem[cms] = accessoryItem[core];
@@ -809,7 +810,8 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
       let cmsAccessoryItem = {};
       for (let [core, cms] of mappingAccessoryItems) {
         if (core == 'is_active') {
-          cmsAccessoryItem[cms] = accessoryItem[core] == 1 ? 'A' : 'D';
+          cmsAccessoryItem[cms] =
+            accessoryItem[core] == 1 || accessoryItem[core] == true ? 'A' : 'D';
           continue;
         }
         cmsAccessoryItem[cms] = accessoryItem[core];
