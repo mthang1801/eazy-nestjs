@@ -832,6 +832,8 @@ export class PaymentService {
     if (!data.NotifyData) {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
+
+    console.log(data);
     let notifyData = data.NotifyData;
 
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;
@@ -886,7 +888,6 @@ export class PaymentService {
   }
 
   async momoNotify(data) {
-    console.log(data);
     if (data.resultCode != 0) {
       const order = await this.orderPaymentRepo.update(
         {
@@ -907,7 +908,7 @@ export class PaymentService {
       if (order) {
         await this.orderRepo.update(
           { order_id: order.order_id },
-          { status: OrderStatus.failed, reason_fail: data['message'] },
+          { status: OrderStatus.cancelled, reason_fail: data['message'] },
         );
       }
 
