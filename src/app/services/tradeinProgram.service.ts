@@ -1143,7 +1143,7 @@ export class TradeinProgramService {
         }
       }
     }
-
+    await this.addTimeoutTurnOnTradeinProgram(tradein_id);
     return this.get(tradein_id);
   }
 
@@ -2032,7 +2032,7 @@ export class TradeinProgramService {
     const today = formatStandardTimeStamp();
     const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("flash sale will end after " + milliseconds/3600000 + " hours.");
+    console.log("tradein program will end after " + milliseconds/3600000 + " hours.");
     this.schedulerRegistry.addTimeout(convertToSlug(tradeinProgram.name), timeout);
   }
 
@@ -2083,13 +2083,31 @@ export class TradeinProgramService {
 
     //Chỉ có ngày kết thúc
     if (!tradeinProgram.start_at) {
+      if (new Date(today).getTime() < new Date(endDate).getTime()) {
+        console.log("Chương trình thu cũ đổi mới đã quá hạn.");
+        this.tradeinProgramRepo.update(
+          {tradein_id},
+          {status: 'D'}
+        )
+        return;
+      }
 
+      console.log("Turn on tradein program");
+      this.tradeinProgramRepo.update(
+        {tradein_id},
+        {status: 'A'}
+      )
+      await this.addTimeoutTurnOffTradeinProgram(tradein_id);
       return;
     }
 
     // Có cả ngày bắt đầu và kết thúc
     if (new Date(today).getTime() < new Date(endDate).getTime()) {
       console.log("Chương trình thu cũ đổi mới đã quá hạn.");
+      this.tradeinProgramRepo.update(
+        {tradein_id},
+        {status: 'D'}
+      )
       return;
     }
 
