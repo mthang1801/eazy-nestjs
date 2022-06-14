@@ -4389,13 +4389,12 @@ export class ProductService {
         { view_count: product.view_count + 1 },
       );
 
-      // await this.cache.removeCachedProductById(product.product_id);
-      // const productCacheResult = await this.cache.getProductCacheById(
-      //   product.product_id,
-      // );
-      // if (productCacheResult) {
-      //   return productCacheResult;
-      // }
+      const productCacheResult = await this.cache.getProductCacheById(
+        product.product_id,
+      );
+      if (productCacheResult) {
+        return productCacheResult;
+      }
     } else {
       product = await this.productRepo.findOne({
         select: productDetailSelector,
@@ -4414,12 +4413,12 @@ export class ProductService {
       { view_count: product.view_count + 1 },
     );
 
-    // const productCacheResult = await this.cache.getProductCacheById(
-    //   product.product_id,
-    // );
-    // if (productCacheResult) {
-    //   return productCacheResult;
-    // }
+    const productCacheResult = await this.cache.getProductCacheById(
+      product.product_id,
+    );
+    if (productCacheResult) {
+      return productCacheResult;
+    }
 
     let result: any = { ...product };
 
