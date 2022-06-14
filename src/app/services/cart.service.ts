@@ -36,53 +36,14 @@ export class CartService {
     private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
-  // async create(user_id: number, product_id: number) {
-  //   // Kiểm tra xem giỏ hàng đã tồn tại hay chưa
-
-  //   let cart = await this.cartRepo.findOne({ user_id });
-  //   if (!cart) {
-  //     const cartData = { ...new CartEntity(), user_id };
-  //     cart = await this.cartRepo.create(cartData);
-  //   }
-  //   const checkProduct = await this.productRepo.findOne({
-  //     product_id,
-  //     product_function: Not(Equal(1)),
-  //   });
-
-  //   if (!checkProduct) {
-  //     throw new HttpException('Không thể thêm SP cha vào giỏ hàng.', 400);
-  //   }
-
-  //   const cartItem = await this.cartItemRepo.findOne({
-  //     cart_id: cart.cart_id,
-  //     product_id,
-  //   });
-
-  //   if (!cartItem) {
-  //     await this.cartItemRepo.create({
-  //       cart_id: cart.cart_id,
-  //       product_id,
-  //       amount: 1,
-  //     });
-  //   }
-
-  //   if (cartItem && cartItem.amount < 3) {
-  //     await this.cartItemRepo.update(
-  //       { cart_item_id: cartItem.cart_item_id },
-  //       { amount: cartItem.amount + 1 },
-  //     );
-  //   }
-  //   let result = await this.get(user_id);
-  //   await this.cache.setCartByUserId(user_id, result);
-
-  //   return result;
-  // }
-
   async create(user_id: number, product_ids: number[]) {
     let cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       const cartData = { ...new CartEntity(), user_id };
       cart = await this.cartRepo.create(cartData);
+    }
+    if (!product_ids.length) {
+      return;
     }
     for (let product_id of product_ids) {
       let checkProduct = await this.productRepo.findOne({
@@ -113,6 +74,7 @@ export class CartService {
 
     let result = await this.get(user_id);
     await this.cache.setCartByUserId(user_id, result);
+    await this.cache.removeCache(cacheTables.cart);
     return result;
   }
 

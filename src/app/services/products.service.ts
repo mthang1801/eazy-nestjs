@@ -1947,7 +1947,6 @@ export class ProductService {
     let filterCondition = {
       [`${Table.PRODUCTS_CATEGORIES}.category_id`]: categoryId,
     };
-    let categoryCacheKey = cacheKeys.category(`${categoryId}-${page}-${limit}`);
 
     let productsList = await this.productCategoryRepo.find({
       select: '*',

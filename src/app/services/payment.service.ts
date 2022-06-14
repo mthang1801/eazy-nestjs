@@ -676,7 +676,7 @@ export class PaymentService {
         ) {
           sendData['shipping_cost'] = +shippingFeeLocation.value_fee;
           sendData['transfer_amount'] =
-            +totalPrice + +shippingFeeLocation.value_fee;
+            +sendData['transfer_amount'] + +shippingFeeLocation.value_fee;
           totalPrice = +totalPrice + +shippingFeeLocation.value_fee;
           sendData['subtotal'] =
             +sendData['subtotal'] + +shippingFeeLocation.value_fee;
@@ -709,7 +709,7 @@ export class PaymentService {
             data,
             ref_order_id,
             paymentDate,
-            totalPrice,
+            sendData['subtotal'],
           );
           urlRequest = payooPaynowURL;
           break;
@@ -718,7 +718,7 @@ export class PaymentService {
             data,
             ref_order_id,
             paymentDate,
-            totalPrice,
+            sendData['subtotal'],
           );
           urlRequest = payooPaynowURL;
           break;
@@ -727,7 +727,7 @@ export class PaymentService {
             data,
             ref_order_id,
             paymentDate,
-            totalPrice,
+            sendData['subtotal'],
           );
           urlRequest = payooPaynowURL;
           break;
