@@ -181,6 +181,16 @@ export class PromotionAccessoryService {
       );
     }
 
+    await this.promoAccessoryRepo.update(
+      {
+        accessory_id,
+        status: In(['A', 'D']),
+      },
+      {
+        description: 'test',
+      },
+    );
+
     if (data.description) {
       await this.promoAccessoryRepo.update(
         { accessory_id },

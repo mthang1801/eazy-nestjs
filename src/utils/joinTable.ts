@@ -1203,3 +1203,12 @@ export const productDiscountDetailJoiner = {
     },
   },
 };
+
+export const reviewCommentJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.USERS]: {
+      fieldJoin: `${Table.USERS}.user_id`,
+      rootJoin: `${Table.REVIEW_COMMENT_ITEMS}.user_id`,
+    },
+  },
+};

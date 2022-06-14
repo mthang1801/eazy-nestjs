@@ -776,7 +776,6 @@ export class DatabaseCollection {
       for (let i = 0; i < this.arrayCondition.length; i++) {
         arrayCheckExist = [...arrayCheckExist, this.arrayCondition[i]];
       }
-
       for (let [i, checkExistItem] of arrayCheckExist.entries()) {
         stringCondition += formatStringCondition(i, checkExistItem);
       }

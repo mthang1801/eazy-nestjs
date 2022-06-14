@@ -35,6 +35,7 @@ import { ReviewCommentUserIPRepository } from '../repositories/reviewCommentUser
 import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entity';
 import { RedisCacheService } from './redisCache.service';
 import { cacheKeys } from '../../utils/cache.utils';
+import { reviewCommentJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class ReviewsCommentService {
@@ -506,12 +507,13 @@ export class ReviewsCommentService {
         403,
       );
     }
-    const reviewCommentItems = await this.reviewCommentItemRepo.find({
-      select: '*',
+    const _reviewCommentItems = this.reviewCommentItemRepo.find({
+      select: `*`,
+      join: reviewCommentJoiner,
       where: {
         product_id,
-        type,
-        status: 'A',
+        [`${Table.REVIEW_COMMENT_ITEMS}.type`]: type,
+        [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
         parent_item_id: IsNull(),
       },
       orderBy: [
@@ -524,15 +526,21 @@ export class ReviewsCommentService {
       limit,
     });
 
-    const count = await this.reviewCommentItemRepo.find({
+    const _count = this.reviewCommentItemRepo.find({
       select: 'COUNT(item_id) as total',
+      join: reviewCommentJoiner,
       where: {
         product_id,
-        type,
-        status: 'A',
+        [`${Table.REVIEW_COMMENT_ITEMS}.type`]: type,
+        [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
         parent_item_id: IsNull(),
       },
     });
+
+    let [reviewCommentItems, count] = await Promise.all([
+      _reviewCommentItems,
+      _count,
+    ]);
 
     if (reviewCommentItems.length) {
       for (let reviewItem of reviewCommentItems) {

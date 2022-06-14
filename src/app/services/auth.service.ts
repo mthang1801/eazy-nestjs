@@ -50,7 +50,7 @@ import { CustomerService } from './customer.service';
 import axios from 'axios';
 import { UserDataEntity } from '../entities/userData.entity';
 import { UserDataRepository } from '../repositories/userData.repository';
-import { generateRandomNumber } from '../../utils/helper';
+import { generateRandomNumber, checkIsLinkURL } from '../../utils/helper';
 import {
   sha512,
   encodeBase64String,
@@ -72,6 +72,7 @@ import { Cryptography } from '../../utils/cryptography';
 import { SortBy } from '../../database/enums/sortBy.enum';
 import { Equal, Not } from '../../database/operators/operators';
 import { defaultPassword } from '../../constants/defaultPassword';
+import { CDN_URL } from '../../constants/api.appcore';
 
 @Injectable()
 export class AuthService {
@@ -353,7 +354,9 @@ export class AuthService {
         email: user['email'],
         firstname: user['firstname'],
         lastname: user['lastname'],
-        avatar: user['avatar'],
+        avatar: checkIsLinkURL(user['avatar'])
+          ? user['avatar']
+          : `${CDN_URL}${user['avatar']}`,
         birthday: user['birthday'],
       },
     };
@@ -486,7 +489,10 @@ export class AuthService {
         user_id: userExists['user_id'],
         firstname: userExists['firstname'],
         lastname: userExists['lastname'],
-        avatar: userExists['avatar'],
+        avatar: checkIsLinkURL(userExists['avatar'])
+          ? userExists['avatar']
+          : `${CDN_URL}${userExists['avatar']}`,
+        email: userExists['email'],
       },
     };
   }
