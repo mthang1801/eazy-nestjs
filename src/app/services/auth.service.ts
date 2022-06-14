@@ -584,6 +584,9 @@ export class AuthService {
         firstname: user['firstname'],
         lastname: user['lastname'],
         avatar: user['avatar'],
+        email: user['email'],
+        phone: user['phone'],
+        birthday: user['birthday'],
       },
     };
   }

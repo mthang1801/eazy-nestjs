@@ -291,8 +291,11 @@ export class PromotionAccessoryService {
     //   { [productFieldNameByAccessory]: accessory_id },
     //   { [productFieldNameByAccessory]: 0 },
     // );
-    if (data.applied_products && data.applied_products.length) {
-      for (let productId of data.applied_products) {
+    const appliedProducts = await this.promoAccessoryDetailRepo.find({
+      accessory_id,
+    });
+    if (appliedProducts.length) {
+      for (let productId of appliedProducts) {
         // await this.productRepo.update(
         //   { product_id: productId },
         //   { [productFieldNameByAccessory]: accessory_id },
