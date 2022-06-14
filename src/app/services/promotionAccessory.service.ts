@@ -221,11 +221,11 @@ export class PromotionAccessoryService {
     //   }
     // }
 
-    const updatePromoAccessoryData = {
-      ...this.promoAccessoryRepo.setData(data),
-      updated_at: formatStandardTimeStamp(),
-      updated_by: user.user_id,
-    };
+    // const updatePromoAccessoryData = {
+    //   ...this.promoAccessoryRepo.setData(data),
+    //   updated_at: formatStandardTimeStamp(),
+    //   updated_by: user.user_id,
+    // };
 
     // await this.promoAccessoryRepo.update(
     //   { accessory_id },
@@ -236,43 +236,43 @@ export class PromotionAccessoryService {
     //   data.display_at = moment(data.display_at).format('YYYY-MM-DD HH:mm:ss');
     // }
 
-    if (data.products && data.products.length) {
-      let oldPromotionProducts = await this.promoAccessoryDetailRepo.find(
-        { accessory_id },
-        true,
-      );
-      if (oldPromotionProducts && oldPromotionProducts.length) {
-        // ======= Remove product cache =========
-        for (let oldPromotionProduct of oldPromotionProducts) {
-          await this.cache.removeRelatedServicesWithCachedProduct(
-            oldPromotionProduct.product_id,
-          );
-        }
-      }
+    // if (data.products && data.products.length) {
+    //   let oldPromotionProducts = await this.promoAccessoryDetailRepo.find(
+    //     { accessory_id },
+    //     true,
+    //   );
+    //   if (oldPromotionProducts && oldPromotionProducts.length) {
+    //     // ======= Remove product cache =========
+    //     for (let oldPromotionProduct of oldPromotionProducts) {
+    //       await this.cache.removeRelatedServicesWithCachedProduct(
+    //         oldPromotionProduct.product_id,
+    //       );
+    //     }
+    //   }
 
-      for (let productItem of data.products) {
-        const product = await this.productRepo.findOne({
-          select: '*',
-          join: productLeftJoiner,
-          where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
-        });
+    //   for (let productItem of data.products) {
+    //     const product = await this.productRepo.findOne({
+    //       select: '*',
+    //       join: productLeftJoiner,
+    //       where: { [`${Table.PRODUCTS}.product_id`]: productItem.product_id },
+    //     });
 
-        const newProductData = {
-          ...new PromotionAccessoryDetailEntity(),
-          ...this.promoAccessoryDetailRepo.setData(productItem),
-          sale_price: product['price'],
-          created_by: user.user_id,
-          updated_by: user.user_id,
-          accessory_id: accessory_id,
-        };
-        // await this.promoAccessoryDetailRepo.create(newProductData, false);
+    //     const newProductData = {
+    //       ...new PromotionAccessoryDetailEntity(),
+    //       ...this.promoAccessoryDetailRepo.setData(productItem),
+    //       sale_price: product['price'],
+    //       created_by: user.user_id,
+    //       updated_by: user.user_id,
+    //       accessory_id: accessory_id,
+    //     };
+    //     // await this.promoAccessoryDetailRepo.create(newProductData, false);
 
-        //============== remove new promotion product cache ==============
-        await this.cache.removeRelatedServicesWithCachedProduct(
-          product.product_id,
-        );
-      }
-    }
+    //     //============== remove new promotion product cache ==============
+    //     await this.cache.removeRelatedServicesWithCachedProduct(
+    //       product.product_id,
+    //     );
+    //   }
+    // }
 
     let accessoryType = promoAccessory['accessory_type'];
     let productFieldNameByAccessory = '';
@@ -294,6 +294,7 @@ export class PromotionAccessoryService {
     const appliedProducts = await this.promoAccessoryDetailRepo.find({
       accessory_id,
     });
+    console.log(appliedProducts);
     if (appliedProducts.length) {
       for (let productId of appliedProducts) {
         // await this.productRepo.update(
