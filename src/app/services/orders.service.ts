@@ -156,6 +156,7 @@ import { ShippingsServiceEntity } from '../entities/shippingsService.entity';
 import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingsEntity } from '../entities/shippings.entity';
 import { ClientProxy } from '@nestjs/microservices';
+import { CartService } from './cart.service';
 
 @Injectable()
 export class OrdersService {
@@ -190,6 +191,7 @@ export class OrdersService {
     private shippingFeeLocationRepo: ShippingFeeLocationRepository<ShippingFeeLocationEntity>,
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
     private shippingRepo: ShippingRepository<ShippingsEntity>, // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
+    private cartService: CartService,
   ) {}
 
   async testQueue(data) {
@@ -535,8 +537,9 @@ export class OrdersService {
       };
       let result = await this.createOrder(user, sendData);
 
-      await this.cartRepo.delete({ cart_id: cart.cart_id });
-      await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+      if (cart?.cart_id) {
+        await this.cartService.clearAll(cart.cart_id);
+      }
     } catch (error) {
       console.log(error);
       throw new HttpException(error.message, error.status);
@@ -544,7 +547,6 @@ export class OrdersService {
   }
 
   async FEcreate(data: CreateOrderFEDto, userAuth) {
-    console.log(data);
     let user: any;
     if (userAuth) {
       user = await this.userRepo.findOne({ user_id: userAuth.user_id });
@@ -705,8 +707,10 @@ export class OrdersService {
 
     const result = await this.createOrder(user, sendData);
 
-    await this.cartRepo.delete({ cart_id: cart.cart_id });
-    await this.cartItemRepo.delete({ cart_id: cart.cart_id });
+    if (cart?.cart_id) {
+      await this.cartService.clearAll(cart.cart_id);
+    }
+
     return result;
   }
 
@@ -894,8 +898,6 @@ export class OrdersService {
 
     try {
       const response = await axios(configPushOrderToAppcore);
-
-      console.log(response);
 
       const orderAppcoreResponse = response.data.data;
       const updatedOrder = await this.orderRepo.update(

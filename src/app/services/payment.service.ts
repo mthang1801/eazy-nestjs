@@ -1267,7 +1267,7 @@ export class PaymentService {
         payment_url: responseData.payUrl,
       });
 
-      if (cart.cart_id) {
+      if (cart?.cart_id) {
         await this.cartService.clearAll(cart.cart_id);
       }
 

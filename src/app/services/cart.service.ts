@@ -209,7 +209,7 @@ export class CartService {
 
   async clearAll(cart_id) {
     let cart = await this.cartRepo.delete({ cart_id }, true);
-    console.log(cart);
+
     await this.cartItemRepo.delete({ cart_id });
 
     if (cart?.user_id) {
