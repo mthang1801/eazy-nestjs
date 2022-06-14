@@ -1115,11 +1115,13 @@ export class PaymentService {
       }
     }
 
+    console.log();
+
+    const newOrder = await this.orderService.createOrder(user, sendData);
+
     const responseData = await this.requestPaymentMomo(sendData);
 
     sendData['paymentStatus'] = PaymentStatus.new;
-
-    const newOrder = await this.orderService.createOrder(user, sendData);
 
     await this.orderPaymentRepo.create({
       order_id: newOrder['order_id'],
@@ -1189,6 +1191,7 @@ export class PaymentService {
       pay_credit_type: payCreditType,
       callback_url: data.callback_url,
       store_id: data.store_id,
+      subtotal: +totalPrice,
     };
 
     // Check coupon if it exist

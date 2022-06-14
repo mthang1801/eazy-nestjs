@@ -326,8 +326,6 @@ export class BaseRepositorty<T> {
       sql += ` ${AutoIncrementKeys[this.table]} = '${conditions}'`;
     }
 
-    sql = sql.replace(/'\(/g, '(').replace(/\)'/g, ')').replace(/'ALL/g, 'ALL');
-
     await this.databaseService.executeQueryWritePool(sql);
 
     if (returnable) {
