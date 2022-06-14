@@ -4602,6 +4602,7 @@ export class ProductService {
         select: '*',
         join: categoryJoiner,
         where: { [`${Table.CATEGORIES}.category_id`]: product['category_id'] },
+        orderBy: [{ field: `${Table.CATEGORIES}.level`, sortBy: SortBy.DESC }],
       });
 
       // Get relative products

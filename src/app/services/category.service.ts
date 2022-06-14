@@ -781,7 +781,6 @@ export class CategoryService {
       select: categorySelector,
       join: categoryJoiner,
       where: { [`${Table.CATEGORIES}.slug`]: slug.trim() },
-      orderBy: [{ field: `${Table.CATEGORIES}`, sortBy: SortBy.DESC }],
     });
 
     if (!category) {
