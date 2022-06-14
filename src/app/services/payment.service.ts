@@ -833,7 +833,6 @@ export class PaymentService {
       throw new HttpException('VERIFY_SIGNATURE_FAIL', 400);
     }
 
-    console.log('PAyoo', data);
     let notifyData = data.NotifyData;
 
     let startIndex = notifyData.indexOf('<Data>') + '<Data>'.length;

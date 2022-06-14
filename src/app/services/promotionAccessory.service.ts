@@ -387,7 +387,8 @@ export class PromotionAccessoryService {
 
   async itgCreate(data, type) {
     const convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
-    console.log(convertedData);
+
+    console.log(390, convertedData);
     const accessory = await this.promoAccessoryRepo.findOne({
       app_core_id: convertedData['app_core_id'],
     });
@@ -408,7 +409,7 @@ export class PromotionAccessoryService {
     ) {
       for (let accessoryItem of convertedData['accessory_items']) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: { product_appcore_id: accessoryItem['product_appcore_id'] },
         });
@@ -563,6 +564,7 @@ export class PromotionAccessoryService {
   async itgUpdate(app_core_id: string, data, type: number) {
     data['app_core_id'] = app_core_id;
     let convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
+    console.log(convertedData);
     let accessory = await this.promoAccessoryRepo.findOne({ app_core_id });
     if (!accessory) {
       return this.itgCreate(data, type);
@@ -590,7 +592,7 @@ export class PromotionAccessoryService {
       });
       for (let accessoryItem of convertedData['accessory_items']) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: { product_appcore_id: accessoryItem['product_appcore_id'] },
         });

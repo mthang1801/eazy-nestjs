@@ -789,12 +789,60 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
   }
 
   if (
+    coreData['warrany_package_items'] &&
+    Array.isArray(coreData['warrany_package_items']) &&
+    coreData['warrany_package_items'].length
+  ) {
+    let mappingAccessoryItems = new Map([
+      ['product_id', 'product_appcore_id'],
+      ['repurchase_price', 'collect_price'],
+      ['is_active', 'status'],
+      ['app_core_id', 'app_core_id'],
+      ['from_price', 'sale_price_from'],
+      ['to_price', 'sale_price_to'],
+    ]);
+    let cmsAccessoryItems = [];
+
+    for (let accessoryItem of coreData['warrany_package_items']) {
+      let cmsAccessoryItem = {};
+      for (let [core, cms] of mappingAccessoryItems) {
+        if (core == 'is_active') {
+          cmsAccessoryItem[cms] = accessoryItem[core] == 1 ? 'A' : 'D';
+          continue;
+        }
+        cmsAccessoryItem[cms] = accessoryItem[core];
+      }
+      cmsAccessoryItems = [...cmsAccessoryItems, cmsAccessoryItem];
+    }
+    cmsData['accessory_items'] = cmsAccessoryItems;
+  }
+
+  if (
     coreData['accessory_applied_products'] &&
     Array.isArray(coreData['accessory_applied_products']) &&
     coreData['accessory_applied_products'].length
   ) {
     let cmsAccessoryAppliedItems = [];
     for (let productItem of coreData['accessory_applied_products']) {
+      let cmsAccessoryAppliedItem = {
+        product_appcore_id: productItem['product_id'],
+      };
+      cmsAccessoryAppliedItems = [
+        ...cmsAccessoryAppliedItems,
+        cmsAccessoryAppliedItem,
+      ];
+    }
+
+    cmsData['accessory_applied_products'] = cmsAccessoryAppliedItems;
+  }
+
+  if (
+    coreData['warranty_package_applied_products'] &&
+    Array.isArray(coreData['warranty_package_applied_products']) &&
+    coreData['warranty_package_applied_products'].length
+  ) {
+    let cmsAccessoryAppliedItems = [];
+    for (let productItem of coreData['warranty_package_applied_products']) {
       let cmsAccessoryAppliedItem = {
         product_appcore_id: productItem['product_id'],
       };

@@ -210,6 +210,7 @@ export class CartService {
   async clearAll(cart_id) {
     let cart = await this.cartRepo.delete({ cart_id }, true);
     await this.cartItemRepo.delete({ cart_id });
+
     if (cart?.user_id) {
       await this.cache.removeCartByUserId(cart.user_id);
     }
