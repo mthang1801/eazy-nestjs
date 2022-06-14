@@ -494,8 +494,8 @@ export class DiscountProgramService {
     
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!discountProgram.start_at && !discountProgram.end_at) {
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(discountProgram.time_start_at ? discountProgram.time_start_at : "00:00:00");
+      const endTime = await this.configTime(discountProgram.time_end_at ? discountProgram.time_end_at : "23:59:59");
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -540,8 +540,8 @@ export class DiscountProgramService {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
         console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
   
-        const startTime = await this.configTime(discountProgram.time_start_at);
-        const endTime = await this.configTime(discountProgram.time_end_at);
+        const startTime = await this.configTime(discountProgram.time_start_at ? discountProgram.time_start_at : "00:00:00");
+        const endTime = await this.configTime(discountProgram.time_end_at ? discountProgram.time_end_at : "23:59:59");
         const now = await this.configTime(formatTime());
         if (
           now.toSecond > startTime.toSecond &&
@@ -604,8 +604,8 @@ export class DiscountProgramService {
         return;
       }
 
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(discountProgram.time_start_at ? discountProgram.time_start_at : "00:00:00");
+      const endTime = await this.configTime(discountProgram.time_end_at ? discountProgram.time_end_at : "23:59:59");
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -654,8 +654,8 @@ export class DiscountProgramService {
     if (new Date(today).getTime() > new Date(startDate).getTime()) {
       console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
 
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(discountProgram.time_start_at ? discountProgram.time_start_at : "00:00:00");
+      const endTime = await this.configTime(discountProgram.time_end_at ? discountProgram.time_end_at : "23:59:59");
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -729,8 +729,8 @@ export class DiscountProgramService {
       discount_id,
     });
 
-    const startTime = await this.configTime(discountProgram.time_start_at);
-    const endTime = await this.configTime(discountProgram.time_end_at);
+    const startTime = await this.configTime(discountProgram.time_start_at ? discountProgram.time_start_at : "00:00:00");
+    const endTime = await this.configTime(discountProgram.time_end_at ? discountProgram.time_end_at : "23:59:59");
     const now = await this.configTime(formatTime());
     if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
       console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
