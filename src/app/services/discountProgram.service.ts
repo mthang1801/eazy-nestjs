@@ -472,7 +472,7 @@ export class DiscountProgramService {
   }
 
   async testCron() {
-    await this.addTimeoutTurnOnDiscountProgram(8);
+    await this.addTimeoutTurnOnDiscountProgram(2);
   }
 
   async addTimeoutTurnOnDiscountProgram(discount_id) {
