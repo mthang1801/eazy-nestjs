@@ -520,7 +520,7 @@ export class ReviewsCommentService {
     }
 
     const _reviewCommentItems = this.reviewCommentItemRepo.find({
-      select: `*`,
+      select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type`,
       join: reviewCommentJoiner,
       where: filterConditions,
       orderBy: [
