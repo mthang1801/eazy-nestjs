@@ -517,7 +517,7 @@ export class bannerService {
 
     //Chỉ có ngày kết thúc
     if (!bannerItem.start_at) {
-      if (new Date(today).getTime() < new Date(endDate).getTime()) {
+      if (new Date(today).getTime() > new Date(endDate).getTime()) {
         console.log("Banner đã quá hạn.");
         await this.bannerItemRepo.update(
           {banner_item_id},
@@ -535,7 +535,7 @@ export class bannerService {
     }
 
     // Có cả ngày bắt đầu và kết thúc
-    if (new Date(today).getTime() < new Date(endDate).getTime()) {
+    if (new Date(today).getTime() > new Date(endDate).getTime()) {
       console.log("Banner đã quá hạn.");
       await this.bannerItemRepo.update(
         {banner_item_id},
