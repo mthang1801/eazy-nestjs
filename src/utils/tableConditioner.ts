@@ -116,7 +116,6 @@ export const customersListSearchFilter = (
 
   if (search) {
     arraySearch = [{ [`${Table.USERS}.phone`]: Like(search.trim()) }];
-    arraySearch = [{ [`${Table.USERS}.b_phone`]: Like(search.trim()) }];
     if (firstName) {
       arraySearch = [
         ...arraySearch,
