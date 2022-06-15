@@ -2019,7 +2019,7 @@ export class TradeinProgramService {
 
   async turnOnTradeinProgram(tradein_id) {
     console.log('Turn on tradein program');
-    this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
+    await this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
     const tradeinProgram = await this.tradeinProgramRepo.findOne({
       tradein_id,
     });
@@ -2033,7 +2033,7 @@ export class TradeinProgramService {
 
   async turnOffTradeinProgram(tradein_id) {
     console.log('Turn off tradein program');
-    this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
+    await this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
     const tradeinProgram = await this.tradeinProgramRepo.findOne({
       tradein_id,
     });
@@ -2088,7 +2088,7 @@ export class TradeinProgramService {
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!tradeinProgram.start_at && !tradeinProgram.end_at) {
       console.log('Turn on tradein program');
-      this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
+      await this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
       return;
     }
 
@@ -2096,7 +2096,7 @@ export class TradeinProgramService {
     if (!tradeinProgram.end_at) {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
         console.log('Turn on tradein program');
-        this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
+        await this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
         return;
       }
 
@@ -2122,12 +2122,12 @@ export class TradeinProgramService {
     if (!tradeinProgram.start_at) {
       if (new Date(today).getTime() < new Date(endDate).getTime()) {
         console.log('Chương trình thu cũ đổi mới đã quá hạn.');
-        this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
+        await this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
         return;
       }
 
       console.log('Turn on tradein program');
-      this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
+      await this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
       await this.addTimeoutTurnOffTradeinProgram(tradein_id);
       return;
     }
@@ -2135,7 +2135,7 @@ export class TradeinProgramService {
     // Có cả ngày bắt đầu và kết thúc
     if (new Date(today).getTime() < new Date(endDate).getTime()) {
       console.log('Chương trình thu cũ đổi mới đã quá hạn.');
-      this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
+      await this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
       return;
     }
 
@@ -2144,7 +2144,7 @@ export class TradeinProgramService {
       new Date(today).getTime() < new Date(endDate).getTime()
     ) {
       console.log('Turn on tradein program');
-      this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
+      await this.tradeinProgramRepo.update({ tradein_id }, { status: 'A' });
       await this.addTimeoutTurnOffTradeinProgram(tradein_id);
       return;
     }

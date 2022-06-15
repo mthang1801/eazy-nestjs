@@ -436,7 +436,7 @@ export class bannerService {
 
   async turnOnBannerItem(banner_item_id) {
     console.log("Turn on banner item");
-    this.bannerItemRepo.update(
+    await this.bannerItemRepo.update(
       {banner_item_id},
       {status: 'A'}
     )
@@ -449,7 +449,7 @@ export class bannerService {
 
   async turnOffBannerItem(banner_item_id) {
     console.log("Turn off banner item");
-    this.bannerItemRepo.update(
+    await this.bannerItemRepo.update(
       {banner_item_id},
       {status: 'D'}
     )
@@ -487,7 +487,7 @@ export class bannerService {
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!bannerItem.start_day && !bannerItem.end_at) {
       console.log("Turn on banner item");
-      this.bannerItemRepo.update(
+      await this.bannerItemRepo.update(
         {banner_item_id},
         {status: 'A'}
       )
@@ -498,7 +498,7 @@ export class bannerService {
     if (!bannerItem.end_at) {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
         console.log("Turn on banner item");
-        this.bannerItemRepo.update(
+        await this.bannerItemRepo.update(
           {banner_item_id},
           {status: 'A'}
         )
@@ -519,14 +519,14 @@ export class bannerService {
     if (!bannerItem.start_at) {
       if (new Date(today).getTime() < new Date(endDate).getTime()) {
         console.log("Banner đã quá hạn.");
-        this.bannerItemRepo.update(
+        await this.bannerItemRepo.update(
           {banner_item_id},
           {status: 'D'}
         )
         return;
       }
       console.log("Turn on tradein program");
-      this.bannerItemRepo.update(
+      await this.bannerItemRepo.update(
         {banner_item_id},
         {status: 'A'}
       )
@@ -537,7 +537,7 @@ export class bannerService {
     // Có cả ngày bắt đầu và kết thúc
     if (new Date(today).getTime() < new Date(endDate).getTime()) {
       console.log("Banner đã quá hạn.");
-      this.bannerItemRepo.update(
+      await this.bannerItemRepo.update(
         {banner_item_id},
         {status: 'D'}
       )
@@ -546,7 +546,7 @@ export class bannerService {
 
     if (new Date(today).getTime() > new Date(startDate).getTime() && new Date(today).getTime() < new Date(endDate).getTime()) {
       console.log("Turn on banner");
-      this.bannerItemRepo.update(
+      await this.bannerItemRepo.update(
         {banner_item_id},
         {status: 'A'}
       )

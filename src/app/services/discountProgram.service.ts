@@ -710,7 +710,7 @@ export class DiscountProgramService {
         now.toSecond < endTime.toSecond
       ) {
         console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-        this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+        await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
         await this.removeCache(discount_id);
       } else {
         console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
@@ -788,7 +788,7 @@ export class DiscountProgramService {
     const now = await this.configTime(formatTime());
     if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
       console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-      this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+      await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
       this.removeCache(discount_id);
     } else {
       console.log('Chương trình được bắt đầu không trong khung giờ diễn ra');
