@@ -897,6 +897,7 @@ export class OrdersService {
     };
 
     try {
+      console.log('call to Appcore', configPushOrderToAppcore);
       const response = await axios(configPushOrderToAppcore);
 
       const orderAppcoreResponse = response.data.data;

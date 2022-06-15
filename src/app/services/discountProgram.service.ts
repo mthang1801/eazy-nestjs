@@ -472,7 +472,7 @@ export class DiscountProgramService {
   }
 
   async testCron() {
-    await this.addTimeoutTurnOnDiscountProgram(8);
+    await this.addTimeoutTurnOnDiscountProgram(2);
   }
 
   async addTimeoutTurnOnDiscountProgram(discount_id) {
@@ -494,8 +494,14 @@ export class DiscountProgramService {
 
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!discountProgram.start_at && !discountProgram.end_at) {
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(
+        discountProgram.time_start_at
+          ? discountProgram.time_start_at
+          : '00:00:00',
+      );
+      const endTime = await this.configTime(
+        discountProgram.time_end_at ? discountProgram.time_end_at : '23:59:59',
+      );
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -544,15 +550,26 @@ export class DiscountProgramService {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
         console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
 
-        const startTime = await this.configTime(discountProgram.time_start_at);
-        const endTime = await this.configTime(discountProgram.time_end_at);
+        const startTime = await this.configTime(
+          discountProgram.time_start_at
+            ? discountProgram.time_start_at
+            : '00:00:00',
+        );
+        const endTime = await this.configTime(
+          discountProgram.time_end_at
+            ? discountProgram.time_end_at
+            : '23:59:59',
+        );
         const now = await this.configTime(formatTime());
         if (
           now.toSecond > startTime.toSecond &&
           now.toSecond < endTime.toSecond
         ) {
           console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
-          await this.discountProgramRepo.update({ discount_id }, { status: 'A' });
+          await this.discountProgramRepo.update(
+            { discount_id },
+            { status: 'A' },
+          );
           await this.removeCache(discount_id);
         } else {
           console.log(
@@ -614,11 +631,18 @@ export class DiscountProgramService {
     if (!discountProgram.start_at) {
       if (new Date(endDate).getTime() < new Date(today).getTime()) {
         console.log('Chương trình chiết khấu đã quá hạn.');
+        await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
         return;
       }
 
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(
+        discountProgram.time_start_at
+          ? discountProgram.time_start_at
+          : '00:00:00',
+      );
+      const endTime = await this.configTime(
+        discountProgram.time_end_at ? discountProgram.time_end_at : '23:59:59',
+      );
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -665,14 +689,21 @@ export class DiscountProgramService {
     //Có ngày bắt đầu và ngày kết thúc
     if (new Date(endDate).getTime() < new Date(today).getTime()) {
       console.log('Chương trình chiết khấu đã quá hạn.');
+      await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
       return;
     }
 
     if (new Date(today).getTime() > new Date(startDate).getTime()) {
       console.log('Chương trình chiết khấu đang trong thời gian diễn ra.');
 
-      const startTime = await this.configTime(discountProgram.time_start_at);
-      const endTime = await this.configTime(discountProgram.time_end_at);
+      const startTime = await this.configTime(
+        discountProgram.time_start_at
+          ? discountProgram.time_start_at
+          : '00:00:00',
+      );
+      const endTime = await this.configTime(
+        discountProgram.time_end_at ? discountProgram.time_end_at : '23:59:59',
+      );
       const now = await this.configTime(formatTime());
       if (
         now.toSecond > startTime.toSecond &&
@@ -746,8 +777,14 @@ export class DiscountProgramService {
       discount_id,
     });
 
-    const startTime = await this.configTime(discountProgram.time_start_at);
-    const endTime = await this.configTime(discountProgram.time_end_at);
+    const startTime = await this.configTime(
+      discountProgram.time_start_at
+        ? discountProgram.time_start_at
+        : '00:00:00',
+    );
+    const endTime = await this.configTime(
+      discountProgram.time_end_at ? discountProgram.time_end_at : '23:59:59',
+    );
     const now = await this.configTime(formatTime());
     if (now.toSecond > startTime.toSecond && now.toSecond < endTime.toSecond) {
       console.log('Chương trình được bắt đầu trong khung giờ diễn ra');
@@ -850,7 +887,7 @@ export class DiscountProgramService {
       } deleted!`,
     );
 
-    this.discountProgramRepo.update({ discount_id }, { status: 'D' });
+    await this.discountProgramRepo.update({ discount_id }, { status: 'D' });
 
     await this.schedulerRegistry.deleteTimeout(
       convertToSlug(discountProgram.discount_name),
@@ -861,7 +898,9 @@ export class DiscountProgramService {
   }
 
   async removeCache(discount_id) {
-    const productList = await this.discountProgramDetailRepo.find({discount_id});
+    const productList = await this.discountProgramDetailRepo.find({
+      discount_id,
+    });
     if (productList && productList.length) {
       for (let productItem of productList) {
         await this.cache.removeCachedProductById(productItem.product_id);
