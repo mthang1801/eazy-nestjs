@@ -926,8 +926,8 @@ export class OrdersService {
         }
       }
     }
-    console.log(1);
-    if (!sendToAppcore) return;
+
+    if (!sendToAppcore) return result;
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {

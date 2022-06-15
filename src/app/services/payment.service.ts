@@ -1091,6 +1091,7 @@ export class PaymentService {
       }
     }
     let cartItems = [];
+
     let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
@@ -1100,10 +1101,29 @@ export class PaymentService {
       join: cartPaymentJoiner,
       where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     });
-    let totalPrice = cartItems.reduce(
+
+    let _cartItems = [...cartItems];
+    for (let cartItem of _cartItems) {
+      if (cartItem.free_accessory_id) {
+        let giftProducts = await this.orderService.findGiftInOrderItem(
+          cartItem.free_accessory_id,
+        );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            let data = {};
+            data['price'] = +giftProductItem['sale_price'];
+            data['amount'] = 1;
+            _cartItems.push(data);
+          }
+        }
+      }
+    }
+
+    let totalPrice = _cartItems.reduce(
       (acc, ele) => acc + ele.price * ele.amount,
       0,
     );
+
     let ref_order_id = generateRandomString();
     let payCreditType = 2;
     let sendData: any = {
@@ -1175,9 +1195,11 @@ export class PaymentService {
       );
     }
 
-    const newOrder = await this.orderService.createOrder(user, sendData);
+    const newOrder = await this.orderService.createOrder(user, sendData, false);
 
     const responseData = await this.requestPaymentMomo(sendData);
+
+    await this.orderService.pushOrderToAppcore(newOrder.order_id);
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
