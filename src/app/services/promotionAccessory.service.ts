@@ -394,7 +394,7 @@ export class PromotionAccessoryService {
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      return this.itgUpdate(convertedData['app_core_id'], data, type);
+      throw new HttpException('Bộ phụ kiện đã tồn tại', 409);
     }
 
     const accessoryData = {
@@ -472,7 +472,7 @@ export class PromotionAccessoryService {
           }
 
           await this.productRepo.update(
-            { product_id: product['product_id'] },
+            { product_appcore_id: appliedProductItem['product_appcore_id'] },
             updatedData,
           );
 
@@ -619,7 +619,7 @@ export class PromotionAccessoryService {
         'accessory_applied_products'
       ]) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             product_appcore_id: appliedProductItem['product_appcore_id'],
