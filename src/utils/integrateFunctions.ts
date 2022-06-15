@@ -749,7 +749,12 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
     accessory_name: coreData['name'],
     accessory_code: coreData['code'],
     description: coreData['description'],
-    status: coreData['is_active'] || coreData['is_active'] == 1 ? 'A' : 'D',
+    status:
+      coreData['is_active'] == true ||
+      coreData['is_active'] == 1 ||
+      !coreData['is_active']
+        ? 'A'
+        : 'D',
     accessory_type: type,
     accessory_items: [],
     accessory_applied_products: [],
