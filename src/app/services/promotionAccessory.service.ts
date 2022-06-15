@@ -713,4 +713,25 @@ export class PromotionAccessoryService {
       }
     }
   }
+
+  async findGiftInProductItem(accessory_id) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    let result = [];
+    if (
+      !promoAccessory ||
+      promoAccessory.accessory_status !== 'A' ||
+      (promoAccessory.display_at &&
+        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
+      (promoAccessory.end_at &&
+        new Date(promoAccessory.end_at).getTime() < Date.now())
+    ) {
+      return result;
+    }
+
+    return this.promoAccessoryDetailRepo.find({
+      accessory_id: promoAccessory.accessory_id,
+    });
+  }
 }

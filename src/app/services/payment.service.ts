@@ -122,6 +122,7 @@ import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import * as _ from 'lodash';
 import { CartService } from './cart.service';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 @Injectable()
 export class PaymentService {
   constructor(
@@ -142,6 +143,7 @@ export class PaymentService {
     private userProfileRepo: UserProfileRepository<UserProfileEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
+    private promotionAccessoryService: PromotionAccessoryService,
     private cartService: CartService,
   ) {}
 
@@ -497,9 +499,10 @@ export class PaymentService {
       let _cartItems = [...cartItems];
       for (let cartItem of _cartItems) {
         if (cartItem.free_accessory_id) {
-          let giftProducts = await this.orderService.findGiftInOrderItem(
-            cartItem.free_accessory_id,
-          );
+          let giftProducts =
+            await this.promotionAccessoryService.findGiftInProductItem(
+              cartItem.free_accessory_id,
+            );
           if (giftProducts?.length) {
             for (let giftProductItem of giftProducts) {
               let data = {};
@@ -1105,9 +1108,10 @@ export class PaymentService {
     let _cartItems = [...cartItems];
     for (let cartItem of _cartItems) {
       if (cartItem.free_accessory_id) {
-        let giftProducts = await this.orderService.findGiftInOrderItem(
-          cartItem.free_accessory_id,
-        );
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            cartItem.free_accessory_id,
+          );
         if (giftProducts?.length) {
           for (let giftProductItem of giftProducts) {
             let data = {};
@@ -1258,9 +1262,10 @@ export class PaymentService {
     let _cartItems = [...cartItems];
     for (let cartItem of _cartItems) {
       if (cartItem.free_accessory_id) {
-        let giftProducts = await this.orderService.findGiftInOrderItem(
-          cartItem.free_accessory_id,
-        );
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            cartItem.free_accessory_id,
+          );
         if (giftProducts?.length) {
           for (let giftProductItem of giftProducts) {
             let data = {};

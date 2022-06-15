@@ -165,6 +165,7 @@ import { PromotionAccessoryRepository } from '../repositories/promotionAccessory
 import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
 import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
 import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 
 @Injectable()
 export class OrdersService {
@@ -204,6 +205,7 @@ export class OrdersService {
     private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
+    private promotionAccessoryService: PromotionAccessoryService,
   ) {}
 
   async testQueue(data) {
@@ -782,9 +784,10 @@ export class OrdersService {
         100;
 
       if (productInfo.free_accessory_id) {
-        let giftProducts = await this.findGiftInOrderItem(
-          productInfo.free_accessory_id,
-        );
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            productInfo.free_accessory_id,
+          );
         if (giftProducts?.length) {
           for (let giftProductItem of giftProducts) {
             orderData['total'] += +giftProductItem['sale_price'];
@@ -898,9 +901,10 @@ export class OrdersService {
       });
 
       if (orderProductItem.free_accessory_id) {
-        let giftProducts = await this.findGiftInOrderItem(
-          orderProductItem.free_accessory_id,
-        );
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            orderProductItem.free_accessory_id,
+          );
         if (giftProducts?.length) {
           for (let giftProductItem of giftProducts) {
             let giftOrderDetailData = {
@@ -2083,26 +2087,5 @@ export class OrdersService {
         error?.response?.status || error.status,
       );
     }
-  }
-
-  async findGiftInOrderItem(accessory_id) {
-    const promoAccessory = await this.promoAccessoryRepo.findOne({
-      accessory_id,
-    });
-    let result = [];
-    if (
-      !promoAccessory ||
-      promoAccessory.accessory_status !== 'A' ||
-      (promoAccessory.display_at &&
-        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
-      (promoAccessory.end_at &&
-        new Date(promoAccessory.end_at).getTime() < Date.now())
-    ) {
-      return result;
-    }
-
-    return this.promoAccessoryDetailRepo.find({
-      accessory_id: promoAccessory.accessory_id,
-    });
   }
 }
