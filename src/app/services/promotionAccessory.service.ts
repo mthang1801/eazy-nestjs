@@ -158,8 +158,8 @@ export class PromotionAccessoryService {
 
     promoAccessory['products'] = [];
 
-    let productLists = await this.productRepo.find({
-      select: getProductAccessorySelector,
+    let productLists = await this.promoAccessoryDetailRepo.find({
+      select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
       join: productPromotionAccessoryJoiner,
       where: {
         [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
