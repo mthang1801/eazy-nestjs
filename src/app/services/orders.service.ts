@@ -915,7 +915,7 @@ export class OrdersService {
         }
       }
     }
-
+    console.log(1);
     if (!sendToAppcore) return;
 
     //============ Push data to Appcore ==================
@@ -963,9 +963,7 @@ export class OrdersService {
       }
       console.log(error);
       throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
+        `Có lỗi xảy ra: ${error?.response?.data?.message || error.message}`,
         400,
       );
     }

@@ -689,7 +689,7 @@ export class PaymentService {
       }
 
       await this.orderService.createOrder(user, sendData, false);
-
+      console.log(2);
       const headers = {
         APIUsername: payooAPIUserName,
         APIPassword: payooAPIPassword,
