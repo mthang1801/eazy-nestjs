@@ -390,8 +390,6 @@ export class bannerService {
 
     await this.bannerRepo.update({ banner_id: id }, bannerData);
 
-    let arrId = [];
-
     if (data.banner_items && data.banner_items.length) {
       await this.bannerItemRepo.delete({
         banner_id: id,
@@ -402,21 +400,46 @@ export class bannerService {
           ...this.bannerItemRepo.setData(bannerItem),
           banner_id: id,
         };
-        let newBannerItem = await this.bannerItemRepo.create(newBannerItemData);
-        if (!bannerItem.status) {
-          await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
-        }
-        arrId.push(newBannerItem.banner_item_id);
+        await this.bannerItemRepo.create(newBannerItemData);
       }
     }
-    const newBannerItems = await this.bannerItemRepo.find({banner_id: id});
-    if (newBannerItems && newBannerItems.length) {
-      for (let newBannerItem of newBannerItems) {
-        if (!arrId.includes(newBannerItem)) {
-          await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
-        }
-      }
-    }
+
+    // if (data?.removed_items && data?.removed_items?.length) {
+    //   for (let banner_item_id of data.removed_items) {
+    //     await this.bannerItemRepo.delete({banner_item_id});
+    //   }
+    // }
+
+    // if (data?.applied_items && data?.applied_items?.length) {
+    //   for (let applied_item of data.applied_items) {
+    //     // Cập nhật
+    //     if (applied_item.banner_item_id) {
+    //       let currentBannerItem = await this.bannerItemRepo.findOne({banner_item_id: applied_item.banner_item_id});
+    //       console.log(currentBannerItem);
+    //       console.log("1");
+    //       let newBannerItemData = {
+    //         ...this.bannerItemRepo.setData(applied_item),
+    //       }
+    //       if(Object.entries(newBannerItemData).length){
+    //         await this.bannerItemRepo.update({banner_item_id: applied_item.banner_item_id}, newBannerItemData);
+    //       }
+    //       if (!applied_item.status || applied_item.status === currentBannerItem.status) {
+    //         await this.addTimeoutTurnOnBannerItem(applied_item.banner_item_id);
+    //       }
+    //     }
+    //     // Tạo mới
+    //     else {
+    //       const newBannerItemData = {
+    //         ...new BannerItemEntity(),
+    //         ...this.bannerItemRepo.setData(applied_item),
+    //         banner_id: id,
+    //       };
+    //       let currentBannerItem = await this.bannerItemRepo.create(newBannerItemData);
+    //       await this.addTimeoutTurnOnBannerItem(currentBannerItem.banner_item_id);
+    //     }
+    //   }
+    // }
+
     await this.cache.removeAllCachedBanners();
 
     return this.getById(id);
@@ -544,7 +567,7 @@ export class bannerService {
 
     // Có cả ngày bắt đầu và kết thúc
     if (new Date(today).getTime() > new Date(endDate).getTime()) {
-      console.log("Banner đã quá hạn.");
+      console.log("Banner đã quá hạnnnnnnnnn.");
       await this.bannerItemRepo.update(
         {banner_item_id},
         {status: 'D'}
