@@ -338,12 +338,6 @@ export class PromotionAccessoryService {
         where: { accessory_id: accessoryItem.accessory_id },
       });
 
-      accessoryItem['display_at'] = moment(accessoryItem['display_at']).format(
-        'YYYY-DD-MM HH:mm:ss',
-      );
-      accessoryItem['end_at'] = moment(accessoryItem['end_at']).format(
-        'YYYY-DD-MM HH:mm:ss',
-      );
       accessoryItem['productAmount'] = productsCount[0].total;
     }
     return {
