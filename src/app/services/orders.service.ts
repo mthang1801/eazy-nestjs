@@ -780,6 +780,17 @@ export class OrdersService {
           orderItem.amount *
           (100 - productInfo['percentage_discount'])) /
         100;
+
+      if (productInfo.free_accessory_id) {
+        let giftProducts = await this.findGiftInOrderItem(
+          productInfo.free_accessory_id,
+        );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            orderData['total'] += +giftProductItem['sale_price'];
+          }
+        }
+      }
     }
 
     orderData['total'] =
