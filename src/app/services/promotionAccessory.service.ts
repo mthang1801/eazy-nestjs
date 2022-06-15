@@ -386,8 +386,10 @@ export class PromotionAccessoryService {
   }
 
   async itgCreate(data, type) {
+    console.log('promotion Create');
+    console.log(391, data);
     const convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
-
+    console.log(convertedData);
     const accessory = await this.promoAccessoryRepo.findOne({
       app_core_id: convertedData['app_core_id'],
     });
@@ -562,6 +564,8 @@ export class PromotionAccessoryService {
 
   async itgUpdate(app_core_id: string, data, type: number) {
     data['app_core_id'] = app_core_id;
+    console.log('promotion Update');
+    console.log(566, data);
     let convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
     console.log(convertedData);
     let accessory = await this.promoAccessoryRepo.findOne({ app_core_id });

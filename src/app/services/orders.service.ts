@@ -157,6 +157,10 @@ import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingsEntity } from '../entities/shippings.entity';
 import { ClientProxy } from '@nestjs/microservices';
 import { CartService } from './cart.service';
+import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
+import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
+import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
+import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 
 @Injectable()
 export class OrdersService {
@@ -192,6 +196,8 @@ export class OrdersService {
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
     private shippingRepo: ShippingRepository<ShippingsEntity>, // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
     private cartService: CartService,
+    private productGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
+    private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
   ) {}
 
   async testQueue(data) {
@@ -1864,23 +1870,44 @@ export class OrdersService {
       order['status'] = status;
     }
 
-    const orderDetails = await this.orderDetailRepo.find({
-      select: `${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
+    let orderDetails = await this.orderDetailRepo.find({
+      select: `${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCTS}.product_type, ${Table.PRODUCTS}.product_id, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
       join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
       },
     });
 
-    // if (orderDetails.length) {
-    //   for (let orderDetailItem of orderDetails) {
-    //     let productCategory = await this.productCategoryRepo.findOne({
-    //       select: '*',
-    //       join: productCategoryJoiner,
-    //       where: { [`${}`]: orderDetailItem['product_appcore_id'] },
-    //     });
-    //   }
-    // }
+    if (orderDetails.length) {
+      let _orderDetails = orderDetails.map(async (orderItem) => {
+        if (orderItem.product_type == 3) {
+          let group = await this.productGroupRepo.findOne({
+            product_root_id: orderItem.product_id,
+          });
+          if (group) {
+            let productItems = await this.productGroupProductRepo.find({
+              group_id: group.group_id,
+            });
+            let comboItems = productItems.filter(
+              (productItem) => productItem.product_id != orderItem.product_id,
+            );
+            orderItem['comboItems'] = [];
+            if (comboItems.length) {
+              for (let { product_id } of comboItems) {
+                let product = await this.productRepo.findOne({
+                  select: `*, ${Table.PRODUCTS}.product_id`,
+                  join: productLeftJoiner,
+                  where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+                });
+                orderItem['comboItems'].push(product);
+              }
+            }
+          }
+        }
+        return orderItem;
+      });
+      orderDetails = await Promise.all(_orderDetails);
+    }
 
     order['shippingService'] = null;
     if (order.shipping_service_id) {
@@ -1923,7 +1950,6 @@ export class OrdersService {
   }
 
   async updateOrderStatus(order_code, order_status) {
-    console.log(1335, order_code, order_status);
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException(
