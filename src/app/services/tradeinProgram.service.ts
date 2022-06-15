@@ -2120,7 +2120,7 @@ export class TradeinProgramService {
 
     //Chỉ có ngày kết thúc
     if (!tradeinProgram.start_at) {
-      if (new Date(today).getTime() < new Date(endDate).getTime()) {
+      if (new Date(today).getTime() > new Date(endDate).getTime()) {
         console.log('Chương trình thu cũ đổi mới đã quá hạn.');
         await this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
         return;
@@ -2133,7 +2133,7 @@ export class TradeinProgramService {
     }
 
     // Có cả ngày bắt đầu và kết thúc
-    if (new Date(today).getTime() < new Date(endDate).getTime()) {
+    if (new Date(today).getTime() > new Date(endDate).getTime()) {
       console.log('Chương trình thu cũ đổi mới đã quá hạn.');
       await this.tradeinProgramRepo.update({ tradein_id }, { status: 'D' });
       return;

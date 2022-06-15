@@ -390,6 +390,8 @@ export class bannerService {
 
     await this.bannerRepo.update({ banner_id: id }, bannerData);
 
+    let arrId = [];
+
     if (data.banner_items && data.banner_items.length) {
       await this.bannerItemRepo.delete({
         banner_id: id,
@@ -400,13 +402,19 @@ export class bannerService {
           ...this.bannerItemRepo.setData(bannerItem),
           banner_id: id,
         };
-        await this.bannerItemRepo.create(newBannerItemData);
+        let newBannerItem = await this.bannerItemRepo.create(newBannerItemData);
+        if (!bannerItem.status) {
+          await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
+        }
+        arrId.push(newBannerItem.banner_item_id);
       }
     }
     const newBannerItems = await this.bannerItemRepo.find({banner_id: id});
     if (newBannerItems && newBannerItems.length) {
       for (let newBannerItem of newBannerItems) {
-        await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
+        if (!arrId.includes(newBannerItem)) {
+          await this.addTimeoutTurnOnBannerItem(newBannerItem.banner_item_id);
+        }
       }
     }
     await this.cache.removeAllCachedBanners();
@@ -517,7 +525,7 @@ export class bannerService {
 
     //Chỉ có ngày kết thúc
     if (!bannerItem.start_at) {
-      if (new Date(today).getTime() < new Date(endDate).getTime()) {
+      if (new Date(today).getTime() > new Date(endDate).getTime()) {
         console.log("Banner đã quá hạn.");
         await this.bannerItemRepo.update(
           {banner_item_id},
@@ -535,7 +543,7 @@ export class bannerService {
     }
 
     // Có cả ngày bắt đầu và kết thúc
-    if (new Date(today).getTime() < new Date(endDate).getTime()) {
+    if (new Date(today).getTime() > new Date(endDate).getTime()) {
       console.log("Banner đã quá hạn.");
       await this.bannerItemRepo.update(
         {banner_item_id},
