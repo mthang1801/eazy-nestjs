@@ -4388,7 +4388,7 @@ export class ProductService {
         { view_count: product.view_count + 1 },
       );
 
-      // await this.cache.removeCachedProductById(product.product_id);
+      await this.cache.removeCachedProductById(product.product_id);
 
       const productCacheResult = await this.cache.getProductCacheById(
         product.product_id,
@@ -4406,7 +4406,7 @@ export class ProductService {
       if (!product) {
         throw new HttpException('Không tìm thấy SP', 404);
       }
-      // await this.cache.removeCachedProductById(product.product_id);
+      await this.cache.removeCachedProductById(product.product_id);
     }
 
     this.productRepo.update(
@@ -5207,7 +5207,6 @@ export class ProductService {
             formatStandardTimeStamp(new Date()),
           ),
           [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
         },
         {
           ...condition,
@@ -5216,14 +5215,12 @@ export class ProductService {
           ),
           [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
           [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
         },
         {
           ...condition,
           [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
           [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
           [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
         },
         {
           ...condition,
@@ -5232,7 +5229,6 @@ export class ProductService {
             formatStandardTimeStamp(),
           ),
           [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
-          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.status`]: 'A',
         },
       ];
     }

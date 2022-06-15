@@ -757,7 +757,14 @@ export class OrdersService {
     orderData['user_id'] = user['user_id'];
 
     orderData['total'] = 0;
-    for (let orderItem of data.order_items) {
+
+    let [orderItems, promotionAccessories] =
+      await this.promotionAccessoryService.splitPromitionAccessoryInProductsList(
+        data['order_items'],
+      );
+    console.log(orderItems);
+
+    for (let orderItem of data['order_items']) {
       const productInfo = await this.productRepo.findOne({
         select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
         join: productLeftJoiner,

@@ -734,4 +734,68 @@ export class PromotionAccessoryService {
       accessory_id: promoAccessory.accessory_id,
     });
   }
+
+  async findPromotionAccessoryInProductItem(accessory_id) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    let result = [];
+    if (
+      !promoAccessory ||
+      promoAccessory.accessory_status !== 'A' ||
+      (promoAccessory.display_at &&
+        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
+      (promoAccessory.end_at &&
+        new Date(promoAccessory.end_at).getTime() < Date.now())
+    ) {
+      return result;
+    }
+    return this.promoAccessoryDetailRepo.find({
+      accessory_id: promoAccessory.accessory_id,
+    });
+  }
+
+  async splitPromitionAccessoryInProductsList(productsList) {
+    let productsPromotionAccessoriesCollection = [];
+    let productsPromotionAccessories = [];
+    let products = [];
+    for (let productItem of productsList) {
+      let product = await this.productRepo.findOne({
+        product_id: productItem.product_id,
+      });
+      if (product.promotion_accessory_id) {
+        let promotionAccessoryItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.promotion_accessory_id,
+        });
+        productsPromotionAccessoriesCollection = [
+          ...productsPromotionAccessoriesCollection,
+          ...promotionAccessoryItems,
+        ];
+      }
+      products = [...products, product];
+    }
+
+    if (productsPromotionAccessoriesCollection.length) {
+      productsPromotionAccessories =
+        productsPromotionAccessoriesCollection.filter(
+          (productPromotionAccessoryItem) =>
+            products.some(
+              (product) =>
+                product.product_id == productPromotionAccessoryItem.product_id,
+            ),
+        );
+    }
+
+    if (productsPromotionAccessories.length) {
+      products = products.filter(
+        (product) =>
+          !productsPromotionAccessories.some(
+            (productPromotionAccessory) =>
+              productPromotionAccessory?.product_id == product?.product_id,
+          ),
+      );
+    }
+
+    return [products, productsPromotionAccessories];
+  }
 }
