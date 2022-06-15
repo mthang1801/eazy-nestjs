@@ -424,21 +424,6 @@ export class PromotionAccessoryService {
             sale_price: product['price'] || 0,
           };
 
-          if (type == 4 && accessoryItem['promotion_price']) {
-            const productPriceData = {
-              promotion_price: accessoryItem['promotion_price'],
-              promotion_discount: accessoryItem['promotion_discount'] || 0,
-              promotion_discount_type:
-                accessoryItem['promotion_discount_type'] || 0,
-              promotion_start_at: newAccessory['display_at'],
-              promotion_end_at: newAccessory['end_at'],
-            };
-            await this.productPriceRepo.update(
-              { product_id: product.product_id },
-              productPriceData,
-            );
-          }
-
           await this.promoAccessoryDetailRepo.create(
             newAccessoryItemData,
             false,
@@ -460,7 +445,7 @@ export class PromotionAccessoryService {
         'accessory_applied_products'
       ]) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             product_appcore_id: appliedProductItem['product_appcore_id'],
