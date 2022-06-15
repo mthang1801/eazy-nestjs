@@ -927,7 +927,6 @@ export class OrdersService {
       },
       data: convertOrderDataFromCMSToAppcore(result),
     };
-    console.log(929, convertOrderDataFromCMSToAppcore(result));
 
     try {
       console.log('call to Appcore', configPushOrderToAppcore);

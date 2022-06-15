@@ -688,7 +688,7 @@ export class PaymentService {
         sendData['order_type'] = 3;
       }
 
-      await this.orderService.createOrder(user, sendData);
+      await this.orderService.createOrder(user, sendData, false);
 
       const headers = {
         APIUsername: payooAPIUserName,
@@ -770,7 +770,11 @@ export class PaymentService {
       }
 
       const orderDataResponse = response.data.order;
+
       const currentOrder = await this.orderRepo.findOne({ ref_order_id });
+
+      await this.orderService.pushOrderToAppcore(currentOrder.order_id);
+
       let orderPaymentData = {
         ...orderDataResponse,
         gateway_name: GatewayName.Payoo,
