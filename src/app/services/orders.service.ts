@@ -1986,34 +1986,35 @@ export class OrdersService {
         },
       });
       let logs = [];
-      if (ordersSync.length) {
-        for (let orderItem of ordersSync) {
-          try {
-            await this.pushOrderToAppcore(orderItem.order_id);
-          } catch (error) {
-            logs.push(orderItem.order_id);
-            const updatedOrder = await this.orderRepo.update(
-              { order_id: orderItem.order_id },
-              {
-                status: OrderStatus.invalid,
-                reason_fail: error.response,
-              },
-              true,
-            );
-            await this.orderHistoryRepo.create(updatedOrder, false);
-          }
-        }
-      }
-      if (logs.length) {
-        throw new HttpException(
-          `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
-          422,
-        );
-      }
-      await this.orderRepo.update(
-        { order_code: Not(IsNull()) },
-        { is_sync: 'N' },
-      );
+      console.log(ordersSync);
+      // if (ordersSync.length) {
+      //   for (let orderItem of ordersSync) {
+      //     try {
+      //       await this.pushOrderToAppcore(orderItem.order_id);
+      //     } catch (error) {
+      //       logs.push(orderItem.order_id);
+      //       const updatedOrder = await this.orderRepo.update(
+      //         { order_id: orderItem.order_id },
+      //         {
+      //           status: OrderStatus.invalid,
+      //           reason_fail: error.response,
+      //         },
+      //         true,
+      //       );
+      //       await this.orderHistoryRepo.create(updatedOrder, false);
+      //     }
+      //   }
+      // }
+      // if (logs.length) {
+      //   throw new HttpException(
+      //     `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
+      //     422,
+      //   );
+      // }
+      // await this.orderRepo.update(
+      //   { order_code: Not(IsNull()) },
+      //   { is_sync: 'N' },
+      // );
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error?.response,

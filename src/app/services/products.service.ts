@@ -4388,7 +4388,7 @@ export class ProductService {
         { view_count: product.view_count + 1 },
       );
 
-      // await this.cache.removeCachedProductById(product.product_id);
+      await this.cache.removeCachedProductById(product.product_id);
 
       const productCacheResult = await this.cache.getProductCacheById(
         product.product_id,
@@ -4406,7 +4406,7 @@ export class ProductService {
       if (!product) {
         throw new HttpException('Không tìm thấy SP', 404);
       }
-      // await this.cache.removeCachedProductById(product.product_id);
+      await this.cache.removeCachedProductById(product.product_id);
     }
 
     this.productRepo.update(
@@ -5086,42 +5086,42 @@ export class ProductService {
 
       let result = [];
 
-      const productsStores = await this.productStoreRepo.find({
-        select: '*',
-        orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
-        where: { product_id: id, amount: MoreThan(0) },
-      });
+      // const productsStores = await this.productStoreRepo.find({
+      //   select: '*',
+      //   orderBy: [{ field: 'amount', sortBy: SortBy.DESC }],
+      //   where: { product_id: id, amount: MoreThan(0) },
+      // });
 
-      if (productsStores.length) {
-        for (let productStoreItem of productsStores) {
-          const store = await this.storeRepo.findOne({
-            select: '*',
-            join: {
-              [JoinTable.leftJoin]: {
-                [Table.STORE_LOCATION_DESCRIPTIONS]: {
-                  fieldJoin: 'store_location_id',
-                  rootJoin: 'store_location_id',
-                },
-              },
-            },
-            where: {
-              [`${Table.STORE_LOCATIONS}.store_location_id`]:
-                productStoreItem['store_location_id'],
-            },
-          });
-          let storeObj = {
-            productId: product.product_id,
-            product_id: product.product_id,
-            storeId: store['store_location_id'],
-            store_location_id: store['store_location_id'],
-            storeName: store['store_name'],
-            storeAddress: store['pickup_address'],
-            storeLatitude: store['latitude'],
-            storeLongitude: store['longitude'],
-          };
-          result = [...result, { ...productStoreItem, ...storeObj }];
-        }
-      }
+      // if (productsStores.length) {
+      //   for (let productStoreItem of productsStores) {
+      //     const store = await this.storeRepo.findOne({
+      //       select: '*',
+      //       join: {
+      //         [JoinTable.leftJoin]: {
+      //           [Table.STORE_LOCATION_DESCRIPTIONS]: {
+      //             fieldJoin: 'store_location_id',
+      //             rootJoin: 'store_location_id',
+      //           },
+      //         },
+      //       },
+      //       where: {
+      //         [`${Table.STORE_LOCATIONS}.store_location_id`]:
+      //           productStoreItem['store_location_id'],
+      //       },
+      //     });
+      //     let storeObj = {
+      //       productId: product.product_id,
+      //       product_id: product.product_id,
+      //       storeId: store['store_location_id'],
+      //       store_location_id: store['store_location_id'],
+      //       storeName: store['store_name'],
+      //       storeAddress: store['pickup_address'],
+      //       storeLatitude: store['latitude'],
+      //       storeLongitude: store['longitude'],
+      //     };
+      //     result = [...result, { ...productStoreItem, ...storeObj }];
+      //   }
+      // }
 
       if (
         productsStocks &&
