@@ -473,7 +473,7 @@ export class PaymentService {
       let cart;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
-          select: `*, ${Table.PRODUCTS}.product_id`,
+          select: `*, ${Table.PRODUCTS}.*`,
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
         });
@@ -489,13 +489,29 @@ export class PaymentService {
           throw new HttpException('Không tìm thấy giỏ hàng', 404);
         }
         cartItems = await this.cartItemRepo.find({
-          select: `*, ${Table.CART_ITEMS}.amount`,
+          select: `*, ${Table.PRODUCTS}.*, ${Table.CART_ITEMS}.amount`,
           join: cartPaymentJoiner,
           where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
         });
       }
+      let _cartItems = [...cartItems];
+      for (let cartItem of _cartItems) {
+        if (cartItem.free_accessory_id) {
+          let giftProducts = await this.orderService.findGiftInOrderItem(
+            cartItem.free_accessory_id,
+          );
+          if (giftProducts?.length) {
+            for (let giftProductItem of giftProducts) {
+              let data = {};
+              data['price'] = +giftProductItem['sale_price'];
+              data['amount'] = 1;
+              _cartItems.push(data);
+            }
+          }
+        }
+      }
 
-      let totalPrice = cartItems.reduce(
+      let totalPrice = _cartItems.reduce(
         (acc, ele) => acc + ele.price * ele.amount,
         0,
       );
