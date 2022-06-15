@@ -900,6 +900,7 @@ export class OrdersService {
               }),
               price: giftProductItem.sale_price,
               is_gift_taken: 1,
+              amount: 1,
               belong_order_detail_id: orderProductItem.product_appcore_id,
             };
 
