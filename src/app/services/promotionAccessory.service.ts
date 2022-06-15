@@ -821,23 +821,7 @@ export class PromotionAccessoryService {
       );
     }
 
-    if (giftProductsCollection.length) {
-      giftProducts = giftProductsCollection.filter((giftProductItem) =>
-        products.some(
-          (product) => product.product_id == giftProductItem.product_id,
-        ),
-      );
-    }
-
-    if (giftProducts.length) {
-      products = products.filter(
-        (product) =>
-          !giftProducts.some(
-            (giftProductItem) =>
-              giftProductItem?.product_id == product?.product_id,
-          ),
-      );
-    }
+    giftProducts = [...giftProductsCollection];
 
     if (warrantyProductsCollection.length) {
       warrantyProducts = warrantyProductsCollection.filter(
