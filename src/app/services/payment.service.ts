@@ -688,7 +688,7 @@ export class PaymentService {
         sendData['order_type'] = 3;
       }
 
-      await this.orderService.createOrder(user, sendData);
+      // await this.orderService.createOrder(user, sendData);
 
       const headers = {
         APIUsername: payooAPIUserName,
@@ -780,6 +780,8 @@ export class PaymentService {
           ? formatStandardTimeStamp(response.data.order.expiry_date)
           : null,
       };
+
+      await this.orderService.createOrder(user, sendData);
 
       await this.orderService.updateOrderPayment(
         currentOrder.order_id,
