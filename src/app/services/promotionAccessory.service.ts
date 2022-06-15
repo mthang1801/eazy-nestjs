@@ -755,9 +755,13 @@ export class PromotionAccessoryService {
     });
   }
 
-  async splitPromitionAccessoryInProductsList(productsList) {
+  async splitAccessoriesGiftWarrantyInProductsList(productsList) {
     let productsPromotionAccessoriesCollection = [];
     let productsPromotionAccessories = [];
+    let giftProductsCollection = [];
+    let giftProducts = [];
+    let warrantyProductsCollection = [];
+    let warrantyProducts = [];
     let products = [];
     for (let productItem of productsList) {
       let product = await this.productRepo.findOne({
@@ -772,6 +776,27 @@ export class PromotionAccessoryService {
           ...promotionAccessoryItems,
         ];
       }
+
+      if (product.free_accessory_id) {
+        let giftAccessoryItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.free_accessory_id,
+        });
+        giftProductsCollection = [
+          ...giftProductsCollection,
+          ...giftAccessoryItems,
+        ];
+      }
+
+      if (product.warranty_package_id) {
+        let warrantyPackageItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.warranty_package_id,
+        });
+        warrantyProductsCollection = [
+          ...warrantyProductsCollection,
+          ...warrantyPackageItems,
+        ];
+      }
+
       products = [...products, product];
     }
 
@@ -796,6 +821,48 @@ export class PromotionAccessoryService {
       );
     }
 
-    return [products, productsPromotionAccessories];
+    if (giftProductsCollection.length) {
+      giftProducts = giftProductsCollection.filter((giftProductItem) =>
+        products.some(
+          (product) => product.product_id == giftProductItem.product_id,
+        ),
+      );
+    }
+
+    if (giftProducts.length) {
+      products = products.filter(
+        (product) =>
+          !giftProducts.some(
+            (giftProductItem) =>
+              giftProductItem?.product_id == product?.product_id,
+          ),
+      );
+    }
+
+    if (warrantyProductsCollection.length) {
+      warrantyProducts = warrantyProductsCollection.filter(
+        (warrantyPackageItem) =>
+          products.some(
+            (product) => product.product_id == warrantyPackageItem.product_id,
+          ),
+      );
+    }
+
+    if (warrantyProducts.length) {
+      products = products.filter(
+        (product) =>
+          !warrantyProducts.some(
+            (warrantyPackageItem) =>
+              warrantyPackageItem?.product_id == product?.product_id,
+          ),
+      );
+    }
+
+    return [
+      products,
+      productsPromotionAccessories,
+      giftProducts,
+      warrantyProducts,
+    ];
   }
 }

@@ -758,12 +758,14 @@ export class OrdersService {
 
     orderData['total'] = 0;
 
-    let [orderItems, promotionAccessories] =
-      await this.promotionAccessoryService.splitPromitionAccessoryInProductsList(
+    let [orderItems, promotionAccessories, giftProducts, warrantyProducts] =
+      await this.promotionAccessoryService.splitAccessoriesGiftWarrantyInProductsList(
         data['order_items'],
       );
     console.log(765, orderItems);
     console.log(766, promotionAccessories);
+    console.log(766, giftProducts);
+    console.log(766, warrantyProducts);
 
     for (let orderItem of data['order_items']) {
       const productInfo = await this.productRepo.findOne({
