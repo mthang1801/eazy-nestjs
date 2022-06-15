@@ -888,7 +888,7 @@ export class PaymentService {
 
   async momoNotify(data) {
     if (data.resultCode != 0) {
-      const order = await this.orderPaymentRepo.update(
+      let orderPayment = await this.orderPaymentRepo.update(
         {
           order_no: data['orderId'],
         },
@@ -903,12 +903,17 @@ export class PaymentService {
         },
         true,
       );
-
-      if (order) {
-        await this.orderRepo.update(
-          { order_id: order.order_id },
+      console.log(orderPayment);
+      if (orderPayment) {
+        let order = await this.orderRepo.update(
+          { order_id: orderPayment.order_id },
           { status: OrderStatus.cancelled, reason_fail: data['message'] },
+          true,
         );
+        if (order.order_code) {
+          console.log(914, order);
+          await this.orderService.cancelOrder(order.order_code);
+        }
       }
 
       return;
