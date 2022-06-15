@@ -349,6 +349,11 @@ export const convertOrderDataFromCMSToAppcore = (data) => {
 
     if (orderItem['belong_order_detail_id']) {
       cvOrderItem['belongOrderItemId'] = orderItem['belong_order_detail_id'];
+      cvOrderItem['belongOrderDetailId'] = orderItem['belong_order_detail_id'];
+    }
+
+    if (orderItem['is_gift_taken']) {
+      cvOrderItem['isGiftTaken'] = orderItem['is_gift_taken'];
     }
 
     itgData['orderItems'] = itgData['orderItems']
