@@ -5,6 +5,8 @@ import { CartItemRepository } from '../repositories/cartItem.repository';
 import { ProductsRepository } from '../repositories/products.repository';
 import { CartService } from '../services/cart.service';
 import { UsersModule } from './users.module';
+import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
+import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
 @Module({
   imports: [UsersModule],
   providers: [
@@ -12,6 +14,8 @@ import { UsersModule } from './users.module';
     CartRepository,
     CartItemRepository,
     ProductsRepository,
+    ProductVariationGroupProductsRepository,
+    ProductVariationGroupsRepository,
   ],
   exports: [CartService, CartRepository, CartItemRepository],
   controllers: [CartController],

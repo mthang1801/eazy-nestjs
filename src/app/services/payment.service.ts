@@ -1104,6 +1104,7 @@ export class PaymentService {
       coupon_code: data.coupon_code ? data.coupon_code : null,
       order_type: OrderType.online,
       callback_url: data.callback_url,
+      status: OrderStatus.new,
     };
     //Check coupon if it exist
     if (data.coupon_code) {
@@ -1145,6 +1146,13 @@ export class PaymentService {
         sendData['transfer_amount'] =
           +sendData['transfer_amount'] + +shippingFeeLocation.value_fee;
       }
+    }
+
+    if (sendData['subtotal'] > 50000000) {
+      throw new HttpException(
+        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        400,
+      );
     }
 
     const newOrder = await this.orderService.createOrder(user, sendData);
@@ -1254,6 +1262,13 @@ export class PaymentService {
     let momoData = { ...sendData };
 
     sendData['paymentStatus'] = PaymentStatus.new;
+
+    if (sendData['subtotal'] > 50000000) {
+      throw new HttpException(
+        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        400,
+      );
+    }
 
     try {
       const newOrder = await this.orderService.createOrder(user, sendData);
