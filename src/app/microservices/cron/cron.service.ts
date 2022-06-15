@@ -41,7 +41,7 @@ export class CronService {
 
   @Timeout(5000)
   standard() {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV == 'production') {
       this.productService.testSql();
     }
   }
