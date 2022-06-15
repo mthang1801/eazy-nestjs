@@ -1078,6 +1078,7 @@ export class OrdersService {
           is_sync: 'N',
           updated_date: formatStandardTimeStamp(),
         },
+        true,
       );
       for (let orderItem of orderAppcoreResponse['orderItemIds']) {
         await this.orderDetailRepo.update(
