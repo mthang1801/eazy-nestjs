@@ -70,6 +70,9 @@ class BannerItem {
   start_at: string;
 
   @IsOptional()
+  background: string;
+
+  @IsOptional()
   end_at: string;
 
   @IsOptional()
