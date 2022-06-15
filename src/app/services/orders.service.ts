@@ -762,7 +762,8 @@ export class OrdersService {
       await this.promotionAccessoryService.splitPromitionAccessoryInProductsList(
         data['order_items'],
       );
-    console.log(orderItems);
+    console.log(765, orderItems);
+    console.log(766, promotionAccessories);
 
     for (let orderItem of data['order_items']) {
       const productInfo = await this.productRepo.findOne({
