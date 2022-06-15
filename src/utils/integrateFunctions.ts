@@ -779,7 +779,7 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
         promotion_price: type == 1 ? accessoryItem['repurchase_price'] : 0,
         collect_price: accessoryItem['repurchase_price'] || 0,
         sale_price_from: accessoryItem['from_price'] || 0,
-        sale_price_: accessoryItem['to_price'] || 0,
+        sale_price_to: accessoryItem['to_price'] || 0,
         status:
           accessoryItem['is_active'] == true ||
           accessoryItem['is_active'] == 1 ||
