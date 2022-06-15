@@ -161,6 +161,10 @@ import { ProductVariationGroupsRepository } from '../repositories/productVariati
 import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
+import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
+import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
+import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
+import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 
 @Injectable()
 export class OrdersService {
@@ -198,6 +202,8 @@ export class OrdersService {
     private cartService: CartService,
     private productGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
     private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
+    private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
+    private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
   ) {}
 
   async testQueue(data) {
@@ -751,7 +757,7 @@ export class OrdersService {
     orderData['total'] = 0;
     for (let orderItem of data.order_items) {
       const productInfo = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
         join: productLeftJoiner,
         where: {
           [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
@@ -853,9 +859,10 @@ export class OrdersService {
       await this.orderPaymentRepo.create(orderPaymentData, false);
     }
 
+    result['order_items'] = [];
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
         join: productLeftJoiner,
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
       });
@@ -874,20 +881,38 @@ export class OrdersService {
 
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
 
-      result['order_items'] = result['order_items']
-        ? [
-            ...result['order_items'],
-            {
-              ...newOrderDetail,
-              product_id: newOrderDetail.product_appcore_id,
-            },
-          ]
-        : [
-            {
-              ...newOrderDetail,
-              product_id: newOrderDetail.product_appcore_id,
-            },
-          ];
+      result['order_items'].push({
+        ...newOrderDetail,
+        product_id: newOrderDetail.product_appcore_id,
+      });
+
+      if (orderProductItem.free_accessory_id) {
+        let giftProducts = await this.findGiftInOrderItem(
+          orderProductItem.free_accessory_id,
+        );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            let giftOrderDetailData = {
+              ...new OrderDetailsEntity(),
+              ...this.orderDetailRepo.setData({
+                ...result,
+                ...giftProductItem,
+              }),
+              price: giftProductItem.sale_price,
+              is_gift_taken: 'Y',
+              belong_order_detail_id: orderProductItem.product_appcore_id,
+            };
+
+            let newGiftOrderItemDetail = await this.orderDetailRepo.create(
+              giftOrderDetailData,
+            );
+            result['order_items'].push({
+              ...newGiftOrderItemDetail,
+              product_id: newGiftOrderItemDetail.product_appcore_id,
+            });
+          }
+        }
+      }
     }
 
     if (!sendToAppcore) return;
@@ -901,6 +926,7 @@ export class OrdersService {
       },
       data: convertOrderDataFromCMSToAppcore(result),
     };
+    console.log(929, convertOrderDataFromCMSToAppcore(result));
 
     try {
       console.log('call to Appcore', configPushOrderToAppcore);
@@ -2047,5 +2073,26 @@ export class OrdersService {
         error?.response?.status || error.status,
       );
     }
+  }
+
+  async findGiftInOrderItem(accessory_id) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    let result = [];
+    if (
+      !promoAccessory ||
+      promoAccessory.accessory_status !== 'A' ||
+      (promoAccessory.display_at &&
+        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
+      (promoAccessory.end_at &&
+        new Date(promoAccessory.end_at).getTime() < Date.now())
+    ) {
+      return result;
+    }
+
+    return this.promoAccessoryDetailRepo.find({
+      accessory_id: promoAccessory.accessory_id,
+    });
   }
 }
