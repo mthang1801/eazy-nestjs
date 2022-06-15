@@ -2354,7 +2354,7 @@ export class ProductService {
     console.log('Create Product Itg');
 
     const convertedData = itgConvertProductsFromAppcore(data);
-
+    console.log(convertedData);
     if (convertedData['product_appcore_id']) {
       let product = await this.productRepo.findOne({
         product_appcore_id: convertedData['product_appcore_id'],

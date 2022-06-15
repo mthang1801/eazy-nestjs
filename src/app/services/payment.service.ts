@@ -1147,8 +1147,6 @@ export class PaymentService {
       }
     }
 
-    console.log();
-
     const newOrder = await this.orderService.createOrder(user, sendData);
 
     const responseData = await this.requestPaymentMomo(sendData);
@@ -1296,8 +1294,8 @@ export class PaymentService {
     const cryptography = new Cryptography();
     const extraData = cryptography.encodeBase64(
       JSON.stringify({
-        b_lastname: data['b_lastname'],
-        b_phone: data['b_phone'],
+        b_lastname: data['b_lastname'] || data['s_lastname'],
+        b_phone: data['b_phone'] || data['s_phone'],
       }),
     );
 
