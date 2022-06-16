@@ -141,6 +141,10 @@ export class CartService {
           cartItem,
         ]);
 
+      if (giftAccessories) {
+        cartItem['giftAccessories'] = giftAccessories;
+      }
+
       return cartItem;
     });
 

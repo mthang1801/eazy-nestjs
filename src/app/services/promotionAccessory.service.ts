@@ -858,11 +858,12 @@ export class PromotionAccessoryService {
     let _promotionAccessories: any = [];
     if (product?.promotion_accessory_id) {
       _promotionAccessories = this.promoAccessoryDetailRepo.find({
+        select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
         join: promoAccessoriesJoiner,
-
         where: {
-          [`${Table.PROMOTION_ACCESSORY}.accessory_id`]:
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
             product?.promotion_accessory_id,
+          [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
         },
       });
     }
