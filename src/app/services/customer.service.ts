@@ -303,16 +303,16 @@ export class CustomerService {
       const source_id: number = 1;
       const source_name: string = logSources['1'];
       const thread: string = logThreads['2'];
-      await this.logService.create(
-        LoggerSuccessBetweenCMSAndAppCore(
-          response,
-          module_id,
-          module_name,
-          source_id,
-          source_name,
-          thread,
-        ),
-      );
+      // await this.logService.create(
+      //   LoggerSuccessBetweenCMSAndAppCore(
+      //     response,
+      //     module_id,
+      //     module_name,
+      //     source_id,
+      //     source_name,
+      //     thread,
+      //   ),
+      // );
       return updatedUser;
     } catch (error) {
       if (
@@ -328,16 +328,16 @@ export class CustomerService {
       const source_id: number = 1;
       const source_name: string = logSources['1'];
       const thread: string = logThreads['2'];
-      await this.logService.create(
-        LoggerFailBetweenCMSAndAppCore(
-          error.response,
-          module_id,
-          module_name,
-          source_id,
-          source_name,
-          thread,
-        ),
-      );
+      // await this.logService.create(
+      //   LoggerFailBetweenCMSAndAppCore(
+      //     error.response,
+      //     module_id,
+      //     module_name,
+      //     source_id,
+      //     source_name,
+      //     thread,
+      //   ),
+      // );
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -731,16 +731,16 @@ export class CustomerService {
       const source_id: number = 1;
       const source_name: string = logSources['1'];
       const thread: string = logThreads['2'];
-      await this.logService.create(
-        LoggerSuccessBetweenCMSAndAppCore(
-          response,
-          module_id,
-          module_name,
-          source_id,
-          source_name,
-          thread,
-        ),
-      );
+      // await this.logService.create(
+      //   LoggerSuccessBetweenCMSAndAppCore(
+      //     response,
+      //     module_id,
+      //     module_name,
+      //     source_id,
+      //     source_name,
+      //     thread,
+      //   ),
+      // );
     } catch (error) {
       console.log(error.response);
       const module_id: number = 4;
@@ -748,16 +748,16 @@ export class CustomerService {
       const source_id: number = 1;
       const source_name: string = logSources['1'];
       const thread: string = logThreads['2'];
-      await this.logService.create(
-        LoggerFailBetweenCMSAndAppCore(
-          error.response,
-          module_id,
-          module_name,
-          source_id,
-          source_name,
-          thread,
-        ),
-      );
+      // await this.logService.create(
+      //   LoggerFailBetweenCMSAndAppCore(
+      //     error.response,
+      //     module_id,
+      //     module_name,
+      //     source_id,
+      //     source_name,
+      //     thread,
+      //   ),
+      // );
       throw new HttpException('Cập nhật tới Appcore không thành công', 400);
     }
   }
