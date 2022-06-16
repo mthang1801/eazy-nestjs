@@ -572,7 +572,7 @@ export class ReviewsCommentService {
           ],
           where: {
             parent_item_id: reviewItem.item_id,
-            status: 'A',
+            [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
           },
         });
         if (responseReviews.length) {
