@@ -32,11 +32,9 @@ export class UpdatePromotionAccessoryDto {
   accessory_status: string = 'A';
 
   @IsOptional()
-  @IsDateString()
   display_at: string;
 
   @IsOptional()
-  @IsDateString()
   end_at: string;
 }
 

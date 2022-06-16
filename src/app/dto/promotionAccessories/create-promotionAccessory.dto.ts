@@ -29,11 +29,9 @@ export class CreatePromotionAccessoryDto {
   description: string;
 
   @IsOptional()
-  @IsDateString()
   display_at: string;
 
   @IsOptional()
-  @IsDateString()
   end_at: string;
 }
 
