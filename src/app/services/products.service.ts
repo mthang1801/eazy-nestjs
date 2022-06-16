@@ -969,6 +969,7 @@ export class ProductService {
       productCacheKey['sort_by_price'] = true;
     }
 
+    await this.cache.removeProductCacheList(productCacheKey);
     let productCacheResult = await this.cache.getProductCacheList(
       productCacheKey,
     );
