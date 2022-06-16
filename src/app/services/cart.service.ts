@@ -54,6 +54,9 @@ export class CartService {
     if (!product_ids.length) {
       return;
     }
+
+    let promotionAccessories = [];
+
     for (let product_id of product_ids) {
       let checkProduct = await this.productRepo.findOne({
         product_id,
@@ -62,6 +65,7 @@ export class CartService {
       if (!checkProduct) {
         throw new HttpException('Không thể thêm SP cha vào giỏ hàng.', 400);
       }
+
       let cartItem = await this.cartItemRepo.findOne({
         cart_id: cart.cart_id,
         product_id,
@@ -176,6 +180,8 @@ export class CartService {
         if (checkPromotionExist) {
           cartItem['price'] = +checkPromotionExist.promotion_price;
           cartItem['amount'] = 1;
+          cartItem['belong_order_detail_id'] = cartItem['product_id'];
+          cartItem['is_gift_taken'] = '0';
         }
         return cartItem;
       });

@@ -396,7 +396,7 @@ export class PromotionAccessoryService {
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      throw new HttpException('Bộ phụ kiện đã tồn tại', 409);
+      return this.itgUpdate(convertedData['app_core_id'], data, type)
     }
 
     const accessoryData = {
