@@ -145,6 +145,19 @@ export class CartService {
         cartItem['giftAccessories'] = giftAccessories;
       }
 
+      if (promotionAccessories) {
+        cartItems = cartItems.map(async (item) => {
+          let appliedPromotionAccessory = promotionAccessories.find(
+            (promotionAccessoryItem) =>
+              promotionAccessoryItem.product_id == item.product_id,
+          );
+          if (appliedPromotionAccessory) {
+            item.price = appliedPromotionAccessory.sale_price;
+          }
+          return item;
+        });
+      }
+
       return cartItem;
     });
 
