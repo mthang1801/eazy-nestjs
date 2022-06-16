@@ -990,7 +990,7 @@ export class OrdersService {
             }),
             price: 0,
             is_gift_taken: 1,
-            amount: 1,
+            amount: giftProductItem.amount,
             belong_order_detail_id: newOrderDetail.product_appcore_id,
           };
 

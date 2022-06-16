@@ -152,7 +152,10 @@ export class CartService {
       cartItem['giftAccessories'] = [];
       if (_giftAccessories.length) {
         giftAccessories = [..._giftAccessories, ...giftAccessories];
-        cartItem['giftAccessories'] = giftAccessories;
+        cartItem['giftAccessories'] = giftAccessories.map((giftAccessory) => ({
+          ...giftAccessory,
+          amount: cartItem.amount,
+        }));
       }
 
       if (_promotionAccessories) {
