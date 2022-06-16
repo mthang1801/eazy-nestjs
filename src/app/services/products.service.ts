@@ -886,7 +886,9 @@ export class ProductService {
       is_installment,
       sort_by_price,
     } = params;
-    let filterConditions = {};
+    let filterConditions: any = {
+      [`${Table.PRODUCTS}.status`]: 'A',
+    };
 
     let categoriesList = [];
 
