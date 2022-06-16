@@ -24,7 +24,10 @@ import {
 } from '../../utils/integrateFunctions';
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
-import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
+import {
+  productPromotionAccessorytLeftJoiner,
+  promoAccessoriesJoiner,
+} from '../../utils/joinTable';
 import { In } from '../../database/operators/operators';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import {
@@ -855,7 +858,12 @@ export class PromotionAccessoryService {
     let _promotionAccessories: any = [];
     if (product?.promotion_accessory_id) {
       _promotionAccessories = this.promoAccessoryDetailRepo.find({
-        accessory_id: product?.promotion_accessory_id,
+        join: promoAccessoriesJoiner,
+
+        where: {
+          [`${Table.PROMOTION_ACCESSORY}.accessory_id`]:
+            product?.promotion_accessory_id,
+        },
       });
     }
 

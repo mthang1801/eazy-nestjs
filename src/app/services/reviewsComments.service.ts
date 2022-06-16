@@ -562,7 +562,8 @@ export class ReviewsCommentService {
 
         reviewItem['responses'] = [];
         let responseReviews = await this.reviewCommentItemRepo.find({
-          select: '*',
+          select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type as userRole`,
+          join: reviewCommentJoiner,
           orderBy: [
             {
               field: `${Table.REVIEW_COMMENT_ITEMS}.updated_at`,
