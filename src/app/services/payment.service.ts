@@ -1192,7 +1192,7 @@ export class PaymentService {
       }
     }
 
-    if (sendData['subtotal'] > 50000000) {
+    if (+sendData['subtotal'] >= 50000000) {
       throw new HttpException(
         'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
         400,

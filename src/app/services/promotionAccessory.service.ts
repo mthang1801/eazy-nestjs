@@ -914,7 +914,7 @@ export class PromotionAccessoryService {
         join: promoAccessoriesJoiner,
         where: filterConditions({
           [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
-            product?.promotion_accessory_id,
+            product?.free_accessory_id,
         }),
       });
     }
@@ -926,12 +926,12 @@ export class PromotionAccessoryService {
         join: promoAccessoriesJoiner,
         where: filterConditions({
           [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
-            product?.promotion_accessory_id,
+            product?.warranty_package_id,
         }),
       });
     }
 
-    return Promise.all([
+    return await Promise.all([
       _promotionAccessories,
       _giftAccessories,
       _warrantyPackages,
