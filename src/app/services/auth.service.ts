@@ -393,7 +393,7 @@ export class AuthService {
     if (!userExists) {
       let lastname = providerData.familyName + ' ' + providerData.givenName;
       lastname = lastname.trim();
-      console.log(lastname);
+
       try {
         const { passwordHash, salt } = saltHashPassword(defaultPassword);
         const userData = {
@@ -493,6 +493,7 @@ export class AuthService {
           ? userExists['avatar']
           : `${CDN_URL}${userExists['avatar']}`,
         email: userExists['email'],
+        phone: userExists['phone'],
       },
     };
   }

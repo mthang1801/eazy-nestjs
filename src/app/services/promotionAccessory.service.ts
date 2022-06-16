@@ -849,4 +849,34 @@ export class PromotionAccessoryService {
       warrantyProducts,
     ];
   }
+
+  async findAccessoriesGiftWarrantyInProduct(product_id) {
+    const product = await this.productRepo.findOne({ product_id });
+    let _promotionAccessories: any = [];
+    if (product?.promotion_accessory_id) {
+      _promotionAccessories = this.promoAccessoryDetailRepo.find({
+        accessory_id: product?.promotion_accessory_id,
+      });
+    }
+
+    let _giftAccessories: any = [];
+    if (product?.free_accessory_id) {
+      _giftAccessories = this.promoAccessoryDetailRepo.find({
+        accessory_id: product?.free_accessory_id,
+      });
+    }
+
+    let _warrantyPackages: any = [];
+    if (product?.warranty_package_id) {
+      _warrantyPackages = this.promoAccessoryDetailRepo.find({
+        accessory_id: product?.warranty_package_id,
+      });
+    }
+
+    return Promise.all([
+      _promotionAccessories,
+      _giftAccessories,
+      _warrantyPackages,
+    ]);
+  }
 }

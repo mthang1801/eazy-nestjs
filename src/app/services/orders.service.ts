@@ -763,46 +763,47 @@ export class OrdersService {
         data['order_items'],
       );
     console.log(765, orderItems);
-    console.log(766, promotionAccessories);
-    console.log(766, giftProducts);
-    console.log(766, warrantyProducts);
+    console.log('promotion', promotionAccessories);
+    console.log('gift', giftProducts);
+    console.log('warranty', warrantyProducts);
 
-    for (let orderItem of data['order_items']) {
-      const productInfo = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
-        join: productLeftJoiner,
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
-        },
-      });
+    if (orderItems.length) {
+      for (let orderItem of orderItems) {
+        const productInfo = await this.productRepo.findOne({
+          select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
+          join: productLeftJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
+          },
+        });
 
-      if (productInfo.product_function == 1) {
-        throw new HttpException('Không thể dùng SP cha', 401);
-      }
-
-      if (!productInfo) {
-        throw new HttpException(
-          `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
-          404,
-        );
-      }
-
-      orderData['total'] +=
-        (productInfo['price'] *
-          orderItem.amount *
-          (100 - productInfo['percentage_discount'])) /
-        100;
-
-      if (productInfo.free_accessory_id) {
-        let giftProducts =
-          await this.promotionAccessoryService.findGiftInProductItem(
-            productInfo.free_accessory_id,
-          );
-        if (giftProducts?.length) {
-          for (let giftProductItem of giftProducts) {
-            orderData['total'] += +giftProductItem['sale_price'];
-          }
+        if (productInfo.product_function == 1) {
+          throw new HttpException('Không thể dùng SP cha', 401);
         }
+
+        if (!productInfo) {
+          throw new HttpException(
+            `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+            404,
+          );
+        }
+
+        orderData['total'] +=
+          (productInfo['price'] *
+            orderItem.amount *
+            (100 - productInfo['percentage_discount'])) /
+          100;
+      }
+    }
+
+    if (promotionAccessories.length) {
+      for (let promotionAccessoryItem of promotionAccessories) {
+        orderData['total'] += +promotionAccessoryItem['promotion_price'];
+      }
+    }
+    if (warrantyProducts.length) {
+      for (let warrantyProductItem of warrantyProducts) {
+        orderData['total'] += +warrantyProductItem['sale_price'];
       }
     }
 

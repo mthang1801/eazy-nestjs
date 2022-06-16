@@ -30,6 +30,7 @@ import { ProductVariationGroupsEntity } from '../entities/productVariationGroups
 import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
 import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
 import { productLeftJoiner } from '../../utils/joinTable';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 @Injectable()
 export class CartService {
   constructor(
@@ -41,6 +42,7 @@ export class CartService {
     private productRepo: ProductsRepository<ProductsEntity>,
     private productGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
     private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
+    private promoAccessoryService: PromotionAccessoryService,
   ) {}
 
   async create(user_id: number, product_ids: number[]) {
@@ -133,6 +135,12 @@ export class CartService {
           }
         }
       }
+
+      let [promotionAccessories, giftAccessories, warrantyPackages] =
+        await this.promoAccessoryService.findAccessoriesGiftWarrantyInProduct([
+          cartItem,
+        ]);
+
       return cartItem;
     });
 
