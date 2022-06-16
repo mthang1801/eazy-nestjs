@@ -520,7 +520,7 @@ export class ReviewsCommentService {
     }
 
     const _reviewCommentItems = this.reviewCommentItemRepo.find({
-      select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type`,
+      select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type as userRole`,
       join: reviewCommentJoiner,
       where: filterConditions,
       orderBy: [
@@ -562,7 +562,8 @@ export class ReviewsCommentService {
 
         reviewItem['responses'] = [];
         let responseReviews = await this.reviewCommentItemRepo.find({
-          select: '*',
+          select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type as userRole`,
+          join: reviewCommentJoiner,
           orderBy: [
             {
               field: `${Table.REVIEW_COMMENT_ITEMS}.updated_at`,
@@ -571,7 +572,7 @@ export class ReviewsCommentService {
           ],
           where: {
             parent_item_id: reviewItem.item_id,
-            status: 'A',
+            [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
           },
         });
         if (responseReviews.length) {

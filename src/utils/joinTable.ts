@@ -497,15 +497,16 @@ export const productPromotionAccessorytLeftJoiner = {
 };
 
 export const productPromotionAccessoryJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
+    },
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,
     },
-    [Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL]: {
-      fieldJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
-      rootJoin: `${Table.PRODUCTS}.product_id`,
-    },
+
     [Table.PRODUCT_PRICES]: {
       fieldJoin: `${Table.PRODUCT_PRICES}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,
@@ -1209,6 +1210,23 @@ export const reviewCommentJoiner = {
     [Table.USERS]: {
       fieldJoin: `${Table.USERS}.user_id`,
       rootJoin: `${Table.REVIEW_COMMENT_ITEMS}.user_id`,
+    },
+  },
+};
+
+export const promoAccessoriesJoiner = {
+  [JoinTable.leftJoin]: {
+    [Table.PRODUCTS]: {
+      fieldJoin: `${Table.PRODUCTS}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
+    },
+    [Table.PROMOTION_ACCESSORY]: {
+      fieldJoin: `${Table.PROMOTION_ACCESSORY}.accessory_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`,
+    },
+    [Table.PRODUCT_DESCRIPTION]: {
+      fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
+      rootJoin: `${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.product_id`,
     },
   },
 };

@@ -40,9 +40,6 @@ export class CreateBannerDto {
   url_media: string;
 
   @IsOptional()
-  background: string;
-
-  @IsOptional()
   @IsDateString()
   start_at: string;
 
@@ -74,6 +71,9 @@ class BannerItem {
 
   @IsOptional()
   end_at: string;
+
+  @IsOptional()
+  background: string;
 
   @IsOptional()
   link_target_url: string;

@@ -39,8 +39,10 @@ export class CronService {
   //   this.productService.standardizeProducts();
   // }
 
-  // @Timeout(5000)
-  // standard() {
-  //   this.productService.testSql();
-  // }
+  @Timeout(5000)
+  standard() {
+    // if (process.env.NODE_ENV != 'development') {
+    //   this.productService.testSql();
+    // }
+  }
 }

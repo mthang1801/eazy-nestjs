@@ -157,6 +157,15 @@ import { ShippingRepository } from '../repositories/shippings.repository';
 import { ShippingsEntity } from '../entities/shippings.entity';
 import { ClientProxy } from '@nestjs/microservices';
 import { CartService } from './cart.service';
+import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
+import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
+import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
+import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
+import { PromotionAccessoryRepository } from '../repositories/promotionAccessory.repository';
+import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity';
+import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
+import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 
 @Injectable()
 export class OrdersService {
@@ -192,6 +201,11 @@ export class OrdersService {
     private shippingServiceRepo: ShippingServiceRepository<ShippingsServiceEntity>,
     private shippingRepo: ShippingRepository<ShippingsEntity>, // @Inject('ORDER_SERVICE') private readonly client: ClientProxy,
     private cartService: CartService,
+    private productGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
+    private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
+    private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
+    private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
+    private promotionAccessoryService: PromotionAccessoryService,
   ) {}
 
   async testQueue(data) {
@@ -743,31 +757,54 @@ export class OrdersService {
     orderData['user_id'] = user['user_id'];
 
     orderData['total'] = 0;
-    for (let orderItem of data.order_items) {
-      const productInfo = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*`,
-        join: productLeftJoiner,
-        where: {
-          [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
-        },
-      });
 
-      if (productInfo.product_function == 1) {
-        throw new HttpException('Không thể dùng SP cha', 401);
+    let [orderItems, promotionAccessories, giftProducts, warrantyProducts] =
+      await this.promotionAccessoryService.splitAccessoriesGiftWarrantyInProductsList(
+        data['order_items'],
+      );
+    console.log(765, orderItems);
+    console.log('promotion', promotionAccessories);
+    console.log('gift', giftProducts);
+    console.log('warranty', warrantyProducts);
+
+    if (orderItems.length) {
+      for (let orderItem of orderItems) {
+        const productInfo = await this.productRepo.findOne({
+          select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
+          join: productLeftJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
+          },
+        });
+
+        if (productInfo.product_function == 1) {
+          throw new HttpException('Không thể dùng SP cha', 401);
+        }
+
+        if (!productInfo) {
+          throw new HttpException(
+            `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+            404,
+          );
+        }
+
+        orderData['total'] +=
+          (productInfo['price'] *
+            orderItem.amount *
+            (100 - productInfo['percentage_discount'])) /
+          100;
       }
+    }
 
-      if (!productInfo) {
-        throw new HttpException(
-          `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
-          404,
-        );
+    if (promotionAccessories.length) {
+      for (let promotionAccessoryItem of promotionAccessories) {
+        orderData['total'] += +promotionAccessoryItem['promotion_price'];
       }
-
-      orderData['total'] +=
-        (productInfo['price'] *
-          orderItem.amount *
-          (100 - productInfo['percentage_discount'])) /
-        100;
+    }
+    if (warrantyProducts.length) {
+      for (let warrantyProductItem of warrantyProducts) {
+        orderData['total'] += +warrantyProductItem['sale_price'];
+      }
     }
 
     orderData['total'] =
@@ -847,9 +884,10 @@ export class OrdersService {
       await this.orderPaymentRepo.create(orderPaymentData, false);
     }
 
+    result['order_items'] = [];
     for (let orderItem of data['order_items']) {
       const orderProductItem = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*`,
+        select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
         join: productLeftJoiner,
         where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
       });
@@ -868,23 +906,43 @@ export class OrdersService {
 
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
 
-      result['order_items'] = result['order_items']
-        ? [
-            ...result['order_items'],
-            {
-              ...newOrderDetail,
-              product_id: newOrderDetail.product_appcore_id,
-            },
-          ]
-        : [
-            {
-              ...newOrderDetail,
-              product_id: newOrderDetail.product_appcore_id,
-            },
-          ];
+      result['order_items'].push({
+        ...newOrderDetail,
+        product_id: newOrderDetail.product_appcore_id,
+      });
+
+      if (orderProductItem.free_accessory_id) {
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            orderProductItem.free_accessory_id,
+          );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            let giftOrderDetailData = {
+              ...new OrderDetailsEntity(),
+              ...this.orderDetailRepo.setData({
+                ...result,
+                ...giftProductItem,
+              }),
+              price: giftProductItem.sale_price,
+              is_gift_taken: 1,
+              amount: 1,
+              belong_order_detail_id: orderProductItem.product_appcore_id,
+            };
+
+            let newGiftOrderItemDetail = await this.orderDetailRepo.create(
+              giftOrderDetailData,
+            );
+            result['order_items'].push({
+              ...newGiftOrderItemDetail,
+              product_id: newGiftOrderItemDetail.product_appcore_id,
+            });
+          }
+        }
+      }
     }
 
-    if (!sendToAppcore) return;
+    if (!sendToAppcore) return result;
 
     //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
@@ -931,9 +989,7 @@ export class OrdersService {
       }
       console.log(error);
       throw new HttpException(
-        `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
-          error?.response?.data?.message || error.message
-        }`,
+        `Có lỗi xảy ra: ${error?.response?.data?.message || error.message}`,
         400,
       );
     }
@@ -1048,6 +1104,7 @@ export class OrdersService {
           is_sync: 'N',
           updated_date: formatStandardTimeStamp(),
         },
+        true,
       );
       for (let orderItem of orderAppcoreResponse['orderItemIds']) {
         await this.orderDetailRepo.update(
@@ -1864,23 +1921,44 @@ export class OrdersService {
       order['status'] = status;
     }
 
-    const orderDetails = await this.orderDetailRepo.find({
-      select: `${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
+    let orderDetails = await this.orderDetailRepo.find({
+      select: `${Table.PRODUCTS}.slug as productSlug, ${Table.PRODUCTS}.thumbnail, ${Table.PRODUCTS}.product_type, ${Table.PRODUCTS}.product_id, ${Table.PRODUCT_DESCRIPTION}.*, ${Table.ORDER_DETAILS}.*`,
       join: orderDetailsJoiner,
       where: {
         [`${Table.ORDER_DETAILS}.order_id`]: order.order_id,
       },
     });
 
-    // if (orderDetails.length) {
-    //   for (let orderDetailItem of orderDetails) {
-    //     let productCategory = await this.productCategoryRepo.findOne({
-    //       select: '*',
-    //       join: productCategoryJoiner,
-    //       where: { [`${}`]: orderDetailItem['product_appcore_id'] },
-    //     });
-    //   }
-    // }
+    if (orderDetails.length) {
+      let _orderDetails = orderDetails.map(async (orderItem) => {
+        if (orderItem.product_type == 3) {
+          let group = await this.productGroupRepo.findOne({
+            product_root_id: orderItem.product_id,
+          });
+          if (group) {
+            let productItems = await this.productGroupProductRepo.find({
+              group_id: group.group_id,
+            });
+            let comboItems = productItems.filter(
+              (productItem) => productItem.product_id != orderItem.product_id,
+            );
+            orderItem['comboItems'] = [];
+            if (comboItems.length) {
+              for (let { product_id } of comboItems) {
+                let product = await this.productRepo.findOne({
+                  select: `*, ${Table.PRODUCTS}.product_id`,
+                  join: productLeftJoiner,
+                  where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+                });
+                orderItem['comboItems'].push(product);
+              }
+            }
+          }
+        }
+        return orderItem;
+      });
+      orderDetails = await Promise.all(_orderDetails);
+    }
 
     order['shippingService'] = null;
     if (order.shipping_service_id) {
@@ -1923,7 +2001,6 @@ export class OrdersService {
   }
 
   async updateOrderStatus(order_code, order_status) {
-    console.log(1335, order_code, order_status);
     const order = await this.orderRepo.findOne({ order_code });
     if (!order) {
       throw new HttpException(
@@ -1986,34 +2063,35 @@ export class OrdersService {
         },
       });
       let logs = [];
-      if (ordersSync.length) {
-        for (let orderItem of ordersSync) {
-          try {
-            await this.pushOrderToAppcore(orderItem.order_id);
-          } catch (error) {
-            logs.push(orderItem.order_id);
-            const updatedOrder = await this.orderRepo.update(
-              { order_id: orderItem.order_id },
-              {
-                status: OrderStatus.invalid,
-                reason_fail: error.response,
-              },
-              true,
-            );
-            await this.orderHistoryRepo.create(updatedOrder, false);
-          }
-        }
-      }
-      if (logs.length) {
-        throw new HttpException(
-          `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
-          422,
-        );
-      }
-      await this.orderRepo.update(
-        { order_code: Not(IsNull()) },
-        { is_sync: 'N' },
-      );
+      console.log(ordersSync);
+      // if (ordersSync.length) {
+      //   for (let orderItem of ordersSync) {
+      //     try {
+      //       await this.pushOrderToAppcore(orderItem.order_id);
+      //     } catch (error) {
+      //       logs.push(orderItem.order_id);
+      //       const updatedOrder = await this.orderRepo.update(
+      //         { order_id: orderItem.order_id },
+      //         {
+      //           status: OrderStatus.invalid,
+      //           reason_fail: error.response,
+      //         },
+      //         true,
+      //       );
+      //       await this.orderHistoryRepo.create(updatedOrder, false);
+      //     }
+      //   }
+      // }
+      // if (logs.length) {
+      //   throw new HttpException(
+      //     `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
+      //     422,
+      //   );
+      // }
+      // await this.orderRepo.update(
+      //   { order_code: Not(IsNull()) },
+      //   { is_sync: 'N' },
+      // );
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error?.response,

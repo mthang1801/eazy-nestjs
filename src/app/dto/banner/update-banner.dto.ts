@@ -61,6 +61,9 @@ export class UpdateBannerDTO {
 
 class BannerItem {
   @IsOptional()
+  banner_item_id: number;
+
+  @IsOptional()
   title: number;
 
   @IsOptional()
@@ -68,6 +71,9 @@ class BannerItem {
 
   @IsOptional()
   start_at: string;
+
+  @IsOptional()
+  background: string;
 
   @IsOptional()
   end_at: string;

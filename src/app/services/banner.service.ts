@@ -466,27 +466,35 @@ export class bannerService {
   }
 
   async turnOnBannerItem(banner_item_id) {
-    console.log("Turn on banner item");
-    await this.bannerItemRepo.update(
-      {banner_item_id},
-      {status: 'A'}
-    )
-    const bannerItem = await this.bannerItemRepo.findOne({banner_item_id});
-    await this.schedulerRegistry.deleteTimeout(convertToSlug(bannerItem.title) + "-start-at-" + convertToSlug(bannerItem.start_at));
+    console.log('Turn on banner item');
+    await this.bannerItemRepo.update({ banner_item_id }, { status: 'A' });
+    const bannerItem = await this.bannerItemRepo.findOne({ banner_item_id });
+    await this.schedulerRegistry.deleteTimeout(
+      convertToSlug(bannerItem.title) +
+        '-start-at-' +
+        convertToSlug(bannerItem.start_at),
+    );
     if (bannerItem.end_at) {
       await this.addTimeoutTurnOffBannerItem(banner_item_id);
     }
   }
 
   async turnOffBannerItem(banner_item_id) {
-    console.log("Turn off banner item");
-    await this.bannerItemRepo.update(
-      {banner_item_id},
-      {status: 'D'}
-    )
-    const bannerItem = await this.bannerItemRepo.findOne({banner_item_id});
-    await this.schedulerRegistry.deleteTimeout(convertToSlug(bannerItem.title) + "-end-at-" + convertToSlug(bannerItem.end_at));
-    await this.logger.warn(`Timeout ${convertToSlug(bannerItem.title) + "-end-at-" + convertToSlug(bannerItem.end_at)} deleted!`);
+    console.log('Turn off banner item');
+    await this.bannerItemRepo.update({ banner_item_id }, { status: 'D' });
+    const bannerItem = await this.bannerItemRepo.findOne({ banner_item_id });
+    await this.schedulerRegistry.deleteTimeout(
+      convertToSlug(bannerItem.title) +
+        '-end-at-' +
+        convertToSlug(bannerItem.end_at),
+    );
+    await this.logger.warn(
+      `Timeout ${
+        convertToSlug(bannerItem.title) +
+        '-end-at-' +
+        convertToSlug(bannerItem.end_at)
+      } deleted!`,
+    );
   }
 
   async addTimeoutTurnOffBannerItem(banner_item_id) {
@@ -494,15 +502,21 @@ export class bannerService {
       this.turnOffBannerItem(banner_item_id);
     };
 
-    const bannerItem = await this.bannerItemRepo.findOne({banner_item_id});
-    const endDate = formatStandardTimeStamp(
-      bannerItem['end_at'],
-    ).toString();
+    const bannerItem = await this.bannerItemRepo.findOne({ banner_item_id });
+    const endDate = formatStandardTimeStamp(bannerItem['end_at']).toString();
     const today = formatStandardTimeStamp();
-    const milliseconds = new Date(endDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(endDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("banner item will end after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout(convertToSlug(bannerItem.title) + "-end-at-" + convertToSlug(bannerItem.end_at), timeout);
+    console.log(
+      'banner item will end after ' + milliseconds / 3600000 + ' hours.',
+    );
+    this.schedulerRegistry.addTimeout(
+      convertToSlug(bannerItem.title) +
+        '-end-at-' +
+        convertToSlug(bannerItem.end_at),
+      timeout,
+    );
   }
 
   async addTimeoutTurnOnBannerItem(banner_item_id) {
@@ -510,57 +524,55 @@ export class bannerService {
       this.turnOnBannerItem(banner_item_id);
     };
 
-    const bannerItem = await this.bannerItemRepo.findOne({banner_item_id});
-    const startDate = formatStandardTimeStamp(bannerItem['start_at']).toString();
+    const bannerItem = await this.bannerItemRepo.findOne({ banner_item_id });
+    const startDate = formatStandardTimeStamp(
+      bannerItem['start_at'],
+    ).toString();
     const endDate = formatStandardTimeStamp(bannerItem['end_at']).toString();
     const today = formatStandardTimeStamp();
 
     //Không có cả ngày bắt đầu và ngày kết thúc
     if (!bannerItem.start_day && !bannerItem.end_at) {
-      console.log("Turn on banner item");
-      await this.bannerItemRepo.update(
-        {banner_item_id},
-        {status: 'A'}
-      )
+      console.log('Turn on banner item');
+      await this.bannerItemRepo.update({ banner_item_id }, { status: 'A' });
       return;
     }
 
     //Chỉ có ngày bắt đầu
     if (!bannerItem.end_at) {
       if (new Date(today).getTime() > new Date(startDate).getTime()) {
-        console.log("Turn on banner item");
-        await this.bannerItemRepo.update(
-          {banner_item_id},
-          {status: 'A'}
-        )
+        console.log('Turn on banner item');
+        await this.bannerItemRepo.update({ banner_item_id }, { status: 'A' });
         return;
       }
 
       const callback = () => {
         this.turnOnBannerItem(banner_item_id);
       };
-      const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+      const milliseconds =
+        new Date(startDate).getTime() - new Date(today).getTime();
       const timeout = setTimeout(callback, milliseconds);
-      console.log("banner item will start after " + milliseconds/3600000 + " hours.");
-      this.schedulerRegistry.addTimeout(convertToSlug(bannerItem.title) + "-start-at-" + convertToSlug(bannerItem.start_at), timeout);
+      console.log(
+        'banner item will start after ' + milliseconds / 3600000 + ' hours.',
+      );
+      this.schedulerRegistry.addTimeout(
+        convertToSlug(bannerItem.title) +
+          '-start-at-' +
+          convertToSlug(bannerItem.start_at),
+        timeout,
+      );
       return;
     }
 
     //Chỉ có ngày kết thúc
     if (!bannerItem.start_at) {
       if (new Date(today).getTime() > new Date(endDate).getTime()) {
-        console.log("Banner đã quá hạn.");
-        await this.bannerItemRepo.update(
-          {banner_item_id},
-          {status: 'D'}
-        )
+        console.log('Banner đã quá hạn.');
+        await this.bannerItemRepo.update({ banner_item_id }, { status: 'D' });
         return;
       }
-      console.log("Turn on tradein program");
-      await this.bannerItemRepo.update(
-        {banner_item_id},
-        {status: 'A'}
-      )
+      console.log('Turn on tradein program');
+      await this.bannerItemRepo.update({ banner_item_id }, { status: 'A' });
       await this.addTimeoutTurnOffBannerItem(banner_item_id);
       return;
     }
@@ -575,19 +587,27 @@ export class bannerService {
       return;
     }
 
-    if (new Date(today).getTime() > new Date(startDate).getTime() && new Date(today).getTime() < new Date(endDate).getTime()) {
-      console.log("Turn on banner");
-      await this.bannerItemRepo.update(
-        {banner_item_id},
-        {status: 'A'}
-      )
+    if (
+      new Date(today).getTime() > new Date(startDate).getTime() &&
+      new Date(today).getTime() < new Date(endDate).getTime()
+    ) {
+      console.log('Turn on banner');
+      await this.bannerItemRepo.update({ banner_item_id }, { status: 'A' });
       await this.addTimeoutTurnOffBannerItem(banner_item_id);
       return;
     }
 
-    const milliseconds = new Date(startDate).getTime() - new Date(today).getTime();
+    const milliseconds =
+      new Date(startDate).getTime() - new Date(today).getTime();
     const timeout = setTimeout(callback, milliseconds);
-    console.log("banner item will start after " + milliseconds/3600000 + " hours.");
-    this.schedulerRegistry.addTimeout(convertToSlug(bannerItem.title) + "-start-at-" + convertToSlug(bannerItem.start_at), timeout);
+    console.log(
+      'banner item will start after ' + milliseconds / 3600000 + ' hours.',
+    );
+    this.schedulerRegistry.addTimeout(
+      convertToSlug(bannerItem.title) +
+        '-start-at-' +
+        convertToSlug(bannerItem.start_at),
+      timeout,
+    );
   }
 }

@@ -735,90 +735,61 @@ export const itgConvertProductsFromAppcore = (data) => {
 };
 
 export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
-  let mappdingData = new Map([
-    ['app_core_id', 'app_core_id'],
-    ['name', 'accessory_name'],
-    ['code', 'accessory_code'],
-    ['description', 'description'],
-    ['is_active', 'accessory_status'],
-    ['start_date', 'display_at'],
-    ['end_date', 'end_at'],
-  ]);
-
-  let cmsData = {};
-  for (let [core, cms] of mappdingData) {
-    if (core == 'is_active') {
-      cmsData[cms] = coreData[core] == 1 ? 'A' : 'D';
-      continue;
-    }
-    if (['start_date', 'end_date'].includes(core)) {
-      if (checkValidTimestamp(coreData[core])) {
-        cmsData[cms] = formatStandardTimeStamp(coreData[core]);
-      } else {
-        cmsData[cms] = null;
-      }
-      continue;
-    }
-    cmsData[cms] = coreData[core];
+  if (coreData['warrany_package_items']) {
+    coreData['accessory_items'] = [...coreData['warrany_package_items']];
+  }
+  if (coreData['warranty_package_applied_products']) {
+    coreData['accessory_applied_products'] = [
+      ...coreData['warranty_package_applied_products'],
+    ];
   }
 
-  cmsData['accessory_type'] = type;
+  let cmsData = {
+    app_core_id: coreData['app_core_id'],
+    accessory_name: coreData['name'],
+    accessory_code: coreData['code'],
+    description: coreData['description'],
+    status:
+      coreData['is_active'] == true ||
+      coreData['is_active'] == 1 ||
+      !coreData['is_active']
+        ? 'A'
+        : 'D',
+    accessory_type: type,
+    accessory_items: [],
+    accessory_applied_products: [],
+    display_at:
+      coreData['start_date'] && checkValidTimestamp(coreData['start_date'])
+        ? formatStandardTimeStamp(coreData['start_date'])
+        : null,
+    end_at:
+      coreData['end_date'] && checkValidTimestamp(coreData['end_date'])
+        ? formatStandardTimeStamp(coreData['end_date'])
+        : null,
+  };
 
   if (
     coreData['accessory_items'] &&
     Array.isArray(coreData['accessory_items']) &&
     coreData['accessory_items'].length
   ) {
-    let mappingAccessoryItems = new Map([
-      ['product_id', 'product_appcore_id'],
-      ['repurchase_price', 'collect_price'],
-      ['is_active', 'status'],
-      ['app_core_id', 'app_core_id'],
-    ]);
-    let cmsAccessoryItems = [];
     for (let accessoryItem of coreData['accessory_items']) {
-      let cmsAccessoryItem = {};
-      for (let [core, cms] of mappingAccessoryItems) {
-        if (core == 'is_active') {
-          cmsAccessoryItem[cms] =
-            accessoryItem[core] == 1 || accessoryItem[core] == true ? 'A' : 'D';
-          continue;
-        }
-        cmsAccessoryItem[cms] = accessoryItem[core];
-      }
-      cmsAccessoryItems = [...cmsAccessoryItems, cmsAccessoryItem];
+      let cmsAccessoryItem = {
+        product_appcore_id: accessoryItem['product_id'],
+        promotion_price: type == 1 ? accessoryItem['repurchase_price'] : 0,
+        collect_price: accessoryItem['repurchase_price'] || 0,
+        sale_price_from: accessoryItem['from_price'] || 0,
+        sale_price_to: accessoryItem['to_price'] || 0,
+        status:
+          accessoryItem['is_active'] == true ||
+          accessoryItem['is_active'] == 1 ||
+          !accessoryItem['is_active']
+            ? 'A'
+            : 'D',
+        app_core_id: accessoryItem['app_core_id'],
+      };
+      cmsData['accessory_items'].push(cmsAccessoryItem);
     }
-    cmsData['accessory_items'] = cmsAccessoryItems;
-  }
-
-  if (
-    coreData['warrany_package_items'] &&
-    Array.isArray(coreData['warrany_package_items']) &&
-    coreData['warrany_package_items'].length
-  ) {
-    let mappingAccessoryItems = new Map([
-      ['product_id', 'product_appcore_id'],
-      ['repurchase_price', 'collect_price'],
-      ['is_active', 'status'],
-      ['app_core_id', 'app_core_id'],
-      ['from_price', 'sale_price_from'],
-      ['to_price', 'sale_price_to'],
-    ]);
-    let cmsAccessoryItems = [];
-
-    for (let accessoryItem of coreData['warrany_package_items']) {
-      let cmsAccessoryItem = {};
-      for (let [core, cms] of mappingAccessoryItems) {
-        if (core == 'is_active') {
-          cmsAccessoryItem[cms] =
-            accessoryItem[core] == 1 || accessoryItem[core] == true ? 'A' : 'D';
-          continue;
-        }
-        cmsAccessoryItem[cms] = accessoryItem[core];
-      }
-      cmsAccessoryItems = [...cmsAccessoryItems, cmsAccessoryItem];
-    }
-    cmsData['accessory_items'] = cmsAccessoryItems;
   }
 
   if (
@@ -826,38 +797,14 @@ export const itgConvertGiftAccessoriesFromAppcore = (coreData, type) => {
     Array.isArray(coreData['accessory_applied_products']) &&
     coreData['accessory_applied_products'].length
   ) {
-    let cmsAccessoryAppliedItems = [];
     for (let productItem of coreData['accessory_applied_products']) {
       let cmsAccessoryAppliedItem = {
         product_appcore_id: productItem['product_id'],
       };
-      cmsAccessoryAppliedItems = [
-        ...cmsAccessoryAppliedItems,
-        cmsAccessoryAppliedItem,
-      ];
+      cmsData['accessory_applied_products'].push(cmsAccessoryAppliedItem);
     }
-
-    cmsData['accessory_applied_products'] = cmsAccessoryAppliedItems;
   }
 
-  if (
-    coreData['warranty_package_applied_products'] &&
-    Array.isArray(coreData['warranty_package_applied_products']) &&
-    coreData['warranty_package_applied_products'].length
-  ) {
-    let cmsAccessoryAppliedItems = [];
-    for (let productItem of coreData['warranty_package_applied_products']) {
-      let cmsAccessoryAppliedItem = {
-        product_appcore_id: productItem['product_id'],
-      };
-      cmsAccessoryAppliedItems = [
-        ...cmsAccessoryAppliedItems,
-        cmsAccessoryAppliedItem,
-      ];
-    }
-
-    cmsData['accessory_applied_products'] = cmsAccessoryAppliedItems;
-  }
   return cmsData;
 };
 

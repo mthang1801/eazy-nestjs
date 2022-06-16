@@ -6,6 +6,7 @@ export class BannerItemEntity {
   status: string = 'A';
   title: string = '';
   image_url: string = '';
+  background: string = '';
   position: number = null;
   link_target_url: string = null;
   start_at: string = null;

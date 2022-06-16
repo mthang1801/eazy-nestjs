@@ -122,6 +122,7 @@ import { UserDataRepository } from '../repositories/userData.repository';
 import { UserDataEntity } from '../entities/userData.entity';
 import * as _ from 'lodash';
 import { CartService } from './cart.service';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 @Injectable()
 export class PaymentService {
   constructor(
@@ -142,6 +143,7 @@ export class PaymentService {
     private userProfileRepo: UserProfileRepository<UserProfileEntity>,
     private userLoyaltyRepo: UserLoyaltyRepository<UserLoyaltyEntity>,
     private userDataRepo: UserDataRepository<UserDataEntity>,
+    private promotionAccessoryService: PromotionAccessoryService,
     private cartService: CartService,
   ) {}
 
@@ -473,7 +475,7 @@ export class PaymentService {
       let cart;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
-          select: `*, ${Table.PRODUCTS}.product_id`,
+          select: `*, ${Table.PRODUCTS}.*`,
           join: productLeftJoiner,
           where: { [`${Table.PRODUCTS}.product_id`]: data.product_id },
         });
@@ -489,13 +491,30 @@ export class PaymentService {
           throw new HttpException('Không tìm thấy giỏ hàng', 404);
         }
         cartItems = await this.cartItemRepo.find({
-          select: `*, ${Table.CART_ITEMS}.amount`,
+          select: `*, ${Table.PRODUCTS}.*, ${Table.CART_ITEMS}.amount`,
           join: cartPaymentJoiner,
           where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
         });
       }
+      let _cartItems = [...cartItems];
+      for (let cartItem of _cartItems) {
+        if (cartItem.free_accessory_id) {
+          let giftProducts =
+            await this.promotionAccessoryService.findGiftInProductItem(
+              cartItem.free_accessory_id,
+            );
+          if (giftProducts?.length) {
+            for (let giftProductItem of giftProducts) {
+              let data = {};
+              data['price'] = +giftProductItem['sale_price'];
+              data['amount'] = 1;
+              _cartItems.push(data);
+            }
+          }
+        }
+      }
 
-      let totalPrice = cartItems.reduce(
+      let totalPrice = _cartItems.reduce(
         (acc, ele) => acc + ele.price * ele.amount,
         0,
       );
@@ -688,8 +707,8 @@ export class PaymentService {
         sendData['order_type'] = 3;
       }
 
-      await this.orderService.createOrder(user, sendData);
-
+      await this.orderService.createOrder(user, sendData, false);
+      console.log(2);
       const headers = {
         APIUsername: payooAPIUserName,
         APIPassword: payooAPIPassword,
@@ -770,7 +789,11 @@ export class PaymentService {
       }
 
       const orderDataResponse = response.data.order;
+
       const currentOrder = await this.orderRepo.findOne({ ref_order_id });
+
+      await this.orderService.pushOrderToAppcore(currentOrder.order_id);
+
       let orderPaymentData = {
         ...orderDataResponse,
         gateway_name: GatewayName.Payoo,
@@ -824,7 +847,7 @@ export class PaymentService {
     orderTotalPrice,
   ) {
     const { s_lastname, s_phone, s_address, callback_url } = userWebInfo;
-    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>${validTime}</validity_time><installment><tenors>3,6,9,12,15,18,24</tenors></installment><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
+    let bodyData = `<shops><shop><username>${payooBusinessName}</username><shop_id>${payooShopId}</shop_id><session>${ref_order_id}</session><shop_title>${payooShopTitle}</shop_title><shop_domain>${webDomain}</shop_domain><shop_back_url>${payooRefer}/${callback_url}</shop_back_url><order_no>${ref_order_id}</order_no><order_cash_amount>${orderTotalPrice}</order_cash_amount><order_ship_date>${paymentDate}</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>${payooPaymentNotifyURL}</notify_url><validity_time>${validTime}</validity_time><installment><tenors>3,6,9,12,18,24</tenors></installment><customer><name>${s_lastname}</name><phone>${s_phone}</phone><address>${s_address}</address></customer></shop></shops>`;
     return bodyData;
   }
 
@@ -888,7 +911,7 @@ export class PaymentService {
 
   async momoNotify(data) {
     if (data.resultCode != 0) {
-      const order = await this.orderPaymentRepo.update(
+      let orderPayment = await this.orderPaymentRepo.update(
         {
           order_no: data['orderId'],
         },
@@ -903,12 +926,17 @@ export class PaymentService {
         },
         true,
       );
-
-      if (order) {
-        await this.orderRepo.update(
-          { order_id: order.order_id },
+      console.log(orderPayment);
+      if (orderPayment) {
+        let order = await this.orderRepo.update(
+          { order_id: orderPayment.order_id },
           { status: OrderStatus.cancelled, reason_fail: data['message'] },
+          true,
         );
+        if (order.order_code) {
+          console.log(914, order);
+          await this.orderService.cancelOrder(order.order_code);
+        }
       }
 
       return;
@@ -1066,6 +1094,7 @@ export class PaymentService {
       }
     }
     let cartItems = [];
+
     let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
@@ -1075,10 +1104,30 @@ export class PaymentService {
       join: cartPaymentJoiner,
       where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     });
-    let totalPrice = cartItems.reduce(
+
+    let _cartItems = [...cartItems];
+    for (let cartItem of _cartItems) {
+      if (cartItem.free_accessory_id) {
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            cartItem.free_accessory_id,
+          );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            let data = {};
+            data['price'] = +giftProductItem['sale_price'];
+            data['amount'] = 1;
+            _cartItems.push(data);
+          }
+        }
+      }
+    }
+
+    let totalPrice = _cartItems.reduce(
       (acc, ele) => acc + ele.price * ele.amount,
       0,
     );
+
     let ref_order_id = generateRandomString();
     let payCreditType = 2;
     let sendData: any = {
@@ -1099,6 +1148,7 @@ export class PaymentService {
       coupon_code: data.coupon_code ? data.coupon_code : null,
       order_type: OrderType.online,
       callback_url: data.callback_url,
+      status: OrderStatus.new,
     };
     //Check coupon if it exist
     if (data.coupon_code) {
@@ -1142,11 +1192,18 @@ export class PaymentService {
       }
     }
 
-    console.log();
+    if (sendData['subtotal'] > 50000000) {
+      throw new HttpException(
+        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        400,
+      );
+    }
 
-    const newOrder = await this.orderService.createOrder(user, sendData);
+    const newOrder = await this.orderService.createOrder(user, sendData, false);
 
     const responseData = await this.requestPaymentMomo(sendData);
+
+    await this.orderService.pushOrderToAppcore(newOrder.order_id);
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
@@ -1201,7 +1258,26 @@ export class PaymentService {
       join: cartPaymentJoiner,
       where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     });
-    let totalPrice = cartItems.reduce(
+
+    let _cartItems = [...cartItems];
+    for (let cartItem of _cartItems) {
+      if (cartItem.free_accessory_id) {
+        let giftProducts =
+          await this.promotionAccessoryService.findGiftInProductItem(
+            cartItem.free_accessory_id,
+          );
+        if (giftProducts?.length) {
+          for (let giftProductItem of giftProducts) {
+            let data = {};
+            data['price'] = +giftProductItem['sale_price'];
+            data['amount'] = 1;
+            _cartItems.push(data);
+          }
+        }
+      }
+    }
+
+    let totalPrice = _cartItems.reduce(
       (acc, ele) => acc + ele.price * ele.amount,
       0,
     );
@@ -1252,6 +1328,13 @@ export class PaymentService {
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
+    if (sendData['subtotal'] > 50000000) {
+      throw new HttpException(
+        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        400,
+      );
+    }
+
     try {
       const newOrder = await this.orderService.createOrder(user, sendData);
 
@@ -1291,8 +1374,8 @@ export class PaymentService {
     const cryptography = new Cryptography();
     const extraData = cryptography.encodeBase64(
       JSON.stringify({
-        b_lastname: data['b_lastname'],
-        b_phone: data['b_phone'],
+        b_lastname: data['b_lastname'] || data['s_lastname'],
+        b_phone: data['b_phone'] || data['s_phone'],
       }),
     );
 

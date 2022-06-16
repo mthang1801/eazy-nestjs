@@ -24,8 +24,16 @@ import {
 } from '../../utils/integrateFunctions';
 import { getProductsListByAccessoryIdSearchFilter } from '../../utils/tableConditioner';
 import { UpdateProductPromotionAccessoryDto } from '../dto/promotionAccessories/update-productPromotionAccessory.dto';
-import { productPromotionAccessorytLeftJoiner } from '../../utils/joinTable';
-import { In } from '../../database/operators/operators';
+import {
+  productPromotionAccessorytLeftJoiner,
+  promoAccessoriesJoiner,
+} from '../../utils/joinTable';
+import {
+  In,
+  IsNull,
+  MoreThan,
+  LessThan,
+} from '../../database/operators/operators';
 import { ProductPricesRepository } from '../repositories/productPrices.repository';
 import {
   getProductsListSelectorBE,
@@ -158,8 +166,8 @@ export class PromotionAccessoryService {
 
     promoAccessory['products'] = [];
 
-    let productLists = await this.productRepo.find({
-      select: getProductAccessorySelector,
+    let productLists = await this.promoAccessoryDetailRepo.find({
+      select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
       join: productPromotionAccessoryJoiner,
       where: {
         [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
@@ -338,12 +346,6 @@ export class PromotionAccessoryService {
         where: { accessory_id: accessoryItem.accessory_id },
       });
 
-      accessoryItem['display_at'] = moment(accessoryItem['display_at']).format(
-        'YYYY-DD-MM HH:mm:ss',
-      );
-      accessoryItem['end_at'] = moment(accessoryItem['end_at']).format(
-        'YYYY-DD-MM HH:mm:ss',
-      );
       accessoryItem['productAmount'] = productsCount[0].total;
     }
     return {
@@ -386,13 +388,15 @@ export class PromotionAccessoryService {
   }
 
   async itgCreate(data, type) {
+    console.log('promotion Create');
+    console.log(391, data);
     const convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
-
+    console.log(convertedData);
     const accessory = await this.promoAccessoryRepo.findOne({
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      return this.itgUpdate(convertedData['app_core_id'], data, type);
+      throw new HttpException('Bộ phụ kiện đã tồn tại', 409);
     }
 
     const accessoryData = {
@@ -422,21 +426,6 @@ export class PromotionAccessoryService {
             sale_price: product['price'] || 0,
           };
 
-          if (type == 4 && accessoryItem['promotion_price']) {
-            const productPriceData = {
-              promotion_price: accessoryItem['promotion_price'],
-              promotion_discount: accessoryItem['promotion_discount'] || 0,
-              promotion_discount_type:
-                accessoryItem['promotion_discount_type'] || 0,
-              promotion_start_at: newAccessory['display_at'],
-              promotion_end_at: newAccessory['end_at'],
-            };
-            await this.productPriceRepo.update(
-              { product_id: product.product_id },
-              productPriceData,
-            );
-          }
-
           await this.promoAccessoryDetailRepo.create(
             newAccessoryItemData,
             false,
@@ -458,7 +447,7 @@ export class PromotionAccessoryService {
         'accessory_applied_products'
       ]) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             product_appcore_id: appliedProductItem['product_appcore_id'],
@@ -485,7 +474,7 @@ export class PromotionAccessoryService {
           }
 
           await this.productRepo.update(
-            { product_id: product['product_id'] },
+            { product_appcore_id: appliedProductItem['product_appcore_id'] },
             updatedData,
           );
 
@@ -562,6 +551,8 @@ export class PromotionAccessoryService {
 
   async itgUpdate(app_core_id: string, data, type: number) {
     data['app_core_id'] = app_core_id;
+    console.log('promotion Update');
+    console.log(566, data);
     let convertedData = itgConvertGiftAccessoriesFromAppcore(data, type);
     console.log(convertedData);
     let accessory = await this.promoAccessoryRepo.findOne({ app_core_id });
@@ -630,7 +621,7 @@ export class PromotionAccessoryService {
         'accessory_applied_products'
       ]) {
         let product = await this.productRepo.findOne({
-          select: '*',
+          select: `*, ${Table.PRODUCTS}.product_id`,
           join: productLeftJoiner,
           where: {
             product_appcore_id: appliedProductItem['product_appcore_id'],
@@ -729,5 +720,274 @@ export class PromotionAccessoryService {
         await this.cache.removeRelatedServicesWithCachedProduct(productId);
       }
     }
+  }
+
+  async findGiftInProductItem(accessory_id) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    let result = [];
+    if (
+      !promoAccessory ||
+      promoAccessory.accessory_status !== 'A' ||
+      (promoAccessory.display_at &&
+        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
+      (promoAccessory.end_at &&
+        new Date(promoAccessory.end_at).getTime() < Date.now())
+    ) {
+      return result;
+    }
+
+    return this.promoAccessoryDetailRepo.find({
+      accessory_id: promoAccessory.accessory_id,
+    });
+  }
+
+  async findPromotionAccessoryInProductItem(accessory_id) {
+    const promoAccessory = await this.promoAccessoryRepo.findOne({
+      accessory_id,
+    });
+    let result = [];
+    if (
+      !promoAccessory ||
+      promoAccessory.accessory_status !== 'A' ||
+      (promoAccessory.display_at &&
+        new Date(promoAccessory.display_ay).getTime() > Date.now()) ||
+      (promoAccessory.end_at &&
+        new Date(promoAccessory.end_at).getTime() < Date.now())
+    ) {
+      return result;
+    }
+    return this.promoAccessoryDetailRepo.find({
+      accessory_id: promoAccessory.accessory_id,
+    });
+  }
+
+  async splitAccessoriesGiftWarrantyInProductsList(productsList) {
+    let productsPromotionAccessoriesCollection = [];
+    let productsPromotionAccessories = [];
+    let giftProductsCollection = [];
+    let giftProducts = [];
+    let warrantyProductsCollection = [];
+    let warrantyProducts = [];
+    let products = [];
+    for (let productItem of productsList) {
+      let product = await this.productRepo.findOne({
+        product_id: productItem.product_id,
+      });
+      if (product.promotion_accessory_id) {
+        let promotionAccessoryItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.promotion_accessory_id,
+        });
+        productsPromotionAccessoriesCollection = [
+          ...productsPromotionAccessoriesCollection,
+          ...promotionAccessoryItems,
+        ];
+      }
+
+      if (product.free_accessory_id) {
+        let giftAccessoryItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.free_accessory_id,
+        });
+        giftProductsCollection = [
+          ...giftProductsCollection,
+          ...giftAccessoryItems,
+        ];
+      }
+
+      if (product.warranty_package_id) {
+        let warrantyPackageItems = await this.promoAccessoryDetailRepo.find({
+          accessory_id: product.warranty_package_id,
+        });
+        warrantyProductsCollection = [
+          ...warrantyProductsCollection,
+          ...warrantyPackageItems,
+        ];
+      }
+
+      products = [...products, product];
+    }
+
+    if (productsPromotionAccessoriesCollection.length) {
+      productsPromotionAccessories =
+        productsPromotionAccessoriesCollection.filter(
+          (productPromotionAccessoryItem) =>
+            products.some(
+              (product) =>
+                product.product_id == productPromotionAccessoryItem.product_id,
+            ),
+        );
+    }
+
+    if (productsPromotionAccessories.length) {
+      products = products.filter(
+        (product) =>
+          !productsPromotionAccessories.some(
+            (productPromotionAccessory) =>
+              productPromotionAccessory?.product_id == product?.product_id,
+          ),
+      );
+    }
+
+    giftProducts = [...giftProductsCollection];
+
+    if (warrantyProductsCollection.length) {
+      warrantyProducts = warrantyProductsCollection.filter(
+        (warrantyPackageItem) =>
+          products.some(
+            (product) => product.product_id == warrantyPackageItem.product_id,
+          ),
+      );
+    }
+
+    if (warrantyProducts.length) {
+      products = products.filter(
+        (product) =>
+          !warrantyProducts.some(
+            (warrantyPackageItem) =>
+              warrantyPackageItem?.product_id == product?.product_id,
+          ),
+      );
+    }
+
+    return [
+      products,
+      productsPromotionAccessories,
+      giftProducts,
+      warrantyProducts,
+    ];
+  }
+
+  async findAccessoriesGiftWarrantyInProduct(product_id) {
+    let filterConditions = (conditions) => [
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+          formatStandardTimeStamp(),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+    ];
+
+    const product = await this.productRepo.findOne({ product_id });
+    let _promotionAccessories: any = [];
+    if (product?.promotion_accessory_id) {
+      _promotionAccessories = this.promoAccessoryDetailRepo.find({
+        select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
+        join: promoAccessoriesJoiner,
+        where: filterConditions({
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
+            product?.promotion_accessory_id,
+        }),
+      });
+    }
+
+    let _giftAccessories: any = [];
+    if (product?.free_accessory_id) {
+      _giftAccessories = this.promoAccessoryDetailRepo.find({
+        select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
+        join: promoAccessoriesJoiner,
+        where: filterConditions({
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
+            product?.promotion_accessory_id,
+        }),
+      });
+    }
+
+    let _warrantyPackages: any = [];
+    if (product?.warranty_package_id) {
+      _warrantyPackages = this.promoAccessoryDetailRepo.find({
+        select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
+        join: promoAccessoriesJoiner,
+        where: filterConditions({
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
+            product?.promotion_accessory_id,
+        }),
+      });
+    }
+
+    return Promise.all([
+      _promotionAccessories,
+      _giftAccessories,
+      _warrantyPackages,
+    ]);
+  }
+
+  async findGiftInProduct(product_id) {
+    let filterConditions = (conditions) => [
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: LessThan(
+          formatStandardTimeStamp(new Date()),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+      {
+        ...conditions,
+        [`${Table.PROMOTION_ACCESSORY}.display_at`]: IsNull(),
+        [`${Table.PROMOTION_ACCESSORY}.end_at`]: MoreThan(
+          formatStandardTimeStamp(),
+        ),
+        [`${Table.PROMOTION_ACCESSORY}.accessory_status`]: 'A',
+      },
+    ];
+
+    const product = await this.productRepo.findOne({ product_id });
+
+    let _giftAccessories: any = [];
+    if (product?.free_accessory_id) {
+      _giftAccessories = this.promoAccessoryDetailRepo.find({
+        select: `*, ${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.*`,
+        join: promoAccessoriesJoiner,
+        where: filterConditions({
+          [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
+            product?.promotion_accessory_id,
+        }),
+      });
+    }
+
+    return Promise.all(_giftAccessories);
   }
 }

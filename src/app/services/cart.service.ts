@@ -25,6 +25,12 @@ import { ProductsRepository } from '../repositories/products.repository';
 import { ProductsEntity } from '../entities/products.entity';
 
 import { Equal, Not } from 'src/database/operators/operators';
+import { ProductVariationGroupsRepository } from '../repositories/productVariationGroups.repository';
+import { ProductVariationGroupsEntity } from '../entities/productVariationGroups.entity';
+import { ProductVariationGroupProductsRepository } from '../repositories/productVariationGroupProducts.entity';
+import { ProductVariationGroupProductsEntity } from '../entities/productVariationGroupProducts.entity';
+import { productLeftJoiner } from '../../utils/joinTable';
+import { PromotionAccessoryService } from './promotionAccessory.service';
 @Injectable()
 export class CartService {
   constructor(
@@ -34,6 +40,9 @@ export class CartService {
     private imageRepo: ImagesRepository<ImagesEntity>,
     private cache: RedisCacheService,
     private productRepo: ProductsRepository<ProductsEntity>,
+    private productGroupRepo: ProductVariationGroupsRepository<ProductVariationGroupsEntity>,
+    private productGroupProductRepo: ProductVariationGroupProductsRepository<ProductVariationGroupProductsEntity>,
+    private promoAccessoryService: PromotionAccessoryService,
   ) {}
 
   async create(user_id: number, product_ids: number[]) {
@@ -100,6 +109,59 @@ export class CartService {
     });
 
     cartItems = _.unionBy(cartItems, 'product_id');
+
+    let _cartItems = cartItems.map(async (cartItem) => {
+      if (cartItem.product_type == 3) {
+        let group = await this.productGroupRepo.findOne({
+          product_root_id: cartItem.product_id,
+        });
+        if (group) {
+          let productItems = await this.productGroupProductRepo.find({
+            group_id: group.group_id,
+          });
+          let comboItems = productItems.filter(
+            (productItem) => productItem.product_id != cartItem.product_id,
+          );
+          cartItem['comboItems'] = [];
+          if (comboItems.length) {
+            for (let { product_id } of comboItems) {
+              let product = await this.productRepo.findOne({
+                select: `*, ${Table.PRODUCTS}.product_id`,
+                join: productLeftJoiner,
+                where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+              });
+              cartItem['comboItems'].push(product);
+            }
+          }
+        }
+      }
+
+      let [promotionAccessories, giftAccessories, warrantyPackages] =
+        await this.promoAccessoryService.findAccessoriesGiftWarrantyInProduct([
+          cartItem,
+        ]);
+
+      if (giftAccessories) {
+        cartItem['giftAccessories'] = giftAccessories;
+      }
+
+      if (promotionAccessories) {
+        cartItems = cartItems.map(async (item) => {
+          let appliedPromotionAccessory = promotionAccessories.find(
+            (promotionAccessoryItem) =>
+              promotionAccessoryItem.product_id == item.product_id,
+          );
+          if (appliedPromotionAccessory) {
+            item.price = appliedPromotionAccessory.sale_price;
+          }
+          return item;
+        });
+      }
+
+      return cartItem;
+    });
+
+    cartItems = await Promise.all([..._cartItems]);
 
     const totalAmount = cartItems.length;
     result['totalAmount'] = totalAmount;
