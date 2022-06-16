@@ -166,6 +166,7 @@ import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity'
 import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
 import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import { PromotionAccessoryService } from './promotionAccessory.service';
+import { iif, of } from 'rxjs';
 
 @Injectable()
 export class OrdersService {
@@ -1117,13 +1118,22 @@ export class OrdersService {
         },
       );
     } catch (error) {
+      let status = OrderStatus.invalid;
+      if (
+        error?.response?.data?.message.find(
+          'Số tiền cần phải thanh toán không chính xác',
+        )
+      ) {
+        status = OrderStatus.new;
+      }
       await this.orderRepo.update(
         { order_id },
         {
-          status: OrderStatus.invalid,
+          status,
           reason_fail: error?.response?.data?.message || '',
         },
       );
+      if (status == OrderStatus.new) return;
       console.log(error);
       throw new HttpException('Something went wrong', 409);
     }
