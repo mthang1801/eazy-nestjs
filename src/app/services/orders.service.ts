@@ -518,20 +518,23 @@ export class OrdersService {
         }
       }
 
-      if (!authUser && data.user_id) {
+      if (!authUser && !data.user_id) {
         throw new HttpException('Lấy giỏ hàng không thành công.', 400);
       }
       let cart = await this.cartService.get(
         authUser ? authUser.user_id : data.user_id,
       );
 
-      if (!cart) {
+      if (
+        !cart ||
+        !cart.cart_items ||
+        !cart.cart_items.length ||
+        cart.totalPrice == undefined
+      ) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
-      const cartItems = await this.cartItemRepo.find({
-        select: 'product_id, amount',
-        where: { cart_id: cart.cart_id },
-      });
+      console.log(cart);
+      let cartItems = cart['cart_items'];
 
       if (!cartItems.length) {
         throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
@@ -684,7 +687,7 @@ export class OrdersService {
     //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     // });
 
-    let totalPrice = cart.totalPrice;
+    let totalPrice = +cart.totalPrice;
 
     if (!cartItems.length) {
       throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
@@ -719,6 +722,7 @@ export class OrdersService {
       ...userProfile,
       user_appcore_id: user['user_appcore_id'],
       order_items: cartItems,
+      ...data,
     };
 
     if (data.shipping_fee_location_id) {

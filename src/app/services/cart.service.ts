@@ -179,7 +179,7 @@ export class CartService {
 
         if (checkPromotionExist) {
           cartItem['price'] = +checkPromotionExist.promotion_price;
-          cartItem['amount'] = 1;
+          cartItem['amount'] = cartItem.amount;
           cartItem['belong_order_detail_id'] = cartItem['product_id'];
           cartItem['is_gift_taken'] = '0';
         }
@@ -195,7 +195,7 @@ export class CartService {
 
         if (warrantyPackageExist) {
           cartItem['price'] = +warrantyPackageExist.sale_price;
-          cartItem['amount'] = 1;
+          cartItem['amount'] = cartItem.amount;
         }
         return cartItem;
       });
