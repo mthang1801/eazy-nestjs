@@ -278,6 +278,7 @@ import { ProductPreviewEntity } from '../entities/productPreview.entity';
 import { SearchService } from './search.service';
 import { productDiscountDetailJoiner } from '../../utils/joinTable';
 import { formatDateTime, formatTime } from '../../utils/helper';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class ProductService {
@@ -319,6 +320,7 @@ export class ProductService {
     private catalogFeatureDetailRepo: CatalogFeatureDetailRepository<CatalogFeatureDetailEntity>,
     private searchService: SearchService,
     private cache: RedisCacheService,
+    private schedulerRegistry: SchedulerRegistry,
   ) {}
 
   async syncProductsIntoGroup(): Promise<void> {
@@ -5376,49 +5378,74 @@ export class ProductService {
     return this.testGetProductDetails(product_id);
   }
 
-  async testSql() {
-    const productsList = await this.productRepo.find({
-      select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
-      join: productSearchJoiner,
-      skip: 0,
-      limit: 1000,
-    });
+  async testSql(j) {
+    await this.searchService.removeAll();
+    // const productsList = await this.productRepo.find({
+    //   select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+    //   join: productSearchJoiner,
+    //   skip: j,
+    //   limit:1000
+    // });
+    
 
-    console.time('run');
-    let products = productsList.map(async (productItem, i) => {
-      this.searchService.createIndex('products', {
-        name: productItem.product,
-        product_code: productItem.product_code,
-        description: productItem.description,
-        slug: productItem.slug || '',
-        productSlug: productItem.productSlug,
-        price: productItem.price,
-        thumbnail: productItem.thumbnail,
-      });
-      return i;
-    });
+    // for (let skip =0;skip<25000;skip+=1000){
+    //   let productsList = await this.productRepo.find({
+    //     select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+    //     join: productSearchJoiner,
+    //     skip: skip,
+    //     limit: 1000
+    //   });
 
-    const categoriesList = await this.categoryRepo.find({
-      select: `*`,
-      join: categoryJoiner,
-      skip: 0,
-      limit: 1000,
-    });
-    console.log(categoriesList);
+    //   //console.time('run');
+    //   console.log(productsList);
+    //   let products = await productsList.map(async (productItem, i) => {
+    //     this.searchService.createIndex('products', {
+    //       name: productItem.product,
+    //       product_code: productItem.product_code,
+    //       description: productItem.description,
+    //       slug: productItem.slug || '',
+    //       productSlug: productItem.productSlug,
+    //       price: productItem.price,
+    //       thumbnail: productItem.thumbnail,
+    //     });
+    //     return i;
+    //   });
+    // }
 
-    console.time('run');
-    let categories = categoriesList.map(async (categoryItem, i) => {
-      this.searchService.createIndex('categories', {
-        name: categoryItem.category,
-        slug: categoryItem.slug || '',
-        icon: categoryItem.icon,
-      });
-      return i;
-    });
+    // console.time('run');
+    // let products = productsList.map(async (productItem, i) => {
+    //   this.searchService.createIndex('products', {
+    //     name: productItem.product,
+    //     product_code: productItem.product_code,
+    //     description: productItem.description,
+    //     slug: productItem.slug || '',
+    //     productSlug: productItem.productSlug,
+    //     price: productItem.price,
+    //     thumbnail: productItem.thumbnail,
+    //   });
+    //   return i;
+    // });
 
-    const res = await Promise.all([products, categories]);
-    console.log(res);
-    console.timeEnd('run');
+    // const categoriesList = await this.categoryRepo.find({
+    //   select: `*`,
+    //   join: categoryJoiner,
+    //   skip: 0,
+    // });
+    // console.log(categoriesList);
+
+    //console.time('run');
+    // let categories = categoriesList.map(async (categoryItem, i) => {
+    //   this.searchService.createIndex('categories', {
+    //     name: categoryItem.category,
+    //     slug: categoryItem.slug || '',
+    //     icon: categoryItem.icon,
+    //   });
+    //   return i;
+    // });
+
+    //const res = await Promise.all([products, categories]);
+    //console.log(res);
+    //console.timeEnd('run');
 
     // const search = await this.searchService.searchMatch("appp", "products", "name");
     // console.log(search);

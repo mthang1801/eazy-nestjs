@@ -1,3 +1,4 @@
+import { CDN_URL } from './../../constants/api.appcore';
 import { Injectable, HttpException } from '@nestjs/common';
 import { RestrictedCommentEntity } from '../entities/restrictedComment.entity';
 import { ReviewEntity } from '../entities/review.entity';
@@ -36,6 +37,7 @@ import { ReviewCommentUserIPEntity } from '../entities/reviewCommentUserIP.entit
 import { RedisCacheService } from './redisCache.service';
 import { cacheKeys } from '../../utils/cache.utils';
 import { reviewCommentJoiner } from '../../utils/joinTable';
+import { checkIsLinkURL } from '../../utils/helper';
 
 @Injectable()
 export class ReviewsCommentService {
@@ -519,7 +521,7 @@ export class ReviewsCommentService {
       filterConditions[`${Table.REVIEW_COMMENT_ITEMS}.point`] = point;
     }
 
-    const _reviewCommentItems = this.reviewCommentItemRepo.find({
+    let _reviewCommentItems = await this.reviewCommentItemRepo.find({
       select: `${Table.REVIEW_COMMENT_ITEMS}.*, ${Table.USERS}.avatar, ${Table.USERS}.user_type as userRole`,
       join: reviewCommentJoiner,
       where: filterConditions,
@@ -532,6 +534,19 @@ export class ReviewsCommentService {
       skip,
       limit,
     });
+
+    let avatarList = [];
+    for (let _reviewCommentItem of _reviewCommentItems) {
+
+
+    }
+
+    _reviewCommentItems = _reviewCommentItems.map(item => {
+      item["avatar"] = checkIsLinkURL(item['avatar'])
+      ? item['avatar']
+      : `${CDN_URL}${item['avatar']}`
+      return item
+    })
 
     const _count = this.reviewCommentItemRepo.find({
       select: 'COUNT(item_id) as total',
@@ -575,6 +590,7 @@ export class ReviewsCommentService {
             [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
           },
         });
+
         if (responseReviews.length) {
           for (let responseReview of responseReviews) {
             responseReview['images'] = [];

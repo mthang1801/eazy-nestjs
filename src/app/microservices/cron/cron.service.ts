@@ -39,10 +39,58 @@ export class CronService {
   //   this.productService.standardizeProducts();
   // }
 
-  @Timeout(5000)
-  standard() {
-    // if (process.env.NODE_ENV != 'development') {
-    //   this.productService.testSql();
-    // }
-  }
+  // @Timeout(60000)
+  // standard0() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(0);
+  //   }
+  // }
+  // @Timeout(60000*2)
+  // standard3000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000);
+  //   }
+  // }
+  // @Timeout(60000*3)
+  // standard6000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*2);
+  //   }
+  // }
+  // @Timeout(60000*4)
+  // standard9000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*3);
+  //   }
+  // }
+  // @Timeout(60000*5)
+  // standard12000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*4);
+  //   }
+  // }
+  // @Timeout(60000*6)
+  // standard15000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*5);
+  //   }
+  // }
+  // @Timeout(60000*7)
+  // standard18000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*6);
+  //   }
+  // }
+  // @Timeout(60000*8)
+  // standard21000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*7);
+  //   }
+  // }
+  // @Timeout(60000*9)
+  // standard24000() {
+  //   if (process.env.NODE_ENV != 'development') {
+  //     this.productService.testSql(3000*8);
+  //   }
+  // }
 }

@@ -45,11 +45,30 @@ export class SearchService {
       const data: any = await this.searchService.search({
         index,
         body: {
-          size: 10,
-          query: {
-            match: {
-              [field]: { query: text, fuzziness: 'auto' },
-            },
+          size: 20,
+          "query" : {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    [field]: {
+                      "query": text,
+                      "fuzziness": 5,
+                    }
+                  }
+                }
+              ],
+              "should": [
+                {
+                  "match": {
+                    [field]: {
+                      "query": text,
+                      "fuzziness": 5,
+                    }
+                  }
+                }
+              ],
+            }
           },
         },
       });
@@ -57,6 +76,8 @@ export class SearchService {
         throw new HttpException('No Result', 404);
       }
       const hits = data?.body?.hits?.hits;
+      console.log("1234567890123456789");
+      console.log(data);
       if (!hits) {
         return [];
       }
@@ -134,6 +155,19 @@ export class SearchService {
       console.log(error);
       return;
     }
+  }
+
+  async removeAll() {
+    this.searchService.indices.delete({
+      index: '_all'
+    }, function(err, res) {
+  
+      if (err) {
+          console.error(err.message);
+      } else {
+          console.log('Indexes have been deleted!');
+      }
+    });
   }
 
   async update(key: string, keyVal: string, body: any, index: string) {
