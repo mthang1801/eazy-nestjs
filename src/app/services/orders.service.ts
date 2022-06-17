@@ -2003,33 +2003,46 @@ export class OrdersService {
     });
 
     if (orderDetails.length) {
-      let _orderDetails = orderDetails.map(async (orderItem) => {
-        if (orderItem.product_type == 3) {
-          let group = await this.productGroupRepo.findOne({
-            product_root_id: orderItem.product_id,
-          });
-          if (group) {
-            let productItems = await this.productGroupProductRepo.find({
-              group_id: group.group_id,
+      console.log(orderDetails);
+      let _orderDetails = orderDetails
+        .filter((orderItem) => orderItem.is_gift_taken != 1)
+        .map(async (orderItem) => {
+          if (orderItem.product_type == 3) {
+            let group = await this.productGroupRepo.findOne({
+              product_root_id: orderItem.product_id,
             });
-            let comboItems = productItems.filter(
-              (productItem) => productItem.product_id != orderItem.product_id,
-            );
-            orderItem['comboItems'] = [];
-            if (comboItems.length) {
-              for (let { product_id } of comboItems) {
-                let product = await this.productRepo.findOne({
-                  select: `*, ${Table.PRODUCTS}.product_id`,
-                  join: productLeftJoiner,
-                  where: { [`${Table.PRODUCTS}.product_id`]: product_id },
-                });
-                orderItem['comboItems'].push(product);
+            if (group) {
+              let productItems = await this.productGroupProductRepo.find({
+                group_id: group.group_id,
+              });
+              let comboItems = productItems.filter(
+                (productItem) => productItem.product_id != orderItem.product_id,
+              );
+              orderItem['comboItems'] = [];
+              if (comboItems.length) {
+                for (let { product_id } of comboItems) {
+                  let product = await this.productRepo.findOne({
+                    select: `*, ${Table.PRODUCTS}.product_id`,
+                    join: productLeftJoiner,
+                    where: { [`${Table.PRODUCTS}.product_id`]: product_id },
+                  });
+                  orderItem['comboItems'].push(product);
+                }
               }
             }
           }
-        }
-        return orderItem;
-      });
+          orderItem['giftAccessories'] = orderDetails.filter(
+            (_orderItem) =>
+              _orderItem.is_gift_taken == 1 &&
+              _orderItem.belong_order_detail_id == orderItem.product_appcore_id,
+          );
+          orderItem['promotionAccessories'] = orderDetails.filter(
+            (_orderItem) =>
+              _orderItem.is_gift_taken != 1 &&
+              _orderItem.belong_order_detail_id == orderItem.product_appcore_id,
+          );
+          return orderItem;
+        });
       orderDetails = await Promise.all(_orderDetails);
     }
 

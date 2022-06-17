@@ -57,7 +57,7 @@ export class OrderController extends BaseController {
     @Body() data: UpdateOrderDto,
   ): Promise<IResponse> {
     const result = await this.service.update(order_id, data);
-    return this.responseSuccess(res, result, `Cập nhật thành công.`);
+    return this.responseSuccess(res, result);
   }
 
   @Get('/:order_code')
@@ -77,7 +77,7 @@ export class OrderController extends BaseController {
     @Param('order_id') order_id: number,
   ): Promise<IResponse> {
     const result = await this.service.getHistory(order_id);
-    return this.responseSuccess(res, result, 'Thành công.');
+    return this.responseSuccess(res, result);
   }
 
   @Put('/:order_code/cancel')

@@ -55,6 +55,9 @@ export class AuthGuard implements CanActivate {
     const cryptography = new Cryptography();
     let decryptedData = cryptography.decrypt(user['user_id']);
 
+    console.log(user);
+    console.log(authorizationUUID);
+
     if (user['user_id'] !== authorizationUUID) {
       throw new HttpException(['Yêu cầu truy cập bị từ chối 4.'], 401);
     }
