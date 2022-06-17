@@ -42,9 +42,11 @@ export class TradeinProgramController extends BaseController {
   async createValuationBill(
     @Res() res: Response,
     @Body() data,
+    @Req() req
   ): Promise<IResponse> {
-    const result = await this.service.createValuationBill(data);
-    return this.responseSuccess(res, result);
+    console.log(req.user);
+    //const result = await this.service.createValuationBill(data);
+    return this.responseSuccess(res, null);
   }
 
   @Get('/old-receipts/:user_id')

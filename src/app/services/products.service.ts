@@ -5381,7 +5381,102 @@ export class ProductService {
     return this.testGetProductDetails(product_id);
   }
 
-  async testSql(j) {
+  async removeAllIndex() {
+    console.log("start remove");
+    await this.searchService.removeAll();
+    console.log("complete remove");
+  }
+
+  async settingShards() {
+    console.log("start add shard");
+    let numberOfProducts = await this.productRepo.findOne({
+      select: "COUNT(*) as count"
+    });
+    let count = +numberOfProducts['count'];
+    console.log(count);
+    let number_of_shards = Math.floor(count / 10000 + 1);
+    console.log(number_of_shards);
+    await this.searchService.settingNumberOfShards("products", number_of_shards, 2);
+
+    let numberOfCategories = await this.categoryRepo.findOne({
+      select: "COUNT(*) as count"
+    });
+    count = +numberOfCategories['count'];
+    console.log(count);
+    number_of_shards = Math.floor(count / 10000 + 1);
+    console.log(number_of_shards);
+    await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
+    console.log("complete add shard");
+  }
+
+  async syncToElasticSearch() {
+    // await this.searchService.removeAll();
+
+    let numberOfProducts = await this.productRepo.findOne({
+      select: "COUNT(*) as count"
+    });
+    let count = +numberOfProducts['count'];
+    // console.log(count);
+    // let number_of_shards = Math.floor(count / 10000 + 1);
+    // console.log(number_of_shards);
+    // await this.searchService.settingNumberOfShards("products", number_of_shards, 2);
+
+    // let numberOfCategories = await this.categoryRepo.findOne({
+    //   select: "COUNT(*) as count"
+    // });
+    // count = +numberOfCategories['count'];
+    // console.log(count);
+    // number_of_shards = Math.floor(count / 10000 + 1);
+    // console.log(number_of_shards);
+    // await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
+
+    count = Math.ceil(numberOfProducts['count']/1000) * 1000;
+
+    for (let skip = 0; skip < count; skip+=1000) {
+      let productsList = await this.productRepo.find({
+        select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+        join: productSearchJoiner,
+        skip: skip,
+        limit: 1000
+      });
+
+      //console.time('run');
+      //console.log(productsList);
+      let products = await productsList.map(async (productItem, i) => {
+        this.searchService.createIndex('products', {
+          name: productItem.product,
+          product_code: productItem.product_code,
+          description: productItem.description,
+          slug: productItem.slug || '',
+          productSlug: productItem.productSlug,
+          price: productItem.price,
+          thumbnail: productItem.thumbnail,
+        });
+        return i;
+      });
+    }
+    console.log("done create index products");
+
+    const categoriesList = await this.categoryRepo.find({
+      select: `*`,
+      join: categoryJoiner,
+      skip: 0,
+    });
+    //console.log(categoriesList);
+
+    //console.time('run');
+    let categories = categoriesList.map(async (categoryItem, i) => {
+      this.searchService.createIndex('categories', {
+        name: categoryItem.category,
+        slug: categoryItem.slug || '',
+        icon: categoryItem.icon,
+      });
+      return i;
+    });
+    console.log("done create index categories");
+  }
+
+  async testSql() {
     await this.searchService.removeAll();
     // const productsList = await this.productRepo.find({
     //   select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
@@ -5389,31 +5484,67 @@ export class ProductService {
     //   skip: j,
     //   limit:1000
     // });
-    
 
-    // for (let skip =0;skip<25000;skip+=1000){
-    //   let productsList = await this.productRepo.find({
-    //     select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
-    //     join: productSearchJoiner,
-    //     skip: skip,
-    //     limit: 1000
-    //   });
+    let numberOfProducts = await this.productRepo.findOne({
+      select: "COUNT(*) as count"
+    });
+    let count = +numberOfProducts['count'];
+    console.log(count);
+    let number_of_shards = Math.floor(count / 10000 + 1);
+    console.log(number_of_shards);
+    await this.searchService.settingNumberOfShards("products", number_of_shards, 2);
 
-    //   //console.time('run');
-    //   console.log(productsList);
-    //   let products = await productsList.map(async (productItem, i) => {
-    //     this.searchService.createIndex('products', {
-    //       name: productItem.product,
-    //       product_code: productItem.product_code,
-    //       description: productItem.description,
-    //       slug: productItem.slug || '',
-    //       productSlug: productItem.productSlug,
-    //       price: productItem.price,
-    //       thumbnail: productItem.thumbnail,
-    //     });
-    //     return i;
-    //   });
-    // }
+    let numberOfCategories = await this.categoryRepo.findOne({
+      select: "COUNT(*) as count"
+    });
+    count = +numberOfCategories['count'];
+    console.log(count);
+    number_of_shards = Math.floor(count / 10000 + 1);
+    console.log(number_of_shards);
+    await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
+
+    count = Math.ceil(numberOfProducts['count']/1000) * 1000;
+
+    for (let skip = 0; skip < count; skip+=1000) {
+      let productsList = await this.productRepo.find({
+        select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
+        join: productSearchJoiner,
+        skip: skip,
+        limit: 1000
+      });
+
+      //console.time('run');
+      console.log(productsList);
+      let products = await productsList.map(async (productItem, i) => {
+        this.searchService.createIndex('products', {
+          name: productItem.product,
+          product_code: productItem.product_code,
+          description: productItem.description,
+          slug: productItem.slug || '',
+          productSlug: productItem.productSlug,
+          price: productItem.price,
+          thumbnail: productItem.thumbnail,
+        });
+        return i;
+      });
+    }
+
+    const categoriesList = await this.categoryRepo.find({
+      select: `*`,
+      join: categoryJoiner,
+      skip: 0,
+    });
+    console.log(categoriesList);
+
+    //console.time('run');
+    let categories = categoriesList.map(async (categoryItem, i) => {
+      this.searchService.createIndex('categories', {
+        name: categoryItem.category,
+        slug: categoryItem.slug || '',
+        icon: categoryItem.icon,
+      });
+      return i;
+    });
 
     // console.time('run');
     // let products = productsList.map(async (productItem, i) => {
@@ -5425,23 +5556,6 @@ export class ProductService {
     //     productSlug: productItem.productSlug,
     //     price: productItem.price,
     //     thumbnail: productItem.thumbnail,
-    //   });
-    //   return i;
-    // });
-
-    // const categoriesList = await this.categoryRepo.find({
-    //   select: `*`,
-    //   join: categoryJoiner,
-    //   skip: 0,
-    // });
-    // console.log(categoriesList);
-
-    //console.time('run');
-    // let categories = categoriesList.map(async (categoryItem, i) => {
-    //   this.searchService.createIndex('categories', {
-    //     name: categoryItem.category,
-    //     slug: categoryItem.slug || '',
-    //     icon: categoryItem.icon,
     //   });
     //   return i;
     // });
