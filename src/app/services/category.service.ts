@@ -787,13 +787,13 @@ export class CategoryService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    // let categoryCacheResult = await this.cache.getCategoryById(
-    //   category.category_id,
-    // );
+    let categoryCacheResult = await this.cache.getCategoryById(
+      category.category_id,
+    );
 
-    // if (categoryCacheResult) {
-    //   return categoryCacheResult;
-    // }
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
 
     let categoriesPath = category['id_path'].split('/').slice(0, -1);
 
@@ -811,15 +811,6 @@ export class CategoryService {
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.childrenCategories(categoryId);
-
-    let currentCategoryPosition = category['id_path']
-      .split('/')
-      .slice(
-        category['id_path'].split('/').indexOf(String(category.category_id)) +
-          1,
-      );
-
-    console.log(currentCategoryPosition);
 
     categoriesListByLevel = _.orderBy(
       categoriesListByLevel,

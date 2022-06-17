@@ -536,9 +536,11 @@ export class ReviewsCommentService {
     });
 
     _reviewCommentItems = _reviewCommentItems.map((item) => {
-      item['avatar'] = checkIsLinkURL(item['avatar'])
-        ? item['avatar']
-        : `${CDN_URL}${item['avatar']}`;
+      item['avatar'] = item['avatar']
+        ? checkIsLinkURL(item['avatar'])
+          ? item['avatar']
+          : `${CDN_URL}${item['avatar']}`
+        : null;
       return item;
     });
 

@@ -56,8 +56,6 @@ export class CartService {
       return;
     }
 
-    let promotionAccessories = [];
-
     for (let product_id of product_ids) {
       let checkProduct = await this.productRepo.findOne({
         product_id,
@@ -156,6 +154,7 @@ export class CartService {
         cartItem['giftAccessories'] = giftAccessories.map((giftAccessory) => ({
           ...giftAccessory,
           amount: cartItem.amount,
+          price: giftAccessory.sale_price,
         }));
       }
 
