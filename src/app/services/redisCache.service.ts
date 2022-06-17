@@ -118,6 +118,7 @@ export class RedisCacheService {
         `======= REMOVE KEYS CACHE IN TABLE [${tableName}]========`,
       );
       const cacheTables = await this.cacheRepo.find({ table_name: tableName });
+
       if (cacheTables.length) {
         for (let cache of cacheTables) {
           await this.delete(cache.cache_key);
@@ -386,6 +387,8 @@ export class RedisCacheService {
     let categoryCacheKey = cacheKeys.category(category_id);
     await this.delete(categoryCacheKey);
     await this.cacheRepo.delete({ cache_key: categoryCacheKey });
+    const categoryTable = cacheTables.category;
+    await this.removeCache(categoryTable);
     // remove products
     let productCategories = await this.productCategoryRepo.find({
       category_id,
