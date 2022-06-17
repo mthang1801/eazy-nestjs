@@ -167,6 +167,8 @@ import { PromotionAccessoryDetailRepository } from '../repositories/promotionAcc
 import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import { PromotionAccessoryService } from './promotionAccessory.service';
 import { iif, of } from 'rxjs';
+import { RedisCacheService } from './redisCache.service';
+import { cacheTables } from '../../utils/cache.utils';
 
 @Injectable()
 export class OrdersService {
@@ -207,6 +209,7 @@ export class OrdersService {
     private promoAccessoryRepo: PromotionAccessoryRepository<PromotionAccessoryEntity>,
     private promoAccessoryDetailRepo: PromotionAccessoryDetailRepository<PromotionAccessoryDetailEntity>,
     private promotionAccessoryService: PromotionAccessoryService,
+    private cache: RedisCacheService,
   ) {}
 
   async testQueue(data) {
@@ -2007,9 +2010,8 @@ export class OrdersService {
     });
 
     if (orderDetails.length) {
-      console.log(orderDetails);
       let _orderDetails = orderDetails
-        .filter((orderItem) => orderItem.is_gift_taken != 1)
+        .filter((orderItem) => !orderItem.belong_order_detail_id)
         .map(async (orderItem) => {
           if (orderItem.product_type == 3) {
             let group = await this.productGroupRepo.findOne({
