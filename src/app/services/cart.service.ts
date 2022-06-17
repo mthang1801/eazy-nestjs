@@ -156,9 +156,7 @@ export class CartService {
           ...giftAccessory,
           amount: cartItem.amount,
           price: giftAccessory.sale_price,
-          belong_product_id: cartItem.product_id,
           belong_order_detail_id: cartItem.product_appcore_id,
-          belong_product_appcore_id: cartItem.product_appcore_id,
         }));
       }
 
@@ -167,7 +165,7 @@ export class CartService {
           ...promotionAccessories,
           ..._promotionAccessories.map((promotionAccessory) => ({
             ...promotionAccessory,
-            applied_product_id: cartItem.product_appcore_id,
+            applied_product_appcore_id: cartItem.product_appcore_id,
           })),
         ];
       }
@@ -203,16 +201,15 @@ export class CartService {
           (promotionAccessory) =>
             promotionAccessory.product_id == cartItem.product_id,
         );
+        console.log(promotionAccessoryInCartItem);
         cartItem['belong_product_id'] = null;
         cartItem['belong_order_detail_id'] = null;
         cartItem['belong_product_appcore_id'] = null;
         if (promotionAccessoryInCartItem) {
-          cartItem['belong_product_id'] =
-            promotionAccessoryInCartItem.applied_product_id;
           cartItem['belong_order_detail_id'] =
-            promotionAccessoryInCartItem.belong_order_detail_id;
-          cartItem['belong_product_appcore_id'] =
-            promotionAccessoryInCartItem.belong_product_appcore_id;
+            promotionAccessoryInCartItem.applied_product_appcore_id;
+          cartItem['price'] = promotionAccessoryInCartItem['promotion_price'];
+          cartItem['is_gift_taken'] = null;
         }
         return cartItem;
       });
