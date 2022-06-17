@@ -46,6 +46,7 @@ export class CartService {
   ) {}
 
   async create(user_id: number, product_ids: number[]) {
+    await this.cache.removeCartByUserId(user_id);
     let cart = await this.cartRepo.findOne({ user_id });
     if (!cart) {
       const cartData = { ...new CartEntity(), user_id };

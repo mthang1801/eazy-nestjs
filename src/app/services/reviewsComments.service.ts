@@ -575,6 +575,7 @@ export class ReviewsCommentService {
             [`${Table.REVIEW_COMMENT_ITEMS}.status`]: 'A',
           },
         });
+
         if (responseReviews.length) {
           for (let responseReview of responseReviews) {
             responseReview['images'] = [];
