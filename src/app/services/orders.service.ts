@@ -812,17 +812,13 @@ export class OrdersService {
     //   }
     // }
 
+    console.log(data);
+
     for (let orderItem of data['order_items']) {
       orderData['total'] += +orderItem.amount * orderItem.price;
     }
 
-    console.log(
-      816,
-      data['order_items'].forEach((orderItem) => {
-        console.log(orderItem.product_id);
-        console.log(orderItem.belong_order_detail_id);
-      }),
-    );
+    console.log(data['order_items']);
 
     // if (promotionAccessories.length) {
     //   for (let promotionAccessoryItem of promotionAccessories) {

@@ -484,10 +484,16 @@ export class PaymentService {
         }
         cart = {
           totalPrice: +product.price,
-          product_id: product.product_id,
-          amount: 1,
-          price: +product.price,
         };
+
+        cartItems = [
+          {
+            product_id: product.product_id,
+            product_appcore_id: product.product_appcore_id,
+            amount: 1,
+            price: +product.price,
+          },
+        ];
       } else {
         cart = await this.cartService.get(data['user_id']);
         if (!cart || !cart.cart_items || !cart.cart_items.length) {
@@ -789,7 +795,7 @@ export class PaymentService {
         orderPaymentData,
       );
 
-      if (cart) {
+      if (cart?.cart_id) {
         await this.cartService.clearAll(cart.cart_id);
       }
 
