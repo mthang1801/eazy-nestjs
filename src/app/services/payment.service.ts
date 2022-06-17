@@ -1077,6 +1077,7 @@ export class PaymentService {
     if (!cart) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
+
     cartItems = await this.cartItemRepo.find({
       select: `*, ${Table.CART_ITEMS}.amount`,
       join: cartPaymentJoiner,
@@ -1173,7 +1174,7 @@ export class PaymentService {
     if (+sendData['subtotal'] >= 50000000) {
       throw new HttpException(
         'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
-        400,
+        413,
       );
     }
 
@@ -1309,7 +1310,7 @@ export class PaymentService {
     if (sendData['subtotal'] > 50000000) {
       throw new HttpException(
         'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
-        400,
+        413,
       );
     }
 

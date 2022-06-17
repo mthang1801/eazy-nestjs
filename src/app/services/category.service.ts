@@ -787,13 +787,26 @@ export class CategoryService {
       throw new HttpException('Không tìm thấy danh mục SP.', 404);
     }
 
-    // let categoryCacheResult = await this.cache.getCategoryById(
-    //   category.category_id,
-    // );
+    let categoryCacheResult = await this.cache.getCategoryById(
+      category.category_id,
+    );
 
-    // if (categoryCacheResult) {
-    //   return categoryCacheResult;
-    // }
+    if (categoryCacheResult) {
+      return categoryCacheResult;
+    }
+
+    let categoriesPath = category['id_path'].split('/').slice(0, -1);
+    let parentCategories: any = [];
+    if (categoriesPath.length > 1) {
+      let _categories = categoriesPath.map(async (categoryId) => {
+        return this.categoryRepo.findOne({
+          select: categorySelector,
+          join: categoryJoiner,
+          where: { [`${Table.CATEGORIES}.category_id`]: categoryId },
+        });
+      });
+      parentCategories = await Promise.all(_categories);
+    }
 
     let categoryId = category.category_id;
     let categoriesListByLevel = await this.childrenCategories(categoryId);
@@ -804,12 +817,6 @@ export class CategoryService {
       ['asc'],
     );
 
-    // let filterCategories = [
-    //   ...new Set([
-    //     categoryId,
-    //     ...categoriesListByLevel.map(({ category_id }) => category_id),
-    //   ]),
-    // ];
     let filterCategories = [categoryId];
 
     let features = await this.getFeaturesSetByCategoryId(
@@ -827,6 +834,7 @@ export class CategoryService {
     let categoryResult = {
       currentCategory: category,
       childrenCategories: categoriesListByLevel,
+      parentCategories,
       features,
       relevantCategories,
       filterCategories,

@@ -535,18 +535,12 @@ export class ReviewsCommentService {
       limit,
     });
 
-    let avatarList = [];
-    for (let _reviewCommentItem of _reviewCommentItems) {
-
-
-    }
-
-    _reviewCommentItems = _reviewCommentItems.map(item => {
-      item["avatar"] = checkIsLinkURL(item['avatar'])
-      ? item['avatar']
-      : `${CDN_URL}${item['avatar']}`
-      return item
-    })
+    _reviewCommentItems = _reviewCommentItems.map((item) => {
+      item['avatar'] = checkIsLinkURL(item['avatar'])
+        ? item['avatar']
+        : `${CDN_URL}${item['avatar']}`;
+      return item;
+    });
 
     const _count = this.reviewCommentItemRepo.find({
       select: 'COUNT(item_id) as total',

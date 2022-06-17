@@ -6,4 +6,5 @@ export const categorySelector = [
   'slug',
   'category',
   'parent_id',
+  'id_path',
 ];
