@@ -662,13 +662,6 @@ export class OrdersService {
       );
     }
 
-    // const cart = await this.cartRepo.findOne({
-    //   user_id: userAuth ? userAuth.user_id : data.user_id,
-    // });
-    // if (!cart) {
-    //   throw new HttpException('Không tìm thấy giỏ hàng', 404);
-    // }
-
     const cart = await this.cartService.get(userAuth?.user_id || data.user_id);
 
     if (
@@ -687,6 +680,8 @@ export class OrdersService {
     //   join: cartPaymentJoiner,
     //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     // });
+
+    console.log(691, cartItems);
 
     let totalPrice = +cart.totalPrice;
 
@@ -775,7 +770,7 @@ export class OrdersService {
     orderData['user_id'] = user['user_id'];
 
     orderData['total'] = 0;
-    console.log(data['order_items']);
+    // console.log(778, data['order_items']);
     // let [orderItems, promotionAccessories, giftProducts, warrantyProducts] =
     //   await this.promotionAccessoryService.splitAccessoriesGiftWarrantyInProductsList(
     //     data['order_items'],
@@ -817,6 +812,14 @@ export class OrdersService {
     for (let orderItem of data['order_items']) {
       orderData['total'] += +orderItem.amount * orderItem.price;
     }
+
+    console.log(
+      816,
+      data['order_items'].forEach((orderItem) => {
+        console.log(orderItem.product_id);
+        console.log(orderItem.belong_order_detail_id);
+      }),
+    );
 
     // if (promotionAccessories.length) {
     //   for (let promotionAccessoryItem of promotionAccessories) {
@@ -965,6 +968,7 @@ export class OrdersService {
     // }
 
     for (let orderItem of data['order_items']) {
+      console.log(orderItem);
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -974,6 +978,7 @@ export class OrdersService {
           product_appcore_id: orderItem.product_appcore_id,
           price: orderItem['price'],
           status: CommonStatus.Active,
+          is_gift_taken: null,
         }),
       };
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
@@ -1019,7 +1024,6 @@ export class OrdersService {
     if (!sendToAppcore) return result;
 
     try {
-      console.log('call to Appcore', configPushOrderToAppcore);
       const response = await axios(configPushOrderToAppcore);
 
       const orderAppcoreResponse = response.data.data;

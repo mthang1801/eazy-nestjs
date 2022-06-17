@@ -10,8 +10,8 @@ export class OrderDetailsEntity {
   price: number = 0;
   amount: number = 0;
   discount: number = 0;
-  is_gift_taken: null;
-  belong_order_detail_id: null;
+  is_gift_taken: number = null;
+  belong_order_detail_id: number = null;
   extra: string = '';
   note: string = '';
   status: string = 'A';
