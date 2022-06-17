@@ -1036,7 +1036,6 @@ export class OrdersService {
 
     result['order_items'] = orderDetailsToAppcore;
 
-    console.log(convertOrderDataFromCMSToAppcore(result));
     const configPushOrderToAppcore: any = {
       method: 'POST',
       url: PUSH_ORDER_TO_APPCORE_API,
@@ -2176,36 +2175,86 @@ export class OrdersService {
           status: Not(Equal(OrderStatus.invalid)),
         },
       });
-      let logs = [];
-      console.log(ordersSync);
-      // if (ordersSync.length) {
-      //   for (let orderItem of ordersSync) {
-      //     try {
-      //       await this.pushOrderToAppcore(orderItem.order_id);
-      //     } catch (error) {
-      //       logs.push(orderItem.order_id);
-      //       const updatedOrder = await this.orderRepo.update(
-      //         { order_id: orderItem.order_id },
-      //         {
-      //           status: OrderStatus.invalid,
-      //           reason_fail: error.response,
-      //         },
-      //         true,
-      //       );
-      //       await this.orderHistoryRepo.create(updatedOrder, false);
-      //     }
-      //   }
-      // }
-      // if (logs.length) {
-      //   throw new HttpException(
-      //     `Đồng bộ đơn hàng có id ${logs.join(',')} không thành công.`,
-      //     422,
-      //   );
-      // }
-      // await this.orderRepo.update(
-      //   { order_code: Not(IsNull()) },
-      //   { is_sync: 'N' },
-      // );
+
+      let _orderSync = ordersSync.map(async (order) => {
+        let originOrderDetails = await this.orderDetailRepo.find({
+          order_id: order.order_id,
+        });
+
+        let orderDetailsToAppcore = originOrderDetails
+          .filter((orderItem) => !orderItem.belong_order_detail_id)
+          .map((orderItem) => {
+            let giftOrderItems = originOrderDetails
+              .filter(
+                (item) =>
+                  item.belong_order_detail_id == orderItem.product_appcore_id &&
+                  item.is_gift_taken == 1,
+              )
+              .map((giftItem) => ({ productId: giftItem.product_appcore_id }));
+            let promotionOrderItems = originOrderDetails
+              .filter(
+                (item) =>
+                  item.belong_order_detail_id == orderItem.product_appcore_id &&
+                  !item.is_gift_taken,
+              )
+              .map((promotionItem) => ({
+                productId: promotionItem.product_appcore_id,
+              }));
+            orderItem['giftOrderItems'] = giftOrderItems;
+            orderItem['promotionOrderItems'] = promotionOrderItems;
+            orderItem['product_id'] = orderItem['product_appcore_id'];
+            return orderItem;
+          });
+
+        order['order_items'] = orderDetailsToAppcore;
+
+        const configPushOrderToAppcore: any = {
+          method: 'POST',
+          url: PUSH_ORDER_TO_APPCORE_API,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          data: convertOrderDataFromCMSToAppcore(order),
+        };
+
+        try {
+          const response = await axios(configPushOrderToAppcore);
+
+          const orderAppcoreResponse = response.data.data;
+          const updatedOrder = await this.orderRepo.update(
+            { order_id: order.order_id },
+            {
+              order_code: orderAppcoreResponse.orderId,
+              is_sync: 'N',
+            },
+            true,
+          );
+
+          for (let orderItem of orderAppcoreResponse['orderItemIds']) {
+            await this.orderDetailRepo.update(
+              {
+                order_id: order.order_id,
+                product_appcore_id: orderItem.productId,
+              },
+              { order_item_appcore_id: orderItem.orderItemId },
+            );
+          }
+          // update order history
+          await this.orderHistoryRepo.create(updatedOrder, false);
+          return order;
+        } catch (err) {
+          await this.orderRepo.update(
+            { order_id: order.order_id },
+            {
+              is_sync: 'N',
+            },
+            true,
+          );
+          console.log(err);
+        }
+      });
+
+      await Promise.allSettled(_orderSync);
     } catch (error) {
       throw new HttpException(
         error?.response?.data?.message || error?.response,
