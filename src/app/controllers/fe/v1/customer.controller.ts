@@ -16,7 +16,7 @@ import { IResponse } from '../../../interfaces/response.interface';
 import { OrdersService } from '../../../services/orders.service';
 import { Query } from '@nestjs/common';
 import { Response } from 'express';
-
+          
 @Controller('/fe/v1/customers')
 export class CustomerController extends BaseController {
   constructor(
@@ -46,7 +46,7 @@ export class CustomerController extends BaseController {
     @Res() res: Response,
     @Query() params,
   ): Promise<IResponse> {
-    const result = await this.orderService.getByCustomerId(user_id, params);
+    const result = await this.orderService.getOrdersListByCustomerId(user_id, params);
     return this.responseSuccess(res, result);
   }
 

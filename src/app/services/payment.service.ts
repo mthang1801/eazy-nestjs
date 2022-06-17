@@ -472,7 +472,7 @@ export class PaymentService {
   async payooPayment(data, method, userAuth = null) {
     try {
       let cartItems = [];
-      let cart;
+      let cart: any;
       if (method === 'installment') {
         let product = await this.productRepo.findOne({
           select: `*, ${Table.PRODUCTS}.*`,
@@ -482,10 +482,12 @@ export class PaymentService {
         if (!product) {
           throw new HttpException('Không tìm thấy SP', 404);
         }
-        cart.totalPrice = +product.price;
-        cartItems = [
-          { product_id: product.product_id, amount: 1, price: +product.price },
-        ];
+        cart = {
+          totalPrice: +product.price,
+          product_id: product.product_id,
+          amount: 1,
+          price: +product.price,
+        };
       } else {
         cart = await this.cartService.get(data['user_id']);
         if (!cart || !cart.cart_items || !cart.cart_items.length) {

@@ -54,12 +54,15 @@ export class OrdersController extends BaseController {
   }
 
   @Get('/customers/:customer_id')
-  async getByCustomerId(
+  async getOrdersListByCustomerId(
     @Query() params,
     @Param('customer_id') customer_id: number,
     @Res() res: Response,
   ): Promise<IResponse> {
-    const result = await this.service.getByCustomerId(customer_id, params);
+    const result = await this.service.getOrdersListByCustomerId(
+      customer_id,
+      params,
+    );
     return this.responseSuccess(res, result);
   }
 

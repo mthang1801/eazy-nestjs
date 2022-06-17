@@ -1765,7 +1765,7 @@ export class OrdersService {
     return this.getOrderDetails(order);
   }
 
-  async getByCustomerId(customer_id: number, params) {
+  async getOrdersListByCustomerId(customer_id: number, params) {
     const customer = await this.userRepo.findOne({ user_id: customer_id });
     if (!customer) {
       throw new HttpException('Không tìm thấy khách hàng.', 404);

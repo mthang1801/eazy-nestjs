@@ -114,7 +114,10 @@ export class CustomerController extends BaseController {
     @Res() res: Response,
     @Query() params,
   ): Promise<IResponse> {
-    const result = await this.orderService.getByCustomerId(user_id, params);
+    const result = await this.orderService.getOrdersListByCustomerId(
+      user_id,
+      params,
+    );
     return this.responseSuccess(res, result);
   }
 
