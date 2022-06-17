@@ -91,6 +91,7 @@ export class CartService {
   }
 
   async get(user_id) {
+    await this.cache.removeCartByUserId(user_id);
     let cartCacheResult = await this.cache.getCartByUserId(user_id);
     if (cartCacheResult) {
       return cartCacheResult;

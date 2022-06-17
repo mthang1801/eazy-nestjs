@@ -1061,7 +1061,16 @@ export class PaymentService {
         },
       });
       if (!user) {
-        await this.customerService.createCustomerFromWebPayment(data);
+        const checkUserAppcore =
+          await this.customerService.searchCustomterAppcoreByPhone(
+            data.s_phone,
+          );
+        if (checkUserAppcore) {
+          await this.customerService.createCustomer(checkUserAppcore, false);
+        } else {
+          await this.customerService.createCustomerFromWebPayment(data);
+        }
+
         user = await this.userRepo.findOne({
           select: userSelector,
           join: userJoiner,
@@ -1071,41 +1080,63 @@ export class PaymentService {
         });
       }
     }
-    let cartItems = [];
 
-    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
-    if (!cart) {
+    let cart = await this.cartService.get(user.user_id);
+    console.log(cart);
+    if (
+      !cart ||
+      !cart.cart_items ||
+      !cart.cart_items.length ||
+      cart.totalPrice == undefined
+    ) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
 
-    cartItems = await this.cartItemRepo.find({
-      select: `*, ${Table.CART_ITEMS}.amount`,
-      join: cartPaymentJoiner,
-      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-    });
+    let cartItems = cart['cart_items'];
 
-    let _cartItems = [...cartItems];
-    for (let cartItem of _cartItems) {
-      if (cartItem.free_accessory_id) {
-        let giftProducts =
-          await this.promotionAccessoryService.findGiftInProductItem(
-            cartItem.free_accessory_id,
-          );
-        if (giftProducts?.length) {
-          for (let giftProductItem of giftProducts) {
-            let data = {};
-            data['price'] = +giftProductItem['sale_price'];
-            data['amount'] = 1;
-            _cartItems.push(data);
-          }
-        }
-      }
-    }
+    let totalPrice = +cart.totalPrice;
 
-    let totalPrice = _cartItems.reduce(
-      (acc, ele) => acc + ele.price * ele.amount,
-      0,
-    );
+    // let cartItems = await this.cartItemRepo.find({
+    //   select: `*, ${Table.CART_ITEMS}.product_id, ${Table.CART_ITEMS}.amount`,
+    //   join: cartPaymentJoiner,
+    //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    // });
+
+    // let cartItems = [];
+
+    // let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
+    // if (!cart) {
+    //   throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    // }
+
+    // cartItems = await this.cartItemRepo.find({
+    //   select: `*, ${Table.CART_ITEMS}.amount`,
+    //   join: cartPaymentJoiner,
+    //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    // });
+
+    // let _cartItems = [...cartItems];
+    // for (let cartItem of _cartItems) {
+    //   if (cartItem.free_accessory_id) {
+    //     let giftProducts =
+    //       await this.promotionAccessoryService.findGiftInProductItem(
+    //         cartItem.free_accessory_id,
+    //       );
+    //     if (giftProducts?.length) {
+    //       for (let giftProductItem of giftProducts) {
+    //         let data = {};
+    //         data['price'] = +giftProductItem['sale_price'];
+    //         data['amount'] = 1;
+    //         _cartItems.push(data);
+    //       }
+    //     }
+    //   }
+    // }
+
+    // let totalPrice = _cartItems.reduce(
+    //   (acc, ele) => acc + ele.price * ele.amount,
+    //   0,
+    // );
 
     let ref_order_id = generateRandomString();
     let payCreditType = 2;
@@ -1173,7 +1204,7 @@ export class PaymentService {
 
     if (+sendData['subtotal'] >= 50000000) {
       throw new HttpException(
-        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        'Phương thức thanh toán ví Momo chỉ áp dụng cho đơn hàng giá trị tối đa 50 Triệu đồng.',
         413,
       );
     }
@@ -1195,6 +1226,10 @@ export class PaymentService {
       errormsg: responseData.message,
       payment_url: responseData.payUrl,
     });
+
+    if (cart.cart_id) {
+      await this.cartService.clearAll(cart.cart_id);
+    }
     return responseData;
   }
 
@@ -1217,7 +1252,16 @@ export class PaymentService {
         },
       });
       if (!user) {
-        await this.customerService.createCustomerFromWebPayment(data);
+        const checkUserAppcore =
+          await this.customerService.searchCustomterAppcoreByPhone(
+            data['b_phone'],
+          );
+        if (checkUserAppcore) {
+          await this.customerService.createCustomer(checkUserAppcore, false);
+        } else {
+          await this.customerService.createCustomerFromWebPayment(data);
+        }
+
         user = await this.userRepo.findOne({
           select: userSelector,
           join: userJoiner,
@@ -1227,39 +1271,22 @@ export class PaymentService {
         });
       }
     }
-    let cartItems = [];
-    let cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
-    if (!cart) {
+
+    let cart = await this.cartService.get(user.user_id);
+
+    if (
+      !cart ||
+      !cart.cart_items ||
+      !cart.cart_items.length ||
+      cart.totalPrice == undefined
+    ) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
-    cartItems = await this.cartItemRepo.find({
-      select: `*, ${Table.CART_ITEMS}.amount`,
-      join: cartPaymentJoiner,
-      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-    });
 
-    let _cartItems = [...cartItems];
-    for (let cartItem of _cartItems) {
-      if (cartItem.free_accessory_id) {
-        let giftProducts =
-          await this.promotionAccessoryService.findGiftInProductItem(
-            cartItem.free_accessory_id,
-          );
-        if (giftProducts?.length) {
-          for (let giftProductItem of giftProducts) {
-            let data = {};
-            data['price'] = +giftProductItem['sale_price'];
-            data['amount'] = 1;
-            _cartItems.push(data);
-          }
-        }
-      }
-    }
+    let cartItems = cart['cart_items'];
 
-    let totalPrice = _cartItems.reduce(
-      (acc, ele) => acc + ele.price * ele.amount,
-      0,
-    );
+    let totalPrice = +cart.totalPrice;
+
     let ref_order_id = generateRandomString();
     let payCreditType = 2;
     let sendData: any = {
@@ -1307,9 +1334,9 @@ export class PaymentService {
 
     sendData['paymentStatus'] = PaymentStatus.new;
 
-    if (sendData['subtotal'] > 50000000) {
+    if (sendData['subtotal'] >= 50000000) {
       throw new HttpException(
-        'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
+        'Phương thức thanh toán ví Momo chỉ áp dụng cho đơn hàng giá trị tối đa 50 Triệu đồng.',
         413,
       );
     }

@@ -989,7 +989,7 @@ export class OrdersService {
               ...result,
               ...giftProductItem,
             }),
-            discount_price: giftProductItem['price'],
+            discount: giftProductItem['price'],
             price: giftProductItem['price'],
             is_gift_taken: 1,
             amount: giftProductItem.amount,
