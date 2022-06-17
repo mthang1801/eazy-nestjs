@@ -482,42 +482,20 @@ export class PaymentService {
         if (!product) {
           throw new HttpException('Không tìm thấy SP', 404);
         }
+        cart.totalPrice = +product.price;
         cartItems = [
-          { product_id: product.product_id, amount: 1, price: product.price },
+          { product_id: product.product_id, amount: 1, price: +product.price },
         ];
       } else {
-        cart = await this.cartRepo.findOne({ user_id: data['user_id'] });
-        if (!cart) {
+        cart = await this.cartService.get(data['user_id']);
+        if (!cart || !cart.cart_items || !cart.cart_items.length) {
           throw new HttpException('Không tìm thấy giỏ hàng', 404);
         }
-        cartItems = await this.cartItemRepo.find({
-          select: `*, ${Table.PRODUCTS}.*, ${Table.CART_ITEMS}.amount`,
-          join: cartPaymentJoiner,
-          where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-        });
-      }
-      let _cartItems = [...cartItems];
-      for (let cartItem of _cartItems) {
-        if (cartItem.free_accessory_id) {
-          let giftProducts =
-            await this.promotionAccessoryService.findGiftInProductItem(
-              cartItem.free_accessory_id,
-            );
-          if (giftProducts?.length) {
-            for (let giftProductItem of giftProducts) {
-              let data = {};
-              data['price'] = +giftProductItem['sale_price'];
-              data['amount'] = 1;
-              _cartItems.push(data);
-            }
-          }
-        }
+
+        cartItems = cart['cart_items'];
       }
 
-      let totalPrice = _cartItems.reduce(
-        (acc, ele) => acc + ele.price * ele.amount,
-        0,
-      );
+      let totalPrice = cart.totalPrice;
 
       let user;
       if (userAuth) {
@@ -708,7 +686,7 @@ export class PaymentService {
       }
 
       await this.orderService.createOrder(user, sendData, false);
-      console.log(2);
+
       const headers = {
         APIUsername: payooAPIUserName,
         APIPassword: payooAPIPassword,
@@ -1192,7 +1170,7 @@ export class PaymentService {
       }
     }
 
-    if (sendData['subtotal'] > 50000000) {
+    if (+sendData['subtotal'] >= 50000000) {
       throw new HttpException(
         'Số tiền thanh toán qúa lớn, không thể áp dụng vào ví Momo',
         400,

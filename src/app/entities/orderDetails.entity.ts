@@ -5,6 +5,8 @@ export class OrderDetailsEntity {
   order_item_appcore_id: string = '0';
   product_id: number = 0;
   product_appcore_id: string = '';
+  product_code: string = '';
+  barcode: string = '';
   price: number = 0;
   amount: number = 0;
   discount: number = 0;

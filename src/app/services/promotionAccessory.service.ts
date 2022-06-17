@@ -396,7 +396,7 @@ export class PromotionAccessoryService {
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      throw new HttpException('Bộ phụ kiện đã tồn tại', 409);
+      return this.itgUpdate(convertedData['app_core_id'], data, type)
     }
 
     const accessoryData = {
@@ -914,7 +914,7 @@ export class PromotionAccessoryService {
         join: promoAccessoriesJoiner,
         where: filterConditions({
           [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
-            product?.promotion_accessory_id,
+            product?.free_accessory_id,
         }),
       });
     }
@@ -926,12 +926,12 @@ export class PromotionAccessoryService {
         join: promoAccessoriesJoiner,
         where: filterConditions({
           [`${Table.PRODUCT_PROMOTION_ACCESSOR_DETAIL}.accessory_id`]:
-            product?.promotion_accessory_id,
+            product?.warranty_package_id,
         }),
       });
     }
 
-    return Promise.all([
+    return await Promise.all([
       _promotionAccessories,
       _giftAccessories,
       _warrantyPackages,

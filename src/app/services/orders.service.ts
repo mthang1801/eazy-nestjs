@@ -166,6 +166,7 @@ import { PromotionAccessoryEntity } from '../entities/promotionAccessory.entity'
 import { PromotionAccessoryDetailRepository } from '../repositories/promotionAccessoryDetail.repository';
 import { PromotionAccessoryDetailEntity } from '../entities/promotionAccessoryDetail.entity';
 import { PromotionAccessoryService } from './promotionAccessory.service';
+import { iif, of } from 'rxjs';
 
 @Injectable()
 export class OrdersService {
@@ -476,7 +477,6 @@ export class OrdersService {
   async createSelfTransport(data: CreateOrderSelfTransportDto, authUser) {
     try {
       let user;
-      let cart;
 
       if (authUser) {
         user = await this.userRepo.findOne({
@@ -495,7 +495,6 @@ export class OrdersService {
           });
           user = await this.customerService.createCustomerToAppcore(user);
         }
-        cart = await this.cartRepo.findOne({ user_id: user.user_id });
       } else {
         user = await this.userRepo.findOne({ phone: data.b_phone });
         if (!user) {
@@ -518,17 +517,25 @@ export class OrdersService {
             user = await this.customerService.createUserSelfTransport(userData);
           }
         }
-
-        cart = await this.cartRepo.findOne({ user_id: data.user_id });
       }
 
-      if (!cart) {
+      if (!authUser && !data.user_id) {
+        throw new HttpException('Lấy giỏ hàng không thành công.', 400);
+      }
+      let cart = await this.cartService.get(
+        authUser ? authUser.user_id : data.user_id,
+      );
+
+      if (
+        !cart ||
+        !cart.cart_items ||
+        !cart.cart_items.length ||
+        cart.totalPrice == undefined
+      ) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
-      const cartItems = await this.cartItemRepo.find({
-        select: 'product_id, amount',
-        where: { cart_id: cart.cart_id },
-      });
+      console.log(cart);
+      let cartItems = cart['cart_items'];
 
       if (!cartItems.length) {
         throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
@@ -655,23 +662,33 @@ export class OrdersService {
       );
     }
 
-    const cart = await this.cartRepo.findOne({
-      user_id: userAuth ? userAuth.user_id : data.user_id,
-    });
-    if (!cart) {
+    // const cart = await this.cartRepo.findOne({
+    //   user_id: userAuth ? userAuth.user_id : data.user_id,
+    // });
+    // if (!cart) {
+    //   throw new HttpException('Không tìm thấy giỏ hàng', 404);
+    // }
+
+    const cart = await this.cartService.get(userAuth?.user_id || data.user_id);
+
+    if (
+      !cart ||
+      !cart.cart_items ||
+      !cart.cart_items.length ||
+      cart.totalPrice == undefined
+    ) {
       throw new HttpException('Không tìm thấy giỏ hàng', 404);
     }
 
-    let cartItems = await this.cartItemRepo.find({
-      select: `*, ${Table.CART_ITEMS}.product_id, ${Table.CART_ITEMS}.amount`,
-      join: cartPaymentJoiner,
-      where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-    });
+    let cartItems = cart['cart_items'];
 
-    let totalPrice = cartItems.reduce(
-      (acc, ele) => acc + ele.price * ele.amount,
-      0,
-    );
+    // let cartItems = await this.cartItemRepo.find({
+    //   select: `*, ${Table.CART_ITEMS}.product_id, ${Table.CART_ITEMS}.amount`,
+    //   join: cartPaymentJoiner,
+    //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
+    // });
+
+    let totalPrice = +cart.totalPrice;
 
     if (!cartItems.length) {
       throw new HttpException('Không tìm thấy sản phẩm trong giỏ hàng', 404);
@@ -706,6 +723,7 @@ export class OrdersService {
       ...userProfile,
       user_appcore_id: user['user_appcore_id'],
       order_items: cartItems,
+      ...data,
     };
 
     if (data.shipping_fee_location_id) {
@@ -757,55 +775,59 @@ export class OrdersService {
     orderData['user_id'] = user['user_id'];
 
     orderData['total'] = 0;
+    console.log(data['order_items']);
+    // let [orderItems, promotionAccessories, giftProducts, warrantyProducts] =
+    //   await this.promotionAccessoryService.splitAccessoriesGiftWarrantyInProductsList(
+    //     data['order_items'],
+    //   );
+    // console.log(765, orderItems);
+    // console.log('promotion', promotionAccessories);
+    // console.log('gift', giftProducts);
+    // console.log('warranty', warrantyProducts);
 
-    let [orderItems, promotionAccessories, giftProducts, warrantyProducts] =
-      await this.promotionAccessoryService.splitAccessoriesGiftWarrantyInProductsList(
-        data['order_items'],
-      );
-    console.log(765, orderItems);
-    console.log('promotion', promotionAccessories);
-    console.log('gift', giftProducts);
-    console.log('warranty', warrantyProducts);
+    // if (orderItems.length) {
+    //   for (let orderItem of orderItems) {
+    //     const productInfo = await this.productRepo.findOne({
+    //       select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
+    //       join: productLeftJoiner,
+    //       where: {
+    //         [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
+    //       },
+    //     });
 
-    if (orderItems.length) {
-      for (let orderItem of orderItems) {
-        const productInfo = await this.productRepo.findOne({
-          select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
-          join: productLeftJoiner,
-          where: {
-            [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
-          },
-        });
+    //     if (productInfo.product_function == 1) {
+    //       throw new HttpException('Không thể dùng SP cha', 401);
+    //     }
 
-        if (productInfo.product_function == 1) {
-          throw new HttpException('Không thể dùng SP cha', 401);
-        }
+    //     if (!productInfo) {
+    //       throw new HttpException(
+    //         `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
+    //         404,
+    //       );
+    //     }
 
-        if (!productInfo) {
-          throw new HttpException(
-            `Không tìm thấy sản phẩm có id ${orderItem.product_id}`,
-            404,
-          );
-        }
+    //     orderData['total'] +=
+    //       (productInfo['price'] *
+    //         orderItem.amount *
+    //         (100 - productInfo['percentage_discount'])) /
+    //       100;
+    //   }
+    // }
 
-        orderData['total'] +=
-          (productInfo['price'] *
-            orderItem.amount *
-            (100 - productInfo['percentage_discount'])) /
-          100;
-      }
+    for (let orderItem of data['order_items']) {
+      orderData['total'] += +orderItem.amount * orderItem.price;
     }
 
-    if (promotionAccessories.length) {
-      for (let promotionAccessoryItem of promotionAccessories) {
-        orderData['total'] += +promotionAccessoryItem['promotion_price'];
-      }
-    }
-    if (warrantyProducts.length) {
-      for (let warrantyProductItem of warrantyProducts) {
-        orderData['total'] += +warrantyProductItem['sale_price'];
-      }
-    }
+    // if (promotionAccessories.length) {
+    //   for (let promotionAccessoryItem of promotionAccessories) {
+    //     orderData['total'] += +promotionAccessoryItem['price'];
+    //   }
+    // }
+    // if (warrantyProducts.length) {
+    //   for (let warrantyProductItem of warrantyProducts) {
+    //     orderData['total'] += +warrantyProductItem['price'];
+    //   }
+    // }
 
     orderData['total'] =
       orderData['discount_type'] == 1
@@ -885,66 +907,105 @@ export class OrdersService {
     }
 
     result['order_items'] = [];
-    for (let orderItem of data['order_items']) {
-      const orderProductItem = await this.productRepo.findOne({
-        select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
-        join: productLeftJoiner,
-        where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
-      });
+    // for (let orderItem of data['order_items']) {
+    //   const orderProductItem = await this.productRepo.findOne({
+    //     select: `*, ${Table.PRODUCT_PRICES}.*, ${Table.PRODUCTS}.*`,
+    //     join: productLeftJoiner,
+    //     where: { [`${Table.PRODUCTS}.product_id`]: orderItem['product_id'] },
+    //   });
 
+    //   let orderDetailData = {
+    //     ...new OrderDetailsEntity(),
+    //     ...this.orderDetailRepo.setData({
+    //       ...result,
+    //       ...orderItem,
+    //       product_id: orderProductItem.product_id,
+    //       product_appcore_id: orderProductItem.product_appcore_id,
+    //       price: orderProductItem['price'],
+    //       status: CommonStatus.Active,
+    //     }),
+    //   };
+
+    //   let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
+
+    //   result['order_items'].push({
+    //     ...newOrderDetail,
+    //     product_id: newOrderDetail.product_appcore_id,
+    //   });
+
+    //   if (orderProductItem.free_accessory_id) {
+    //     let giftProducts =
+    //       await this.promotionAccessoryService.findGiftInProductItem(
+    //         orderProductItem.free_accessory_id,
+    //       );
+    //     if (giftProducts?.length) {
+    //       for (let giftProductItem of giftProducts) {
+    //         let giftOrderDetailData = {
+    //           ...new OrderDetailsEntity(),
+    //           ...this.orderDetailRepo.setData({
+    //             ...result,
+    //             ...giftProductItem,
+    //           }),
+    //           price: giftProductItem.sale_price,
+    //           is_gift_taken: 1,
+    //           amount: 1,
+    //           belong_order_detail_id: orderProductItem.product_appcore_id,
+    //         };
+
+    //         let newGiftOrderItemDetail = await this.orderDetailRepo.create(
+    //           giftOrderDetailData,
+    //         );
+    //         result['order_items'].push({
+    //           ...newGiftOrderItemDetail,
+    //           product_id: newGiftOrderItemDetail.product_appcore_id,
+    //         });
+    //       }
+    //     }
+    //   }
+    // }
+
+    for (let orderItem of data['order_items']) {
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
           ...result,
           ...orderItem,
-          product_id: orderProductItem.product_id,
-          product_appcore_id: orderProductItem.product_appcore_id,
-          price: orderProductItem['price'],
+          product_id: orderItem.product_id,
+          product_appcore_id: orderItem.product_appcore_id,
+          price: orderItem['price'],
           status: CommonStatus.Active,
         }),
       };
-
       let newOrderDetail = await this.orderDetailRepo.create(orderDetailData);
-
       result['order_items'].push({
         ...newOrderDetail,
         product_id: newOrderDetail.product_appcore_id,
       });
+      if (orderItem['giftAccessories'] && orderItem['giftAccessories'].length) {
+        for (let giftProductItem of orderItem['giftAccessories']) {
+          let giftOrderDetailData = {
+            ...new OrderDetailsEntity(),
+            ...this.orderDetailRepo.setData({
+              ...result,
+              ...giftProductItem,
+            }),
+            price: 0,
+            is_gift_taken: 1,
+            amount: giftProductItem.amount,
+            belong_order_detail_id: newOrderDetail.product_appcore_id,
+          };
 
-      if (orderProductItem.free_accessory_id) {
-        let giftProducts =
-          await this.promotionAccessoryService.findGiftInProductItem(
-            orderProductItem.free_accessory_id,
+          let newGiftOrderItemDetail = await this.orderDetailRepo.create(
+            giftOrderDetailData,
           );
-        if (giftProducts?.length) {
-          for (let giftProductItem of giftProducts) {
-            let giftOrderDetailData = {
-              ...new OrderDetailsEntity(),
-              ...this.orderDetailRepo.setData({
-                ...result,
-                ...giftProductItem,
-              }),
-              price: giftProductItem.sale_price,
-              is_gift_taken: 1,
-              amount: 1,
-              belong_order_detail_id: orderProductItem.product_appcore_id,
-            };
-
-            let newGiftOrderItemDetail = await this.orderDetailRepo.create(
-              giftOrderDetailData,
-            );
-            result['order_items'].push({
-              ...newGiftOrderItemDetail,
-              product_id: newGiftOrderItemDetail.product_appcore_id,
-            });
-          }
+          result['order_items'].push({
+            ...newGiftOrderItemDetail,
+            product_id: newGiftOrderItemDetail.product_appcore_id,
+          });
         }
       }
     }
 
-    if (!sendToAppcore) return result;
-
-    //============ Push data to Appcore ==================
     const configPushOrderToAppcore: any = {
       method: 'POST',
       url: PUSH_ORDER_TO_APPCORE_API,
@@ -953,6 +1014,8 @@ export class OrdersService {
       },
       data: convertOrderDataFromCMSToAppcore(result),
     };
+
+    if (!sendToAppcore) return result;
 
     try {
       console.log('call to Appcore', configPushOrderToAppcore);
@@ -1055,13 +1118,22 @@ export class OrdersService {
         },
       );
     } catch (error) {
+      let status = OrderStatus.invalid;
+      if (
+        error?.response?.data?.message.find(
+          'Số tiền cần phải thanh toán không chính xác',
+        )
+      ) {
+        status = OrderStatus.new;
+      }
       await this.orderRepo.update(
         { order_id },
         {
-          status: OrderStatus.invalid,
+          status,
           reason_fail: error?.response?.data?.message || '',
         },
       );
+      if (status == OrderStatus.new) return;
       console.log(error);
       throw new HttpException('Something went wrong', 409);
     }

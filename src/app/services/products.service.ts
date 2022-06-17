@@ -888,7 +888,9 @@ export class ProductService {
       is_installment,
       sort_by_price,
     } = params;
-    let filterConditions = {};
+    let filterConditions: any = {
+      [`${Table.PRODUCTS}.status`]: 'A',
+    };
 
     let categoriesList = [];
 
@@ -969,6 +971,7 @@ export class ProductService {
       productCacheKey['sort_by_price'] = true;
     }
 
+    // await this.cache.removeProductCacheList(productCacheKey);
     let productCacheResult = await this.cache.getProductCacheList(
       productCacheKey,
     );
@@ -4390,7 +4393,7 @@ export class ProductService {
         { view_count: product.view_count + 1 },
       );
 
-      await this.cache.removeCachedProductById(product.product_id);
+      // await this.cache.removeCachedProductById(product.product_id);
 
       const productCacheResult = await this.cache.getProductCacheById(
         product.product_id,
@@ -4408,7 +4411,7 @@ export class ProductService {
       if (!product) {
         throw new HttpException('Không tìm thấy SP', 404);
       }
-      await this.cache.removeCachedProductById(product.product_id);
+      // await this.cache.removeCachedProductById(product.product_id);
     }
 
     this.productRepo.update(

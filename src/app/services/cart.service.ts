@@ -54,6 +54,9 @@ export class CartService {
     if (!product_ids.length) {
       return;
     }
+
+    let promotionAccessories = [];
+
     for (let product_id of product_ids) {
       let checkProduct = await this.productRepo.findOne({
         product_id,
@@ -62,6 +65,7 @@ export class CartService {
       if (!checkProduct) {
         throw new HttpException('Không thể thêm SP cha vào giỏ hàng.', 400);
       }
+
       let cartItem = await this.cartItemRepo.findOne({
         cart_id: cart.cart_id,
         product_id,
@@ -110,7 +114,11 @@ export class CartService {
 
     cartItems = _.unionBy(cartItems, 'product_id');
 
-    let _cartItems = cartItems.map(async (cartItem) => {
+    let totalPrice = 0;
+    let giftAccessories = [];
+    let promotionAccessories = [];
+    let warrantyPackages = [];
+    for (let cartItem of cartItems) {
       if (cartItem.product_type == 3) {
         let group = await this.productGroupRepo.findOne({
           product_root_id: cartItem.product_id,
@@ -136,38 +144,71 @@ export class CartService {
         }
       }
 
-      let [promotionAccessories, giftAccessories, warrantyPackages] =
+      let [_promotionAccessories, _giftAccessories, _warrantyPackages] =
         await this.promoAccessoryService.findAccessoriesGiftWarrantyInProduct([
-          cartItem,
+          cartItem.product_id,
         ]);
 
-      if (giftAccessories) {
-        cartItem['giftAccessories'] = giftAccessories;
+      cartItem['giftAccessories'] = [];
+      if (_giftAccessories.length) {
+        giftAccessories = [..._giftAccessories, ...giftAccessories];
+        cartItem['giftAccessories'] = giftAccessories.map((giftAccessory) => ({
+          ...giftAccessory,
+          amount: cartItem.amount,
+        }));
       }
 
-      if (promotionAccessories) {
-        cartItems = cartItems.map(async (item) => {
-          let appliedPromotionAccessory = promotionAccessories.find(
-            (promotionAccessoryItem) =>
-              promotionAccessoryItem.product_id == item.product_id,
-          );
-          if (appliedPromotionAccessory) {
-            item.price = appliedPromotionAccessory.sale_price;
-          }
-          return item;
-        });
+      if (_promotionAccessories) {
+        promotionAccessories = [
+          ...promotionAccessories,
+          ..._promotionAccessories,
+        ];
       }
+      if (warrantyPackages) {
+        warrantyPackages = [...warrantyPackages, ..._warrantyPackages];
+      }
+    }
 
-      return cartItem;
-    });
+    cartItems = cartItems.filter(
+      (cartItem) =>
+        !giftAccessories.some((item) => item.product_id == cartItem.product_id),
+    );
 
-    cartItems = await Promise.all([..._cartItems]);
+    if (promotionAccessories.length) {
+      cartItems = cartItems.map((cartItem) => {
+        let checkPromotionExist = promotionAccessories.find(
+          (item) => item.product_id == cartItem.product_id,
+        );
+
+        if (checkPromotionExist) {
+          cartItem['price'] = +checkPromotionExist.promotion_price;
+          cartItem['amount'] = cartItem.amount;
+          cartItem['belong_order_detail_id'] = cartItem['product_id'];
+          cartItem['is_gift_taken'] = '0';
+        }
+        return cartItem;
+      });
+    }
+
+    if (warrantyPackages.length) {
+      cartItems = cartItems.map((cartItem) => {
+        let warrantyPackageExist = warrantyPackages.find(
+          (item) => item.product_id == cartItem.product_id,
+        );
+
+        if (warrantyPackageExist) {
+          cartItem['price'] = +warrantyPackageExist.sale_price;
+          cartItem['amount'] = cartItem.amount;
+        }
+        return cartItem;
+      });
+    }
 
     const totalAmount = cartItems.length;
     result['totalAmount'] = totalAmount;
 
-    const totalPrice = cartItems.reduce(
-      (acc, ele) => acc + ele.amount * ele.price,
+    totalPrice = cartItems.reduce(
+      (acc, item) => acc + +item.price * +item.amount,
       0,
     );
     result['totalPrice'] = totalPrice;
