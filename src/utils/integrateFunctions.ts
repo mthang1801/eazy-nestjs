@@ -694,6 +694,7 @@ export const itgConvertProductsFromAppcore = (data) => {
 
     convertedData[toData] = convertedData[fromData];
   }
+  convertedData['status'] = 'A';
 
   const mappingComboData = new Map([
     ['product_appcore_id', 'product_appcore_id'],

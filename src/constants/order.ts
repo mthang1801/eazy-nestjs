@@ -356,6 +356,14 @@ export const convertOrderDataFromCMSToAppcore = (data) => {
       cvOrderItem['isGiftTaken'] = orderItem['is_gift_taken'];
     }
 
+    if (orderItem['promotionOrderItems']) {
+      cvOrderItem['promotionOrderItems'] = orderItem['promotionOrderItems'];
+    }
+
+    if (orderItem['giftOrderItems']) {
+      cvOrderItem['freeOrderItems'] = orderItem['giftOrderItems'];
+    }
+
     itgData['orderItems'] = itgData['orderItems']
       ? [...itgData['orderItems'], cvOrderItem]
       : [cvOrderItem];

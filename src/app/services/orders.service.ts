@@ -287,7 +287,6 @@ export class OrdersService {
         join: productLeftJoiner,
         where: {
           [`${Table.PRODUCTS}.product_id`]: orderItem.product_id,
-          [`${Table.PRODUCTS}.product_type`]: Not(Equal('4')),
         },
       });
 
@@ -302,7 +301,9 @@ export class OrdersService {
         );
       }
 
-      orderData['total'] = +productInfo['price'] * orderItem.amount;
+      console.log(productInfo);
+
+      orderData['total'] += +productInfo['price'] * orderItem.amount;
     }
 
     orderData['subtotal'] = +orderData['subtotal'] + +orderData['total'];
@@ -537,7 +538,7 @@ export class OrdersService {
       ) {
         throw new HttpException('Không tìm thấy giỏ hàng', 404);
       }
-      console.log(cart);
+
       let cartItems = cart['cart_items'];
 
       if (!cartItems.length) {
@@ -684,8 +685,6 @@ export class OrdersService {
     //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
     // });
 
-    console.log(691, cartItems);
-
     let totalPrice = +cart.totalPrice;
 
     if (!cartItems.length) {
@@ -812,13 +811,9 @@ export class OrdersService {
     //   }
     // }
 
-    console.log(data);
-
     for (let orderItem of data['order_items']) {
       orderData['total'] += +orderItem.amount * orderItem.price;
     }
-
-    console.log(data['order_items']);
 
     // if (promotionAccessories.length) {
     //   for (let promotionAccessoryItem of promotionAccessories) {
@@ -967,7 +962,6 @@ export class OrdersService {
     // }
 
     for (let orderItem of data['order_items']) {
-      console.log(orderItem);
       let orderDetailData = {
         ...new OrderDetailsEntity(),
         ...this.orderDetailRepo.setData({
@@ -985,6 +979,7 @@ export class OrdersService {
         ...newOrderDetail,
         product_id: newOrderDetail.product_appcore_id,
       });
+
       if (orderItem['giftAccessories'] && orderItem['giftAccessories'].length) {
         for (let giftProductItem of orderItem['giftAccessories']) {
           let giftOrderDetailData = {
@@ -1011,6 +1006,37 @@ export class OrdersService {
       }
     }
 
+    let originOrderDetails = await this.orderDetailRepo.find({
+      order_id: result.order_id,
+    });
+    let orderDetailsToAppcore = originOrderDetails
+      .filter((orderItem) => !orderItem.belong_order_detail_id)
+      .map((orderItem) => {
+        let giftOrderItems = originOrderDetails
+          .filter(
+            (item) =>
+              item.belong_order_detail_id == orderItem.product_appcore_id &&
+              item.is_gift_taken == 1,
+          )
+          .map((giftItem) => ({ productId: giftItem.product_appcore_id }));
+        let promotionOrderItems = originOrderDetails
+          .filter(
+            (item) =>
+              item.belong_order_detail_id == orderItem.product_appcore_id &&
+              !item.is_gift_taken,
+          )
+          .map((promotionItem) => ({
+            productId: promotionItem.product_appcore_id,
+          }));
+        orderItem['giftOrderItems'] = giftOrderItems;
+        orderItem['promotionOrderItems'] = promotionOrderItems;
+        orderItem['product_id'] = orderItem['product_appcore_id'];
+        return orderItem;
+      });
+
+    result['order_items'] = orderDetailsToAppcore;
+
+    console.log(convertOrderDataFromCMSToAppcore(result));
     const configPushOrderToAppcore: any = {
       method: 'POST',
       url: PUSH_ORDER_TO_APPCORE_API,
