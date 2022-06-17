@@ -10,6 +10,7 @@ import { FlashSaleDetailRepository } from '../repositories/flashSaleDetail.repos
 import { FlashSaleProductRepository } from '../repositories/flashSaleProduct.repository';
 import { CartRepository } from '../repositories/cart.repository';
 import { CartItemRepository } from '../repositories/cartItem.repository';
+import { ProductsRepository } from '../repositories/products.repository';
 
 @Global()
 @Module({
@@ -37,6 +38,7 @@ import { CartItemRepository } from '../repositories/cartItem.repository';
     FlashSaleProductRepository,
     CartRepository,
     CartItemRepository,
+    ProductsRepository,
   ],
   exports: [RedisCacheService, CacheRepository],
 })

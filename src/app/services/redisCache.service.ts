@@ -30,6 +30,8 @@ import { CartEntity } from '../entities/cart.entity';
 import { CartItemRepository } from '../repositories/cartItem.repository';
 import { CartItemEntity } from '../entities/cartItem.entity';
 import { cartItemCacheJoiner } from '../../utils/joinTable';
+import { ProductsRepository } from '../repositories/products.repository';
+import { ProductsEntity } from '../entities/products.entity';
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
@@ -42,6 +44,7 @@ export class RedisCacheService {
     private flashSaleProductRepo: FlashSaleProductRepository<FlashSaleProductEntity>,
     private cartRepo: CartRepository<CartEntity>,
     private cartItemRepo: CartItemRepository<CartItemEntity>,
+    private productRepo: ProductsRepository<ProductsEntity>,
   ) {}
 
   async get(key) {
@@ -422,6 +425,18 @@ export class RedisCacheService {
     await this.removeCache(null, null, productCacheKey);
     await this.delete(productCacheKey);
     await this.cacheRepo.delete({ cache_key: productCacheKey });
+    const product = await this.productRepo.findOne({ product_id });
+    if (product?.parent_product_appcore_id) {
+      const parentProduct = await this.productRepo.findOne({
+        product_appcore_id: product.parent_product_appcore_id,
+      });
+      if (parentProduct) {
+        let parentProductCacheKey = cacheKeys.product(parentProduct.product_id);
+        await this.removeCache(null, null, parentProductCacheKey);
+        await this.delete(parentProductCacheKey);
+        await this.cacheRepo.delete({ cache_key: parentProductCacheKey });
+      }
+    }
   }
 
   async removeCachedFlashSale() {
