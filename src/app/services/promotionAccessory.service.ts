@@ -396,7 +396,7 @@ export class PromotionAccessoryService {
       app_core_id: convertedData['app_core_id'],
     });
     if (accessory) {
-      return this.itgUpdate(convertedData['app_core_id'], data, type)
+      return this.itgUpdate(convertedData['app_core_id'], data, type);
     }
 
     const accessoryData = {

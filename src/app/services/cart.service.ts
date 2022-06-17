@@ -156,13 +156,19 @@ export class CartService {
           ...giftAccessory,
           amount: cartItem.amount,
           price: giftAccessory.sale_price,
+          belong_product_id: cartItem.product_id,
+          belong_order_detail_id: cartItem.product_appcore_id,
+          belong_product_appcore_id: cartItem.product_appcore_id,
         }));
       }
 
       if (_promotionAccessories) {
         promotionAccessories = [
           ...promotionAccessories,
-          ..._promotionAccessories,
+          ..._promotionAccessories.map((promotionAccessory) => ({
+            ...promotionAccessory,
+            applied_product_id: cartItem.product_appcore_id,
+          })),
         ];
       }
       if (warrantyPackages) {
@@ -175,17 +181,38 @@ export class CartService {
         !giftAccessories.some((item) => item.product_id == cartItem.product_id),
     );
 
+    // if (promotionAccessories.length) {
+    //   cartItems = cartItems.map((cartItem) => {
+    //     let checkPromotionExist = promotionAccessories.find(
+    //       (item) => item.product_id == cartItem.product_id,
+    //     );
+
+    //     if (checkPromotionExist) {
+    //       cartItem['price'] = +checkPromotionExist.promotion_price;
+    //       cartItem['amount'] = cartItem.amount;
+    //       cartItem['belong_order_detail_id'] = cartItem['product_id'];
+    //       cartItem['is_gift_taken'] = '0';
+    //     }
+    //     return cartItem;
+    //   });
+    // }
+
     if (promotionAccessories.length) {
       cartItems = cartItems.map((cartItem) => {
-        let checkPromotionExist = promotionAccessories.find(
-          (item) => item.product_id == cartItem.product_id,
+        let promotionAccessoryInCartItem = promotionAccessories.find(
+          (promotionAccessory) =>
+            promotionAccessory.product_id == cartItem.product_id,
         );
-
-        if (checkPromotionExist) {
-          cartItem['price'] = +checkPromotionExist.promotion_price;
-          cartItem['amount'] = cartItem.amount;
-          cartItem['belong_order_detail_id'] = cartItem['product_id'];
-          cartItem['is_gift_taken'] = '0';
+        cartItem['belong_product_id'] = null;
+        cartItem['belong_order_detail_id'] = null;
+        cartItem['belong_product_appcore_id'] = null;
+        if (promotionAccessoryInCartItem) {
+          cartItem['belong_product_id'] =
+            promotionAccessoryInCartItem.applied_product_id;
+          cartItem['belong_order_detail_id'] =
+            promotionAccessoryInCartItem.belong_order_detail_id;
+          cartItem['belong_product_appcore_id'] =
+            promotionAccessoryInCartItem.belong_product_appcore_id;
         }
         return cartItem;
       });
