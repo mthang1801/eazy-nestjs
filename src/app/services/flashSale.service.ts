@@ -227,17 +227,12 @@ export class FlashSalesService {
           : [flashSaleDetailItem];
       }
     }
+
     await this.cache.setFlashSaleWebSite(flashSale);
     return flashSale;
   }
 
   async CMSget(flash_sale_id) {
-    let flashSaleCacheKey = cacheKeys.flashSale(flash_sale_id);
-    let flashSaleCacheResult = await this.cache.get(flashSaleCacheKey);
-    // if (flashSaleCacheResult) {
-    //   return flashSaleCacheResult;
-    // }
-
     let flashSale = await this.flashSaleRepo.findOne({ flash_sale_id });
     if (!flashSale) {
       throw new HttpException('Không tìm thấy FlashSale', 404);
@@ -476,7 +471,6 @@ export class FlashSalesService {
         }
       }
     }
-    await this.cache.removeCacheAllPages();
   }
 
   async testCron() {

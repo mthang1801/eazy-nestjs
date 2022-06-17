@@ -352,6 +352,11 @@ export class RedisCacheService {
     let flashSaleWebCacheKey = cacheKeys.flashSaleWebsite;
     return this.get(flashSaleWebCacheKey);
   }
+  async removeFlashSaleWebsite() {
+    let flashSaleWebCacheKey = cacheKeys.flashSaleWebsite;
+    await this.removeCache(null, null, flashSaleWebCacheKey);
+    await this.removeCacheAllPages();
+  }
 
   async setFlashSaleWebSite(data) {
     let flashSaleWebCacheKey = cacheKeys.flashSaleWebsite;
