@@ -476,6 +476,7 @@ export class FlashSalesService {
         }
       }
     }
+    await this.cache.removeCacheAllPages();
   }
 
   async testCron() {
