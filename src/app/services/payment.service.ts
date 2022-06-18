@@ -602,6 +602,12 @@ export class PaymentService {
       let sendData = {
         user_id: user.user_id,
         user_appcore_id: user.user_appcore_id,
+        b_lastname: data.b_lastname || user.b_lastname,
+        b_phone: data.b_lastname || user.b_phone,
+        b_city: data.b_city || user.b_city,
+        b_district: data.b_district || user.b_district,
+        b_ward: data.b_ward || user.b_ward,
+        b_address: data.b_address || user.b_address,
         order_items: cartItems,
         ref_order_id,
         pay_credit_type: payCreditType,
@@ -658,12 +664,6 @@ export class PaymentService {
         sendData['s_district'] = data.s_district;
         sendData['s_ward'] = data.s_ward;
         sendData['s_address'] = data.s_address;
-        sendData['b_lastname'] = data.b_lastname || user.b_lastname;
-        sendData['b_phone'] = data.b_lastname || user.b_phone;
-        sendData['b_city'] = data.b_city || user.b_city;
-        sendData['b_district'] = data.b_district || user.b_district;
-        sendData['b_ward'] = data.b_ward || user.b_ward;
-        sendData['b_address'] = data.b_address || user.b_address;
       }
 
       if (method === 'selfTransport') {

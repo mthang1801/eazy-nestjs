@@ -2122,6 +2122,7 @@ export class ProductService {
       }
     }
 
+    console.log('remove Cache');
     await Promise.all([
       _removeRelatedServicesWithCachedProduct1,
       _removePrefixProduct,
@@ -2156,7 +2157,6 @@ export class ProductService {
       const updatedProduct = await this.productRepo.update(
         { product_id: result.product_id },
         productData,
-        true,
       );
 
       result = { ...result, ...updatedProduct };
