@@ -3,6 +3,7 @@ export class CartItemEntity {
   cart_id: number = 0;
   product_id: string = '';
   amount: number = 0;
-  belong_product_id: number = 0;
-  if_gift_taken: string = 'N';
+  belong_order_detail_appcore_id: string = null;
+  belong_order_detail_id: number = null;
+  if_gift_taken: number = null;
 }

@@ -321,7 +321,7 @@ export const convertOrderDataFromCMSToAppcore = (data) => {
   for (let orderItem of data['order_items']) {
     let cvOrderItem = {};
 
-    cvOrderItem['productId'] = orderItem['product_id']; //Mã SP
+    cvOrderItem['productId'] = orderItem['product_appcore_id'].toString(); //Mã SP
 
     cvOrderItem['productPrice'] = orderItem['price']; // Đơn giá SP
 
@@ -347,9 +347,11 @@ export const convertOrderDataFromCMSToAppcore = (data) => {
       cvOrderItem['note'] = orderItem['note']; // Ghi chú SP
     }
 
-    if (orderItem['belong_order_detail_id']) {
-      cvOrderItem['belongOrderItemId'] = orderItem['belong_order_detail_id'];
-      cvOrderItem['belongOrderDetailId'] = orderItem['belong_order_detail_id'];
+    if (orderItem['belong_order_detail_appcore_id']) {
+      cvOrderItem['belongOrderItemId'] =
+        orderItem['belong_order_detail_appcore_id'];
+      cvOrderItem['belongOrderDetailId'] =
+        orderItem['belong_order_detail_appcore_id'];
     }
 
     if (orderItem['is_gift_taken']) {

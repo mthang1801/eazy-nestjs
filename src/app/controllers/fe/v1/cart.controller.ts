@@ -23,10 +23,10 @@ export class CartController extends BaseController {
   @Post(':user_id')
   async create(
     @Res() res: Response,
-    @Body('product_ids') product_ids: number[],
+    @Body() data,
     @Param('user_id') user_id: number,
   ): Promise<IResponse> {
-    const result = await this.service.create(user_id, product_ids);
+    const result = await this.service.create(user_id, data);
     return this.responseSuccess(res, result);
   }
 
