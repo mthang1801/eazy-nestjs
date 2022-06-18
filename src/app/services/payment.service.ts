@@ -1095,8 +1095,8 @@ export class PaymentService {
       }
     }
 
-    let cart = await this.cartService.get(user.user_id);
-    console.log(cart);
+    let cart = await this.cartService.get(data.user_id);
+
     if (
       !cart ||
       !cart.cart_items ||
@@ -1286,7 +1286,7 @@ export class PaymentService {
       }
     }
 
-    let cart = await this.cartService.get(user.user_id);
+    let cart = await this.cartService.get(data.user_id);
 
     if (
       !cart ||
