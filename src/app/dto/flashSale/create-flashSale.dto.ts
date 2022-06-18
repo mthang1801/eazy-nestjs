@@ -23,7 +23,7 @@ export class CreateFlashSaleDto {
   flash_type: number = 0;
 
   @IsOptional()
-  status: string = 'A';
+  status: string = 'D';
 
   @IsNotEmpty()
   start_at: string;

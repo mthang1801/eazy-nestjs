@@ -160,14 +160,20 @@ export class SearchService {
   async removeAll() {
     this.searchService.indices.delete({
       index: '_all'
-    }, function(err, res) {
-  
-      if (err) {
-          console.error(err.message);
-      } else {
-          console.log('Indexes have been deleted!');
-      }
     });
+  }
+
+  async settingNumberOfShards(index: string, number_of_shards: number, number_of_replica_shards: number) {
+    return this.searchService.index({
+      index,
+      body: {
+        "settings" : {
+          "number_of_shards": number_of_shards,
+          "number_of_replicas": number_of_replica_shards
+        }
+      }
+    },
+    );
   }
 
   async update(key: string, keyVal: string, body: any, index: string) {

@@ -1,5 +1,5 @@
 import { TradeinProgramController } from './../controllers/fe/v1/tradeinProgram.controller';
-import { Module } from '@nestjs/common';
+import { Module, NestModule, RequestMethod, MiddlewareConsumer } from '@nestjs/common';
 import { TradeinProgramRepository } from '../repositories/tradeinProgram.repository';
 import { TradeinProgramService } from '../services/tradeinProgram.service';
 import { TradeinProgramDetailRepository } from '../repositories/tradeinProgramDetail.repository';
@@ -15,6 +15,7 @@ import { TradeinProgramControllerItg } from '../controllers/integration/v1/trade
 import { TradeinOldReceiptRepository } from '../repositories/tradeinOldReceipt.repository';
 import { TradeinOldReceiptDetailRepository } from '../repositories/tradeinOldReceiptDetail.repository';
 import { CustomerService } from '../services/customer.service';
+import { getUserFromToken } from '../../middlewares/getUserFromToken';
 
 @Module({
   imports: [ProductsModule, UsersModule],
@@ -48,4 +49,13 @@ import { CustomerService } from '../services/customer.service';
     TradeinProgramController,
   ],
 })
-export class TradeinProgramModule {}
+export class TradeinProgramModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(getUserFromToken).forRoutes(
+      {
+        path: 'fe/v1/tradein-programs/valuation-bill',
+        method: RequestMethod.POST,
+      },
+    );
+  }
+}

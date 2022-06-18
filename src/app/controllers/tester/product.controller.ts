@@ -71,12 +71,12 @@ export class ProductTesterController extends BaseController {
     return this.responseSuccess(res, result);
   }
 
-  @Post('test/:skip')
+  @Post('test')
   async test(@Res() res, @Param('skip') skip: number) {
     // await this.messageService.sendMessage(data);
     // await this.audioService.sendAudio(data);
 
-    const result = await this.service.testSql(skip);
+    const result = await this.service.syncToElasticSearch();
     return this.responseSuccess(res, null);
   }
 }
