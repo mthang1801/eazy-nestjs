@@ -393,3 +393,8 @@ export const OrderType = {
   preOrder: 2,
   online: 3,
 };
+
+export const orderSyncStatus = {
+  Waiting: 'Y',
+  Synced: 'N',
+};

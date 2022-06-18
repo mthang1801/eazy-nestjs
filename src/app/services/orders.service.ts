@@ -122,7 +122,7 @@ import {
   Between,
   MoreThan,
 } from '../../database/operators/operators';
-import { OrderStatus, OrderType } from '../../constants/order';
+import { OrderStatus, OrderType, orderSyncStatus } from '../../constants/order';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import {
@@ -758,7 +758,7 @@ export class OrdersService {
       ...this.orderRepo.setData(data),
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
-      is_sync: 'Y',
+      is_sync: orderSyncStatus.Waiting,
       status: OrderStatus.new,
     };
 
@@ -944,7 +944,7 @@ export class OrdersService {
         { order_id: result.order_id },
         {
           order_code: orderAppcoreResponse.orderId,
-          is_sync: 'N',
+          is_sync: orderSyncStatus.Synced,
           updated_date: formatStandardTimeStamp(),
         },
         true,
@@ -1091,7 +1091,7 @@ export class OrdersService {
         { order_id: order_id },
         {
           order_code: orderAppcoreResponse.orderId,
-          is_sync: 'N',
+          is_sync: orderSyncStatus.Synced,
           updated_date: formatStandardTimeStamp(),
         },
         true,
@@ -1109,21 +1109,25 @@ export class OrdersService {
       await this.orderHistoryRepo.create(updatedOrder);
     } catch (error) {
       console.log(error);
-      const updatedOrder = await this.orderRepo.update(
-        { order_id },
-        {
-          status: OrderStatus.invalid,
-          reason_fail: error?.response?.data?.message,
-          updated_date: formatStandardTimeStamp(),
-        },
-        true,
-      );
-      await this.orderHistoryRepo.create(updatedOrder);
+      if (error?.response?.status < 500 || error?.status < 500) {
+        const updatedOrder = await this.orderRepo.update(
+          { order_id },
+          {
+            status: OrderStatus.invalid,
+            reason_fail: error?.response?.data?.message,
+            is_sync: orderSyncStatus.Synced,
+            updated_date: formatStandardTimeStamp(),
+          },
+          true,
+        );
+        await this.orderHistoryRepo.create(updatedOrder);
+      }
+
       throw new HttpException(
         `Có lỗi xảy ra trong quá trình đưa dữ liệu lên AppCore : ${
           error?.response?.data?.message || error.message
         }`,
-        400,
+        error?.response?.status,
       );
     }
   }
@@ -2143,7 +2147,10 @@ export class OrdersService {
                 order_id: order.order_id,
                 product_appcore_id: orderItem.productId,
               },
-              { order_item_appcore_id: orderItem.orderItemId },
+              {
+                order_item_appcore_id: orderItem.orderItemId,
+                is_sync: orderSyncStatus.Synced,
+              },
             );
           }
           // update order history
@@ -2154,7 +2161,7 @@ export class OrdersService {
             await this.orderRepo.update(
               { order_id: order.order_id },
               {
-                is_sync: 'N',
+                is_sync: orderSyncStatus.Synced,
               },
               true,
             );
