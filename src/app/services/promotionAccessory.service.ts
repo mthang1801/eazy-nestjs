@@ -613,10 +613,27 @@ export class PromotionAccessoryService {
       Array.isArray(convertedData['accessory_applied_products']) &&
       convertedData['accessory_applied_products'].length
     ) {
-      await this.productRepo.update(
-        { promotion_accessory_id: accessory['accessory_id'] },
-        { promotion_accessory_id: 0 },
-      );
+      switch (type) {
+        case 1:
+          await this.productRepo.update(
+            { promotion_accessory_id: accessory['accessory_id'] },
+            { promotion_accessory_id: 0 },
+          );
+          break;
+        case 2:
+          await this.productRepo.update(
+            { free_accessory_id: accessory['accessory_id'] },
+            { free_accessory_id: 0 },
+          );
+          break;
+        case 3:
+          await this.productRepo.update(
+            { warranty_package_id: accessory['accessory_id'] },
+            { warranty_package_id: 0 },
+          );
+          break;
+      }
+
       for (let appliedProductItem of convertedData[
         'accessory_applied_products'
       ]) {
