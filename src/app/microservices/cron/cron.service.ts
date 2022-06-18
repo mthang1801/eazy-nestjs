@@ -46,7 +46,7 @@ export class CronService {
 
   @Timeout('setting-shards', 6000)
   async settingShards() {
-    await this.productService.settingShards();
+    // await this.productService.settingShards();
   }
 
   @Timeout('sync-to-elastic-search', 15000)
