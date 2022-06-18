@@ -3,7 +3,7 @@ export class OrderDetailsEntity {
   item_id: number = 0;
   order_id: number = 0;
   order_item_appcore_id: string = null;
-  product_id: number = 0;
+  product_id: string = '';
   product_appcore_id: string = '';
   product_code: string = '';
   product: string = '';

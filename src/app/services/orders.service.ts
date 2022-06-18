@@ -1438,22 +1438,24 @@ export class OrdersService {
           product_appcore_id: orderItem['product_id'],
         });
 
-        let orderDetailData = {
-          ...new OrderDetailsEntity(),
-          ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
-          product_appcore_id: orderItem['product_id'],
-          product_id: product ? product.product_id : null,
-          order_id: result.order_id,
-        };
+        if (product) {
+          let orderDetailData = {
+            ...new OrderDetailsEntity(),
+            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+            product_appcore_id: orderItem['product_id'],
+            product_id: product ? product.product_id : null,
+            order_id: result.order_id,
+          };
 
-        const newOrderDetail = await this.orderDetailRepo.create(
-          orderDetailData,
-          false,
-        );
+          const newOrderDetail = await this.orderDetailRepo.create(
+            orderDetailData,
+            false,
+          );
 
-        result['order_items'] = result['order_items']
-          ? [...result['order_items'], newOrderDetail]
-          : [newOrderDetail];
+          result['order_items'] = result['order_items']
+            ? [...result['order_items'], newOrderDetail]
+            : [newOrderDetail];
+        }
       }
     }
     return result;
