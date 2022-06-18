@@ -14,7 +14,7 @@ export const getUserFromToken = (
     next();
   } else {
     const token = authoriazationToken.split(' ').slice(-1)[0].trim();
-console.log(token)
+    console.log(token);
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     if (!decoded || +decoded['exp'] * 1000 - Date.now() < 0) {
@@ -22,7 +22,7 @@ console.log(token)
     }
 
     const user = decoded?.sub;
-    console.log(user)
+    console.log(user);
     if (!user || !user['user_id']) {
       req['user'] = null;
     }
