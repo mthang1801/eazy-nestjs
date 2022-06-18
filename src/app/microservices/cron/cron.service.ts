@@ -39,17 +39,17 @@ export class CronService {
   //   this.productService.standardizeProducts();
   // }
 
-  @Timeout("remove-all-index", 1000)
+  @Timeout('remove-all-index', 1000)
   async removeAllIndex() {
-    await this.productService.removeAllIndex();
+    // await this.productService.removeAllIndex();
   }
 
-  @Timeout("setting-shards", 6000)
+  @Timeout('setting-shards', 6000)
   async settingShards() {
     await this.productService.settingShards();
   }
 
-  @Timeout("sync-to-elastic-search", 15000)
+  @Timeout('sync-to-elastic-search', 15000)
   async syncToElasticSearch() {
     await this.productService.syncToElasticSearch();
   }
