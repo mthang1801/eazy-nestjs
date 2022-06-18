@@ -2081,51 +2081,55 @@ export class ProductService {
       );
     }
 
-    await this.cache.removeRelatedServicesWithCachedProduct(
-      currentProduct.product_id,
-    );
+    let _removeRelatedServicesWithCachedProduct1 =
+      this.cache.removeRelatedServicesWithCachedProduct(
+        currentProduct.product_id,
+      );
 
+    let _removePrefixProduct;
     if (currentProduct.product_function != 2) {
-      await this.cache.removeCache(null, prefixCacheKey.products);
+      _removePrefixProduct = this.cache.removeCache(
+        null,
+        prefixCacheKey.products,
+      );
     }
 
+    let _removeRelatedServicesWithCachedProduct2;
     if (currentProduct['parent_product_appcore_id']) {
       let parentProduct = await this.productRepo.findOne({
         product_appcore_id: currentProduct['parent_product_appcore_id'],
       });
       if (parentProduct) {
-        await this.cache.removeRelatedServicesWithCachedProduct(
-          parentProduct.product_id,
-        );
+        _removeRelatedServicesWithCachedProduct2 =
+          this.cache.removeRelatedServicesWithCachedProduct(
+            parentProduct.product_id,
+          );
       }
     }
 
+    let _removeRelatedServicesWithCachedProduct3;
     if (currentProduct['product_function'] == 1) {
       let childrenProducts = await this.productRepo.find({
         parent_product_appcore_id: currentProduct['product_appcore_id'],
       });
       if (childrenProducts.length) {
         for (let childProduct of childrenProducts) {
-          await this.cache.removeRelatedServicesWithCachedProduct(
-            childProduct.product_id,
-          );
+          _removeRelatedServicesWithCachedProduct3 =
+            this.cache.removeRelatedServicesWithCachedProduct(
+              childProduct.product_id,
+            );
         }
       }
     }
 
+    await Promise.all([
+      _removeRelatedServicesWithCachedProduct1,
+      _removePrefixProduct,
+      _removeRelatedServicesWithCachedProduct2,
+      _removeRelatedServicesWithCachedProduct3,
+    ]);
+
     let result = { ...currentProduct };
-
-    // Kiểm tra tính sku đã tồn tại hay chưa
-    // if (data.product_code) {
-    //   const product = await this.productRepo.findOne({
-    //     product_code: data.product_code,
-    //     product_id: Not(Equal(result.product_id)),
-    //   });
-
-    //   if (product) {
-    //     throw new HttpException('Mã sản phẩm đã tồn tại.', 409);
-    //   }
-    // }
 
     // Kiểm tra slug đã tồn tại hay chưa
     if (data.slug) {
@@ -2215,10 +2219,6 @@ export class ProductService {
           category_id: oldCategoryItem.category_id,
         });
         if (category) {
-          // await this.categoryRepo.update(
-          //   { category_id: category.category_id },
-          //   { product_count: category.product_count - 1 },
-          // );
           await this.categoryService.updateProductCount(
             category.category_id,
             -1,
@@ -2233,19 +2233,6 @@ export class ProductService {
     // Update product category
     if (data?.category_id?.length) {
       for (let categoryId of data.category_id) {
-        // const newProductCategoryData = {
-        //   ...new ProductsCategoriesEntity(),
-        //   category_id: categoryId,
-        //   product_id: result.product_id,
-        // };
-        // await this.productCategoryRepo.create(newProductCategoryData);
-        // let currentCategory = await this.categoryRepo.findOne({
-        //   category_id: categoryId,
-        // });
-        // await this.categoryRepo.update(
-        //   { category_id: categoryId },
-        //   { product_count: currentCategory.product_count + 1 },
-        // );
         await this.updateProductCategory(result.product_id, categoryId);
         await this.categoryService.updateProductCount(categoryId, 1);
         await this.cache.removeCategoryById(categoryId);
@@ -2327,7 +2314,7 @@ export class ProductService {
     if (data.joined_products && data.joined_products.length) {
       await this.joinParentProducts(data.joined_products);
     }
-
+    this.getBySlug(result['slug']);
     return result;
   }
 
