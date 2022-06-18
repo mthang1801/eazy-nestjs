@@ -2139,13 +2139,16 @@ export class OrdersService {
           await this.orderHistoryRepo.create(updatedOrder, false);
           return order;
         } catch (err) {
-          await this.orderRepo.update(
-            { order_id: order.order_id },
-            {
-              is_sync: 'N',
-            },
-            true,
-          );
+          if (err.status < 500 || err?.response?.status < 500) {
+            await this.orderRepo.update(
+              { order_id: order.order_id },
+              {
+                is_sync: 'N',
+              },
+              true,
+            );
+          }
+
           console.log(err);
         }
       });
