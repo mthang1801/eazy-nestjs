@@ -1955,12 +1955,12 @@ export class OrdersService {
           orderItem['giftAccessories'] = orderDetails.filter(
             (_orderItem) =>
               _orderItem.is_gift_taken == 1 &&
-              _orderItem.belong_order_detail_id == orderItem.product_appcore_id,
+              _orderItem.belong_order_detail_id == orderItem.product_id,
           );
           orderItem['promotionAccessories'] = orderDetails.filter(
             (_orderItem) =>
               _orderItem.is_gift_taken != 1 &&
-              _orderItem.belong_order_detail_id == orderItem.product_appcore_id,
+              _orderItem.belong_order_detail_id == orderItem.product_id,
           );
           return orderItem;
         });

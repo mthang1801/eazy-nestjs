@@ -11,6 +11,7 @@ export class OrderDetailsEntity {
   price: number = 0;
   amount: number = 0;
   discount: number = 0;
+  promotion_type: number = null;
   is_gift_taken: number = null;
   belong_order_detail_id: number = null;
   belong_order_detail_appcore_id: number = null;
