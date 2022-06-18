@@ -495,7 +495,9 @@ export class PaymentService {
           },
         ];
       } else {
-        cart = await this.cartService.get(data['user_id']);
+        cart = await this.cartService.get(
+          userAuth ? userAuth.user_id : data['user_id'],
+        );
         if (!cart || !cart.cart_items || !cart.cart_items.length) {
           throw new HttpException('Không tìm thấy giỏ hàng', 404);
         }

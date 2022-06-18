@@ -638,7 +638,7 @@ export const productInfoJoiner = {
   },
 };
 export const productDescriptionJoiner = {
-  [JoinTable.innerJoin]: {
+  [JoinTable.leftJoin]: {
     [Table.PRODUCT_DESCRIPTION]: {
       fieldJoin: `${Table.PRODUCT_DESCRIPTION}.product_id`,
       rootJoin: `${Table.PRODUCTS}.product_id`,

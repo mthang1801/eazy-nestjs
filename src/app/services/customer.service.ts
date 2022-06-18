@@ -1309,12 +1309,43 @@ export class CustomerService {
           };
           await this.userDataRepo.create(userDataData);
         }
-        await this.createCustomerToAppcore(customer);
 
-        await this.userRepo.update(
-          { user_appcore_id: Not(IsNull()) },
-          { is_sync: 'N' },
-        );
+        try {
+          let customerData = await this.userRepo.findOne({
+            select: '*',
+            join: userJoiner,
+            where: { [`${Table.USERS}.user_id`]: customer.user_id },
+          });
+          const customerAppcoreData = itgCustomerToAppcore(customerData);
+
+          const response = await axios({
+            url: CREATE_CUSTOMER_API,
+            method: 'POST',
+            data: customerAppcoreData,
+          });
+
+          if (!response?.data) {
+            return;
+          }
+
+          const data = response.data;
+
+          const user_appcore_id = data.data;
+          await this.userRepo.update(
+            { user_id: customer.user_id },
+            {
+              user_appcore_id,
+              is_sync: 'N',
+            },
+          );
+        } catch (error) {
+          if (error?.status < 500 || error?.response?.status < 500) {
+            await this.userRepo.update(
+              { user_id: customer.user_id },
+              { is_sync: 'N' },
+            );
+          }
+        }
       });
 
       await Promise.all(_res);

@@ -171,6 +171,7 @@ import { RedisCacheService } from './redisCache.service';
 import { cacheTables } from '../../utils/cache.utils';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
+import { productDescriptionJoiner } from '../../utils/joinTable';
 
 @Injectable()
 export class OrdersService {
@@ -681,12 +682,6 @@ export class OrdersService {
     }
 
     let cartItems = cart['cart_items'];
-
-    // let cartItems = await this.cartItemRepo.find({
-    //   select: `*, ${Table.CART_ITEMS}.product_id, ${Table.CART_ITEMS}.amount`,
-    //   join: cartPaymentJoiner,
-    //   where: { [`${Table.CART_ITEMS}.cart_id`]: cart.cart_id },
-    // });
 
     let totalPrice = +cart.totalPrice;
 
@@ -1435,13 +1430,21 @@ export class OrdersService {
     if (convertedData['order_items'] && convertedData['order_items'].length) {
       for (let orderItem of convertedData['order_items']) {
         let product = await this.productRepo.findOne({
-          product_appcore_id: orderItem['product_id'],
+          select: '*',
+          join: productDescriptionJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_appcore_id`]: orderItem['product_id'],
+          },
         });
 
         if (product) {
           let orderDetailData = {
             ...new OrderDetailsEntity(),
-            ...this.orderDetailRepo.setData({ ...result, ...orderItem }),
+            ...this.orderDetailRepo.setData({
+              ...result,
+              ...product,
+              ...orderItem,
+            }),
             product_appcore_id: orderItem['product_id'],
             product_id: product ? product.product_id : null,
             order_id: result.order_id,
@@ -1632,9 +1635,17 @@ export class OrdersService {
       }
 
       for (let orderItem of willAddNewOrderItems) {
+        const product = await this.productRepo.findOne({
+          select: '*',
+          join: productDescriptionJoiner,
+          where: {
+            [`${Table.PRODUCTS}.product_appcore_id`]: orderItem['product_id'],
+          },
+        });
+
         const orderItemData = {
           ...new OrderDetailsEntity(),
-          ...this.orderDetailRepo.setData(orderItem),
+          ...this.orderDetailRepo.setData({ ...orderItem, ...product }),
           product_appcore_id: orderItem['product_id'],
           order_id: order.order_id,
         };
@@ -2148,8 +2159,6 @@ export class OrdersService {
               true,
             );
           }
-
-          console.log(err);
         }
       });
 
