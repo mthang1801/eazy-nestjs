@@ -5382,38 +5382,46 @@ export class ProductService {
   }
 
   async removeAllIndex() {
-    console.log("start remove");
+    console.log('start remove');
     await this.searchService.removeAll();
-    console.log("complete remove");
+    console.log('complete remove');
   }
 
   async settingShards() {
-    console.log("start add shard");
+    console.log('start add shard');
     let numberOfProducts = await this.productRepo.findOne({
-      select: "COUNT(*) as count"
+      select: 'COUNT(*) as count',
     });
     let count = +numberOfProducts['count'];
     console.log(count);
     let number_of_shards = Math.floor(count / 10000 + 1);
     console.log(number_of_shards);
-    await this.searchService.settingNumberOfShards("products", number_of_shards, 2);
+    await this.searchService.settingNumberOfShards(
+      'products',
+      number_of_shards,
+      2,
+    );
 
     let numberOfCategories = await this.categoryRepo.findOne({
-      select: "COUNT(*) as count"
+      select: 'COUNT(*) as count',
     });
     count = +numberOfCategories['count'];
     console.log(count);
     number_of_shards = Math.floor(count / 10000 + 1);
     console.log(number_of_shards);
-    await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
-    console.log("complete add shard");
+    await this.searchService.settingNumberOfShards(
+      'categories',
+      number_of_shards,
+      2,
+    );
+    console.log('complete add shard');
   }
 
   async syncToElasticSearch() {
     // await this.searchService.removeAll();
 
     let numberOfProducts = await this.productRepo.findOne({
-      select: "COUNT(*) as count"
+      select: 'COUNT(*) as count',
     });
     let count = +numberOfProducts['count'];
     // console.log(count);
@@ -5430,15 +5438,17 @@ export class ProductService {
     // console.log(number_of_shards);
     // await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
 
-    count = Math.ceil(numberOfProducts['count']/1000) * 1000;
+    count = Math.ceil(numberOfProducts['count'] / 1000) * 1000;
 
-    for (let skip = 0; skip < count; skip+=1000) {
+    for (let skip = 0; skip < count; skip += 1000) {
       let productsList = await this.productRepo.find({
         select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
         join: productSearchJoiner,
         skip: skip,
-        limit: 1000
+        limit: 1000,
       });
+
+      productsList = _.unionBy(productsList, 'product_id');
 
       //console.time('run');
       //console.log(productsList);
@@ -5455,7 +5465,7 @@ export class ProductService {
         return i;
       });
     }
-    console.log("done create index products");
+    console.log('done create index products');
 
     const categoriesList = await this.categoryRepo.find({
       select: `*`,
@@ -5473,7 +5483,7 @@ export class ProductService {
       });
       return i;
     });
-    console.log("done create index categories");
+    console.log('done create index categories');
   }
 
   async testSql() {
@@ -5486,31 +5496,39 @@ export class ProductService {
     // });
 
     let numberOfProducts = await this.productRepo.findOne({
-      select: "COUNT(*) as count"
+      select: 'COUNT(*) as count',
     });
     let count = +numberOfProducts['count'];
     console.log(count);
     let number_of_shards = Math.floor(count / 10000 + 1);
     console.log(number_of_shards);
-    await this.searchService.settingNumberOfShards("products", number_of_shards, 2);
+    await this.searchService.settingNumberOfShards(
+      'products',
+      number_of_shards,
+      2,
+    );
 
     let numberOfCategories = await this.categoryRepo.findOne({
-      select: "COUNT(*) as count"
+      select: 'COUNT(*) as count',
     });
     count = +numberOfCategories['count'];
     console.log(count);
     number_of_shards = Math.floor(count / 10000 + 1);
     console.log(number_of_shards);
-    await this.searchService.settingNumberOfShards("categories", number_of_shards, 2);
+    await this.searchService.settingNumberOfShards(
+      'categories',
+      number_of_shards,
+      2,
+    );
 
-    count = Math.ceil(numberOfProducts['count']/1000) * 1000;
+    count = Math.ceil(numberOfProducts['count'] / 1000) * 1000;
 
-    for (let skip = 0; skip < count; skip+=1000) {
+    for (let skip = 0; skip < count; skip += 1000) {
       let productsList = await this.productRepo.find({
         select: `*, ${Table.PRODUCTS}.slug as productSlug, ${Table.CATEGORIES}.slug as categoryId, ${Table.PRODUCT_PRICES}.*`,
         join: productSearchJoiner,
         skip: skip,
-        limit: 1000
+        limit: 1000,
       });
 
       //console.time('run');
