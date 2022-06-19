@@ -8,7 +8,6 @@ export class DatabaseService {
   constructor(
     @Inject(DatabasePool.WRITE_POOL) private writePool: Pool,
     @Inject(DatabasePool.READ_POOL) private readPool: Pool,
-    @Inject(DatabasePool.MAGENTO_POOL) private magentoPool: Pool,
   ) {}
 
   async executeQueryWritePool(
@@ -41,26 +40,6 @@ export class DatabaseService {
 
     return new Promise(async (resolve, reject) => {
       this.readPool
-        .query(sqlQuery, values)
-        .then((result: any) => {
-          resolve(result);
-        })
-        .catch((err) => reject(err));
-    });
-  }
-
-  async executeMagentoPool(
-    queryText: string,
-    values: any[] = [],
-    showLog: boolean = true,
-  ): Promise<void> {
-    let sqlQuery = formatQueryString(queryText);
-    if (showLog) {
-      this.logger.verbose(`Executing mutation: ${sqlQuery}`);
-    }
-
-    return new Promise(async (resolve, reject) => {
-      this.magentoPool
         .query(sqlQuery, values)
         .then((result: any) => {
           resolve(result);

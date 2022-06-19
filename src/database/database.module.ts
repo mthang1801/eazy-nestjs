@@ -5,9 +5,9 @@ import {
   DatabaseMagentoPoolFactory,
   DatabasePoolFactory,
 } from './database.provider';
-import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { Pool } from 'mysql2/promise';
-import { UserRepository } from '../app/repositories/user.repository';
+
 import { ConfigService } from '@nestjs/config';
 import { DatabasePool } from './enums/databasePool.enum';
 
@@ -26,11 +26,7 @@ import { DatabasePool } from './enums/databasePool.enum';
         DatabasePoolFactory(configService, 'read'),
       inject: [ConfigService],
     },
-    {
-      provide: DatabasePool.MAGENTO_POOL,
-      useFactory: async () => DatabaseMagentoPoolFactory(),
-      inject: [ConfigService],
-    },
+
     DatabaseService,
   ],
   exports: [DatabaseService],

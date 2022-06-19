@@ -6,13 +6,14 @@ import {
   NestExpressApplication,
 } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/modules/app.module';
+
 import { join } from 'path';
 import * as hbs from 'hbs';
 import { ConfigService } from '@nestjs/config';
 import { ValidationConfig } from './config/validation.config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as requestIp from 'request-ip';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(

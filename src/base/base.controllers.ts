@@ -1,4 +1,5 @@
-import { IResponse } from '../app/interfaces/response.interface';
+import { IResponse } from './interfaces/response.interface';
+
 export class BaseController {
   private message: string | string[] = '';
   private data: any = null;
