@@ -4,7 +4,8 @@ export class OrderEntity {
   sub_total_price: number = 0;
   other_fees: number = 0;
   total_price: number = 0;
-  status: string = '';
+  status: string = '1';
+  user_id: number = null;
   created_at: string = formatStandardTimeStamp();
   updated_at: string = formatStandardTimeStamp();
 }

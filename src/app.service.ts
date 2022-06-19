@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { Table } from './database/enums';
 import { UserEntity } from './entity/user.entity';
 import { UserRepository } from './repository/user.repository';
+import { OrderRepository } from './repository/order.repository';
 import {
   $gt,
   $in,
@@ -10,10 +11,17 @@ import {
   $lt,
   MoreThan,
 } from './database/operators/operators';
+import { OrderEntity } from './entity/order.entity';
+import { DatabaseService } from './database/database.service';
+import { formatStandardTimeStamp } from './utils/helper';
 
 @Injectable()
 export class AppService {
-  constructor(private userRepo: UserRepository<UserEntity>) {}
+  constructor(
+    private userRepo: UserRepository<UserEntity>,
+    private orderRepo: OrderRepository<OrderEntity>,
+    private db: DatabaseService,
+  ) {}
 
   async getUser() {
     await this.userRepo.findOne({
@@ -70,5 +78,38 @@ export class AppService {
         },
       ],
     });
+  }
+
+  async create(data) {
+    await this.db.startTracking();
+    try {
+      // const userData = { ...new UserEntity(), ...this.userRepo.setData(data) };
+      // const user = await this.userRepo.create(userData);
+      // const orderData = {
+      //   ...new OrderEntity(),
+      //   ...this.orderRepo.setData(data),
+      //   user_id: user.user_id,
+      // };
+      // const order = await this.orderRepo.create(orderData);
+      await this.userRepo.update({ user_id: 1 }, { status: 2 });
+      await this.orderRepo.update({ order_id: 1 }, { status: 2 });
+      throw new HttpException('Something went wrong', 400);
+      // await this.userRepo.update(
+      //   {
+      //     user_id: user.user_id,
+      //   },
+      //   { updated_at: formatStandardTimeStamp() },
+      // );
+      // await this.orderRepo.update(
+      //   {
+      //     order_id: order.order_id,
+      //   },
+      //   { updated_at: formatStandardTimeStamp() },
+      // );
+      // await this.db.commitTracking();
+    } catch (error) {
+      console.log(error);
+      await this.db.rollback();
+    }
   }
 }

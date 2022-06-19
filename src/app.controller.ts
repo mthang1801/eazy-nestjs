@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { BaseController } from './base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from './base/interfaces/response.interface';
@@ -12,5 +12,10 @@ export class AppController extends BaseController {
   async getUser(@Res() res: Response): Promise<IResponse> {
     await this.service.getUser();
     return this.responseSuccess(res);
+  }
+  @Post()
+  async create(@Res() res: Response, @Body() data): Promise<IResponse> {
+    await this.service.create(data);
+    return this.responseCreated(res);
   }
 }

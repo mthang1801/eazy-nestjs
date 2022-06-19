@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { UserRepository } from './repository/user.repository';
+import { OrderRepository } from './repository/order.repository';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { UserRepository } from './repository/user.repository';
     }),
     DatabaseModule,
   ],
-  providers: [AppService, UserRepository, String],
+  providers: [AppService, UserRepository, OrderRepository, String],
   controllers: [AppController],
 })
 export class AppModule {}

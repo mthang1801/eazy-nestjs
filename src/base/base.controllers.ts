@@ -22,7 +22,7 @@ export class BaseController {
   private responseWithError(): IResponse {
     const data = {
       statusCode: this.statusCode,
-      message: this.message,
+      message: this.message || 'Không thành công.',
       data: this.data,
       timestamp: new Date().toLocaleString(),
     };
@@ -98,6 +98,7 @@ export class BaseController {
     this.setStatusCode(201);
     this.data = data;
     this.res = res;
+    this.message = 'Tạo thành công.';
     return this.respond();
   }
 
