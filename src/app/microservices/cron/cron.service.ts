@@ -54,7 +54,7 @@ export class CronService {
   @Timeout('sync-to-elastic-search', 15000)
   async syncToElasticSearch() {
     if (process.env.ENVIRONMENT != 'development') {
-      await this.productService.syncToElasticSearch();
+      // await this.productService.syncToElasticSearch();
     }
   }
 }
