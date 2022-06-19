@@ -1,3 +1,4 @@
 export enum AutoIncrementKeys {
-  config = 'config_id',
+  users = 'user_id',
+  orders = 'order_id',
 }

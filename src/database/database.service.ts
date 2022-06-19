@@ -5,6 +5,8 @@ import { DatabasePool } from './enums/databasePool.enum';
 @Injectable()
 export class DatabaseService {
   private readonly logger = new Logger(DatabaseService.name);
+  private trackers: object[] = [];
+  private isTracking: boolean = false;
   constructor(
     @Inject(DatabasePool.WRITE_POOL) private writePool: Pool,
     @Inject(DatabasePool.READ_POOL) private readPool: Pool,
@@ -61,5 +63,10 @@ export class DatabaseService {
   async rollbackTransaction(): Promise<void> {
     let sql = 'ROLLBACK;';
     await this.executeQueryWritePool(sql);
+  }
+
+  async startTracking() {
+    this.trackers = [];
+    this.isTracking = true;
   }
 }

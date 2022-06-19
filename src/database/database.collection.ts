@@ -16,6 +16,8 @@ import {
   formatStringCondition,
   formatHavingCondition,
 } from './database.helper';
+import { of } from 'rxjs';
+import { formatRawStringCondition } from './database.helper';
 export class DatabaseCollection {
   private table: string;
 
@@ -31,8 +33,8 @@ export class DatabaseCollection {
   private stringGroupBy: string | number | string[] | number[];
   private stringHaving: string;
   private arrayHaving: any[];
-  private orOperator = '$or';
-  private andOperator = '$and';
+  private orOperator: string = '$or';
+  private andOperator: string = '$and';
 
   constructor(table) {
     this.table = table;
@@ -384,7 +386,7 @@ export class DatabaseCollection {
     }
   }
 
-  where(objFields: any): void {
+  where(objFields: any) {
     if (typeof objFields !== 'object') {
       throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
     }
@@ -421,102 +423,13 @@ export class DatabaseCollection {
     let values = Object.values(objField)[0];
 
     console.log('============ INITIAL ===========');
-    console.log(JSON.stringify(values, null, 4));
 
-    // sqlQuery += this.handleRecursiveConditions(values, key, Infinity, sqlQuery);
-    sqlQuery += this.handleRecursiveConditions2(values, key, sqlQuery);
+    sqlQuery = this.handleRecursiveConditions(values, key, sqlQuery);
 
-    console.log(407, JSON.stringify(sqlQuery, null, 4));
+    this.stringCondition = sqlQuery;
   }
 
-  handleRecursiveConditions(
-    values,
-    operator,
-    position = Infinity,
-    sqlQuery = '',
-  ) {
-    if (!values.length) return sqlQuery;
-    console.log(438, position);
-    let strOperator = operator === this.orOperator ? 'OR' : 'AND';
-    for (let [i, objectItem] of values.entries()) {
-      if (i !== 0) {
-        sqlQuery += ` ${strOperator} `;
-      }
-      if (objectItem.hasOwnProperty(this.orOperator)) {
-        // if (position === 0) {
-        //   sqlQuery += ` ( `;
-        // }
-        sqlQuery = this.handleRecursiveConditions(
-          Object.values(objectItem),
-          this.orOperator,
-          i,
-          sqlQuery,
-        );
-        // if (i === values.length - 1) {
-        //   sqlQuery += ' ) ';
-        // }
-      } else if (objectItem.hasOwnProperty(this.andOperator)) {
-        // if (position === 0) {
-        //   sqlQuery += ` ( `;
-        // }
-        sqlQuery = this.handleRecursiveConditions(
-          Object.values(objectItem),
-          this.andOperator,
-          i,
-          sqlQuery,
-        );
-        // if (i === values.length - 1) {
-        //   sqlQuery += ' ) ';
-        // }
-      } else {
-        if (typeof objectItem !== 'object') {
-          throw new HttpException('Lỗi cú pháp truy vấn ở mệnh đề where.', 400);
-        }
-
-        if (Array.isArray(objectItem)) {
-          // if (position === 0) {
-          //   sqlQuery += ` ( `;
-          // }
-          if (operator === this.orOperator) {
-            sqlQuery = this.handleRecursiveConditions(
-              objectItem,
-              this.orOperator,
-              i,
-              sqlQuery,
-            );
-          } else {
-            sqlQuery = this.handleRecursiveConditions(
-              objectItem,
-              this.andOperator,
-              i,
-              sqlQuery,
-            );
-          }
-        } else {
-          if (i === 0) {
-            sqlQuery += ` ( `;
-          }
-          let key = Object.keys(objectItem)[0];
-          let value = Object.values(objectItem)[0];
-          if (
-            value.hasOwnProperty('operator') &&
-            value.hasOwnProperty('value')
-          ) {
-            sqlQuery += `( ${key} ${value['operator']} '${value['value']}' )`;
-          } else {
-            sqlQuery += `( ${key} = '${value}' )`;
-          }
-          if (i === values.length - 1) {
-            sqlQuery += ' ) ';
-          }
-        }
-      }
-    }
-
-    console.log('============ END ==========');
-    return sqlQuery;
-  }
-  handleRecursiveConditions2(values, operator, sqlQuery = '') {
+  handleRecursiveConditions(values, operator, sqlQuery = '', position = 0) {
     if (!values.length) return sqlQuery;
     let strOperator = '';
     switch (operator) {
@@ -533,11 +446,35 @@ export class DatabaseCollection {
     for (let [i, valueObj] of values.entries()) {
       let key = Object.keys(valueObj)[0];
       let childValues = Object.values(valueObj)[0];
-      if (i === 0) sqlQuery += '( ';
-      if (key === this.orOperator) {
-      } else if (key === this.andOperator) {
-      } else {
+
+      if (i === 0) {
+        sqlQuery += '( ';
       }
+      if (i < values.length && i > 0) {
+        sqlQuery += ` ${strOperator} `;
+      }
+
+      if ([this.orOperator, this.andOperator].includes(key)) {
+        sqlQuery = this.handleRecursiveConditions(
+          childValues,
+          key,
+          sqlQuery,
+          i,
+        );
+      } else {
+        if (
+          typeof childValues == 'object' &&
+          childValues.hasOwnProperty('operator') &&
+          childValues.hasOwnProperty('value')
+        ) {
+          {
+            sqlQuery += `( ${key} ${childValues['operator']} '${childValues['value']}' )`;
+          }
+        } else {
+          sqlQuery += `( ${key} = '${childValues}' )`;
+        }
+      }
+
       if (i === values.length - 1) sqlQuery += ' )';
     }
 
@@ -771,7 +708,7 @@ export class DatabaseCollection {
 
   genCondition(): string {
     let stringCondition = '';
-    if (this.arrayCondition.length > 0) {
+    if (this.arrayCondition.length) {
       let arrayCheckExist = [];
       for (let i = 0; i < this.arrayCondition.length; i++) {
         arrayCheckExist = [...arrayCheckExist, this.arrayCondition[i]];
@@ -779,6 +716,8 @@ export class DatabaseCollection {
       for (let [i, checkExistItem] of arrayCheckExist.entries()) {
         stringCondition += formatStringCondition(i, checkExistItem);
       }
+    } else {
+      stringCondition = formatRawStringCondition(this.stringCondition);
     }
     return stringCondition;
   }

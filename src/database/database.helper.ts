@@ -11,6 +11,16 @@ export const formatStringCondition = (position, existsItem) => {
 
   return formatStringCond;
 };
+export const formatRawStringCondition = (rawStringCondition) => {
+  let formatStringCond = `WHERE ${rawStringCondition} `;
+
+  formatStringCond = formatStringCond
+    .replace(/'\(/g, '(')
+    .replace(/\)'/g, ')')
+    .replace(/'ALL/g, 'ALL');
+
+  return formatStringCond;
+};
 
 export const formatHavingCondition = (position, existsItem) => {
   let formatStringCond =

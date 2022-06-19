@@ -2,7 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { Table } from './database/enums';
 import { UserEntity } from './entity/user.entity';
 import { UserRepository } from './repository/user.repository';
-import { MoreThan } from './database/operators/operators';
+import {
+  $gt,
+  $in,
+  $isNull,
+  $like,
+  $lt,
+  MoreThan,
+} from './database/operators/operators';
 
 @Injectable()
 export class AppService {
@@ -14,20 +21,29 @@ export class AppService {
       where: [
         {
           $or: [
-            // { [`${Table.PRODUCT_PRICES}.or_1`]: MoreThan(0) },
+            { [`${Table.USER}.status`]: $gt(0) },
+            { [`${Table.USER}.user_id`]: $in([1, 2, 3, 4, 5]) },
             {
               $and: [
-                { [`${Table.USER}.or_and_1`]: MoreThan(10) },
-                { [`${Table.USER}.or_and_2`]: MoreThan(25) },
-                // {
-                //   $or: [
-                //     { [`${Table.PRODUCT_PRICES}.or_and_or_1`]: MoreThan(1000) },
-                //     { [`${Table.PRODUCTS}.or_and_or_2`]: MoreThan(50) },
-                //   ],
-                // },
+                { [`${Table.USER}.gender`]: 1 },
+                { [`${Table.USER}.mobile_phone`]: $like('0932139321') },
+                {
+                  $or: [
+                    { [`${Table.USER}.gender`]: 0 },
+                    { [`${Table.USER}.mobile_phone`]: $like('1234567') },
+                    {
+                      $and: [
+                        { [`${Table.USER}.status`]: $lt(1) },
+                        { [`${Table.USER}.user_id`]: $in([1, 2, 3, 4, 5]) },
+                      ],
+                    },
+                  ],
+                },
+                { [`${Table.USER}.email`]: 'example@example.com' },
               ],
             },
-            { [`${Table.USER}.or_3`]: MoreThan(0) },
+            { [`${Table.USER}.email`]: $like('example_order@gmail.comm') },
+            { [`${Table.USER}.status`]: $isNull() },
             // { [`${Table.PRODUCT_PRICES}.or_2`]: 'JKJLS782136HK' },
             // { [`${Table.PRODUCTS}.or_3`]: MoreThan(0) },
             // {
