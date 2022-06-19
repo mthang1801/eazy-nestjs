@@ -5441,6 +5441,7 @@ export class ProductService {
       //console.log(productsList);
       let products = await productsList.map(async (productItem, i) => {
         this.searchService.createIndex('products', {
+          product_id: productItem.product_id,
           name: productItem.product,
           product_code: productItem.product_code,
           description: productItem.description,
@@ -5464,6 +5465,7 @@ export class ProductService {
     //console.time('run');
     let categories = categoriesList.map(async (categoryItem, i) => {
       this.searchService.createIndex('categories', {
+        category_id: categoryItem.category_id,
         name: categoryItem.category,
         slug: categoryItem.slug || '',
         icon: categoryItem.icon,

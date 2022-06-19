@@ -45,30 +45,30 @@ export class SearchService {
       const data: any = await this.searchService.search({
         index,
         body: {
-          size: 20,
-          "query" : {
-            "bool": {
-              "must": [
+          size: 10,
+          query: {
+            bool: {
+              must: [
                 {
-                  "match": {
+                  match: {
                     [field]: {
-                      "query": text,
-                      "fuzziness": 5,
-                    }
-                  }
-                }
+                      query: text,
+                      fuzziness: 5,
+                    },
+                  },
+                },
               ],
-              "should": [
+              should: [
                 {
-                  "match": {
+                  match: {
                     [field]: {
-                      "query": text,
-                      "fuzziness": 5,
-                    }
-                  }
-                }
+                      query: text,
+                      fuzziness: 5,
+                    },
+                  },
+                },
               ],
-            }
+            },
           },
         },
       });
@@ -76,7 +76,7 @@ export class SearchService {
         throw new HttpException('No Result', 404);
       }
       const hits = data?.body?.hits?.hits;
-      console.log("1234567890123456789");
+      console.log('1234567890123456789');
       console.log(data);
       if (!hits) {
         return [];
@@ -159,21 +159,24 @@ export class SearchService {
 
   async removeAll() {
     this.searchService.indices.delete({
-      index: '_all'
+      index: '_all',
     });
   }
 
-  async settingNumberOfShards(index: string, number_of_shards: number, number_of_replica_shards: number) {
+  async settingNumberOfShards(
+    index: string,
+    number_of_shards: number,
+    number_of_replica_shards: number,
+  ) {
     return this.searchService.index({
       index,
       body: {
-        "settings" : {
-          "number_of_shards": number_of_shards,
-          "number_of_replicas": number_of_replica_shards
-        }
-      }
-    },
-    );
+        settings: {
+          number_of_shards: number_of_shards,
+          number_of_replicas: number_of_replica_shards,
+        },
+      },
+    });
   }
 
   async update(key: string, keyVal: string, body: any, index: string) {

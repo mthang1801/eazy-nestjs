@@ -41,7 +41,9 @@ export class CronService {
 
   @Timeout('remove-all-index', 1000)
   async removeAllIndex() {
-    // await this.productService.removeAllIndex();
+    if (process.env.ENVIRONMENT != 'development') {
+      await this.productService.removeAllIndex();
+    }
   }
 
   @Timeout('setting-shards', 6000)
