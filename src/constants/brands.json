@@ -1,7 +1,0 @@
-{
-  "data": "<shops><shop><username>SB_DiDongViet</username><shop_id>11689</shop_id><session>257cf006bb6040c59f21bd72a01d82d3</session><shop_title>DiDongViet</shop_title><shop_domain>https://ddv-fe-ecom.vercel.app</shop_domain><shop_back_url>https://ddv-fe-ecom.vercel.app/payment/success</shop_back_url><order_no>257cf006bb6040c59f21bd72a01d82d3</order_no><order_cash_amount>7700000</order_cash_amount><order_ship_date>22/04/2022</order_ship_date><order_ship_days>7</order_ship_days><order_description>UrlEncode(Mô tả chi tiết của đơn hàng(Chi tiết về sản phẩm/dịch vụ/chuyến bay.... Chiều dài phải hơn 50 ký tự. Nội dung có thể dạng văn bản hoặc mã HTML)</order_description><notify_url>https://ddvwsdev.ntlogistics.vn/be/v1/payment/payoo/payment-result</notify_url><validity_time>20220519135215</validity_time><installment><tenors>3,6,9,12</tenors></installment><customer><name>Okela 1999</name><phone>09367213363</phone><address>123 Quang Trung</address></customer></shop></shops>",
-  "refer": "https://ddv-fe-ecom.vercel.app",
-  "method": "Installment",
-  "bank": "SCB",
-  "checksum": "817b1894b7eaebe13f1b10b88996637114e6a347f756ef0c2f4ef9e0d677ac828740747981194cd873020d6e4cae3b916f696dad5e0c19bcab6690f5a32b3cdd"
-}

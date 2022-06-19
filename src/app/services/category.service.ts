@@ -27,7 +27,6 @@ import { ImagesLinksRepository } from '../repositories/imageLink.repository';
 import { ImagesLinksEntity } from '../entities/imageLinkEntity';
 import { ImageObjectType } from 'src/database/enums/tableFieldTypeStatus.enum';
 import { CreateCategoryV2Dto } from '../dto/category/create-category.v2.dto';
-import * as categoryData from '../../constants/category.json';
 import { catalogCategoryJoiner } from 'src/utils/joinTable';
 import { DatabaseService } from 'src/database/database.service';
 import {
@@ -1437,14 +1436,6 @@ export class CategoryService {
           { id_path: idPaths.join('/') },
         );
       }
-    }
-  }
-
-  async callSync() {
-    let categoriesList: any = categoryData;
-    await this.clearAll();
-    for (let categoryItem of categoriesList) {
-      await this.itgCreate(categoryItem);
     }
   }
 

@@ -84,6 +84,7 @@ import {
 import { logModules, logSources, logThreads } from '../../constants/logs';
 import { Response } from 'express';
 import { SEARCH_CUSTOMER_APPCORE_BY_PHONE } from '../../constants/api.appcore';
+import { SyncStatus } from '../../constants/status.constant';
 
 @Injectable()
 export class CustomerService {
@@ -214,7 +215,7 @@ export class CustomerService {
       password: passwordHash,
       salt: salt,
       status: UserStatusEnum.Active,
-      is_sync: 'N',
+      is_sync: SyncStatus.Waiting,
     };
 
     const newUser = await this.userRepo.create(userData);
@@ -294,25 +295,10 @@ export class CustomerService {
         {
           user_appcore_id,
           updated_at: formatStandardTimeStamp(),
-          is_sync: 'N',
+          is_sync: SyncStatus.Synced,
         },
         true,
       );
-      const module_id: number = 3;
-      const module_name: string = logModules['3'];
-      const source_id: number = 1;
-      const source_name: string = logSources['1'];
-      const thread: string = logThreads['2'];
-      // await this.logService.create(
-      //   LoggerSuccessBetweenCMSAndAppCore(
-      //     response,
-      //     module_id,
-      //     module_name,
-      //     source_id,
-      //     source_name,
-      //     thread,
-      //   ),
-      // );
       return updatedUser;
     } catch (error) {
       if (
@@ -323,21 +309,6 @@ export class CustomerService {
         this.userProfileRepo.delete({ user_id: user['user_id'] });
       }
       console.log(error.response);
-      const module_id: number = 3;
-      const module_name: string = logModules['3'];
-      const source_id: number = 1;
-      const source_name: string = logSources['1'];
-      const thread: string = logThreads['2'];
-      // await this.logService.create(
-      //   LoggerFailBetweenCMSAndAppCore(
-      //     error.response,
-      //     module_id,
-      //     module_name,
-      //     source_id,
-      //     source_name,
-      //     thread,
-      //   ),
-      // );
       throw new HttpException(
         error?.response?.data?.message || error.response,
         error?.response?.status || error.status,
@@ -372,6 +343,7 @@ export class CustomerService {
       ...new UserEntity(),
       ...this.userRepo.setData(customerData),
       password: passwordHash,
+      is_sync: SyncStatus.Waiting,
       salt,
     };
 
@@ -1335,14 +1307,14 @@ export class CustomerService {
             { user_id: customer.user_id },
             {
               user_appcore_id,
-              is_sync: 'N',
+              is_sync: SyncStatus.Synced,
             },
           );
         } catch (error) {
           if (error?.status < 500 || error?.response?.status < 500) {
             await this.userRepo.update(
               { user_id: customer.user_id },
-              { is_sync: 'N' },
+              { is_sync: SyncStatus.Synced, user_appcore_id: null },
             );
           }
         }

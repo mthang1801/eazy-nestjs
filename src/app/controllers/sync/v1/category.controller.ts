@@ -17,11 +17,6 @@ export class CategorySyncController extends BaseController {
     await this.service.getSync();
     return this.responseSuccess(res, null, 'Thành công.');
   }
-  @Post()
-  async callSync(@Res() res: Response): Promise<IResponse> {
-    await this.service.callSync();
-    return this.responseSuccess(res, null, 'Thành công.');
-  }
 
   @Get('count-products')
   async countProducts(@Res() res: Response): Promise<IResponse> {

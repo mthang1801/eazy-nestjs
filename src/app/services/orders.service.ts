@@ -122,7 +122,7 @@ import {
   Between,
   MoreThan,
 } from '../../database/operators/operators';
-import { OrderStatus, OrderType, orderSyncStatus } from '../../constants/order';
+import { OrderStatus, OrderType } from '../../constants/order';
 import { ProductsCategoriesRepository } from '../repositories/productsCategories.repository';
 import { ProductsCategoriesEntity } from '../entities/productsCategories.entity';
 import {
@@ -172,6 +172,7 @@ import { cacheTables } from '../../utils/cache.utils';
 import { ProductDescriptionsRepository } from '../repositories/productDescriptions.respository';
 import { ProductDescriptionsEntity } from '../entities/productDescriptions.entity';
 import { productDescriptionJoiner } from '../../utils/joinTable';
+import { SyncStatus } from '../../constants/status.constant';
 
 @Injectable()
 export class OrdersService {
@@ -758,7 +759,7 @@ export class OrdersService {
       ...this.orderRepo.setData(data),
       created_date: formatStandardTimeStamp(),
       updated_date: formatStandardTimeStamp(),
-      is_sync: orderSyncStatus.Waiting,
+      is_sync: SyncStatus.Waiting,
       status: OrderStatus.new,
     };
 
@@ -944,7 +945,7 @@ export class OrdersService {
         { order_id: result.order_id },
         {
           order_code: orderAppcoreResponse.orderId,
-          is_sync: orderSyncStatus.Synced,
+          is_sync: SyncStatus.Synced,
           updated_date: formatStandardTimeStamp(),
         },
         true,
@@ -1091,7 +1092,7 @@ export class OrdersService {
         { order_id: order_id },
         {
           order_code: orderAppcoreResponse.orderId,
-          is_sync: orderSyncStatus.Synced,
+          is_sync: SyncStatus.Synced,
           updated_date: formatStandardTimeStamp(),
         },
         true,
@@ -1115,7 +1116,7 @@ export class OrdersService {
           {
             status: OrderStatus.invalid,
             reason_fail: error?.response?.data?.message,
-            is_sync: orderSyncStatus.Synced,
+            is_sync: SyncStatus.Synced,
             updated_date: formatStandardTimeStamp(),
           },
           true,
@@ -1142,7 +1143,7 @@ export class OrdersService {
       phone: data.b_phone,
       password: passwordHash,
       salt,
-      is_sync: 'N',
+      is_sync: SyncStatus.Waiting,
     };
 
     let result = await this.userRepo.create(userData);
@@ -2149,7 +2150,7 @@ export class OrdersService {
               },
               {
                 order_item_appcore_id: orderItem.orderItemId,
-                is_sync: orderSyncStatus.Synced,
+                is_sync: SyncStatus.Synced,
               },
             );
           }
@@ -2161,7 +2162,7 @@ export class OrdersService {
             await this.orderRepo.update(
               { order_id: order.order_id },
               {
-                is_sync: orderSyncStatus.Synced,
+                is_sync: SyncStatus.Synced,
               },
               true,
             );
