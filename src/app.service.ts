@@ -91,8 +91,10 @@ export class AppService {
       //   user_id: user.user_id,
       // };
       // const order = await this.orderRepo.create(orderData);
-      await this.userRepo.update({ user_id: 1 }, { status: 2 });
-      await this.orderRepo.update({ order_id: 1 }, { status: 2 });
+      // await this.userRepo.update({ user_id: 1 }, { status: 2 });
+      // await this.orderRepo.update({ order_id: 1 }, { status: 2 });
+      await this.userRepo.delete({ user_id: 1 });
+      await this.orderRepo.delete({ order_id: 1 });
       throw new HttpException('Something went wrong', 400);
       // await this.userRepo.update(
       //   {

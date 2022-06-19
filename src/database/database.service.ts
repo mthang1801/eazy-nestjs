@@ -154,15 +154,23 @@ export class DatabaseService {
           case 'delete':
             Object.entries(tracker.oldData).forEach(([key, val], i) => {
               if (i !== 0) {
-                stringData += `, ${key} = '${val}'`;
+                stringData += datetimeFieldsList.includes(key)
+                  ? checkValidTimestamp(val)
+                    ? `, ${key} = '${formatStandardTimeStamp(val)}'`
+                    : null
+                  : `, ${key} = '${val}'`;
               } else {
-                stringData += `${key} = '${val}'`;
+                stringData += datetimeFieldsList.includes(key)
+                  ? checkValidTimestamp(val)
+                    ? ` ${key} = '${formatStandardTimeStamp(val)}'`
+                    : null
+                  : ` ${key} = '${val}'`;
               }
             });
-            rawStringQuery = `INSERT INTO ${tracker.tableName} SET ${stringData} WHERE ${tracker.condition}`;
+            rawStringQuery = `INSERT INTO ${tracker.tableName} SET ${stringData}`;
             break;
         }
-        console.log(stringData);
+        console.log(rawStringQuery);
         await this.writePool.query(rawStringQuery);
         return tracker;
       }),
@@ -190,6 +198,17 @@ export class DatabaseService {
     if (updateStartIndex === 0) {
       let tableName = queryText
         .substring(updateStartIndex + startUpdate.length, updateEndIndex)
+        .trim();
+      return tableName;
+    }
+
+    let startDelete = 'DELETE FROM';
+    let endDelete = 'WHERE';
+    let deleteStartIndex = queryText.indexOf(startDelete);
+    let deleteEndIndex = queryText.indexOf(endDelete);
+    if (deleteStartIndex === 0) {
+      let tableName = queryText
+        .substring(deleteStartIndex + startDelete.length, deleteEndIndex)
         .trim();
       return tableName;
     }
