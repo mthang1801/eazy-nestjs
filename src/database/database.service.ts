@@ -35,13 +35,13 @@ export class DatabaseService {
         tableName,
         method:
           queryText.indexOf('INSERT INTO') > -1
-            ? 'insert'
+            ? 'INSERT'
             : queryText.indexOf('DELETE') > -1
-            ? 'delete'
-            : 'update',
+            ? 'DELETE'
+            : 'UPDATE',
       };
 
-      if (['update', 'delete'].includes(this.dataTracker.method)) {
+      if (['UPDATE', 'DELETE'].includes(this.dataTracker.method)) {
         let condition = sqlQuery
           .substring(sqlQuery.indexOf('WHERE'))
           .trim()
@@ -129,10 +129,10 @@ export class DatabaseService {
         let rawStringQuery = '';
         let stringData = '';
         switch (tracker.method) {
-          case 'insert':
+          case 'INSERT':
             rawStringQuery = `DELETE FROM ${tracker.tableName} WHERE ${tracker.condition} `;
             break;
-          case 'update':
+          case 'UPDATE':
             Object.entries(tracker.oldData).forEach(([key, val], i) => {
               if (i !== 0) {
                 stringData += datetimeFieldsList.includes(key)
@@ -151,7 +151,7 @@ export class DatabaseService {
             rawStringQuery = `UPDATE ${tracker.tableName} SET ${stringData} WHERE ${tracker.condition}`;
 
             break;
-          case 'delete':
+          case 'DELETE':
             Object.entries(tracker.oldData).forEach(([key, val], i) => {
               if (i !== 0) {
                 stringData += datetimeFieldsList.includes(key)
