@@ -6,7 +6,7 @@ import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { UserRepository } from './repository/user.repository';
 import { OrderRepository } from './repository/order.repository';
-
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,6 +14,7 @@ import { OrderRepository } from './repository/order.repository';
       envFilePath: '.env',
       load: [appConfig, databaseConfig],
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
   ],
   providers: [AppService, UserRepository, OrderRepository, String],

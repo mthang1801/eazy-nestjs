@@ -10,17 +10,22 @@ import {
   CustomRepositoryCannotInheritRepositoryError,
   UsingJoinColumnIsNotAllowedError,
 } from 'typeorm';
-import { Condition } from '../base/interfaces/collection.interfaces';
-import { SortBy } from './enums/index';
+import { Condition } from './interfaces/collection.interfaces';
+import { SortType } from '../database/enums/index';
 import {
   formatStringCondition,
   formatHavingCondition,
-} from './database.helper';
+} from '../database/database.helper';
 import { of } from 'rxjs';
-import { formatRawStringCondition } from './database.helper';
-export class DatabaseCollection {
+import { formatRawStringCondition } from '../database/database.helper';
+import { ISortQuery } from 'src/database/interfaces/sortBy.interface';
+import { ErrorCollection } from '../constants/errorCollection.constant';
+import { exclusiveConditionsCmds } from './base.helper';
+import { JoinTable } from '../database/enums/joinTable.enum';
+export class BaseConfigure {
   private table: string;
-
+  private originalLimit = 99999999999;
+  private originalOffset = 0;
   private stringSelect: string;
   private alias: string;
   private arrayTable: any[];
@@ -28,13 +33,14 @@ export class DatabaseCollection {
   private arrayCondition: any[];
   private stringCondition: string;
   private sortString: string;
-  private limit: number;
-  private offset: number;
+  private limit: number = 99999999999;
+  private offset: number = 0;
   private stringGroupBy: string | number | string[] | number[];
   private stringHaving: string;
   private arrayHaving: any[];
   private orOperator: string = '$or';
   private andOperator: string = '$and';
+  private typeOfJoin = 'JOIN';
 
   constructor(table) {
     this.table = table;
@@ -48,8 +54,6 @@ export class DatabaseCollection {
     this.stringGroupBy = '';
     this.stringHaving = '';
     this.arrayHaving = [];
-    this.limit = 99999999999;
-    this.offset = 0;
   }
 
   reset(): void {
@@ -154,6 +158,12 @@ export class DatabaseCollection {
   }
 
   join(objFields: any): void {
+    this.typeOfJoin = JoinTable.join;
+    if (typeof objFields == 'string') {
+      this.stringJoin = `FROM ${this.table} ${this.alias} JOIN ${objFields} `;
+
+      return;
+    }
     if (objFields.alias) {
       this.alias = objFields.alias;
     }
@@ -171,6 +181,73 @@ export class DatabaseCollection {
         this.addJoin(table, result.fieldJoin, result.rootJoin, typeOfJoin);
       }
     }
+
+    this.stringJoin = ` FROM ${this.table} ${this.alias} ${this.stringJoin} `;
+  }
+
+  leftJoin(objFields: any): void {
+    this.typeOfJoin = JoinTable.leftJoin;
+    if (typeof objFields == 'string') {
+      this.stringJoin = `FROM ${this.table} ${this.alias} LEFT JOIN ${objFields} `;
+
+      return;
+    }
+  }
+
+  rightJoin(objFields: any): void {
+    this.typeOfJoin = JoinTable.rightJoin;
+    if (typeof objFields == 'string') {
+      this.stringJoin = `FROM ${this.table} ${this.alias} LEFT JOIN ${objFields} `;
+
+      return;
+    }
+    if (objFields.alias) {
+      this.alias = objFields.alias;
+    }
+    const typesOfJoin = Object.keys(objFields).filter((field) =>
+      /join/gi.test(field),
+    );
+    for (let typeOfJoin of typesOfJoin) {
+      const listJoins = objFields[typeOfJoin];
+      const tableNames = Object.keys(listJoins);
+      for (let table of tableNames) {
+        const { fieldJoin, rootJoin } = objFields[typeOfJoin][table];
+
+        const result = this.checkTableJoin(rootJoin, table, fieldJoin);
+
+        this.addJoin(table, result.fieldJoin, result.rootJoin, 'RIGHT JOIN');
+      }
+    }
+
+    this.stringJoin = ` FROM ${this.table} ${this.alias} ${this.stringJoin} `;
+  }
+
+  crossJoin(objFields: any): void {
+    this.typeOfJoin = JoinTable.crossJoin;
+    if (typeof objFields == 'string') {
+      this.stringJoin = `FROM ${this.table} ${this.alias} LEFT JOIN ${objFields} `;
+
+      return;
+    }
+    if (objFields.alias) {
+      this.alias = objFields.alias;
+    }
+    const typesOfJoin = Object.keys(objFields).filter((field) =>
+      /join/gi.test(field),
+    );
+    for (let typeOfJoin of typesOfJoin) {
+      const listJoins = objFields[typeOfJoin];
+      const tableNames = Object.keys(listJoins);
+      for (let table of tableNames) {
+        const { fieldJoin, rootJoin } = objFields[typeOfJoin][table];
+
+        const result = this.checkTableJoin(rootJoin, table, fieldJoin);
+
+        this.addJoin(table, result.fieldJoin, result.rootJoin, 'CROSS JOIN');
+      }
+    }
+
+    this.stringJoin = ` FROM ${this.table} ${this.alias} ${this.stringJoin} `;
   }
 
   andWhere(field, operation, value, type): void {
@@ -371,22 +448,42 @@ export class DatabaseCollection {
     }
   }
 
-  orderBy(sortArray: { field: string; sortBy: SortBy }[]): void {
+  orderBy(sortArray: ISortQuery[]): void {
+    if (!Array.isArray(sortArray)) {
+      let newError = new ErrorCollection();
+      let syntaxError = newError.querySyntax();
+      throw new HttpException(syntaxError.message, syntaxError.statusCode);
+    }
+
     if (sortArray.length) {
       let sortString = '';
+
       for (let i = 0; i < sortArray.length; i++) {
-        const { field, sortBy } = sortArray[i];
+        const { sortBy, sortType } = sortArray[i];
         if (i === 0) {
-          sortString += ` ${field} ${sortBy}`;
+          sortString += ` ${sortBy} ${sortType}`;
           continue;
         }
-        sortString += `, ${field} ${sortBy}`;
+        sortString += `, ${sortBy} ${sortType}`;
       }
+
       this.sortString = sortString;
     }
   }
 
   where(objFields: any) {
+    if (
+      Object.entries(objFields).length &&
+      exclusiveConditionsCmds.includes(Object.keys(objFields).join(',')) &&
+      !Object.keys(objFields).includes('where')
+    )
+      return;
+
+    if (typeof objFields == 'string') {
+      this.stringCondition = `WHERE ${objFields}`;
+      return;
+    }
+
     if (typeof objFields !== 'object') {
       throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
     }
@@ -665,21 +762,29 @@ export class DatabaseCollection {
     return sql;
   }
 
-  sql(is_limit = true): string {
+  sql(): string {
     let sql_string = '';
-    this.stringCondition = this.genCondition();
+    let is_limit =
+      this.limit != this.originalLimit || this.offset != this.originalOffset
+        ? true
+        : false;
+    if (!this.stringCondition.trim()) {
+      this.stringCondition = this.genCondition();
+    }
+
     this.stringHaving = this.genHaving();
+
     const orderString = this.sortString
       ? 'ORDER BY ' + this.sortString
       : this.sortString;
     sql_string =
       this.stringSelect +
-      ` FROM ${this.table} ${this.alias} ` +
       this.stringJoin +
       this.stringCondition +
       this.stringGroupBy +
       this.stringHaving +
       orderString;
+
     if (is_limit == true) {
       sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset} ; `;
     }
@@ -708,6 +813,7 @@ export class DatabaseCollection {
 
   genCondition(): string {
     let stringCondition = '';
+
     if (this.arrayCondition.length) {
       let arrayCheckExist = [];
       for (let i = 0; i < this.arrayCondition.length; i++) {

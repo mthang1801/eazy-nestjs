@@ -92,7 +92,7 @@ export const formatTypeValueConditionSQL = (value) => {
   return `'${value}'`;
 };
 
-export const preprocessDatabaseBeforeResponse = (data) => {
+export const preprocessDatabaseBeforeResponse = (data): object => {
   if (!data || (typeof data === 'object' && !Object.entries(data).length)) {
     return null;
   }
@@ -120,3 +120,23 @@ export const preprocessDatabaseBeforeResponse = (data) => {
 
   return dataObject;
 };
+
+export const orderCmds: string[] = [
+  'select',
+  'from',
+  'join',
+  'where',
+  'groupBy',
+  'having',
+  'skip',
+  'limit',
+  'orderBy',
+];
+
+export const exclusiveConditionsCmds: string[] = [
+  'select',
+  'from',
+  'join',
+  'groupBy',
+  'orderBy',
+];

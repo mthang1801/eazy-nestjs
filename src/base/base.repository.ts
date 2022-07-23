@@ -1,9 +1,13 @@
 import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { DatabaseCollection } from '../database/database.collection';
+import { BaseConfigure } from './base.configure';
 import { Table, AutoIncrementKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
-import { preprocessDatabaseBeforeResponse } from './base.helper';
+import {
+  preprocessDatabaseBeforeResponse,
+  orderCmds,
+  exclusiveConditionsCmds,
+} from './base.helper';
 import {
   SHOW_LOG_ON_FIND_MANY,
   SHOW_LOG_ON_FIND_ONE,
@@ -13,17 +17,7 @@ import {
   preprocessAddTextDataToMysql,
   formatTypeValueToInSertSQL,
 } from './base.helper';
-const orderCmds = [
-  'select',
-  'from',
-  'join',
-  'where',
-  'groupBy',
-  'having',
-  'skip',
-  'limit',
-  'orderBy',
-];
+
 @Injectable()
 export class BaseRepositorty {
   private logger = new Logger(BaseRepositorty.name);
@@ -37,7 +31,7 @@ export class BaseRepositorty {
   }
 
   dbCollection() {
-    let collection = new DatabaseCollection(this.table);
+    let collection = new BaseConfigure(this.table);
     return collection;
   }
 
@@ -86,7 +80,8 @@ export class BaseRepositorty {
     if (
       Object.keys(options).some(
         (val) =>
-          val.toLowerCase() === 'where' || /(select|from|join)/gi.test(val),
+          val.toLowerCase() === 'where' ||
+          /(exclusiveConditionsCmds.join("|"))/gi.test(val),
       )
     ) {
       results = await this.find({ ...options, limit: 1 }, false);
@@ -110,12 +105,13 @@ export class BaseRepositorty {
     }
 
     const optionKeys = Object.keys(options);
-    const collection = new DatabaseCollection(this.table);
+    const collection = new BaseConfigure(this.table);
 
     if (
       !Object.keys(options).some(
         (val) =>
-          val.toLowerCase() === 'where' || /(select|from|join)/gi.test(val),
+          val.toLowerCase() === 'where' ||
+          /(exclusiveConditionsCmds.join("|"))/gi.test(val),
       )
     ) {
       collection['where'](options);
@@ -168,7 +164,7 @@ export class BaseRepositorty {
       );
     }
 
-    const collection = new DatabaseCollection(this.table);
+    const collection = new BaseConfigure(this.table);
     let distinctParam: any = null;
     Object.entries(params).forEach(([key, val]) => {
       if (['join', 'where'].includes(key)) {
@@ -456,13 +452,13 @@ export class BaseRepositorty {
       }
 
       const optionKeys = Object.keys(options);
-      const collection = new DatabaseCollection(this.table);
+      const collection = new BaseConfigure(this.table);
 
       if (
         !Object.keys(options).some(
           (val) =>
             val.toLowerCase() === 'where' ||
-            /(select|from|join|orderBy)/gi.test(val),
+            /(exclusiveConditionsCmds.join("|"))/gi.test(val),
         )
       ) {
         collection['where'](options);
@@ -520,7 +516,7 @@ export class BaseRepositorty {
         Object.keys(options).some(
           (val) =>
             val.toLowerCase() === 'where' ||
-            /(select|from|join|orderBy)/gi.test(val),
+            /(exclusiveConditionsCmds.join("|"))/gi.test(val),
         )
       ) {
         results = await this.findInWritePool({ ...options, limit: 1 }, false);

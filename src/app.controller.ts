@@ -13,9 +13,16 @@ export class AppController extends BaseController {
     await this.service.getUser();
     return this.responseSuccess(res);
   }
-  @Post()
+
+  @Post('tracking-rollback')
   async create(@Res() res: Response, @Body() data): Promise<IResponse> {
     await this.service.create(data);
+    return this.responseCreated(res);
+  }
+
+  @Post('test-condition')
+  async testCondition(@Res() res: Response, @Body() data): Promise<IResponse> {
+    await this.service.testCondition(data);
     return this.responseCreated(res);
   }
 }

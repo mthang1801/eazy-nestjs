@@ -14,6 +14,8 @@ import {
 import { OrderEntity } from './entity/order.entity';
 import { DatabaseService } from './database/database.service';
 import { formatStandardTimeStamp } from './utils/helper';
+import { Timeout } from '@nestjs/schedule';
+import { SortType } from './database/enums/sortBy.enum';
 
 @Injectable()
 export class AppService {
@@ -112,6 +114,21 @@ export class AppService {
     } catch (error) {
       console.log(error);
       await this.db.rollback();
+    }
+  }
+
+  @Timeout(500)
+  async testCondition(data) {
+    try {
+      // await this.userRepo.find({
+      //   orderBy: [{ sortBy: 'updated_at', sortType: SortType.DESC }],
+      // });
+      await this.userRepo.find({
+        join: `ddv_user_profiles b ON ${Table.USER}.user_id = b.user_id`,
+        where: "user_id = 1 and user_type = 2 and status = 'A' ",
+      });
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
     }
   }
 }
