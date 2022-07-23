@@ -18,8 +18,8 @@ import { formatStandardTimeStamp } from './utils/helper';
 @Injectable()
 export class AppService {
   constructor(
-    private userRepo: UserRepository<UserEntity>,
-    private orderRepo: OrderRepository<OrderEntity>,
+    private userRepo: UserRepository,
+    private orderRepo: OrderRepository,
     private db: DatabaseService,
   ) {}
 

@@ -6,7 +6,7 @@ import { DatabaseService } from '../database/database.service';
 import { BaseRepositorty } from '../base/base.repository';
 
 @Injectable()
-export class UserRepository<UserEntity> extends BaseRepositorty<UserEntity> {
+export class UserRepository extends BaseRepositorty {
   constructor(databaseService: DatabaseService, table: Table) {
     super(databaseService, table);
     this.table = Table.USER;

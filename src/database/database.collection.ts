@@ -676,9 +676,9 @@ export class DatabaseCollection {
       this.stringSelect +
       ` FROM ${this.table} ${this.alias} ` +
       this.stringJoin +
+      this.stringCondition +
       this.stringGroupBy +
       this.stringHaving +
-      this.stringCondition +
       orderString;
     if (is_limit == true) {
       sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset} ; `;

@@ -4,6 +4,10 @@ import { DatabaseCollection } from '../database/database.collection';
 import { Table, AutoIncrementKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
 import { preprocessDatabaseBeforeResponse } from './base.helper';
+import {
+  SHOW_LOG_ON_FIND_MANY,
+  SHOW_LOG_ON_FIND_ONE,
+} from '../constants/index.constant';
 
 import {
   preprocessAddTextDataToMysql,
@@ -13,15 +17,15 @@ const orderCmds = [
   'select',
   'from',
   'join',
+  'where',
   'groupBy',
   'having',
-  'where',
   'skip',
   'limit',
   'orderBy',
 ];
 @Injectable()
-export class BaseRepositorty<T> {
+export class BaseRepositorty {
   private logger = new Logger(BaseRepositorty.name);
   private _tableProps: string[];
 
@@ -193,52 +197,58 @@ export class BaseRepositorty<T> {
     returnable: boolean = true,
     showLog: boolean = true,
   ): Promise<any> {
-    if (showLog) {
-      this.logger.log(
-        `=============== [MYSQL] CREATE ON ${this.table} ================`,
-      );
-    }
-
-    if (Array.isArray(inputData) || typeof inputData !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào phải là một Object',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    let fmtInputData: any = {};
-    for (let [key, val] of Object.entries(inputData)) {
-      if (typeof val === 'number') {
-        fmtInputData[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtInputData[key] = preprocessAddTextDataToMysql(val);
-      }
-    }
-
-    let sql = `INSERT INTO ${this.table} SET `;
-
-    Object.entries(fmtInputData).forEach(([key, val], i) => {
-      if (i === 0) {
-        sql += formatTypeValueToInSertSQL(key, val);
-      } else {
-        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
-      }
-    });
-
-    let response = await this.databaseService.executeQueryWritePool(sql);
-
-    if (returnable) {
-      let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
-
-      if (!lastInsertId) {
-        throw new HttpException(
-          'Không tìm thấy auto_increment_id của entity vừa tạo',
-          404,
+    try {
+      if (showLog) {
+        this.logger.log(
+          `=============== [MYSQL] CREATE ON ${this.table} ================`,
         );
       }
 
-      return this.findOne({
-        [`${this.table}.${[AutoIncrementKeys[this.table]]}`]: lastInsertId,
+      if (Array.isArray(inputData) || typeof inputData !== 'object') {
+        throw new HttpException(
+          'Tham số truyền vào phải là một Object',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      let fmtInputData: any = {};
+      for (let [key, val] of Object.entries(inputData)) {
+        if (typeof val === 'number') {
+          fmtInputData[key] = preprocessAddTextDataToMysql(+val);
+        } else {
+          fmtInputData[key] = preprocessAddTextDataToMysql(val);
+        }
+      }
+
+      let sql = `INSERT INTO ${this.table} SET `;
+
+      Object.entries(fmtInputData).forEach(([key, val], i) => {
+        if (i === 0) {
+          sql += formatTypeValueToInSertSQL(key, val);
+        } else {
+          sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
+        }
       });
+
+      let response = await this.databaseService.executeQueryWritePool(sql);
+      let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
+      if (returnable) {
+        if (!lastInsertId) {
+          throw new HttpException(
+            'Không tìm thấy auto_increment_id của entity vừa tạo',
+            404,
+          );
+        }
+
+        return this.findOneInWritePool({
+          [`${this.table}.${[AutoIncrementKeys[this.table]]}`]: lastInsertId,
+        });
+      }
+
+      return {
+        [AutoIncrementKeys[this.table]]: lastInsertId,
+      };
+    } catch (err) {
+      throw new HttpException(err.response, err.status);
     }
   }
 
@@ -247,7 +257,7 @@ export class BaseRepositorty<T> {
    * @param id
    * @returns
    */
-  async findById(id: number | any): Promise<T> {
+  async findById(id: number | any) {
     this.logger.log(
       `=============== [MYSQL] FIND BY ID ON ${this.table} ================`,
     );
@@ -280,61 +290,65 @@ export class BaseRepositorty<T> {
     returnable: boolean = false,
     showLog = true,
   ) {
-    if (showLog) {
-      this.logger.warn(
-        `=============== [MYSQL] UPDATE ON ${this.table} ================`,
-      );
-    }
-
-    if (typeof inputData !== 'object') {
-      throw new HttpException(
-        'Tham số truyền vào không hợp lệ.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    let fmtParams: any = { ...inputData };
-
-    for (let [key, val] of Object.entries(inputData)) {
-      if (typeof val == 'number') {
-        fmtParams[key] = preprocessAddTextDataToMysql(+val);
-      } else {
-        fmtParams[key] = preprocessAddTextDataToMysql(val);
+    try {
+      if (showLog) {
+        this.logger.warn(
+          `=============== [MYSQL] UPDATE ON ${this.table} ================`,
+        );
       }
-    }
 
-    let sql = `UPDATE ${this.table} SET `;
-    Object.entries(fmtParams).forEach(([key, val], i) => {
-      if (i === 0) {
-        sql += formatTypeValueToInSertSQL(key, val);
-      } else {
-        sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
+      if (typeof inputData !== 'object') {
+        throw new HttpException(
+          'Tham số truyền vào không hợp lệ.',
+          HttpStatus.BAD_REQUEST,
+        );
       }
-    });
 
-    sql += ' WHERE ';
+      let fmtParams: any = { ...inputData };
 
-    if (typeof conditions === 'object') {
-      Object.entries(conditions).forEach(([key, val], i) => {
+      for (let [key, val] of Object.entries(inputData)) {
+        if (typeof val == 'number') {
+          fmtParams[key] = preprocessAddTextDataToMysql(+val);
+        } else {
+          fmtParams[key] = preprocessAddTextDataToMysql(val);
+        }
+      }
+
+      let sql = `UPDATE ${this.table} SET `;
+      Object.entries(fmtParams).forEach(([key, val], i) => {
         if (i === 0) {
           sql += formatTypeValueToInSertSQL(key, val);
         } else {
-          sql += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
+          sql += `, ${formatTypeValueToInSertSQL(key, val)}`;
         }
       });
-    } else {
-      sql += ` ${AutoIncrementKeys[this.table]} = '${conditions}'`;
-    }
 
-    await this.databaseService.executeQueryWritePool(sql);
+      sql += ' WHERE ';
 
-    if (returnable) {
-      const updatedData =
-        typeof conditions === 'object'
-          ? await this.findOne(conditions)
-          : await this.findById(conditions);
+      if (typeof conditions === 'object') {
+        Object.entries(conditions).forEach(([key, val], i) => {
+          if (i === 0) {
+            sql += formatTypeValueToInSertSQL(key, val);
+          } else {
+            sql += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
+          }
+        });
+      } else {
+        sql += ` ${AutoIncrementKeys[this.table]} = '${conditions}'`;
+      }
 
-      return updatedData;
+      await this.databaseService.executeQueryWritePool(sql);
+
+      if (returnable) {
+        const updatedData =
+          typeof conditions === 'object'
+            ? await this.findOneInWritePool(conditions)
+            : await this.findByIdInWritePool(conditions);
+
+        return updatedData;
+      }
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
     }
   }
 
@@ -343,67 +357,71 @@ export class BaseRepositorty<T> {
     returnable: boolean = false,
     showLog: boolean = true,
   ) {
-    if (showLog) {
-      this.logger.error(
-        `=============== [MYSQL] DELETE ON ${this.table} ================`,
-      );
-    }
-    let deletedData;
-    if (returnable) {
-      deletedData =
-        typeof conditions === 'object'
-          ? await this.findOne(conditions)
-          : await this.findById(conditions);
-    }
+    try {
+      if (showLog) {
+        this.logger.error(
+          `=============== [MYSQL] DELETE ON ${this.table} ================`,
+        );
+      }
+      let deletedData;
+      if (returnable) {
+        deletedData =
+          typeof conditions === 'object'
+            ? await this.findOneInWritePool(conditions)
+            : await this.findByIdInWritePool(conditions);
+      }
 
-    let queryString = `DELETE FROM ${this.table} WHERE `;
+      let queryString = `DELETE FROM ${this.table} WHERE `;
 
-    let res;
-    if (typeof conditions === 'object') {
-      if (Array.isArray(conditions)) {
-        for (let i = 0; i < conditions.length; i++) {
-          if (typeof conditions[i] !== 'object') {
-            throw new HttpException(
-              'Sai cú pháp truy vấn',
-              HttpStatus.BAD_REQUEST,
-            );
+      let res;
+      if (typeof conditions === 'object') {
+        if (Array.isArray(conditions)) {
+          for (let i = 0; i < conditions.length; i++) {
+            if (typeof conditions[i] !== 'object') {
+              throw new HttpException(
+                'Sai cú pháp truy vấn',
+                HttpStatus.BAD_REQUEST,
+              );
+            }
+            Object.entries(conditions).forEach(([key, val], i) => {
+              if (i === 0) {
+                queryString += `${key} = '${val}'`;
+              } else {
+                queryString += ` OR ${key} = '${val}'`;
+              }
+            });
           }
+        } else {
           Object.entries(conditions).forEach(([key, val], i) => {
             if (i === 0) {
               queryString += `${key} = '${val}'`;
             } else {
-              queryString += ` OR ${key} = '${val}'`;
+              queryString += ` AND ${key} = '${val}'`;
             }
           });
         }
+        res = await this.databaseService.executeQueryWritePool(queryString, [
+          conditions,
+        ]);
       } else {
-        Object.entries(conditions).forEach(([key, val], i) => {
-          if (i === 0) {
-            queryString += `${key} = '${val}'`;
-          } else {
-            queryString += ` AND ${key} = '${val}'`;
-          }
-        });
+        queryString += ` ? `;
+        res = await this.databaseService.executeQueryWritePool(queryString, [
+          { [AutoIncrementKeys[this.table]]: conditions },
+        ]);
       }
-      res = await this.databaseService.executeQueryWritePool(queryString, [
-        conditions,
-      ]);
-    } else {
-      queryString += ` ? `;
-      res = await this.databaseService.executeQueryWritePool(queryString, [
-        { [AutoIncrementKeys[this.table]]: conditions },
-      ]);
-    }
 
-    if (res[0].affectedRows === 0) {
-      return false;
-    }
+      if (res[0].affectedRows === 0) {
+        return false;
+      }
 
-    if (returnable) {
-      return deletedData;
-    }
+      if (returnable) {
+        return deletedData;
+      }
 
-    return true;
+      return true;
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
+    }
   }
 
   async readExec(queryString: string): Promise<any> {
@@ -424,5 +442,121 @@ export class BaseRepositorty<T> {
 
   async rollbackTransaction() {
     await this.databaseService.rollbackTransaction();
+  }
+
+  private async findInWritePool(
+    options: any = {},
+    showLog = SHOW_LOG_ON_FIND_MANY,
+  ) {
+    try {
+      if (showLog) {
+        this.logger.log(
+          `=============== [MYSQL] FIND ON ${this.table} ================`,
+        );
+      }
+
+      const optionKeys = Object.keys(options);
+      const collection = new DatabaseCollection(this.table);
+
+      if (
+        !Object.keys(options).some(
+          (val) =>
+            val.toLowerCase() === 'where' ||
+            /(select|from|join|orderBy)/gi.test(val),
+        )
+      ) {
+        collection['where'](options);
+      }
+
+      for (let cmd of orderCmds) {
+        if (optionKeys.includes(cmd)) {
+          if (cmd === 'skip') {
+            collection['setSkip'](options[cmd]);
+            continue;
+          }
+          if (cmd === 'limit') {
+            collection['setLimit'](options[cmd]);
+            continue;
+          }
+          collection[cmd](options[cmd]);
+        }
+      }
+
+      const res = await this.databaseService.executeQueryWritePool(
+        collection.sql(),
+      );
+      let results: any[] = [];
+
+      for (let result of res[0]) {
+        results.push(preprocessDatabaseBeforeResponse(result));
+      }
+
+      return results;
+    } catch (err) {
+      throw new HttpException(err.stack, err.status || err.code);
+    }
+  }
+
+  private async findOneInWritePool(
+    options: any,
+    showLog: boolean = SHOW_LOG_ON_FIND_ONE,
+  ): Promise<any> {
+    try {
+      if (showLog) {
+        this.logger.log(
+          `=============== [MYSQL] FIND ONE ON ${this.table} ================`,
+        );
+      }
+
+      if (typeof options !== 'object') {
+        throw new HttpException(
+          'Tham số đưa vào phải là Object',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      let results;
+
+      if (
+        Object.keys(options).some(
+          (val) =>
+            val.toLowerCase() === 'where' ||
+            /(select|from|join|orderBy)/gi.test(val),
+        )
+      ) {
+        results = await this.findInWritePool({ ...options, limit: 1 }, false);
+      } else {
+        results = await this.findInWritePool(
+          { where: options, limit: 1 },
+          false,
+        );
+      }
+
+      return await preprocessDatabaseBeforeResponse(results[0]);
+    } catch (error) {
+      throw new HttpException(error.response, error.status);
+    }
+  }
+
+  private async findByIdInWritePool(id: number | any) {
+    this.logger.log(
+      `=============== [MYSQL] FIND BY ID ON ${this.table} ================`,
+    );
+
+    const stringQuery = `SELECT * FROM ${this.table} WHERE ?`;
+
+    let rows;
+    if (typeof id === 'object') {
+      rows = await this.databaseService.executeQueryWritePool(stringQuery, [
+        id,
+      ]);
+    } else {
+      rows = await this.databaseService.executeQueryWritePool(stringQuery, [
+        { [AutoIncrementKeys[this.table]]: id },
+      ]);
+    }
+
+    const result = rows[0];
+
+    return preprocessDatabaseBeforeResponse(result[0]);
   }
 }
