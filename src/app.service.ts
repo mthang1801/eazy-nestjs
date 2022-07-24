@@ -129,8 +129,13 @@ export class AppService {
       //   where: "user_id = 1 and user_type = 2 and status = 'A' ",
       // });
       // await this.userRepo.createMany(users);
-      const users = await this.userRepo.findMany({});
-      console.log(users);
+      console.time('start');
+      const users = await this.userRepo.findMany();
+      const user = await this.userRepo.findOne({
+        where: { '1': 1 },
+        orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
+      });
+      console.timeEnd('start');
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

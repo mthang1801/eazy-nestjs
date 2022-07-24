@@ -22,6 +22,7 @@ import { ISortQuery } from 'src/database/interfaces/sortBy.interface';
 import { ErrorCollection } from '../constants/errorCollection.constant';
 import { exclusiveConditionsCmds } from './base.helper';
 import { JoinTable } from '../database/enums/joinTable.enum';
+import { removeMoreThanOneSpace } from '../utils/helper';
 export class BaseConfigure {
   private table: string;
   private originalLimit = 99999999999;
@@ -449,13 +450,18 @@ export class BaseConfigure {
     }
   }
 
-  orderBy(sortArray: ISortQuery[]): void {
+  orderBy(sortArray: ISortQuery[] | string): void {
+    if (typeof sortArray == 'string') {
+      this.sortString = sortArray;
+      return;
+    }
+
     if (!Array.isArray(sortArray)) {
       let newError = new ErrorCollection();
       let syntaxError = newError.querySyntax();
       throw new HttpException(syntaxError.message, syntaxError.statusCode);
     }
-
+    console.log(sortArray);
     if (sortArray.length) {
       let sortString = '';
 
@@ -790,13 +796,15 @@ export class BaseConfigure {
     const orderString = this.sortString
       ? 'ORDER BY ' + this.sortString
       : this.sortString;
-    sql_string =
+
+    sql_string = removeMoreThanOneSpace(
       this.stringSelect +
-      this.stringJoin +
-      this.stringCondition +
-      this.stringGroupBy +
-      this.stringHaving +
-      orderString;
+        this.stringJoin +
+        this.stringCondition +
+        this.stringGroupBy +
+        this.stringHaving +
+        orderString,
+    );
 
     if (is_limit == true) {
       sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset} ; `;
