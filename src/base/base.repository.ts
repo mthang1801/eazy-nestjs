@@ -95,9 +95,9 @@ export class BaseRepositorty {
           /(exclusiveConditionsCmds.join("|"))/gi.test(val),
       )
     ) {
-      results = await this.find({ ...options, limit: 1 }, false);
+      results = await this.findMany({ ...options, limit: 1 }, false);
     } else {
-      results = await this.find({ where: options, limit: 1 }, false);
+      results = await this.findMany({ where: options, limit: 1 }, false);
     }
 
     return preprocessDatabaseBeforeResponse(results[0]);
@@ -108,7 +108,7 @@ export class BaseRepositorty {
    * @param options
    * @returns array
    */
-  async find(options: any = {}, showLog = true) {
+  async findMany(options: any = {}, showLog = true) {
     if (showLog) {
       this.logger.log(
         `=============== [MYSQL] FIND ON ${this.table} ================`,
@@ -202,7 +202,7 @@ export class BaseRepositorty {
    * @param showLog {boolean}
    * @returns
    */
-  async create(
+  async createOne(
     inputData: any,
     returnable: boolean = false,
     showLog: boolean = SHOW_LOG_ON_CREATE_ONE,
@@ -516,7 +516,7 @@ export class BaseRepositorty {
     await this.databaseService.rollbackTransaction();
   }
 
-  private async findInWritePool(
+  private async findManyInWritePool(
     options: any = {},
     showLog = SHOW_LOG_ON_FIND_MANY,
   ) {
@@ -595,9 +595,12 @@ export class BaseRepositorty {
             /(exclusiveConditionsCmds.join("|"))/gi.test(val),
         )
       ) {
-        results = await this.findInWritePool({ ...options, limit: 1 }, false);
+        results = await this.findManyInWritePool(
+          { ...options, limit: 1 },
+          false,
+        );
       } else {
-        results = await this.findInWritePool(
+        results = await this.findManyInWritePool(
           { where: options, limit: 1 },
           false,
         );
