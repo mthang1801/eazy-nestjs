@@ -579,6 +579,11 @@ export class BaseConfigure {
   }
 
   having(objFields: any): void {
+    if (typeof objFields == 'string') {
+      this.stringCondition = ` HAVING ${objFields} `;
+      return;
+    }
+
     if (typeof objFields !== 'object') {
       throw new BadRequestException('Cú pháp truy vấn SQL không hợp lệ.');
     }
@@ -772,7 +777,9 @@ export class BaseConfigure {
       this.stringCondition = this.genCondition();
     }
 
-    this.stringHaving = this.genHaving();
+    if (!this.stringHaving.trim()) {
+      this.stringHaving = this.genHaving();
+    }
 
     const orderString = this.sortString
       ? 'ORDER BY ' + this.sortString

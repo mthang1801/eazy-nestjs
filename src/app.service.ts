@@ -15,7 +15,7 @@ import { OrderEntity } from './entity/order.entity';
 import { DatabaseService } from './database/database.service';
 import { formatStandardTimeStamp } from './utils/helper';
 import { Timeout } from '@nestjs/schedule';
-import { SortType } from './database/enums/sortBy.enum';
+import * as users from 'src/constants/user.mockData.json';
 
 @Injectable()
 export class AppService {
@@ -123,10 +123,12 @@ export class AppService {
       // await this.userRepo.find({
       //   orderBy: [{ sortBy: 'updated_at', sortType: SortType.DESC }],
       // });
-      await this.userRepo.find({
-        join: `ddv_user_profiles b ON ${Table.USER}.user_id = b.user_id`,
-        where: "user_id = 1 and user_type = 2 and status = 'A' ",
-      });
+      // await this.userRepo.find({
+      //   join: `ddv_user_profiles b ON ${Table.USER}.user_id = b.user_id`,
+      //   where: "user_id = 1 and user_type = 2 and status = 'A' ",
+      // });
+
+      await this.userRepo.createMany(users);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

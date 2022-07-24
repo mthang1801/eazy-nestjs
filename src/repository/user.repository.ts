@@ -11,5 +11,6 @@ export class UserRepository extends BaseRepositorty {
     super(databaseService, table);
     this.table = Table.USER;
     this.tableProps = Object.getOwnPropertyNames(new UserEntity());
+    this.defaultValues = new UserEntity();
   }
 }

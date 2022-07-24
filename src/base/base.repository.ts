@@ -3,26 +3,29 @@ import { DatabaseService } from '../database/database.service';
 import { BaseConfigure } from './base.configure';
 import { Table, AutoIncrementKeys } from '../database/enums/index';
 import { HttpStatus } from '@nestjs/common';
+import { formatTypeValueConditionSQL } from './base.helper';
+import {
+  SHOW_LOG_ON_CREATE_ONE,
+  SHOW_LOG_ON_FIND_MANY,
+  SHOW_LOG_ON_FIND_ONE,
+} from '../constants/index.constant';
 import {
   preprocessDatabaseBeforeResponse,
   orderCmds,
   exclusiveConditionsCmds,
 } from './base.helper';
-import {
-  SHOW_LOG_ON_FIND_MANY,
-  SHOW_LOG_ON_FIND_ONE,
-} from '../constants/index.constant';
 
 import {
   preprocessAddTextDataToMysql,
   formatTypeValueToInSertSQL,
 } from './base.helper';
+import databaseConfig from 'src/config/database.config';
 
 @Injectable()
 export class BaseRepositorty {
   private logger = new Logger(BaseRepositorty.name);
   private _tableProps: string[];
-
+  private _defaultValues: any;
   constructor(
     protected readonly databaseService: DatabaseService,
     protected table: Table,
@@ -33,6 +36,14 @@ export class BaseRepositorty {
   dbCollection() {
     let collection = new BaseConfigure(this.table);
     return collection;
+  }
+
+  set defaultValues(values) {
+    this._defaultValues = values;
+  }
+
+  get defaultValues() {
+    return this._defaultValues;
   }
 
   set tableProps(tableProps) {
@@ -54,7 +65,7 @@ export class BaseRepositorty {
 
     //Primiry keys is unique and db define
 
-    // delete dataObject[AutoIncrementKeys[this.table]];
+    delete dataObject[AutoIncrementKeys[this.table]];
 
     return dataObject;
   }
@@ -183,15 +194,18 @@ export class BaseRepositorty {
 
     return result[0][0]['total'] || 0;
   }
+
   /**
-   * Create new record
-   * @param params
+   * Create One record. If creating success and returnable is true will return full record else return inserted id
+   * @param inputData {any}
+   * @param returnable {boolean}
+   * @param showLog {boolean}
    * @returns
    */
   async create(
     inputData: any,
-    returnable: boolean = true,
-    showLog: boolean = true,
+    returnable: boolean = false,
+    showLog: boolean = SHOW_LOG_ON_CREATE_ONE,
   ): Promise<any> {
     try {
       if (showLog) {
@@ -245,6 +259,68 @@ export class BaseRepositorty {
       };
     } catch (err) {
       throw new HttpException(err.response, err.status);
+    }
+  }
+
+  async createMany(dataInput: any[], showLog: boolean = SHOW_LOG_ON_FIND_MANY) {
+    try {
+      if (showLog) {
+        this.logger.log(
+          `=============== [MYSQL] CREATE MANY ON ${this.table} ================`,
+        );
+      }
+      let props = this._tableProps.filter(
+        (fieldItem) => fieldItem != AutoIncrementKeys[this.table],
+      );
+
+      let queryResult = `INSERT INTO ${this.table} (${props.join(
+        ', ',
+      )}) VALUES `;
+
+      if (dataInput.length) {
+        for (let [i, dataInputItem] of dataInput.entries()) {
+          let dataResult = '';
+
+          for (let [j, keyProp] of props.entries()) {
+            if (dataInputItem[keyProp]) {
+              let val = dataInputItem[keyProp];
+
+              if (typeof val === 'number') {
+                dataResult += formatTypeValueConditionSQL(
+                  preprocessAddTextDataToMysql(+val),
+                );
+              } else {
+                dataResult += formatTypeValueConditionSQL(
+                  preprocessAddTextDataToMysql(val),
+                );
+              }
+            } else {
+              dataResult += formatTypeValueConditionSQL(
+                this.defaultValues[keyProp],
+              );
+            }
+
+            if (j < props.length - 1) {
+              dataResult += ', ';
+            }
+          }
+
+          if (i < dataInput.length - 1) {
+            dataResult = `( ${dataResult} ), `;
+          } else {
+            dataResult = `( ${dataResult} )`;
+          }
+
+          queryResult += dataResult;
+        }
+      }
+      let response = await this.databaseService.executeQueryWritePool(
+        queryResult,
+      );
+      console.log(response);
+    } catch (error) {
+      console.log(error.stack);
+      throw new HttpException(error.response, error.status);
     }
   }
 
