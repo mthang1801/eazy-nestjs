@@ -26,11 +26,17 @@ export class BaseRepositorty {
   private logger = new Logger(BaseRepositorty.name);
   private _tableProps: string[];
   private _defaultValues: any;
-  constructor(
-    protected readonly databaseService: DatabaseService,
-    protected table: Table,
-  ) {
-    this.table = table;
+
+  private _table: Table;
+
+  constructor(protected readonly databaseService: DatabaseService) {}
+
+  set table(tableName) {
+    this._table = tableName;
+  }
+
+  get table() {
+    return this._table;
   }
 
   dbCollection() {
@@ -138,6 +144,7 @@ export class BaseRepositorty {
           collection['setLimit'](options[cmd]);
           continue;
         }
+
         collection[cmd](options[cmd]);
       }
     }

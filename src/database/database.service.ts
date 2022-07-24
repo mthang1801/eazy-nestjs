@@ -14,6 +14,7 @@ export class DatabaseService {
   private trackers: object[] = [];
   private isTracking: boolean = false;
   private dataTracker: ITracker = {};
+
   constructor(
     @Inject(DatabasePool.WRITE_POOL) private writePool: Pool,
     @Inject(DatabasePool.READ_POOL) private readPool: Pool,

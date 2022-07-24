@@ -16,6 +16,7 @@ import { DatabaseService } from './database/database.service';
 import { formatStandardTimeStamp } from './utils/helper';
 import { Timeout } from '@nestjs/schedule';
 import * as users from 'src/constants/user.mockData.json';
+import { User } from './models/user.model';
 
 @Injectable()
 export class AppService {
@@ -127,8 +128,9 @@ export class AppService {
       //   join: `ddv_user_profiles b ON ${Table.USER}.user_id = b.user_id`,
       //   where: "user_id = 1 and user_type = 2 and status = 'A' ",
       // });
-
-      await this.userRepo.createMany(users);
+      // await this.userRepo.createMany(users);
+      const users = await this.userRepo.findMany({});
+      console.log(users);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

@@ -7,8 +7,8 @@ import { BaseRepositorty } from '../base/base.repository';
 
 @Injectable()
 export class UserRepository extends BaseRepositorty {
-  constructor(databaseService: DatabaseService, table: Table) {
-    super(databaseService, table);
+  constructor(databaseService: DatabaseService) {
+    super(databaseService);
     this.table = Table.USER;
     this.tableProps = Object.getOwnPropertyNames(new UserEntity());
     this.defaultValues = new UserEntity();

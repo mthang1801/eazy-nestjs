@@ -159,11 +159,12 @@ export class BaseConfigure {
 
   join(objFields: any): void {
     this.typeOfJoin = JoinTable.join;
+
     if (typeof objFields == 'string') {
       this.stringJoin = `FROM ${this.table} ${this.alias} JOIN ${objFields} `;
-
       return;
     }
+
     if (objFields.alias) {
       this.alias = objFields.alias;
     }
@@ -773,12 +774,17 @@ export class BaseConfigure {
       this.limit != this.originalLimit || this.offset != this.originalOffset
         ? true
         : false;
+
     if (!this.stringCondition.trim()) {
       this.stringCondition = this.genCondition();
     }
 
     if (!this.stringHaving.trim()) {
       this.stringHaving = this.genHaving();
+    }
+
+    if (!this.stringJoin.trim()) {
+      this.stringJoin = `FROM ${this.table} ${this.alias} `;
     }
 
     const orderString = this.sortString
@@ -829,8 +835,6 @@ export class BaseConfigure {
       for (let [i, checkExistItem] of arrayCheckExist.entries()) {
         stringCondition += formatStringCondition(i, checkExistItem);
       }
-    } else {
-      stringCondition = formatRawStringCondition(this.stringCondition);
     }
     return stringCondition;
   }
