@@ -1,8 +1,8 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import { Table } from './database/enums';
-import { UserEntity } from './entity/user.entity';
-import { UserRepository } from './repository/user.repository';
-import { OrderRepository } from './repository/order.repository';
+import { UserEntity } from './entities/user.entity';
+import { UserRepository } from './repositories/user.repository';
+import { OrderRepository } from './repositories/order.repository';
 import {
   $gt,
   $in,
@@ -11,7 +11,7 @@ import {
   $lt,
   MoreThan,
 } from './database/operators/operators';
-import { OrderEntity } from './entity/order.entity';
+import { OrderEntity } from './entities/order.entity';
 import { DatabaseService } from './database/database.service';
 import { formatStandardTimeStamp } from './utils/helper';
 import { Timeout } from '@nestjs/schedule';
@@ -118,7 +118,6 @@ export class AppService {
     }
   }
 
-  @Timeout(500)
   async testCondition(data) {
     try {
       // await this.userRepo.find({

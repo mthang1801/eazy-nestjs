@@ -4,8 +4,8 @@ import { appConfig, databaseConfig } from './config/index.config';
 import { DatabaseModule } from './database/database.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
-import { UserRepository } from './repository/user.repository';
-import { OrderRepository } from './repository/order.repository';
+import { UserRepository } from './repositories/user.repository';
+import { OrderRepository } from './repositories/order.repository';
 import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
