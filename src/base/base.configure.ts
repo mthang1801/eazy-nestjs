@@ -461,7 +461,7 @@ export class BaseConfigure {
       let syntaxError = newError.querySyntax();
       throw new HttpException(syntaxError.message, syntaxError.statusCode);
     }
-    console.log(sortArray);
+
     if (sortArray.length) {
       let sortString = '';
 
@@ -515,7 +515,7 @@ export class BaseConfigure {
 
   setAndOrCondition(objFields) {
     let sqlQuery = '';
-    console.log(407, objFields);
+
     if (objFields.length != 1) {
       throw new HttpException(
         'Cú pháp truy vấn mệnh đề điều kiện không hợp lệ.',
@@ -525,8 +525,6 @@ export class BaseConfigure {
     let objField = Object.values(objFields)[0];
     let key = Object.keys(objField)[0];
     let values = Object.values(objField)[0];
-
-    console.log('============ INITIAL ===========');
 
     sqlQuery = this.handleRecursiveConditions(values, key, sqlQuery);
 

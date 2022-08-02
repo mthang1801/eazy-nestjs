@@ -3,6 +3,7 @@ import { BaseController } from './base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from './base/interfaces/response.interface';
 import { AppService } from './app.service';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 @Controller()
 export class AppController extends BaseController {
   constructor(private service: AppService) {

@@ -1,5 +1,4 @@
 import * as crypto from 'crypto';
-import { slice } from 'lodash';
 
 export class Cryptography {
   private algorithm: string = 'aes-256-cbc';
