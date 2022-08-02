@@ -10,14 +10,14 @@ import { formatStandardTimeStamp, checkValidTimestamp } from '../utils/helper';
 
 @Injectable()
 export class DatabaseService {
-  private readonly logger = new Logger(DatabaseService.name);
+  protected readonly logger = new Logger(DatabaseService.name);
   private trackers: object[] = [];
   private isTracking: boolean = false;
   private dataTracker: ITracker = {};
 
   constructor(
-    @Inject(DatabasePool.WRITE_POOL) private writePool: Pool,
-    @Inject(DatabasePool.READ_POOL) private readPool: Pool,
+    @Inject(DatabasePool.WRITE_POOL) protected writePool: Pool,
+    @Inject(DatabasePool.READ_POOL) protected readPool: Pool,
   ) {}
 
   async executeQueryWritePool(
@@ -74,6 +74,7 @@ export class DatabaseService {
         .catch((err) => reject(err));
     });
   }
+
   async executeQueryReadPool(
     queryText: string,
     values: any[] = [],

@@ -23,12 +23,10 @@ import databaseConfig from 'src/config/database.config';
 
 @Injectable()
 export class BaseRepositorty {
-  private logger = new Logger(BaseRepositorty.name);
+  private _logger = new Logger(BaseRepositorty.name);
   private _tableProps: string[];
   private _defaultValues: any;
-
   private _table: Table;
-
   constructor(protected readonly databaseService: DatabaseService) {}
 
   set table(tableName) {
@@ -69,8 +67,6 @@ export class BaseRepositorty {
       }
     }
 
-    //Primiry keys is unique and db define
-
     delete dataObject[AutoIncrementKeys[this.table]];
 
     return dataObject;
@@ -82,7 +78,7 @@ export class BaseRepositorty {
    * @returns
    */
   async findOne(options: any): Promise<any> {
-    this.logger.log(
+    this._logger.log(
       `=============== [MYSQL] FIND ONE ON ${this.table} ================`,
     );
 
@@ -116,7 +112,7 @@ export class BaseRepositorty {
    */
   async findMany(options: any = {}, showLog = true) {
     if (showLog) {
-      this.logger.log(
+      this._logger.log(
         `=============== [MYSQL] FIND ON ${this.table} ================`,
       );
     }
@@ -160,63 +156,21 @@ export class BaseRepositorty {
     return results;
   }
 
-  async count(params, showLog: boolean = true): Promise<any> {
-    if (showLog) {
-      this.logger.log(
-        `=============== [MYSQL] COUNT ON ${this.table} ================`,
-      );
-    }
-
-    if (
-      typeof params !== 'object' ||
-      Object.keys(params).some(
-        (value: string) =>
-          orderCmds.includes(value.toLowerCase()) &&
-          value.toLowerCase() !== 'where' &&
-          value.toLowerCase() !== 'join',
-      )
-    ) {
-      throw new HttpException(
-        'Tham số truyền vào không hợp lệ.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const collection = new BaseConfigure(this.table);
-    let distinctParam: any = null;
-    Object.entries(params).forEach(([key, val]) => {
-      if (['join', 'where'].includes(key)) {
-        collection[key](val);
-      }
-      if (key.toLowerCase() == 'distinct') {
-        distinctParam = { [key]: val };
-      }
-    });
-
-    const result = await this.databaseService.executeQueryReadPool(
-      distinctParam
-        ? collection.sqlCount(distinctParam)
-        : collection.sqlCount(),
-    );
-
-    return result[0][0]['total'] || 0;
-  }
-
   /**
-   * Create One record. If creating success and returnable is true will return full record else return inserted id
-   * @param inputData {any}
-   * @param returnable {boolean}
-   * @param showLog {boolean}
+   * Create One record. If creating success and returnFullRecord is true will return full record else return inserted id
+   * @param inputData {any} required
+   * @param returnFullRecord {boolean} default false
+   * @param showLog {boolean} default false
    * @returns
    */
   async createOne(
     inputData: any,
-    returnable: boolean = false,
+    returnFullRecord: boolean = false,
     showLog: boolean = SHOW_LOG_ON_CREATE_ONE,
   ): Promise<any> {
     try {
       if (showLog) {
-        this.logger.log(
+        this._logger.log(
           `=============== [MYSQL] CREATE ON ${this.table} ================`,
         );
       }
@@ -248,7 +202,7 @@ export class BaseRepositorty {
 
       let response = await this.databaseService.executeQueryWritePool(sql);
       let lastInsertId = JSON.parse(JSON.stringify(response[0]))['insertId'];
-      if (returnable) {
+      if (returnFullRecord) {
         if (!lastInsertId) {
           throw new HttpException(
             'Không tìm thấy auto_increment_id của entity vừa tạo',
@@ -272,7 +226,7 @@ export class BaseRepositorty {
   async createMany(dataInput: any[], showLog: boolean = SHOW_LOG_ON_FIND_MANY) {
     try {
       if (showLog) {
-        this.logger.log(
+        this._logger.log(
           `=============== [MYSQL] CREATE MANY ON ${this.table} ================`,
         );
       }
@@ -337,7 +291,7 @@ export class BaseRepositorty {
    * @returns
    */
   async findById(id: number | any) {
-    this.logger.log(
+    this._logger.log(
       `=============== [MYSQL] FIND BY ID ON ${this.table} ================`,
     );
 
@@ -358,20 +312,22 @@ export class BaseRepositorty {
   }
 
   /**
-   * Update one record by primary key
-   * @param id primary key
-   * @param params object<any> with
+   *
+   * @param conditions
+   * @param inputData
+   * @param returnFullRecord {boolean : False}
+   * @param showLog
    * @returns
    */
   async update(
     conditions: number | object,
     inputData: object,
-    returnable: boolean = false,
+    returnFullRecord: boolean = false,
     showLog = true,
   ) {
     try {
       if (showLog) {
-        this.logger.warn(
+        this._logger.warn(
           `=============== [MYSQL] UPDATE ON ${this.table} ================`,
         );
       }
@@ -418,7 +374,7 @@ export class BaseRepositorty {
 
       await this.databaseService.executeQueryWritePool(sql);
 
-      if (returnable) {
+      if (returnFullRecord) {
         const updatedData =
           typeof conditions === 'object'
             ? await this.findOneInWritePool(conditions)
@@ -431,19 +387,26 @@ export class BaseRepositorty {
     }
   }
 
+  /**
+   * Delete a / some records  by conditions
+   * @param conditions
+   * @param returnFullRecord {boolean} default as false
+   * @param showLog {boolean} default as false
+   * @returns
+   */
   async delete(
     conditions: number | object,
-    returnable: boolean = false,
+    returnFullRecord: boolean = false,
     showLog: boolean = true,
   ) {
     try {
       if (showLog) {
-        this.logger.error(
+        this._logger.error(
           `=============== [MYSQL] DELETE ON ${this.table} ================`,
         );
       }
       let deletedData;
-      if (returnable) {
+      if (returnFullRecord) {
         deletedData =
           typeof conditions === 'object'
             ? await this.findOneInWritePool(conditions)
@@ -493,7 +456,7 @@ export class BaseRepositorty {
         return false;
       }
 
-      if (returnable) {
+      if (returnFullRecord) {
         return deletedData;
       }
 
@@ -529,7 +492,7 @@ export class BaseRepositorty {
   ) {
     try {
       if (showLog) {
-        this.logger.log(
+        this._logger.log(
           `=============== [MYSQL] FIND ON ${this.table} ================`,
         );
       }
@@ -582,7 +545,7 @@ export class BaseRepositorty {
   ): Promise<any> {
     try {
       if (showLog) {
-        this.logger.log(
+        this._logger.log(
           `=============== [MYSQL] FIND ONE ON ${this.table} ================`,
         );
       }
@@ -620,7 +583,7 @@ export class BaseRepositorty {
   }
 
   private async findByIdInWritePool(id: number | any) {
-    this.logger.log(
+    this._logger.log(
       `=============== [MYSQL] FIND BY ID ON ${this.table} ================`,
     );
 

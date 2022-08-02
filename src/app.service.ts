@@ -118,6 +118,7 @@ export class AppService {
     }
   }
 
+  @Timeout(500)
   async testCondition(data) {
     try {
       // await this.userRepo.find({
@@ -130,10 +131,12 @@ export class AppService {
       // await this.userRepo.createMany(users);
       console.time('start');
       const users = await this.userRepo.findMany();
+
       const user = await this.userRepo.findOne({
         where: { '1': 1 },
         orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
       });
+
       console.timeEnd('start');
     } catch (error) {
       throw new HttpException(error.message, error.status);

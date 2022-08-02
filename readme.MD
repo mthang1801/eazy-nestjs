@@ -2,7 +2,8 @@
 
 Some features in this source :
 
-- Sql query with findMany, findOne, findById, createOne, createMany, update, delete
+- Some sql queries has been deprecated as <span style="text-decoration: line-through;">count</span>, <span style="text-decoration: line-through;">find</span>
+- Sql new Features queries as findMany, findOne, findById, createOne, createMany, update, delete
 - Sql rollback transaction
 - Backlog error
 - Swagger
