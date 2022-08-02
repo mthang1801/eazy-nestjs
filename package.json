@@ -1,7 +1,7 @@
 {
   "name": "nestjs-mysql-configure",
-  "version": "2.0.0",
-  "description": "NestJS MySQL ODM",
+  "version": "2.1.0",
+  "description": "NestJS Source Configure",
   "author": "MVT",
   "private": true,
   "license": "UNLICENSED",

@@ -8,6 +8,7 @@ import {
   SHOW_LOG_ON_CREATE_ONE,
   SHOW_LOG_ON_FIND_MANY,
   SHOW_LOG_ON_FIND_ONE,
+  SHOW_LOG_ON_FIND_ONE_AND_CREATE,
 } from '../constants/index.constant';
 import {
   preprocessDatabaseBeforeResponse,
@@ -74,10 +75,14 @@ export class BaseRepositorty {
 
   /**
    * Find one record by item
-   * @param options
-   * @returns
+   * @param options {any}
+   * @param showLog {boolean}
+   * @returns a record if condition is met else null
    */
-  async findOne(options: any): Promise<any> {
+  async findOne(
+    options: any,
+    showLog: boolean = SHOW_LOG_ON_FIND_ONE,
+  ): Promise<any> {
     this._logger.log(
       `=============== [MYSQL] FIND ONE ON ${this.table} ================`,
     );
@@ -108,7 +113,7 @@ export class BaseRepositorty {
   /**
    * Find items by multi filters
    * @param options
-   * @returns array
+   * @returns many records if condition is met else empty array
    */
   async findMany(options: any = {}, showLog = true) {
     if (showLog) {
@@ -157,7 +162,8 @@ export class BaseRepositorty {
   }
 
   /**
-   * Create One record. If creating success and returnFullRecord is true will return full record else return inserted id
+   * Create a record without checking any conditions
+   * If returnFullRecord is true will return full record else return last inserted id
    * @param inputData {any} required
    * @param returnFullRecord {boolean} default false
    * @param showLog {boolean} default false
@@ -223,6 +229,11 @@ export class BaseRepositorty {
     }
   }
 
+  /**
+   * Create many records with data input is array
+   * @param dataInput {any[]}
+   * @param showLog {boolean}
+   */
   async createMany(dataInput: any[], showLog: boolean = SHOW_LOG_ON_FIND_MANY) {
     try {
       if (showLog) {
@@ -282,6 +293,37 @@ export class BaseRepositorty {
     } catch (error) {
       console.log(error.stack);
       throw new HttpException(error.response, error.status);
+    }
+  }
+
+  /**
+   * find an record, if it has not existed, a new record with data input will be executed
+   * If returnFullRecord is true will return full record else return last inserted id
+   * @param conditions {any}
+   * @param dataInput {any}
+   * @param returnFullRecord {boolean}
+   * @param showLog {boolean}
+   */
+  async findOneAndCreate(
+    conditions: any,
+    dataInput: any,
+    returnFullRecord: boolean = false,
+    showLog: boolean = SHOW_LOG_ON_FIND_ONE_AND_CREATE,
+  ) {
+    if (showLog) {
+      this._logger.log(
+        `=============== [MYSQL] FIND ONE AND CREATE ON ${this.table} ================`,
+      );
+    }
+    try {
+      let checkRecordExist = await this.findOne(conditions);
+      if (!checkRecordExist) {
+        return await this.createOne(dataInput, returnFullRecord, showLog);
+      }
+
+      return;
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
     }
   }
 
@@ -603,5 +645,13 @@ export class BaseRepositorty {
     const result = rows[0];
 
     return preprocessDatabaseBeforeResponse(result[0]);
+  }
+
+  async query(queryString: string) {
+    try {
+      return this.databaseService.query(queryString);
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
   }
 }

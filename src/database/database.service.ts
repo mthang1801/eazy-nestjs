@@ -7,6 +7,7 @@ import { AutoIncrementKeys } from './enums/autoIncrementKeys.enum';
 import { ITracker } from './interfaces/trackers.interface';
 import { datetimeFieldsList } from '../base/base.helper';
 import { formatStandardTimeStamp, checkValidTimestamp } from '../utils/helper';
+import { SHOW_LOG_ON_RAW_QUERY } from '../constants/index.constant';
 
 @Injectable()
 export class DatabaseService {
@@ -218,5 +219,19 @@ export class DatabaseService {
 
   get dataTrackers() {
     return this.trackers;
+  }
+
+  async query(queryString: string, showLog: boolean = SHOW_LOG_ON_RAW_QUERY) {
+    if (showLog) {
+      this.logger.verbose(`RAW QUERY: ${queryString}`);
+    }
+    return new Promise(async (resolve, reject) => {
+      this.readPool
+        .query(queryString)
+        .then((result: any) => {
+          resolve(result);
+        })
+        .catch((err) => reject(err));
+    });
   }
 }
