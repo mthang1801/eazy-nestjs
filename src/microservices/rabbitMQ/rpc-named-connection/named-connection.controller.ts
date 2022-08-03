@@ -14,7 +14,7 @@ export class NamedConnectionController extends BaseController {
   }
 
   @Get('rpc')
-  async getRpc() {
+  getRpc() {
     return this.amqpConn.request({
       exchange: exchange2,
       routingKey: 'rpc-2',
@@ -37,6 +37,22 @@ export class NamedConnectionController extends BaseController {
         data: {
           msg: 'test error',
           statusCode: 500,
+        },
+        timestamp: new Date().toLocaleString('vn'),
+      },
+      correlationId: uuid(),
+    });
+  }
+
+  @Get('non-json-rpc-2')
+  getNonJSONRpc2() {
+    return this.amqpConn.request({
+      exchange: exchange2,
+      routingKey: 'non-json-rpc-2',
+      payload: {
+        data: {
+          msg: 'test Non JSON',
+          statusCode: 200,
         },
         timestamp: new Date().toLocaleString('vn'),
       },

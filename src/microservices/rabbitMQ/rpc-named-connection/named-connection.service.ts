@@ -29,4 +29,16 @@ export class NamedConnectionService {
   errorReplyRpc(message: any = {}) {
     throw new RpcException(message);
   }
+
+  @RabbitRPC({
+    exchange: exchange2,
+    routingKey: 'non-json-rpc-2',
+    queue: 'non-json-rpc-2',
+    allowNonJsonMessages: true,
+  })
+  async getNonJSONRpc2(message: any) {
+    return {
+      data: message,
+    };
+  }
 }
