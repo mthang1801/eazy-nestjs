@@ -1,17 +1,17 @@
 import * as crypto from 'crypto';
 
 export class Cryptography {
-  private algorithm: string = 'aes-256-cbc';
-  private secretKey = Buffer.from(process.env.SECURITY_KEY, 'hex');
-  private ivKey = crypto.randomBytes(16).fill(0);
+  private _algorithm: string = 'aes-256-cbc';
+  private _secretKey = Buffer.from(process.env.SECURITY_KEY, 'hex');
+  private _ivKey = crypto.randomBytes(16).fill(0);
   constructor() {}
 
   //Encrypting text
   public encrypt(text) {
     let cipher = crypto.createCipheriv(
-      this.algorithm,
-      this.secretKey,
-      this.ivKey,
+      this._algorithm,
+      this._secretKey,
+      this._ivKey,
     );
     let buffer = Buffer.concat([cipher.update(text), cipher.final()]);
     return this.encodeBase64(buffer);
@@ -20,9 +20,9 @@ export class Cryptography {
   // Decrypting text
   public decrypt(encryptedData: string) {
     let decipher = crypto.createDecipheriv(
-      this.algorithm,
-      this.secretKey,
-      this.ivKey,
+      this._algorithm,
+      this._secretKey,
+      this._ivKey,
     );
     let buffer = Buffer.concat([
       decipher.update(Buffer.from(encryptedData, 'base64')),
@@ -89,13 +89,13 @@ export class Cryptography {
     return hash.digest('hex');
   }
 
-  public sha512(str, secretKey) {
-    const hash = crypto.createHmac('sha512', this.getStringValue(secretKey));
+  public sha512(str, _secretKey) {
+    const hash = crypto.createHmac('sha512', this.getStringValue(_secretKey));
     hash.update(this.getStringValue(str));
     const hashedData = hash.digest('hex');
 
     return {
-      secretKey,
+      _secretKey,
       hashedData,
     };
   }
