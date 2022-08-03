@@ -8,7 +8,7 @@ import { UserRepository } from './repositories/user.repository';
 import { OrderRepository } from './repositories/order.repository';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RpcModulle } from './microservices/rabbitMQ/rpc/rpc.module';
-import { NamedConnectionModule } from './microservices/rabbitMQ/named-connection/named-connection.module';
+import { NamedConnectionModule } from './microservices/rabbitMQ/rpc-named-connection/named-connection.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
