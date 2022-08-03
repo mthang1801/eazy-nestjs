@@ -50,6 +50,11 @@
 
 **9. Swagger**
 
+**10. Versioning**
+
+- URI Versioning
+- Header Versioning
+
 This project was developed by [MVT](https://github.com/mthang1801). Contributions of any kind welcome!
 
 Especially, if you are exicited about Machine learning, Deep learning, Data science, etc... Visit my blog : [https://mvt-blog.com/](https://mvt-blog.com/)

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import {
   ExpressAdapter,
   NestExpressApplication,
@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationConfig } from './config/validation.config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import * as requestIp from 'request-ip';
-import { AppModule } from './app.module';
+import { AppModule } from './modules/index.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -31,6 +31,11 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('hbs');
   hbs.registerPartials(join(__dirname, '..', '/views/partials'));
+
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: ['2', '1'],
+  });
 
   app.enableShutdownHooks();
   app.use(requestIp.mw());
