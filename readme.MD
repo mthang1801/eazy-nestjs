@@ -2,13 +2,13 @@
 
 ## Some features in this source :
 
-### Deprecated
+## Deprecated
 
 - Some sql queries has been deprecated as ~~count~~, ~~find~~
 
-### New Features
+## New Features
 
-1. Sql new Features queries :
+### 1. Sql new Features queries :
 
 - findMany, findOne, findById, findOneAndCreate.
 - createOne, createMany.
@@ -18,35 +18,37 @@
 - aggregation.
 - Sql rollback transaction.
 
-2. Upload files
+### 2. Upload files
 
 - Upload one file
 - Upload many files
 
-3. Error Logs
+### 3. Error Logs
 
 - Writing Error Log In Database
 
-4. RabbitMQ
+### 4. RabbitMQ
 
 - RPC
 - Routing
 
-5. Schedule
+### 5. Schedule
 
 - Static Cron
 - Dynamic Cron
 
-6. Redis
-7. Elasticsearch
+### 6. Redis
+
+### 7. Elasticsearch
 
 - search Term
 - search Match
 - search MatchPhrase
 - search Nested
 
-8. Websockets
-9. Swagger
+### 8. Websockets
+
+### 9. Swagger
 
 This project was developed by [MVT](https://github.com/mthang1801). Contributions of any kind welcome!
 
