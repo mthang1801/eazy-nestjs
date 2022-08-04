@@ -99,14 +99,14 @@ export const preprocessDatabaseBeforeResponse = (data): object => {
 
   let dataObject = { ...data };
 
-  function* iterate_object(o) {
+  function* iterateObject(o) {
     var keys = Object.keys(o);
     for (var i = 0; i < keys.length; i++) {
       yield [keys[i], o[keys[i]]];
     }
   }
 
-  for (let [key, val] of iterate_object(dataObject)) {
+  for (let [key, val] of iterateObject(dataObject)) {
     if (val == null) {
       dataObject[key] = null;
       continue;

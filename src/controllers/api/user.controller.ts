@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Res, Version } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseArrayPipe,
+  Post,
+  Query,
+  Res,
+  Version,
+} from '@nestjs/common';
 import { BaseController } from '../../base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from 'src/base/interfaces/response.interface';
@@ -20,6 +29,7 @@ export class UserController extends BaseController {
   @Get()
   async getListVersion1(@Res() res: Response): Promise<IResponse> {
     // Do something
+
     let data = null;
     let message = 'This action return User version 1';
     return this.responseSuccess(res, data, message);

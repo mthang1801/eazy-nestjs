@@ -14,20 +14,23 @@ import {
 import { OrderEntity } from '../entities/order.entity';
 import { DatabaseService } from '../database/database.service';
 import { formatStandardTimeStamp } from '../utils/helper';
-import { Timeout } from '@nestjs/schedule';
+import { Cron, SchedulerRegistry, Timeout } from '@nestjs/schedule';
 import * as users from 'src/constants/user.mockData.json';
 import { Cryptography } from '../utils/cryptography.utils';
+import { startToday } from '../utils/functions.utils';
 import {
   encodeUserAuthentication,
   decodeUserAuthentication,
 } from '../utils/functions.utils';
+import { time } from 'console';
+import { CronTime } from 'cron';
 
 @Injectable()
 export class UserService {
   constructor(
     private userRepo: UserRepository,
-    private orderRepo: OrderRepository,
     private db: DatabaseService,
+    private schedulerRegister: SchedulerRegistry,
   ) {}
 
   async getUser() {
@@ -152,5 +155,19 @@ export class UserService {
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
+  }
+
+  @Cron('* */40 11 * * * ', {
+    name: 'triggerNotifications',
+  })
+  triggerNotifications() {
+    console.log('Cron call.');
+  }
+
+  @Timeout(500)
+  async testDynamicCron() {
+    const job = this.schedulerRegister.getCronJob('triggerNotifications');
+
+    job.start();
   }
 }
