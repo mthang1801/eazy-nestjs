@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
+  Version,
 } from '@nestjs/common';
 
 import * as multer from 'multer';
@@ -15,13 +19,13 @@ import { BaseController } from '../../base/base.controllers';
 import { UploadService } from '../../services/upload.services';
 import { IResponse } from 'src/base/interfaces/response.interface';
 
-@Controller()
+@Controller('uploads')
 export class UploadController extends BaseController {
   constructor(private service: UploadService) {
     super();
   }
 
-  @Post('uploads')
+  @Post()
   @UseInterceptors(
     FilesInterceptor('files', 100, {
       storage: multer.diskStorage({
@@ -40,5 +44,14 @@ export class UploadController extends BaseController {
   ): Promise<IResponse> {
     const result = await this.service.uploadFiles(data, files);
     return this.responseCreated(res, result);
+  }
+
+  @Get()
+  async getFile(
+    @Res() res: Response,
+    @Query('q') q: string,
+  ): Promise<IResponse> {
+    const result = await this.service.getFile(q);
+    return this.responseSuccess(res, result);
   }
 }

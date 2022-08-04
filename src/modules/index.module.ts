@@ -10,6 +10,7 @@ import { NamedConnectionModule } from '../microservices/rabbitMQ/rpc-named-conne
 import { AuthenticationModule } from './auth.module';
 import { UserModule } from './user.module';
 import uploadConfig from 'src/config/upload.config';
+import { UploadModule } from './upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -17,6 +18,7 @@ import uploadConfig from 'src/config/upload.config';
       envFilePath: '.env',
       load: [appConfig, databaseConfig, queueConfig, uploadConfig],
     }),
+    UploadModule,
     ScheduleModule.forRoot(),
     DatabaseModule,
     RpcModulle,
@@ -24,6 +26,6 @@ import uploadConfig from 'src/config/upload.config';
     AuthenticationModule,
     UserModule,
   ],
-  providers: [UserRepository, OrderRepository, String],
+  providers: [UserRepository, OrderRepository, String, Object],
 })
 export class AppModule {}

@@ -67,4 +67,8 @@ export class UploadService {
       );
     }
   }
+
+  async getFile(q: string) {
+    return `${this.config.get<string>('cdnUrl')}/${q}`;
+  }
 }
