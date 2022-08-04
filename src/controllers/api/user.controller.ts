@@ -3,9 +3,13 @@ import { BaseController } from '../../base/base.controllers';
 import { Response } from 'express';
 import { IResponse } from 'src/base/interfaces/response.interface';
 import { CreateUserDto } from '../../dto/user/createUser.dto';
+import { UserService } from '../../services/user.service';
 
-@Controller('users')
+@Controller('api/users')
 export class UserController extends BaseController {
+  constructor(private service: UserService) {
+    super();
+  }
   /**
    * Get List Users version 1
    * @param res {Response}
@@ -27,15 +31,6 @@ export class UserController extends BaseController {
     // Do something
     let data = null;
     let message = 'This action return User version 2';
-    return this.responseSuccess(res, data, message);
-  }
-
-  @Version(['3', '4'])
-  @Get()
-  async getListVersion1Or2(@Res() res: Response): Promise<IResponse> {
-    // Do something
-    let data = null;
-    let message = 'This action return User version 3 or 4';
     return this.responseSuccess(res, data, message);
   }
 
@@ -62,6 +57,24 @@ export class UserController extends BaseController {
     @Body() data: CreateUserDto,
   ): Promise<IResponse> {
     //Do something
+    return this.responseCreated(res);
+  }
+
+  @Get('get-all')
+  async getUser(@Res() res: Response): Promise<IResponse> {
+    await this.service.getUser();
+    return this.responseSuccess(res);
+  }
+
+  @Post('tracking-rollback')
+  async createTest(@Res() res: Response, @Body() data): Promise<IResponse> {
+    await this.service.create(data);
+    return this.responseCreated(res);
+  }
+
+  @Post('test-condition')
+  async testCondition(@Res() res: Response, @Body() data): Promise<IResponse> {
+    await this.service.testCondition(data);
     return this.responseCreated(res);
   }
 }

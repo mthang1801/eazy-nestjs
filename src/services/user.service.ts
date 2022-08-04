@@ -1,8 +1,8 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { Table } from './database/enums';
-import { UserEntity } from './entities/user.entity';
-import { UserRepository } from './repositories/user.repository';
-import { OrderRepository } from './repositories/order.repository';
+import { Table } from '../database/enums';
+import { UserEntity } from '../entities/user.entity';
+import { UserRepository } from '../repositories/user.repository';
+import { OrderRepository } from '../repositories/order.repository';
 import {
   $gt,
   $in,
@@ -10,15 +10,20 @@ import {
   $like,
   $lt,
   MoreThan,
-} from './database/operators/operators';
-import { OrderEntity } from './entities/order.entity';
-import { DatabaseService } from './database/database.service';
-import { formatStandardTimeStamp } from './utils/helper';
+} from '../database/operators/operators';
+import { OrderEntity } from '../entities/order.entity';
+import { DatabaseService } from '../database/database.service';
+import { formatStandardTimeStamp } from '../utils/helper';
 import { Timeout } from '@nestjs/schedule';
 import * as users from 'src/constants/user.mockData.json';
+import { Cryptography } from '../utils/cryptography.utils';
+import {
+  encodeUserAuthentication,
+  decodeUserAuthentication,
+} from '../utils/functions.utils';
 
 @Injectable()
-export class AppService {
+export class UserService {
   constructor(
     private userRepo: UserRepository,
     private orderRepo: OrderRepository,
@@ -129,12 +134,19 @@ export class AppService {
       // });
       // await this.userRepo.createMany(users);
       console.time('start');
-      const users = await this.userRepo.findMany();
+      // const users = await this.userRepo.findMany();
 
-      const user = await this.userRepo.findOne({
-        where: { '1': 1 },
-        orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
-      });
+      // const user = await this.userRepo.findOne({
+      //   where: { '1': 1 },
+      //   orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
+      // });
+
+      let crypto = new Cryptography();
+      console.log(crypto.genSecurityKey());
+      let user_id = 329138123;
+      let role_id = 5;
+      let encodeUUID = encodeUserAuthentication(user_id, role_id);
+      console.log(decodeUserAuthentication(encodeUUID));
 
       console.timeEnd('start');
     } catch (error) {

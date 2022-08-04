@@ -20,8 +20,7 @@
 
 **2. Upload files**
 
-- Upload one file
-- Upload many files
+- Upload files with multer
 
 **3. Error Logs**
 

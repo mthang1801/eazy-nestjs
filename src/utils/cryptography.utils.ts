@@ -1,8 +1,9 @@
 import * as crypto from 'crypto';
 
 export class Cryptography {
+  private _encoding = 'base64';
   private _algorithm: string = 'aes-256-cbc';
-  private _secretKey = Buffer.from(process.env.SECURITY_KEY, 'hex');
+  private _secretKey = Buffer.from(process.env.SECURITY_KEY, 'base64');
   private _ivKey = crypto.randomBytes(16).fill(0);
   constructor() {}
 
@@ -116,5 +117,9 @@ export class Cryptography {
     let num = Math.floor(Math.random() * (max - min)) + min;
 
     return `${prefix}${num}${id}`;
+  }
+
+  genSecurityKey() {
+    return crypto.randomBytes(32).toString('base64');
   }
 }
