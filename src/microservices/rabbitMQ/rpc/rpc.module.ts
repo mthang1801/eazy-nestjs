@@ -27,4 +27,4 @@ import { RpcController } from './rpc.controller';
   providers: [RpcService],
   controllers: [RpcController],
 })
-export class RpcModulle {}
+export class RpcModule {}
