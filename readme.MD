@@ -2,6 +2,16 @@
 
 ## Table of Contents
 
+### Installation
+
+- Install docker
+- Open command line or terminal... And type:
+
+* $ git clone https://github.com/mthang1801/nestjs-resource-configure.git
+* $ npm install -f
+* $ docker-compose up
+* $ Crate file .env and fill value the same as .env.example
+
 ### Deprecated
 
 - Some sql queries has been deprecated as ~~count~~, ~~find~~
