@@ -18,6 +18,7 @@ export class CreateUserDto {
   birthday: string;
 
   @IsOptional()
+  @IsNumber()
   province: number;
 
   @IsOptional()

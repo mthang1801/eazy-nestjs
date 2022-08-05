@@ -10,6 +10,24 @@ export class ErrorCollection {
     return this.responseError();
   }
 
+  internalServer() {
+    this._name = 'Hệ thống gặp sự cố.';
+    this._code = 500;
+    return this.responseError();
+  }
+
+  TokenExpiredError() {
+    this._name = 'Phiên đăng nhập đã hết hạn.';
+    this._code = 408;
+    return this.responseError();
+  }
+
+  ETIMEDOUT() {
+    this._name = 'Thời gian truy vấn đã hết.';
+    this._code = 504;
+    return this.responseError();
+  }
+
   public responseError() {
     return {
       message: this._name,
