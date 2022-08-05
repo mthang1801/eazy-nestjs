@@ -11,7 +11,7 @@ import { join } from 'path';
 import * as hbs from 'hbs';
 import { ConfigService } from '@nestjs/config';
 import { ValidationConfig } from './config/validation.config';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import * as compression from 'compression';
 import * as requestIp from 'request-ip';
 import { AppModule } from './modules/index.module';
 
@@ -26,6 +26,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe(ValidationConfig));
 
   app.use(require('helmet')());
+  app.use(compression());
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));

@@ -21,7 +21,11 @@
 
 **1. Sql new Features queries :**
 
-- findMany, findOne, findById, findOneAndCreate.
+1. Query
+
+1.1. findOne
+
+Return a record when the condition is satisfied
 
 Example :
 
@@ -29,6 +33,43 @@ Example :
 await this.userRepo.findOne({user_id : 1})
 or
 await this.userRepo.findOne({where :{user_id : 1}})
+```
+
+1.2. findMany
+
+Return many records with the condition is satisfied
+
+Example:
+
+```
+await this.userRepo.findMany({ status : "A" })
+or
+await this.userRepo.findMany({where :{ company_id : 1}})
+```
+
+1.3. findById
+
+Return a record by id (primary key)
+
+Example
+
+```
+await this.userRepo.findById(1)
+```
+
+1.4. findOneAndCreate
+
+Check a record whether has existed or not, if the record has not existed, this function will create a new record. Otherwise, this function will passover.
+
+```
+await this.userRepo.findOneAndCreate(
+  { email : "example@email.com"}, // Condition
+  { email : "example@email.com", // Input data to create new record
+    phone : "0987654321",
+    firstname : "John",
+    lastname : "Doe"
+  }
+  )
 ```
 
 - createOne, createMany.
