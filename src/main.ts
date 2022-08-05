@@ -54,6 +54,7 @@ async function bootstrap() {
     )
     .setContact('MVT', 'https://mvt-blog.com', 'mthang1801@gmail.com')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const swaggerDocumentOptions: ISwaggerDocumentOptions = {

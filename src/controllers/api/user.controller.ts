@@ -15,9 +15,11 @@ import { CreateUserDto } from '../../dto/user/createUser.dto';
 import { UserService } from '../../services/user.service';
 import { RolesEnum } from '../../enums/role.enum';
 import {
+  ApiBearerAuth,
   ApiConsumes,
   ApiExtraModels,
   ApiOkResponse,
+  ApiSecurity,
   getSchemaPath,
 } from '@nestjs/swagger';
 import { PaginatedDto, PagingDto } from '../../dto/genneric/paginated.dto';
@@ -27,10 +29,8 @@ import { ApiPaginatedResponse } from 'src/swagger/apiPaginatedResponse.swagger';
 
 @Controller('api/users')
 @ApiTags('User Management')
-@ApiHeaders([
-  { name: 'x-auth-uuid', description: 'Auth UUID' },
-  { name: 'Authorization', description: 'Auth Bearer' },
-])
+@ApiBearerAuth()
+@ApiHeaders([{ name: 'x-auth-uuid', description: 'Auth UUID' }])
 export class UserController extends BaseController {
   constructor(private service: UserService) {
     super();
