@@ -6,6 +6,7 @@ import {
   queueConfig,
   uploadConfig,
   redisConfig,
+  searchConfig,
 } from '../config/index.config';
 import { DatabaseModule } from '../database/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -15,17 +16,26 @@ import { AuthenticationModule } from './auth.module';
 import { UserModule } from './user.module';
 import { UploadModule } from './upload.module';
 import { RedisCacheModule } from '../microservices/cache/cache.module';
+import { ElasticSearchModule } from '../microservices/elasticSearch/search.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfig, databaseConfig, queueConfig, uploadConfig, redisConfig],
+      load: [
+        appConfig,
+        databaseConfig,
+        queueConfig,
+        uploadConfig,
+        redisConfig,
+        searchConfig,
+      ],
     }),
     UploadModule,
     ScheduleModule.forRoot(),
     DatabaseModule,
     RedisCacheModule,
+    ElasticSearchModule,
     RpcModule,
     NamedConnectionModule,
     AuthenticationModule,
