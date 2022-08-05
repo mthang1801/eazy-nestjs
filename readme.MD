@@ -4,15 +4,16 @@
 
 ### Installation
 
-- Install docker
-- Open command line or terminal... And type:
+- Install docker (prequisition)
+- Open command line or terminal, so on. Then type commands:
 
 * $ git clone https://github.com/mthang1801/nestjs-resource-configure.git
 * $ npm install -f
 * $ docker-compose up
 * $ Crate file .env and fill value the same as .env.example
+* $ npm run start:dev
 
-### Deprecated
+### Deprecated Features
 
 - Some sql queries has been deprecated as ~~count~~, ~~find~~
 
@@ -21,6 +22,15 @@
 **1. Sql new Features queries :**
 
 - findMany, findOne, findById, findOneAndCreate.
+
+Example :
+
+```
+await this.userRepo.findOne({user_id : 1})
+or
+await this.userRepo.findOne({where :{user_id : 1}})
+```
+
 - createOne, createMany.
 - update.
 - delete.
