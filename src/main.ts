@@ -17,6 +17,9 @@ import { AppModule } from './modules/index.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ISwaggerDocumentOptions } from 'src/interfaces/swaggerDocument.interface';
 import { IExpressSwaggerCustomOptions } from 'src/interfaces/swaggerCustom.interface';
+import { ICat, IDog } from './enums/pet.enum';
+import { ApiPaginatedResponse } from './swagger/apiPaginatedResponse.swagger';
+import { extraModels } from './swagger/extraModels';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -55,6 +58,7 @@ async function bootstrap() {
 
   const swaggerDocumentOptions: ISwaggerDocumentOptions = {
     operationIdFactory: (cnotrollerKey: string, methodKey: string) => methodKey,
+    extraModels,
   };
   const document = SwaggerModule.createDocument(
     app,

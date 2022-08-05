@@ -18,13 +18,31 @@ import { UploadFileDto } from '../../dto/upload/upload.dto';
 import { BaseController } from '../../base/base.controllers';
 import { UploadService } from '../../services/upload.services';
 import { IResponse } from 'src/base/interfaces/response.interface';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiHeader,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @Controller('uploads')
+@ApiTags('Uploads')
 export class UploadController extends BaseController {
   constructor(private service: UploadService) {
     super();
   }
 
+  @Version('1')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    type: UploadFileDto,
+    description: 'Upload List of files to CDN',
+  })
+  @ApiResponse({ status: 201, description: 'Upload successfully' })
+  @ApiResponse({ status: 413, description: 'File too large' })
+  @ApiResponse({ status: 500, description: 'Internal Server' })
+  @ApiResponse({ status: 504, description: 'Request Timeout' })
   @Post()
   @UseInterceptors(
     FilesInterceptor('files', 100, {
@@ -42,10 +60,12 @@ export class UploadController extends BaseController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Res() res: Response,
   ): Promise<IResponse> {
+    console.log(data);
     const result = await this.service.uploadFiles(data, files);
     return this.responseCreated(res, result);
   }
 
+  @Version('1')
   @Get()
   async getFile(
     @Res() res: Response,
