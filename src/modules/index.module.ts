@@ -14,7 +14,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RpcModule } from '../microservices/rabbitMQ/rpc/rpc.module';
 import { NamedConnectionModule } from '../microservices/rabbitMQ/rpc-named-connection/named-connection.module';
 import { AuthenticationModule } from './auth.module';
-import { UserModule } from './user.module';
 import { UploadModule } from './upload.module';
 import { RedisCacheModule } from '../microservices/cache/cache.module';
 import { ElasticSearchModule } from '../microservices/elasticSearch/search.module';
@@ -56,7 +55,6 @@ import { ElasticSearchModule } from '../microservices/elasticSearch/search.modul
     RpcModule,
     NamedConnectionModule,
     AuthenticationModule,
-    UserModule,
   ],
   providers: [String, Object],
 })
