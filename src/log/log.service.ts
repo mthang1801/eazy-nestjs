@@ -43,7 +43,8 @@ export class LogService extends Logger {
       ...this.errorLogRepo.setData(logData),
       source: findSourceRaiseError(JSON.parse(logData.headers)?.origin),
     };
-    await this.errorLogRepo.createOne(errorLogData, false);
+
+    await this.errorLogRepo.createOne(errorLogData);
     return;
   }
 

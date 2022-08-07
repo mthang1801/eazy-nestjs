@@ -98,18 +98,4 @@ export class ExampleService {
       throw new HttpException(error.message, error.status);
     }
   }
-
-  @Cron('* */40 11 * * * ', {
-    name: 'triggerNotifications',
-  })
-  triggerNotifications() {
-    console.log('Cron call.');
-  }
-
-  @Timeout(500)
-  async testDynamicCron() {
-    const job = this.schedulerRegister.getCronJob('triggerNotifications');
-
-    job.start();
-  }
 }

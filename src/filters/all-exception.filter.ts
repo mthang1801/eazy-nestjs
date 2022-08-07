@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { IErrorLog } from 'src/interfaces/errorLog.interface';
 import { LogService } from '../log/log.service';
+import { isNumeric } from '../utils/functions.utils';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -73,10 +74,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       method: request?.method,
       body: request.body ? JSON.stringify(request?.body) : null,
       error_details: errorDetails,
-      status_code: statusCode,
+      status_code: isNumeric(statusCode)
+        ? statusCode
+        : HttpStatus.INTERNAL_SERVER_ERROR,
     };
 
-    this.logService.insertErrorLog(logData);
+    await this.logService.insertErrorLog(logData);
 
     const responseBody = {
       statusCode: statusCode,

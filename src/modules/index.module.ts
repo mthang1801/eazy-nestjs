@@ -17,6 +17,7 @@ import { UploadModule } from './upload.module';
 import { RedisCacheModule } from '../microservices/cache/cache.module';
 import { ElasticSearchModule } from '../microservices/elasticSearch/search.module';
 import { ExampleModule } from './example.module';
+import { ScheduleService } from '../microservices/schedule/schedule.service';
 
 @Module({
   imports: [
@@ -42,6 +43,6 @@ import { ExampleModule } from './example.module';
     AuthenticationModule,
     ExampleModule,
   ],
-  providers: [String, Object],
+  providers: [String, Object, ScheduleService],
 })
 export class AppModule {}
