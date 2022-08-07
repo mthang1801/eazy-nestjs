@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { RequestMethod, ValidationPipe, VersioningType } from '@nestjs/common';
 import {
   ExpressAdapter,
   NestExpressApplication,
@@ -32,9 +32,13 @@ async function bootstrap() {
   app.setViewEngine('hbs');
   hbs.registerPartials(join(__dirname, '..', '/views/partials'));
 
+  app.setGlobalPrefix(configService.get<string>('apiPrefix'), {
+    exclude: configService.get<any>('exludeGlobalPrefix'),
+  });
+
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: ['2', '1'],
+    defaultVersion: configService.get<string[]>('enableVersioning'),
   });
 
   app.enableShutdownHooks();

@@ -8,6 +8,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   Version,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
 
 import * as multer from 'multer';
@@ -33,7 +34,6 @@ export class UploadController extends BaseController {
     super();
   }
 
-  @Version('1')
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     type: UploadFileDto,
@@ -43,6 +43,7 @@ export class UploadController extends BaseController {
   @ApiResponse({ status: 413, description: 'File too large' })
   @ApiResponse({ status: 500, description: 'Internal Server' })
   @ApiResponse({ status: 504, description: 'Request Timeout' })
+  @Version(VERSION_NEUTRAL)
   @Post()
   @UseInterceptors(
     FilesInterceptor('files', 100, {
