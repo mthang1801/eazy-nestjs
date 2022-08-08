@@ -26,7 +26,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const { httpAdapter } = this.httpAdapterHost;
     const {} = HttpAdapterHost;
-
+    console.log(29);
     let statusCode = exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
 
     let message =
@@ -82,12 +82,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     await this.logService.insertErrorLog(logData);
 
     const responseBody = {
-      statusCode: statusCode,
+      statusCode: isNumeric(statusCode)
+        ? statusCode
+        : HttpStatus.INTERNAL_SERVER_ERROR,
       data: null,
       message: originalMessage,
       timestamp: new Date().toLocaleString(),
     };
 
-    httpAdapter.reply(ctx.getResponse(), responseBody, statusCode);
+    httpAdapter.reply(
+      ctx.getResponse(),
+      responseBody,
+      isNumeric(statusCode) ? statusCode : HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
 }

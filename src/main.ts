@@ -13,6 +13,10 @@ import { ValidationConfig } from './config/validation.config';
 import * as compression from 'compression';
 import * as requestIp from 'request-ip';
 import { AppModule } from './modules/index.module';
+import {
+  i18nValidationErrorFactory,
+  I18nValidationExceptionFilter,
+} from 'nestjs-i18n';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -23,6 +27,11 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.useGlobalPipes(new ValidationPipe(ValidationConfig));
+  app.useGlobalFilters(
+    new I18nValidationExceptionFilter({
+      detailedErrors: false, //Show details error
+    }),
+  );
 
   app.use(require('helmet')());
   app.use(compression());

@@ -1,0 +1,10 @@
+{
+  "MIN": "{property} with value : {value} needs to be at least {constraints.0}",
+  "MAX": "{property} with value : {value} needs to be at most {constraints.0}",
+  "IS_EMAIL": "{property} is invalid email",
+  "IS_NOT_EMPTY": "{property} is required",
+  "INVALID_BOOLEAN": "{property} is not a boolean",
+  "INVALID_NUMBER": "{property} is not a number.",
+  "INVALID_STRING": "{property} is not a string.",
+  "ARRAY_NOT_EMPTY": "{property} is array not empty."
+}

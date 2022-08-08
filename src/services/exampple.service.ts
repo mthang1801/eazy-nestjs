@@ -1,4 +1,4 @@
-import { Injectable, HttpException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Table } from '../database/enums';
 
 import {
@@ -94,6 +94,14 @@ export class ExampleService {
       console.log(decodeUserAuthentication(encodeUUID));
 
       console.timeEnd('start');
+    } catch (error) {
+      throw new HttpException(error.message, error.status);
+    }
+  }
+
+  async createExample() {
+    try {
+      throw new HttpException('Not Acceptable', HttpStatus.NOT_ACCEPTABLE);
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }

@@ -18,7 +18,11 @@ import { RedisCacheModule } from '../microservices/cache/cache.module';
 import { ElasticSearchModule } from '../microservices/elasticSearch/search.module';
 import { ExampleModule } from './example.module';
 import { ScheduleService } from '../microservices/schedule/schedule.service';
-
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { join } from 'path';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionsFilter } from 'src/filters/all-exception.filter';
+import { LogModule } from 'src/log/log.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +37,18 @@ import { ScheduleService } from '../microservices/schedule/schedule.service';
         searchConfig,
       ],
     }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'vi',
+      loaderOptions: {
+        path: join(__dirname, '..', '/i18n/'),
+        watch: true,
+      },
+
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+      ],
+    }),
     UploadModule,
     ScheduleModule.forRoot(),
     DatabaseModule,
@@ -40,9 +56,18 @@ import { ScheduleService } from '../microservices/schedule/schedule.service';
     ElasticSearchModule,
     RpcModule,
     NamedConnectionModule,
+    LogModule,
     AuthenticationModule,
     ExampleModule,
   ],
-  providers: [String, Object, ScheduleService],
+  providers: [
+    String,
+    Object,
+    ScheduleService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule {}

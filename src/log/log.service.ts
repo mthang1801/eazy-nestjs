@@ -7,37 +7,12 @@ import { getPageSkipLimit, isJsonString } from '../utils/helper';
 import { searchFilterErrorLogs } from 'src/database/queries/search-filter';
 import { Table } from 'src/database/enums';
 
-@Injectable({ scope: Scope.TRANSIENT })
-export class LogService extends Logger {
-  constructor(private errorLogRepo: ErrorLogRepository) {
-    super();
-  }
-  error(message: string, trace?: string, context?: string): void {
-    // TO DO
-    super.error(message, trace, context);
-  }
-
-  warn(message: string, context?: string): void {
-    // TO DO
-    super.warn(message, context);
-  }
-
-  log(message: string, context?: string): void {
-    // TO DO
-    super.log(message, context);
-  }
-
-  debug(message: string, context?: string): void {
-    // TO DO
-    super.debug(message, context);
-  }
-
-  verbose(message: string, context?: string): void {
-    // TO DO
-    super.verbose(message, context);
-  }
+@Injectable()
+export class LogService {
+  constructor(private errorLogRepo: ErrorLogRepository) {}
 
   async insertErrorLog(logData: IErrorLog) {
+    console.log(logData);
     let errorLogData = {
       ...new ErrorLogEntity(),
       ...this.errorLogRepo.setData(logData),

@@ -1,0 +1,10 @@
+{
+  "MIN": "{property} với giá trị : {value} cần ít nhất {constraints.0}.",
+  "MAX": "{property} với giá trị : {value} chỉ đạt tối đa {constraints.0}",
+  "IS_EMAIL": "{property} không hợp lệ",
+  "IS_NOT_EMPTY": "{property} không được bỏ trống",
+  "INVALID_BOOLEAN": "{property} không phải là kiểu boolean",
+  "INVALID_NUMBER": "{property} không phài là kiểu số.",
+  "INVALID_STRING": "{property} không phài là kiểu chuỗi.",
+  "ARRAY_NOT_EMPTY": "{property} là một mảng không rỗng"
+}

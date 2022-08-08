@@ -1,0 +1,27 @@
+{
+  "HELLO": "Xin chào {username}, Chào mừng bạn đến với API {api_name}",
+  "PRODUCT": {
+    "NEW": "Sản Phầm: {name}"
+  },
+  "ENGLISH": "Tiếng Anh",
+  "ARRAY": ["Một", "Hai", "Ba"],
+  "cat": "Con Mèo",
+  "cat_name": "Con mèo: {name}",
+  "set-up-password": {
+    "heading": "Xin chào, {username}",
+    "title": "Quên mật khẩu",
+    "followLink": "Vui lòng nhấp vào đường link để khôi phục mật khẩu."
+  },
+  "day_interval": {
+    "one": "Hàng ngày",
+    "other": "Mỗi {count} ngày",
+    "two": "Mỗi 2 ngày",
+    "zero": "Chưa bao giờ"
+  },
+  "HOME_PAGE": {
+    "TITLE": "Trang chủ {home_name}",
+    "SUBTITLE": "$t(example.HELLO, {{\"username\" :  \"username\"} , {\"api_name\" : \"api_name\"})"
+  },
+  "api_version": "Đây là version {version}",
+  "nested": "Chúng ta sẽ đi mua sắm: $t(test.day_interval, {{\"count\": {count} }})"
+}
