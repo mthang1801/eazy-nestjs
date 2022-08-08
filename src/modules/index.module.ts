@@ -7,6 +7,7 @@ import {
   uploadConfig,
   redisConfig,
   searchConfig,
+  mailConfig,
 } from '../config/index.config';
 import { DatabaseModule } from '../database/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -23,6 +24,7 @@ import { join } from 'path';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from 'src/filters/all-exception.filter';
 import { LogModule } from 'src/log/log.module';
+import { MailModule } from './mail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +37,7 @@ import { LogModule } from 'src/log/log.module';
         uploadConfig,
         redisConfig,
         searchConfig,
+        mailConfig,
       ],
     }),
     I18nModule.forRoot({
@@ -53,6 +56,7 @@ import { LogModule } from 'src/log/log.module';
     ScheduleModule.forRoot(),
     DatabaseModule,
     RedisCacheModule,
+    MailModule,
     ElasticSearchModule,
     RpcModule,
     NamedConnectionModule,

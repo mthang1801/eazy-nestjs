@@ -49,4 +49,13 @@ export class ExampleController extends BaseController {
     await this.service.createExample();
     return this.responseCreated(res);
   }
+
+  @Post('send-mail')
+  async sendMail(
+    @Res() res: Response,
+    @I18n() i18n: I18nContext,
+  ): Promise<IResponse> {
+    await this.service.sendMail(i18n.lang);
+    return this.responseCreated(res);
+  }
 }

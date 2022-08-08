@@ -23,5 +23,10 @@
     "SUBTITLE": "$t(example.HELLO, {{\"username\" :  \"username\"} , {\"api_name\" : \"api_name\"})"
   },
   "api_version": "Đây là version {version}",
-  "nested": "Chúng ta sẽ đi mua sắm: $t(test.day_interval, {{\"count\": {count} }})"
+  "nested": "Chúng ta sẽ đi mua sắm: $t(test.day_interval, {{\"count\": {count} }})",
+  "MAIL": {
+    "header": "Xin chào {firstname} {lastname}",
+    "body": "Đây là nội dung chính của email",
+    "footer": "Đây là phần footer của email."
+  }
 }

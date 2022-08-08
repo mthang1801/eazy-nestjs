@@ -24,5 +24,10 @@
     "TEMP": "$t(example.cat_name , {{\"name\" : \"{name}\"}})"
   },
   "api_version": "This version is {version}",
-  "nested": "We go shopping: $t(test.day_interval, {{\"count\": {count} }})"
+  "nested": "We go shopping: $t(test.day_interval, {{\"count\": {count} }})",
+  "MAIL": {
+    "header": "Hi, {firstname} {lastname}",
+    "body": "This is the body of email",
+    "footer": "This is the footer of email"
+  }
 }

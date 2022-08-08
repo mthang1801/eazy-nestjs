@@ -1,4 +1,4 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { Table } from '../database/enums';
 
 import {
@@ -22,12 +22,16 @@ import {
 } from '../utils/functions.utils';
 import { time } from 'console';
 import { CronTime } from 'cron';
+import { MailService } from './mail.service';
+import { I18n, I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class ExampleService {
   constructor(
     private db: DatabaseService,
-    private schedulerRegister: SchedulerRegistry,
+
+    private mailService: MailService,
+    private i18n: I18nService,
   ) {}
 
   async getUser() {}
@@ -105,5 +109,20 @@ export class ExampleService {
     } catch (error) {
       throw new HttpException(error.message, error.status);
     }
+  }
+
+  async sendMail(lang: string) {
+    let to: string = 'mthang1801@gmail.com';
+    let subject: string = 'test send mail';
+    let mailData: any = {
+      header: this.i18n.translate('example.MAIL.header', {
+        args: { firstname: 'Mai', lastname: 'Thang' },
+        lang,
+      }),
+      body: this.i18n.translate('example.MAIL.body', { lang }),
+      footer: this.i18n.translate('example.MAIL.footer', { lang }),
+    };
+    console.log(mailData);
+    await this.mailService.sendMailExample(to, subject, mailData);
   }
 }
