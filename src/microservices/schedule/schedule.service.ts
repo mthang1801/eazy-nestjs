@@ -7,7 +7,7 @@ export class ScheduleService {
 
   async addInterval(
     name: string,
-    functs: any | any[],
+    functs: Function | Function[],
     milliseconds: number,
   ): Promise<void> {
     let interval: any = this.getInterval(name);
@@ -43,7 +43,7 @@ export class ScheduleService {
 
   addTimeout(
     name: string,
-    functs: any | any[],
+    functs: Function | Function[],
     milliseconds: number,
   ): Promise<void> {
     let timeout: any = this.getTimeout(name);
