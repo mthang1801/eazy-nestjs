@@ -177,7 +177,8 @@ await this.userRepo.findOne({
 
 **12. Mail Service**
 
-- Config Email (Host, post, user, pass, template)
+- Config Email
+- Building Template
 - Send Mail with multiple locales
 
 This project was powered by [MVT](https://github.com/mthang1801). Contributions of any kind welcome!

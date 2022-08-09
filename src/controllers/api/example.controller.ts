@@ -13,7 +13,7 @@ import { I18n, I18nContext, I18nValidationExceptionFilter } from 'nestjs-i18n';
 import { BaseController } from 'src/base/base.controllers';
 import { IResponse } from 'src/base/interfaces/response.interface';
 import { CreateExampleDto } from '../../dto/example/create-example.dto';
-import { ExampleService } from '../../services/exampple.service';
+import { ExampleService } from '../../services/example.service';
 
 @Controller('examples')
 export class ExampleController extends BaseController {

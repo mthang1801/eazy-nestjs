@@ -29,7 +29,6 @@ import { I18n, I18nContext, I18nService } from 'nestjs-i18n';
 export class ExampleService {
   constructor(
     private db: DatabaseService,
-
     private mailService: MailService,
     private i18n: I18nService,
   ) {}
@@ -82,6 +81,7 @@ export class ExampleService {
       //   where: "user_id = 1 and user_type = 2 and status = 'A' ",
       // });
       // await this.userRepo.createMany(users);
+      this;
       console.time('start');
       // const users = await this.userRepo.findMany();
 

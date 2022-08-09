@@ -796,16 +796,13 @@ export class BaseConfigure {
       : this.sortString;
 
     sql_string = removeMoreThanOneSpace(
-      this.stringSelect +
-        this.stringJoin +
-        this.stringCondition +
-        this.stringGroupBy +
-        this.stringHaving +
-        orderString,
+      `${this.stringSelect}  ${this.stringJoin} ${this.stringCondition} ${this.stringGroupBy} ${this.stringHaving} ${orderString}`,
     );
 
     if (is_limit == true) {
-      sql_string += ` LIMIT ${this.limit} OFFSET ${this.offset} ; `;
+      sql_string = removeMoreThanOneSpace(
+        `${sql_string} LIMIT ${this.limit} OFFSET ${this.offset} ; `,
+      );
     }
 
     this.reset();
