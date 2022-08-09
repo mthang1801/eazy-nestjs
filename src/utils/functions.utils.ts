@@ -164,18 +164,6 @@ export const formatCustomerDatetime = (customer) => {
   return customer;
 };
 
-export const getPageSkipLimit = (params) => {
-  let { page, limit } = params;
-
-  page = +page || 1;
-  limit = +limit || 50;
-  if (limit > 100) {
-    limit = 100;
-  }
-  let skip = (page - 1) * limit;
-  return { page, skip, limit };
-};
-
 export const isNumeric = (value: string | number) => {
   if (typeof value == 'undefined' || !value) {
     return false;

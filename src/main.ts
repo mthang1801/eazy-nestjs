@@ -17,6 +17,14 @@ import {
   i18nValidationErrorFactory,
   I18nValidationExceptionFilter,
 } from 'nestjs-i18n';
+import {
+  DocumentBuilder,
+  SwaggerCustomOptions,
+  SwaggerDocumentOptions,
+  SwaggerModule,
+} from '@nestjs/swagger';
+import { includes } from './swagger/includes';
+import { extraModels } from './swagger/extraModels';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -24,7 +32,7 @@ async function bootstrap() {
     new ExpressAdapter(),
   );
 
-  const configService = app.get(ConfigService);
+  const config = app.get(ConfigService);
 
   app.useGlobalPipes(new ValidationPipe(ValidationConfig));
   app.useGlobalFilters(
@@ -41,19 +49,53 @@ async function bootstrap() {
   app.setViewEngine('hbs');
   hbs.registerPartials(join(__dirname, '..', '/views/partials'));
 
-  app.setGlobalPrefix(configService.get<string>('apiPrefix'), {
-    exclude: configService.get<any>('exludeGlobalPrefix'),
+  app.setGlobalPrefix(config.get<string>('apiPrefix'), {
+    exclude: config.get<any>('exludeGlobalPrefix'),
   });
 
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: configService.get<string[]>('enableVersioning'),
+    defaultVersion: config.get<string[]>('enableVersioning'),
   });
 
   app.enableShutdownHooks();
   app.use(requestIp.mw());
 
-  const PORT = configService.get<number>('port');
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle(config.get<string>('swaggerTitle'))
+    .setDescription(config.get<string>('swaggerDescription'))
+    .setContact(
+      config.get<string>('swaggerContactName'),
+      config.get<string>('swaggerContactUrl'),
+      config.get<string>('swaggerContactEmail'),
+    )
+    .setVersion(config.get<string>('swaggerVersion'))
+    .setLicense(
+      config.get<string>('swaggerLicenseName'),
+      config.get<string>('swaggerLicenseUrl'),
+    )
+    .addTag(config.get<string>('swaggerTag'))
+    .build();
+
+  const swaggerOptions: SwaggerDocumentOptions = {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+    ignoreGlobalPrefix: false,
+    include: includes,
+    extraModels: extraModels,
+  };
+
+  const document = SwaggerModule.createDocument(
+    app,
+    swaggerConfig,
+    swaggerOptions,
+  );
+
+  SwaggerModule.setup('api/v1/docs', app, document, {
+    explorer: true,
+    customCssUrl: join('..', '..', 'swagger-ui', 'swagger-material.css'),
+  });
+
+  const PORT = config.get<number>('port');
 
   app.enableCors();
 

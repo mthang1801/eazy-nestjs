@@ -1,14 +1,17 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Version } from '@nestjs/common';
 import { BaseController } from '../../../base/base.controllers';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { exchange1 } from '../../../constants/queue.constant';
 import { v4 as uuid } from 'uuid';
+import { ApiTags } from '@nestjs/swagger';
 @Controller()
+@ApiTags('RabbitMQ RPC')
 export class RpcController extends BaseController {
   constructor(private readonly amqpConnection: AmqpConnection) {
     super();
   }
 
+  @Version('1')
   @Get('rpc')
   async getRpc() {
     return this.amqpConnection.request({
@@ -20,6 +23,7 @@ export class RpcController extends BaseController {
     });
   }
 
+  @Version('1')
   @Get('error-reply-rpc')
   async getErrorReplyRpc() {
     return this.amqpConnection.request({

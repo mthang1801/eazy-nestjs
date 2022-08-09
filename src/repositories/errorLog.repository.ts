@@ -1,4 +1,3 @@
-import { OrderEntity } from '../entities/order.entity';
 import { BaseRepositorty } from '../base/base.repository';
 import { Table } from '../database/enums/tables.enum';
 import { DatabaseService } from '../database/database.service';

@@ -24,3 +24,15 @@ export const searchFilterTemplate = (
 
   return result;
 };
+
+export const getPageSkipLimit = (params) => {
+  let { page, limit } = params;
+
+  page = +page || 1;
+  limit = +limit || 50;
+  if (limit > 100) {
+    limit = 100;
+  }
+  let skip = (page - 1) * limit;
+  return { page, skip, limit };
+};

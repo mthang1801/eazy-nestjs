@@ -8,6 +8,7 @@ import {
   redisConfig,
   searchConfig,
   mailConfig,
+  swaggerConfig,
 } from '../config/index.config';
 import { DatabaseModule } from '../database/database.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -25,6 +26,8 @@ import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from 'src/filters/all-exception.filter';
 import { LogModule } from 'src/log/log.module';
 import { MailModule } from './mail.module';
+import { HomeController } from '../controllers/common/home.controller';
+import { ServeStaticModule } from '@nestjs/serve-static';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,7 +41,12 @@ import { MailModule } from './mail.module';
         redisConfig,
         searchConfig,
         mailConfig,
+        swaggerConfig,
       ],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public'),
+      serveRoot: '',
     }),
     I18nModule.forRoot({
       fallbackLanguage: 'vi',
@@ -73,5 +81,6 @@ import { MailModule } from './mail.module';
       useClass: AllExceptionsFilter,
     },
   ],
+  controllers: [HomeController],
 })
 export class AppModule {}

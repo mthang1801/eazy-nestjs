@@ -1,3 +1,2 @@
-import { PaginatedDto } from '../dto/genneric/paginated.dto';
-import { ApiPaginatedResponse } from './apiPaginatedResponse.swagger';
-export const extraModels = [PaginatedDto, ApiPaginatedResponse];
+import { PaginatedDto } from '../dto/paging/page.dto';
+export const extraModels = [PaginatedDto];

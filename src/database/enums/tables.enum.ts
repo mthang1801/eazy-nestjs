@@ -1,6 +1,6 @@
 export enum Table {
   USER = 'users',
-  ORDER = 'orders',
+  EXAMPLE = 'examples',
   ERROR_LOG = 'error_logs',
   CACHE = 'caches',
 }

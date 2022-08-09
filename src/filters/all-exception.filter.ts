@@ -5,7 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
+import { Logger, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { IErrorLog } from 'src/interfaces/errorLog.interface';
@@ -25,9 +25,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     this.logger.error(exception, exception.name, exception.code);
     const ctx = host.switchToHttp();
     const { httpAdapter } = this.httpAdapterHost;
-    const {} = HttpAdapterHost;
-    console.log(29);
-    let statusCode = exception.getStatus() || HttpStatus.INTERNAL_SERVER_ERROR;
+
+    let statusCode =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
     let message =
       exception.response?.message ||
@@ -78,8 +80,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? statusCode
         : HttpStatus.INTERNAL_SERVER_ERROR,
     };
-
-    await this.logService.insertErrorLog(logData);
+    if (logData['status_code'] != 404) {
+      await this.logService.insertErrorLog(logData);
+    }
 
     const responseBody = {
       statusCode: isNumeric(statusCode)

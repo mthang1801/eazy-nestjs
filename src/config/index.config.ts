@@ -5,3 +5,4 @@ export { default as redisConfig } from './redis.config';
 export { default as uploadConfig } from './upload.config';
 export { default as searchConfig } from './search.config';
 export { default as mailConfig } from './mail.config';
+export { default as swaggerConfig } from './swagger.config';

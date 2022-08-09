@@ -20,9 +20,16 @@ import { BaseController } from '../../base/base.controllers';
 import { UploadService } from '../../services/upload.services';
 import { IResponse } from 'src/base/interfaces/response.interface';
 import {
+  GetFileEntity,
+  UploadEntityResponseEntity,
+} from '../../entities/upload.entity';
+import {} from '../../entities/upload.entity';
+import {
   ApiBody,
   ApiConsumes,
   ApiHeader,
+  ApiOkResponse,
+  ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -39,10 +46,15 @@ export class UploadController extends BaseController {
     type: UploadFileDto,
     description: 'Upload List of files to CDN',
   })
-  @ApiResponse({ status: 201, description: 'Upload successfully' })
+  @ApiResponse({
+    type: UploadEntityResponseEntity,
+    status: 201,
+    description: 'Upload successfully',
+  })
   @ApiResponse({ status: 413, description: 'File too large' })
   @ApiResponse({ status: 500, description: 'Internal Server' })
   @ApiResponse({ status: 504, description: 'Request Timeout' })
+  @ApiOperation({ summary: 'Upload multiple files' })
   @Version(VERSION_NEUTRAL)
   @Post()
   @UseInterceptors(
@@ -66,7 +78,9 @@ export class UploadController extends BaseController {
     return this.responseCreated(res, result);
   }
 
-  @Version('1')
+  @Version(VERSION_NEUTRAL)
+  @ApiOperation({ summary: 'Get File by url with q query parameter' })
+  @ApiOkResponse({ type: GetFileEntity })
   @Get()
   async getFile(
     @Res() res: Response,

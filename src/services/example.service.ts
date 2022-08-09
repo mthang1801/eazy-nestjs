@@ -9,7 +9,6 @@ import {
   $lt,
   MoreThan,
 } from '../database/operators/operators';
-import { OrderEntity } from '../entities/order.entity';
 import { DatabaseService } from '../database/database.service';
 import { formatStandardTimeStamp } from '../utils/helper';
 import { Cron, SchedulerRegistry, Timeout } from '@nestjs/schedule';
@@ -112,7 +111,7 @@ export class ExampleService {
   }
 
   async sendMail(lang: string) {
-    let to: string = 'mthang1801@gmail.com';
+    let to: string = 'maivthang.95@gmail.com';
     let subject: string = 'test send mail';
     let mailData: any = {
       header: this.i18n.translate('example.MAIL.header', {
@@ -122,7 +121,7 @@ export class ExampleService {
       body: this.i18n.translate('example.MAIL.body', { lang }),
       footer: this.i18n.translate('example.MAIL.footer', { lang }),
     };
-    console.log(mailData);
+
     await this.mailService.sendMailExample(to, subject, mailData);
   }
 }
