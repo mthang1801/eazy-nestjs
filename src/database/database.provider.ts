@@ -10,7 +10,7 @@ export const DatabasePoolFactory = async (
   const databasePort = configService.get<string>('databasePort');
   const databaseUsername = configService.get<string>('databaseUsername');
   const databasePassword = configService.get<string>('databasePassword');
-
+  const charset = configService.get<string>('charset');
   return createPool({
     user: databaseUsername,
     host:
@@ -18,6 +18,7 @@ export const DatabasePoolFactory = async (
     database: databaseName,
     password: databasePassword,
     port: +databasePort,
+    charset,
   });
 };
 

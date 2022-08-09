@@ -90,12 +90,12 @@ export class ExampleService {
       //   orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
       // });
 
-      let crypto = new Cryptography();
-      console.log(crypto.genSecurityKey());
-      let user_id = 329138123;
-      let role_id = 5;
-      let encodeUUID = encodeUserAuthentication(user_id, role_id);
-      console.log(decodeUserAuthentication(encodeUUID));
+      // let crypto = new Cryptography();
+      // console.log(crypto.genSecurityKey());
+      // let user_id = 329138123;
+      // let role_id = 5;
+      // let encodeUUID = encodeUserAuthentication(user_id, role_id);
+      // console.log(decodeUserAuthentication(encodeUUID));
 
       console.timeEnd('start');
     } catch (error) {
