@@ -69,6 +69,7 @@ async function bootstrap() {
       config.get<string>('swaggerContactUrl'),
       config.get<string>('swaggerContactEmail'),
     )
+    // .addServer('localhost:5000')
     .setVersion(config.get<string>('swaggerVersion'))
     .setLicense(
       config.get<string>('swaggerLicenseName'),
