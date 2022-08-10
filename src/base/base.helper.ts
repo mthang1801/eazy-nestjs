@@ -56,8 +56,21 @@ export const formatTypeValueToInSertSQL = (key, value) => {
   )
     return `${key} = ''`;
 
-  if (typeof value === 'object' && value.operator && value.value) {
+  if (
+    typeof value === 'object' &&
+    value.operator &&
+    ![null, undefined].includes(value.value)
+  ) {
     return `${key} ${value.operator} '${value.value}' `;
+  }
+
+  if (
+    typeof value == 'object' &&
+    value.operator &&
+    ![null, undefined].includes(value.value1) &&
+    ![null, undefined].includes(value.value2)
+  ) {
+    return `${key} ${value.operator} '${value.value1}' AND '${value.value2}'`;
   }
 
   if (+value === 0) return `${key} = 0`;

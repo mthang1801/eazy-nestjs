@@ -21,6 +21,7 @@ import {
   formatTypeValueToInSertSQL,
 } from './base.helper';
 import databaseConfig from 'src/config/database.config';
+import { formatRawStringCondition } from '../database/database.helper';
 
 @Injectable()
 export class BaseRepositorty {
@@ -414,6 +415,8 @@ export class BaseRepositorty {
         sql += ` ${AutoIncrementKeys[this.table]} = '${conditions}'`;
       }
 
+      sql = formatRawStringCondition(sql);
+
       await this.databaseService.executeQueryWritePool(sql);
 
       if (returnFullRecord) {
@@ -469,21 +472,24 @@ export class BaseRepositorty {
             }
             Object.entries(conditions).forEach(([key, val], i) => {
               if (i === 0) {
-                queryString += `${key} = '${val}'`;
+                queryString += formatTypeValueToInSertSQL(key, val);
               } else {
-                queryString += ` OR ${key} = '${val}'`;
+                queryString += ` OR ${formatTypeValueToInSertSQL(key, val)}`;
               }
             });
           }
         } else {
           Object.entries(conditions).forEach(([key, val], i) => {
             if (i === 0) {
-              queryString += `${key} = '${val}'`;
+              queryString += formatTypeValueToInSertSQL(key, val);
             } else {
-              queryString += ` AND ${key} = '${val}'`;
+              queryString += ` AND ${formatTypeValueToInSertSQL(key, val)}`;
             }
           });
         }
+
+        queryString = formatRawStringCondition(queryString);
+
         res = await this.databaseService.executeQueryWritePool(queryString, [
           conditions,
         ]);

@@ -1,62 +1,50 @@
+import { preprocessAddTextDataToMysql } from '../../base/base.helper';
 import {
-  processGetTextDataFromMysql,
-  preprocessAddTextDataToMysql,
-} from '../../base/base.helper';
-export function Like<T>(value: T): {
-  operator: string;
-  value: T;
-} {
+  IAllOperator,
+  IAnyOperator,
+  IBetweenOperator,
+  IEqualOperator,
+  IGreaterThan,
+  IInOperator,
+  ILessThan,
+  ILessThanOrEqual,
+  ILikeOperator,
+  INotOperator,
+} from './operator.interface';
+
+export function Like<T>(value: T): ILikeOperator<T> {
   let _value = preprocessAddTextDataToMysql(value);
 
   return { operator: 'LIKE', value: _value };
 }
 
-export function $like<T>(value: T): {
-  operator: string;
-  value: T;
-} {
+export function $like<T>(value: T): ILikeOperator<T> {
   let _value = preprocessAddTextDataToMysql(value);
 
   return { operator: 'LIKE', value: _value };
 }
 
-export function LessThanOrEqual<T>(value: T): {
-  operator: string;
-  value: T;
-} {
-  return { operator: '<=', value };
-}
-export function $lte<T>(value: T): {
-  operator: string;
-  value: T;
-} {
+export function LessThanOrEqual<T>(value: T): ILessThanOrEqual<T> {
   return { operator: '<=', value };
 }
 
-export function LessThan<T>(value: T): {
-  operator: string;
-  value: T;
-} {
-  return { operator: '<', value };
+export function $lte<T>(value: T): ILessThanOrEqual<T> {
+  return { operator: '<=', value };
 }
-export function $lt<T>(value: T): {
-  operator: string;
-  value: T;
-} {
+
+export function LessThan<T>(value: T): ILessThan<T> {
   return { operator: '<', value };
 }
 
-export function MoreThan(value): {
-  operator: string;
-  value;
-} {
+export function $lt<T>(value: T): ILessThan<T> {
+  return { operator: '<', value };
+}
+
+export function GreaterThan<T>(value: T): IGreaterThan<T> {
   return { operator: '>', value };
 }
 
-export function $gt(value): {
-  operator: string;
-  value;
-} {
+export function $gt<T>(value: T): IGreaterThan<T> {
   return { operator: '>', value };
 }
 
@@ -67,10 +55,7 @@ export function $gte<T>(value: T): {
   return { operator: '>=', value };
 }
 
-export function Equal(value): {
-  operator: string;
-  value;
-} {
+export function Equal(value): IEqualOperator {
   if (typeof value == 'object') {
     if (value.hasOwnProperty('operator') && value.hasOwnProperty('value')) {
       value = `${value['operator']} ${value['value']}`;
@@ -79,10 +64,7 @@ export function Equal(value): {
   return { operator: '=', value };
 }
 
-export function $eq(value): {
-  operator: string;
-  value;
-} {
+export function $eq(value): IEqualOperator {
   if (typeof value == 'object') {
     if (value.hasOwnProperty('operator') && value.hasOwnProperty('value')) {
       value = `${value['operator']} ${value['value']}`;
@@ -91,79 +73,69 @@ export function $eq(value): {
   return { operator: '=', value };
 }
 
-export function Between(
-  value1,
-  value2,
-): {
-  operator: string;
-  value1;
-  value2;
-} {
+export function Between(value1: any, value2: any): IBetweenOperator {
   return { operator: 'BETWEEN', value1, value2 };
 }
 
-export function $bw(
-  value1,
-  value2,
-): {
-  operator: string;
-  value1;
-  value2;
-} {
+export function $bw(value1: any, value2: any): IBetweenOperator {
   return { operator: 'BETWEEN', value1, value2 };
 }
 
-export function In<T>(arr: T[]): {
-  operator: string;
-  value: string;
-} {
+export function In(...args): IInOperator {
+  let _args = args;
+  if (Array.isArray(args[0])) {
+    _args = [...args.flat(1)];
+  }
   return {
     operator: 'IN',
-    value: `(${arr.map((item) => `'${item}'`).join()})`,
+    value: `(${args.map((item) => `'${item}'`).join()})`,
   };
 }
-export function $in<T>(arr: T[]): {
-  operator: string;
-  value: string;
-} {
+
+export function $in(...args): IInOperator {
+  let _args = args;
+  if (Array.isArray(args[0])) {
+    _args = [...args.flat(1)];
+  }
+
   return {
     operator: 'IN',
-    value: `(${arr.map((item) => `'${item}'`).join()})`,
+    value: `(${_args.map((item) => `'${item}'`).join()})`,
   };
 }
 
-export function All<T>(arr: T[]): {
-  operator: string;
-  value: string;
-} {
+export function All(...args): IAllOperator {
+  let _args = args;
+  if (Array.isArray(args[0])) {
+    _args = [...args.flat(1)];
+  }
   return {
     operator: 'ALL',
-    value: `(${arr.map((item) => `'${item}'`).join()})`,
+    value: `(${_args.map((item) => `'${item}'`).join()})`,
   };
 }
 
-export function $all<T>(arr: T[]): {
-  operator: string;
-  value: string;
-} {
+export function $all(...args): IAllOperator {
+  let _args = args;
+  if (Array.isArray(args[0])) {
+    _args = [...args.flat(1)];
+  }
   return {
     operator: 'ALL',
-    value: `(${arr.map((item) => `'${item}'`).join()})`,
+    value: `(${_args.map((item) => `'${item}'`).join()})`,
   };
 }
 
-export function Any<T>(arr: T[]): {
-  operator: string;
-  value: T[];
-} {
-  return { operator: 'ANY', value: arr };
-}
+export function $any(...args): IAnyOperator {
+  let _args = args;
+  if (Array.isArray(args[0])) {
+    _args = [...args.flat(1)];
+  }
 
-export function $any<T>(arr: T[]): {
-  operator: string;
-  value: T[];
-} {
-  return { operator: 'ANY', value: arr };
+  return {
+    operator: 'ANY',
+    value: `(${_args.map((item) => `'${item}'`).join()})`,
+  };
 }
 
 export function IsNull() {
@@ -174,10 +146,7 @@ export function $isNull() {
   return { operator: 'IS', value: 'NULL' };
 }
 
-export function Not(cb: { operator: string; value?: string }): {
-  operator: string;
-  value?: string;
-} {
+export function Not(cb: { operator: string; value?: string }): INotOperator {
   let operatorRes = '';
   switch (cb.operator) {
     case 'IS':
@@ -194,10 +163,8 @@ export function Not(cb: { operator: string; value?: string }): {
     value: cb.value,
   };
 }
-export function $not(cb: { operator: string; value?: string }): {
-  operator: string;
-  value?: string;
-} {
+
+export function $not(cb: { operator: string; value?: string }): INotOperator {
   let operatorRes = '';
   switch (cb.operator) {
     case 'IS':

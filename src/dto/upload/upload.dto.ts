@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
 import { genRandomString } from 'src/utils/helper';
-import { Any } from '../../database/operators/operators';
+
 import { generateRandomString } from '../../utils/functions.utils';
 
 export class UploadFileDto {

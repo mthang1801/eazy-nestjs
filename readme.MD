@@ -72,6 +72,36 @@ await this.exampleRepo.findOneAndCreate(
 
 **1.5.** _setData_
 
+If user table has some fields as : user_id, fullname, mobile_phone, email, password, gender, avatar, created_at, updated_at. However, when client would like to create an user with more payloads defined in database (as injecting firstname, lastname...). Mysql will reject with invalid data. So we need to filter data fields before inserting new record in the database.
+Example :
+
+```
+let userData = {
+  fullname : "John Doe",
+  mobile_phone : "0123456789",
+  email : "johndoe@email.com",
+  password : "123456",
+  avatar : "avatar-default.png" ,
+  firstname : "John",
+  lastname : "Doe"
+}
+```
+
+Then, we execute setData() in **userRepository** :
+
+```
+  let userFilteredData = this.userRepo.setData(userData);
+  console.log(userFilteredData)
+  /* {
+    fullname : "John Doe",
+    mobile_phone : "0123456789",
+    email : "johndoe@email.com",
+    password : "123456",
+    avatar : "avatar-default.png" ,
+  }
+  */
+```
+
 **1.6.** _createOne_
 Create a record with input data, if argument 2 is true will return full record, else return primary key of that table
 
@@ -84,9 +114,46 @@ Create a record with input data, if argument 2 is true will return full record, 
 
 **1.7.** _createMany_
 
-1.8. update.
+Create manu records per request.
+
+```
+const usersData = [
+  {
+    "fullname": "Rhianon Palffrey",
+    "email": "rpalffrey0@ebay.co.uk",
+    "gender": "Female",
+    "mobile_phone": "694-567-7471"
+  },
+  {
+    "fullname": "Vin Walesa",
+    "email": "vwalesa1@upenn.edu",
+    "gender": "Female",
+    "mobile_phone": "120-321-6514"
+  }
+]
+await this.userRepo.createMany(users);
+```
+
+**1.8.** _update_
+
+Update a record with some following conditions.
+
+```
+await this.userRepo.update(
+  { user_id: user.user_id }, // condition
+  { status: "D", updated_at: formatStandardTimeStamp() }, //payload to update
+);
+```
 
 1.9. delete.
+
+Delete a record with some following conditions.
+Example:
+
+```
+await this.exampleRepo.delete({status : "D"})
+await this.userRepo.delete({age : $lt(18)})
+```
 
 1.10. SQL query properties
 
@@ -94,44 +161,46 @@ Advanced Example :
 
 ```
 await this.exampleRepo.findOne({
-      select: '*',
-      join: {
-        [Table.EXAMPLE_PROFILE] : {
-          fieldJoin : `${Table.EXAMPLE_PROFILE}.user_id` ,
-          rootJoin : `${Table.EXAMPLE}.user_id`
-        }
-      },
-      where: [
+  select: '*',
+  join: {
+    [Table.EXAMPLE_PROFILE]: {
+      fieldJoin: `${Table.EXAMPLE_PROFILE}.user_id`,
+      rootJoin: `${Table.EXAMPLE}.user_id`,
+    },
+  },
+  where: [
+    {
+      $or: [
+        { [`${Table.EXAMPLE}.status`]: $gt(0) },
+        { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
+        { [`${Table.EXAMPLE}.age`]: $bw(18, 60) },
         {
-          $or: [
-            { [`${Table.EXAMPLE}.status`]: $gt(0) },
-            { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
-            { [`${Table.EXAMPLE}.age`]: $bw(18, 60) },
+          $and: [
+            { [`${Table.EXAMPLE}.gender`]: 1 },
+            { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
             {
-              $and: [
-                { [`${Table.EXAMPLE}.gender`]: 1 },
-                { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
+              $or: [
+                { [`${Table.EXAMPLE}.gender`]: 0 },
+                { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
                 {
-                  $or: [
-                    { [`${Table.EXAMPLE}.gender`]: 0 },
-                    { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
+                  $and: [
+                    { [`${Table.EXAMPLE}.status`]: $lt(1) },
                     {
-                      $and: [
-                        { [`${Table.EXAMPLE}.status`]: $lt(1) },
-                        { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
-                      ],
+                      [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]),
                     },
                   ],
                 },
-                { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
               ],
             },
-            { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
-            { [`${Table.EXAMPLE}.status`]: $isNull() },
+            { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
           ],
         },
+        { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
+        { [`${Table.EXAMPLE}.status`]: $isNull() },
       ],
-    });
+    },
+  ],
+});
 ```
 
 - rawQuery.
@@ -149,6 +218,7 @@ await this.exampleRepo.findOne({
 **4. RabbitMQ**
 
 - RPC
+- Named RPC
 - Routing
 
 **5. Schedule**
@@ -188,3 +258,11 @@ Example URL:
 This project was powered by [MVT](https://github.com/mthang1801). Contributions of any kind welcome!
 
 Especially, if you are exicited about Machine learning, Deep learning, Data science, etc... Visit my blog : [https://mvt-blog.com/](https://mvt-blog.com/)
+
+```
+
+```
+
+```
+
+```
