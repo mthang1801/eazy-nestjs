@@ -75,6 +75,7 @@ async function bootstrap() {
       config.get<string>('swaggerLicenseUrl'),
     )
     .addTag(config.get<string>('swaggerTag'))
+    .addBearerAuth()
     .build();
 
   const swaggerOptions: SwaggerDocumentOptions = {

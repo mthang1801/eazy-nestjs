@@ -10,6 +10,7 @@ import {
 import { Timeout } from '@nestjs/schedule';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -19,6 +20,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiResponse,
+  ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -35,6 +37,7 @@ import { ApiPaginatedResponse } from 'src/swagger/helper';
 
 @Controller('examples')
 @ApiTags('Examples')
+@ApiBearerAuth('Authorization')
 @ApiHeaders([
   {
     name: 'Accept-Language',
