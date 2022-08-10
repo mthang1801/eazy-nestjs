@@ -13,6 +13,20 @@ export const formatStringCondition = (position, existsItem) => {
 };
 export const formatRawStringCondition = (rawStringCondition) => {
   let formatStringCond = `WHERE ${rawStringCondition} `;
+  if (/WHERE/gi.test(rawStringCondition)) {
+    formatStringCond = ` ${rawStringCondition} `;
+  }
+
+  formatStringCond = formatStringCond
+    .replace(/'\(/g, '(')
+    .replace(/\)'/g, ')')
+    .replace(/'ALL/g, 'ALL');
+
+  return formatStringCond;
+};
+
+export const formatRawStringHavingCondition = (rawStringCondition) => {
+  let formatStringCond = `HAVING ${rawStringCondition} `;
 
   formatStringCond = formatStringCond
     .replace(/'\(/g, '(')

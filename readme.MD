@@ -28,9 +28,9 @@ Return a record when the condition is satisfied
 Example :
 
 ```
-await this.userRepo.findOne({user_id : 1})
+await this.exampleRepo.findOne({user_id : 1})
 or
-await this.userRepo.findOne({where :{user_id : 1}})
+await this.exampleRepo.findOne({where :{user_id : 1}})
 ```
 
 **1.2.** _findMany_
@@ -40,9 +40,9 @@ Return many records with the condition is satisfied
 Example:
 
 ```
-await this.userRepo.findMany({ status : "A" })
+await this.exampleRepo.findMany({ status : "A" })
 or
-await this.userRepo.findMany({where :{ company_id : 1}})
+await this.exampleRepo.findMany({where :{ company_id : 1}})
 ```
 
 **1.3.** _findById_
@@ -52,7 +52,7 @@ Return a record by id (primary key)
 Example
 
 ```
-await this.userRepo.findById(1)
+await this.exampleRepo.findById(1)
 ```
 
 **1.4.** _findOneAndCreate_
@@ -60,7 +60,7 @@ await this.userRepo.findById(1)
 Check a record whether has existed or not, if the record has not existed, this function will create a new record. Otherwise, this function will passover.
 
 ```
-await this.userRepo.findOneAndCreate(
+await this.exampleRepo.findOneAndCreate(
   { email : "example@email.com"}, // Condition
   { email : "example@email.com", // Input data to create new record
     phone : "0987654321",
@@ -77,9 +77,9 @@ Create a record with input data, if argument 2 is true will return full record, 
 
 ```
   //First of all, define input data
-  const userData = { ...new UserEntity(), ...this.userRepo.setData(data) };
+  const userData = { ...new UserEntity(), ...this.exampleRepo.setData(data) };
   // Equivalent, userData = {firstname : "John", lastname : "Doe", email : "johndoe@email.com", phone : "123456789"}
-  const user = await this.userRepo.create(userData);
+  const user = await this.exampleRepo.create(userData);
 ```
 
 **1.7.** _createMany_
@@ -93,40 +93,41 @@ Create a record with input data, if argument 2 is true will return full record, 
 Advanced Example :
 
 ```
-await this.userRepo.findOne({
+await this.exampleRepo.findOne({
       select: '*',
       join: {
-        [Table.USER_PROFILE] : {
-          fieldJoin : `${Table.USER_PROFILE}.user_id` ,
-          rootJoin : `${Table.USER}.user_id`
+        [Table.EXAMPLE_PROFILE] : {
+          fieldJoin : `${Table.EXAMPLE_PROFILE}.user_id` ,
+          rootJoin : `${Table.EXAMPLE}.user_id`
         }
       },
       where: [
         {
           $or: [
-            { [`${Table.USER}.status`]: $gt(0) },
-            { [`${Table.USER}.user_id`]: $in([1, 2, 3, 4, 5]) },
+            { [`${Table.EXAMPLE}.status`]: $gt(0) },
+            { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
+            { [`${Table.EXAMPLE}.age`]: $bw(18, 60) },
             {
               $and: [
-                { [`${Table.USER}.gender`]: 1 },
-                { [`${Table.USER}.mobile_phone`]: $like('0932139321') },
+                { [`${Table.EXAMPLE}.gender`]: 1 },
+                { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
                 {
                   $or: [
-                    { [`${Table.USER}.gender`]: 0 },
-                    { [`${Table.USER}.mobile_phone`]: $like('1234567') },
+                    { [`${Table.EXAMPLE}.gender`]: 0 },
+                    { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
                     {
                       $and: [
-                        { [`${Table.USER}.status`]: $lt(1) },
-                        { [`${Table.USER}.user_id`]: $in([1, 2, 3, 4, 5]) },
+                        { [`${Table.EXAMPLE}.status`]: $lt(1) },
+                        { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
                       ],
                     },
                   ],
                 },
-                { [`${Table.USER}.email`]: 'example@example.com' },
+                { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
               ],
             },
-            { [`${Table.USER}.email`]: $like('example_order@gmail.comm') },
-            { [`${Table.USER}.status`]: $isNull() },
+            { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
+            { [`${Table.EXAMPLE}.status`]: $isNull() },
           ],
         },
       ],
@@ -167,6 +168,9 @@ await this.userRepo.findOne({
 **8. Websockets**
 
 **9. Swagger**
+
+Example URL:
+[localhost:5000/api/v1/docs](localhost:5000/api/v1/docs)
 
 **10. Versioning**
 

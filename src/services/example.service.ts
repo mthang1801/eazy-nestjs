@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { Table } from '../database/enums';
 
 import {
+  $bw,
   $gt,
   $in,
   $isNull,
@@ -23,6 +24,7 @@ import { time } from 'console';
 import { CronTime } from 'cron';
 import { MailService } from './mail.service';
 import { I18n, I18nContext, I18nService } from 'nestjs-i18n';
+import { ExampleRepository } from '../repositories/example.repository';
 
 @Injectable()
 export class ExampleService {
@@ -30,6 +32,7 @@ export class ExampleService {
     private db: DatabaseService,
     private mailService: MailService,
     private i18n: I18nService,
+    private exampleRepo: ExampleRepository,
   ) {}
 
   async getUser() {}
@@ -76,19 +79,49 @@ export class ExampleService {
       //   orderBy: [{ sortBy: 'updated_at', sortType: SortType.DESC }],
       // });
       // await this.userRepo.find({
-      //   join: `ddv_user_profiles b ON ${Table.USER}.user_id = b.user_id`,
+      //   join: `ddv_user_profiles b ON ${Table.EXAMPLE}.user_id = b.user_id`,
       //   where: "user_id = 1 and user_type = 2 and status = 'A' ",
       // });
       // await this.userRepo.createMany(users);
       this;
       console.time('start');
       // const users = await this.userRepo.findMany();
+      // await this.exampleRepo.findOne({
+      //   select: '*',
 
-      // const user = await this.userRepo.findOne({
-      //   where: { '1': 1 },
-      //   orderBy: [{ sortBy: `${Table.USER}.created_at`, sortType: 'ASC' }],
+      //   where: [
+      //     {
+      //       $or: [
+      //         { [`${Table.EXAMPLE}.status`]: $gt(0) },
+      //         { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
+
+      //         {
+      //           $and: [
+      //             { [`${Table.EXAMPLE}.gender`]: 1 },
+      //             { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
+      //             {
+      //               $or: [
+      //                 { [`${Table.EXAMPLE}.gender`]: 0 },
+      //                 { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
+      //                 {
+      //                   $and: [
+      //                     { [`${Table.EXAMPLE}.status`]: $lt(1) },
+      //                     {
+      //                       [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]),
+      //                     },
+      //                   ],
+      //                 },
+      //               ],
+      //             },
+      //             { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
+      //           ],
+      //         },
+      //         { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
+      //         { [`${Table.EXAMPLE}.status`]: $isNull() },
+      //       ],
+      //     },
+      //   ],
       // });
-
       // let crypto = new Cryptography();
       // console.log(crypto.genSecurityKey());
       // let user_id = 329138123;

@@ -579,7 +579,7 @@ export class BaseConfigure {
           childValues.hasOwnProperty('value1') &&
           childValues.hasOwnProperty('value2')
         ) {
-          sqlQuery += `( ${key} '${childValues['value1']}'  ${childValues['operator']} '${childValues['value2']}' )`;
+          sqlQuery += `( ${key}  ${childValues['operator']} '${childValues['value1']}' AND '${childValues['value2']}' )`;
         } else {
           sqlQuery += `( ${key} = '${childValues}' )`;
         }
@@ -588,7 +588,7 @@ export class BaseConfigure {
       if (i === values.length - 1) sqlQuery += ' )';
     }
 
-    return sqlQuery;
+    return formatRawStringCondition(sqlQuery);
   }
 
   having(objFields: any): void {
