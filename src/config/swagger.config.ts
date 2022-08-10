@@ -8,4 +8,5 @@ export default (): Record<string, any> => ({
   swaggerTag: 'Table Of Contents',
   swaggerLicenseName: 'MVT NestJS API',
   swaggerLicenseUrl: 'localhost',
+  swaggerServerURl: process.env.API_URL || 'localhost',
 });

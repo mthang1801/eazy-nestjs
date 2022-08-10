@@ -23,6 +23,7 @@ import { ErrorCollection } from '../constants/errorCollection.constant';
 import { exclusiveConditionsCmds } from './base.helper';
 import { JoinTable } from '../database/enums/joinTable.enum';
 import { removeMoreThanOneSpace } from '../utils/helper';
+import e from 'express';
 export class BaseConfigure {
   private table: string;
   private originalLimit = 99999999999;
@@ -572,6 +573,13 @@ export class BaseConfigure {
           {
             sqlQuery += `( ${key} ${childValues['operator']} '${childValues['value']}' )`;
           }
+        } else if (
+          typeof childValues == 'object' &&
+          childValues.hasOwnProperty('operator') &&
+          childValues.hasOwnProperty('value1') &&
+          childValues.hasOwnProperty('value2')
+        ) {
+          sqlQuery += `( ${key} '${childValues['value1']}'  ${childValues['operator']} '${childValues['value2']}' )`;
         } else {
           sqlQuery += `( ${key} = '${childValues}' )`;
         }
