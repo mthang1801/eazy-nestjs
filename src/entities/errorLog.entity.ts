@@ -1,4 +1,4 @@
-import { formatStandardTimeStamp } from '../utils/helper';
+import { formatStandardTimeStamp } from '../utils/functions.utils';
 
 export class ErrorLogEntity {
   log_id: number = 0;

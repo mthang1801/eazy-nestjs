@@ -3,9 +3,10 @@ import { IErrorLog } from 'src/interfaces/errorLog.interface';
 import { ErrorLogRepository } from '../repositories/errorLog.repository';
 import { ErrorLogEntity } from '../entities/errorLog.entity';
 import { findSourceRaiseError } from './log.helper';
-import { getPageSkipLimit, isJsonString } from '../utils/helper';
+import { isJsonString } from '../utils/functions.utils';
 import { searchFilterErrorLogs } from 'src/database/queries/search-filter';
 import { Table } from 'src/database/enums';
+import { getPageSkipLimit } from 'src/base/base.template';
 
 @Injectable()
 export class LogService {

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
-import { genRandomString } from 'src/utils/helper';
+import { genRandomString } from 'src/utils/functions.utils';
 
 import { generateRandomString } from '../../utils/functions.utils';
 

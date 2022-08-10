@@ -53,3 +53,8 @@ export interface INotOperator {
   operator: string;
   value?: string;
 }
+
+export interface IIsNull {
+  operator: 'IS';
+  value: 'NULL';
+}

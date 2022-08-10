@@ -1,12 +1,15 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Pool } from 'mysql2/promise';
-import { formatQueryString } from 'src/utils/helper';
+import {
+  formatQueryString,
+  formatStandardTimeStamp,
+  checkValidTimestamp,
+} from 'src/utils/functions.utils';
 import { DatabasePool } from './enums/databasePool.enum';
-import { Table } from './enums/tables.enum';
 import { AutoIncrementKeys } from './enums/autoIncrementKeys.enum';
 import { ITracker } from './interfaces/trackers.interface';
 import { datetimeFieldsList } from '../base/base.helper';
-import { formatStandardTimeStamp, checkValidTimestamp } from '../utils/helper';
+
 import { SHOW_LOG_ON_RAW_QUERY } from '../constants/index.constant';
 
 @Injectable()

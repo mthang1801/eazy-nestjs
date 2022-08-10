@@ -22,7 +22,7 @@ import { ISortQuery } from 'src/database/interfaces/sortBy.interface';
 import { ErrorCollection } from '../constants/errorCollection.constant';
 import { exclusiveConditionsCmds } from './base.helper';
 import { JoinTable } from '../database/enums/joinTable.enum';
-import { removeMoreThanOneSpace } from '../utils/helper';
+import { removeMoreThanOneSpace } from '../utils/functions.utils';
 import e from 'express';
 export class BaseConfigure {
   private table: string;

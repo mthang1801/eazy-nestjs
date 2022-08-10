@@ -1,4 +1,4 @@
-import { formatStandardTimeStamp } from 'src/utils/helper';
+import { formatStandardTimeStamp } from 'src/utils/functions.utils';
 
 export const datetimeFieldsList = [
   'created_at',

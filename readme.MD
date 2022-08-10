@@ -145,7 +145,7 @@ await this.userRepo.update(
 );
 ```
 
-1.9. delete.
+**1.9.** _delete_.
 
 Delete a record with some following conditions.
 Example:
@@ -155,7 +155,7 @@ await this.exampleRepo.delete({status : "D"})
 await this.userRepo.delete({age : $lt(18)})
 ```
 
-1.10. SQL query properties
+**1.10.** _SQL query properties_
 
 Advanced Example :
 
@@ -203,9 +203,54 @@ await this.exampleRepo.findOne({
 });
 ```
 
-- rawQuery.
-- aggregation.
-- Sql rollback transaction.
+**1.11.** _rawQuery_
+Beside the available query builder, you can also write raw sql.
+
+Example using with repository:
+
+```
+this.exampleRepo.query(`
+        SELECT *
+        FROM examples
+        WHERE status = 'A'
+      `);
+```
+
+Otherwise, using query directly from database service :
+
+```
+this.db.query(`
+  SELECT *
+  FROM examples
+  WHERE status = 'A'
+  `);
+```
+
+**1.12.** _aggregation_
+
+This features are developing, comming soon. 😂
+
+**1.13.** _Sql rollback transaction_.
+
+The rollback transaction, one of the important feature in sql when you execute logic with multitple repositories per service. For instance, In order to create an order includes with items, user info, you need to check user has existed in database or not, if that user has not yet, you need to create a record for that user. Then, you just create order followed with user_id. Suppose that, creating user successfully, but server crash, order is not able to create. Then, rollback transaction will help you clear anything which processed before.
+
+**Note**: This feature you need to use **try...catch**
+
+Example:
+
+```
+await this.db.startTracking(); // initialize rollback transaction
+try{
+  await this.userRepo.update({ user_id: 1 }, { status: 2 });
+  await this.orderRepo.update({ order_id: 1 }, { status: 2 });
+  await this.userRepo.delete({ user_id: 1 });
+  await this.orderRepo.delete({ order_id: 1 });
+
+  await this.db.commitTracking(); //commit transaction here
+}catch(error){
+  await this.db.rollback(); //rollback transaction  await this.db.rollback();
+}
+```
 
 **2. Upload files**
 
@@ -227,6 +272,9 @@ await this.exampleRepo.findOne({
 - Dynamic Cron
 
 **6. Redis**
+
+- Config redis
+- Cache Template
 
 **7. Elasticsearch**
 
@@ -255,14 +303,12 @@ Example URL:
 - Building Template
 - Send Mail with multiple locales
 
+**13. Utility Functions**
+
+- util functions
+- dates
+- cryptocraphy
+
 This project was powered by [MVT](https://github.com/mthang1801). Contributions of any kind welcome!
 
 Especially, if you are exicited about Machine learning, Deep learning, Data science, etc... Visit my blog : [https://mvt-blog.com/](https://mvt-blog.com/)
-
-```
-
-```
-
-```
-
-```

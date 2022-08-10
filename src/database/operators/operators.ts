@@ -6,21 +6,20 @@ import {
   IEqualOperator,
   IGreaterThan,
   IInOperator,
+  IIsNull,
   ILessThan,
   ILessThanOrEqual,
   ILikeOperator,
   INotOperator,
-} from './operator.interface';
+} from './operators.interface';
 
 export function Like<T>(value: T): ILikeOperator<T> {
   let _value = preprocessAddTextDataToMysql(value);
-
   return { operator: 'LIKE', value: _value };
 }
 
 export function $like<T>(value: T): ILikeOperator<T> {
   let _value = preprocessAddTextDataToMysql(value);
-
   return { operator: 'LIKE', value: _value };
 }
 
@@ -138,13 +137,15 @@ export function $any(...args): IAnyOperator {
   };
 }
 
-export function IsNull() {
-  return { operator: 'IS', value: 'NULL' };
-}
+export const IsNull: IIsNull = {
+  operator: 'IS',
+  value: 'NULL',
+};
 
-export function $isNull() {
-  return { operator: 'IS', value: 'NULL' };
-}
+export const $isNull: IIsNull = {
+  operator: 'IS',
+  value: 'NULL',
+};
 
 export function Not(cb: { operator: string; value?: string }): INotOperator {
   let operatorRes = '';
