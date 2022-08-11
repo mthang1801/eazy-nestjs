@@ -23,7 +23,7 @@
 
 <h4 style="font-size:20px">A. SQL builder</h4>
 
-<h4 style="font-size:16px; font-weight : 600">Overview</h4>
+<h4 style="font-size:18px; font-weight : 600">Overview</h4>
 
 ```
 await this.exampleRepo.findOne({
@@ -75,7 +75,7 @@ await this.exampleRepo.findOne({
 });
 ```
 
-<h4 style="font-size:16px; font-weight : 600">Select</h4>
+<h4 style="font-size:18px; font-weight : 600">Select</h4>
 
 As above, when we query with query build, **select** component is used to get what fields we want. `select` is with various options
 
