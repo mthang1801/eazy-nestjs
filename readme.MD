@@ -1,8 +1,8 @@
-# NestJS Resource configure
+<h1 style="font-size:42px;text-align: center"> NestJS Resource configure<h1>
 
-## Table of Contents
+<h1 style="font-size:32px">Table of Contents</h1>
 
-### **Installation**
+<h2 style="font-size: 28px">1. Installation</h2>
 
 - Install docker (prequisition)
 - Open command line or terminal, so on. Then type commands:
@@ -13,15 +13,73 @@
 * $ Crate file .env and fill value the same as .env.example
 * $ npm run start:dev
 
-### **Deprecated Features**
+<h2 style="font-size: 28px">2. Deprecated Features</h2>
 
 - Some sql queries has been deprecated as ~~count~~, ~~find~~
 
-### **New Features**
+<h2 style="font-size: 28px">3. New Features</h2>
 
-### **1. Sql new Features queries :**
+<h3 style="font-size: 22px">3.1. SQL new Features queries :</h3>
 
-**1.1.** _findOne_
+<h4 style="font-size:20px">A. SQL builder</h4>
+
+<h4 style="font-size:18px">Overview</h4>
+
+```
+await this.exampleRepo.findOne({
+  select: '*',
+  join: {
+    [JoinTable.leftJoin] : {
+      [Table.EXAMPLE_PROFILE]: {
+        fieldJoin: `${Table.EXAMPLE_PROFILE}.example_id`,
+        rootJoin: `${Table.EXAMPLE}.example_id`,
+      },
+      [Table.EXAMPLE_DATA]: {
+        fieldJoin: `${Table.EXAMPLE_DATA}.example_id`,
+        rootJoin: `${Table.EXAMPLE_DATA}.example_id`,
+      },
+    }
+  },
+  where: [
+    {
+      $or: [
+        { [`${Table.EXAMPLE}.status`]: $gt(0) },
+        { [`${Table.EXAMPLE}.example_id`]: $in([1, 2, 3, 4, 5]) },
+        { [`${Table.EXAMPLE}.age`]: $bw(18, 60) },
+        {
+          $and: [
+            { [`${Table.EXAMPLE}.gender`]: 1 },
+            { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
+            {
+              $or: [
+                { [`${Table.EXAMPLE}.gender`]: 0 },
+                { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
+                {
+                  $and: [
+                    { [`${Table.EXAMPLE}.status`]: $lt(1) },
+                    {
+                      [`${Table.EXAMPLE}.example_id`]: $in([1, 2, 3, 4, 5]),
+                    },
+                  ],
+                },
+              ],
+            },
+            { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
+          ],
+        },
+        { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
+        { [`${Table.EXAMPLE}.status`]: $isNull() },
+      ],
+    },
+  ],
+});
+```
+
+1. Select
+
+#### **B. Functions**
+
+**_findOne_**
 
 Return a record when the condition is satisfied
 
@@ -33,7 +91,7 @@ or
 await this.exampleRepo.findOne({where :{user_id : 1}})
 ```
 
-**1.2.** _findMany_
+**_findMany_**
 
 Return many records with the condition is satisfied
 
@@ -45,7 +103,7 @@ or
 await this.exampleRepo.findMany({where :{ company_id : 1}})
 ```
 
-**1.3.** _findById_
+**_findById_**
 
 Return a record by id (primary key)
 
@@ -55,7 +113,7 @@ Example
 await this.exampleRepo.findById(1)
 ```
 
-**1.4.** _findOneAndCreate_
+**_findOneAndCreate_**
 
 Check a record whether has existed or not, if the record has not existed, this function will create a new record. Otherwise, this function will passover.
 
@@ -70,7 +128,7 @@ await this.exampleRepo.findOneAndCreate(
   )
 ```
 
-**1.5.** _setData_
+**_setData_**
 
 If user table has some fields as : user_id, fullname, mobile_phone, email, password, gender, avatar, created_at, updated_at. However, when client would like to create an user with more payloads defined in database (as injecting firstname, lastname...). Mysql will reject with invalid data. So we need to filter data fields before inserting new record in the database.
 Example :
@@ -102,7 +160,8 @@ Then, we execute setData() in **userRepository** :
   */
 ```
 
-**1.6.** _createOne_
+**_createOne_**
+
 Create a record with input data, if argument 2 is true will return full record, else return primary key of that table
 
 ```
@@ -112,7 +171,7 @@ Create a record with input data, if argument 2 is true will return full record, 
   const user = await this.exampleRepo.create(userData);
 ```
 
-**1.7.** _createMany_
+**_createMany_**
 
 Create manu records per request.
 
@@ -134,7 +193,7 @@ const usersData = [
 await this.userRepo.createMany(users);
 ```
 
-**1.8.** _update_
+**_update_**
 
 Update a record with some following conditions.
 
@@ -145,7 +204,7 @@ await this.userRepo.update(
 );
 ```
 
-**1.9.** _delete_.
+**_delete_.**
 
 Delete a record with some following conditions.
 Example:
@@ -155,55 +214,7 @@ await this.exampleRepo.delete({status : "D"})
 await this.userRepo.delete({age : $lt(18)})
 ```
 
-**1.10.** _SQL query properties_
-
-Advanced Example :
-
-```
-await this.exampleRepo.findOne({
-  select: '*',
-  join: {
-    [Table.EXAMPLE_PROFILE]: {
-      fieldJoin: `${Table.EXAMPLE_PROFILE}.user_id`,
-      rootJoin: `${Table.EXAMPLE}.user_id`,
-    },
-  },
-  where: [
-    {
-      $or: [
-        { [`${Table.EXAMPLE}.status`]: $gt(0) },
-        { [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]) },
-        { [`${Table.EXAMPLE}.age`]: $bw(18, 60) },
-        {
-          $and: [
-            { [`${Table.EXAMPLE}.gender`]: 1 },
-            { [`${Table.EXAMPLE}.mobile_phone`]: $like('0932139321') },
-            {
-              $or: [
-                { [`${Table.EXAMPLE}.gender`]: 0 },
-                { [`${Table.EXAMPLE}.mobile_phone`]: $like('1234567') },
-                {
-                  $and: [
-                    { [`${Table.EXAMPLE}.status`]: $lt(1) },
-                    {
-                      [`${Table.EXAMPLE}.user_id`]: $in([1, 2, 3, 4, 5]),
-                    },
-                  ],
-                },
-              ],
-            },
-            { [`${Table.EXAMPLE}.email`]: 'example@example.com' },
-          ],
-        },
-        { [`${Table.EXAMPLE}.email`]: $like('example_order@gmail.comm') },
-        { [`${Table.EXAMPLE}.status`]: $isNull() },
-      ],
-    },
-  ],
-});
-```
-
-**1.11.** _rawQuery_
+**_rawQuery_**
 Beside the available query builder, you can also write raw sql.
 
 Example using with repository:
@@ -226,11 +237,11 @@ this.db.query(`
   `);
 ```
 
-**1.12.** _aggregation_
+**_aggregation_**
 
 This features are developing, comming soon. 😂
 
-**1.13.** _Sql rollback transaction_.
+**_Sql rollback transaction_.**
 
 The rollback transaction, one of the important feature in sql when you execute logic with multitple repositories per service. For instance, In order to create an order includes with items, user info, you need to check user has existed in database or not, if that user has not yet, you need to create a record for that user. Then, you just create order followed with user_id. Suppose that, creating user successfully, but server crash, order is not able to create. Then, rollback transaction will help you clear anything which processed before.
 
@@ -252,58 +263,58 @@ try{
 }
 ```
 
-**2. Upload files**
+### **2. Upload files**
 
 - Upload files with multer
 
-**3. Error Logs**
+### **3. Error Logs**
 
 - Writing Error Log In Database
 
-**4. RabbitMQ**
+### **4. RabbitMQ**
 
 - RPC
 - Named RPC
 - Routing
 
-**5. Schedule**
+### **5. Schedule**
 
 - Static Cron
 - Dynamic Cron
 
-**6. Redis**
+### **6. Redis**
 
 - Config redis
 - Cache Template
 
-**7. Elasticsearch**
+### **7. Elasticsearch**
 
 - search Term
 - search Match
 - search MatchPhrase
 - search Nested
 
-**8. Websockets**
+### **8. Websockets**
 
-**9. Swagger**
+### **9. Swagger**
 
 Example URL:
 [localhost:5000/api/v1/docs](localhost:5000/api/v1/docs)
 
-**10. Versioning**
+### **10. Versioning**
 
 - URI Versioning
 - Header Versioning
 
-**11. Prefix API**
+### **11. Prefix API**
 
-**12. Mail Service**
+### **12. Mail Service**
 
 - Config Email
 - Building Template
 - Send Mail with multiple locales
 
-**13. Utility Functions**
+### **13. Utility Functions**
 
 - util functions
 - dates
