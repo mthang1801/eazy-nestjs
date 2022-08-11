@@ -137,10 +137,7 @@ export function $any(...args): IAnyOperator {
   };
 }
 
-export const IsNull: IIsNull = {
-  operator: 'IS',
-  value: 'NULL',
-};
+export const IsNull = (): IIsNull => ({ operator: 'IS', value: 'NULL' });
 
 export const $isNull: IIsNull = {
   operator: 'IS',

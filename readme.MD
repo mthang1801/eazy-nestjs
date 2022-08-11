@@ -23,7 +23,7 @@
 
 <h4 style="font-size:20px">A. SQL builder</h4>
 
-<h4 style="font-size:18px">Overview</h4>
+<h4 style="font-size:16px; font-weight : 600">Overview</h4>
 
 ```
 await this.exampleRepo.findOne({
@@ -75,11 +75,11 @@ await this.exampleRepo.findOne({
 });
 ```
 
-1. Select
+<h4 style="font-size:16px; font-weight : 600">Select</h4>
 
-#### **B. Functions**
+<h4 style="font-size:20px">B. SQL Functions</h4>
 
-**_findOne_**
+<h4 style="font-size: 16px; font-weight: 600">findOne</h4>
 
 Return a record when the condition is satisfied
 
@@ -91,7 +91,7 @@ or
 await this.exampleRepo.findOne({where :{user_id : 1}})
 ```
 
-**_findMany_**
+<h4 style="font-size: 16px; font-weight: 600">findMany</h4>
 
 Return many records with the condition is satisfied
 
@@ -103,7 +103,7 @@ or
 await this.exampleRepo.findMany({where :{ company_id : 1}})
 ```
 
-**_findById_**
+<h4 style="font-size: 16px; font-weight: 600">findById</h4>
 
 Return a record by id (primary key)
 
@@ -113,7 +113,7 @@ Example
 await this.exampleRepo.findById(1)
 ```
 
-**_findOneAndCreate_**
+<h4 style="font-size: 16px; font-weight: 600">findOneAndCreate</h4>
 
 Check a record whether has existed or not, if the record has not existed, this function will create a new record. Otherwise, this function will passover.
 
@@ -128,7 +128,7 @@ await this.exampleRepo.findOneAndCreate(
   )
 ```
 
-**_setData_**
+<h4 style="font-size: 16px; font-weight: 600">setData</h4>
 
 If user table has some fields as : user_id, fullname, mobile_phone, email, password, gender, avatar, created_at, updated_at. However, when client would like to create an user with more payloads defined in database (as injecting firstname, lastname...). Mysql will reject with invalid data. So we need to filter data fields before inserting new record in the database.
 Example :
@@ -160,7 +160,7 @@ Then, we execute setData() in **userRepository** :
   */
 ```
 
-**_createOne_**
+<h4 style="font-size: 16px; font-weight: 600">createOne</h4>
 
 Create a record with input data, if argument 2 is true will return full record, else return primary key of that table
 
@@ -171,7 +171,7 @@ Create a record with input data, if argument 2 is true will return full record, 
   const user = await this.exampleRepo.create(userData);
 ```
 
-**_createMany_**
+<h4 style="font-size: 16px; font-weight: 600">createMany</h4>
 
 Create manu records per request.
 
@@ -193,7 +193,7 @@ const usersData = [
 await this.userRepo.createMany(users);
 ```
 
-**_update_**
+<h4 style="font-size: 16px; font-weight: 600">update</h4>
 
 Update a record with some following conditions.
 
@@ -204,7 +204,7 @@ await this.userRepo.update(
 );
 ```
 
-**_delete_.**
+<h4 style="font-size: 16px; font-weight: 600">delete</h4>
 
 Delete a record with some following conditions.
 Example:
@@ -214,7 +214,8 @@ await this.exampleRepo.delete({status : "D"})
 await this.userRepo.delete({age : $lt(18)})
 ```
 
-**_rawQuery_**
+<h4 style="font-size: 16px; font-weight: 600">rawQuery</h4>
+
 Beside the available query builder, you can also write raw sql.
 
 Example using with repository:
@@ -237,11 +238,11 @@ this.db.query(`
   `);
 ```
 
-**_aggregation_**
+<h4 style="font-size: 16px; font-weight: 600">aggregation</h4>
 
 This features are developing, comming soon. 😂
 
-**_Sql rollback transaction_.**
+<h4 style="font-size: 16px; font-weight: 600">Sql rollback transaction</h4>
 
 The rollback transaction, one of the important feature in sql when you execute logic with multitple repositories per service. For instance, In order to create an order includes with items, user info, you need to check user has existed in database or not, if that user has not yet, you need to create a record for that user. Then, you just create order followed with user_id. Suppose that, creating user successfully, but server crash, order is not able to create. Then, rollback transaction will help you clear anything which processed before.
 
@@ -263,58 +264,61 @@ try{
 }
 ```
 
-### **2. Upload files**
+<h3 style="font-size: 22px">3.2. Upload files</h3>
 
 - Upload files with multer
 
-### **3. Error Logs**
+<h3 style="font-size: 22px">3.3. Error Logs</h3>
 
 - Writing Error Log In Database
 
-### **4. RabbitMQ**
+<h3 style="font-size: 22px">3.4. RabbitMQ</h3>
 
 - RPC
 - Named RPC
 - Routing
 
-### **5. Schedule**
+<h3 style="font-size: 22px">3.5. Schedule</h3>
 
 - Static Cron
 - Dynamic Cron
 
-### **6. Redis**
+<h3 style="font-size: 22px">3.6. Redis</h3>
 
 - Config redis
 - Cache Template
 
-### **7. Elasticsearch**
+<h3 style="font-size: 22px">3.7. Elasticsearch</h3>
 
 - search Term
 - search Match
 - search MatchPhrase
 - search Nested
 
-### **8. Websockets**
-
-### **9. Swagger**
+<h3 style="font-size: 22px">3.8. Websockets</h3>
+ 
+This feature is developing.
+<h3 style="font-size: 22px">3.9. Swagger</h3>
 
 Example URL:
 [localhost:5000/api/v1/docs](localhost:5000/api/v1/docs)
 
-### **10. Versioning**
+<h3 style="font-size: 22px">3.10. Versioning</h3>
 
 - URI Versioning
 - Header Versioning
 
-### **11. Prefix API**
+<h3 style="font-size: 22px">3.11. Prefix API</h3>
 
-### **12. Mail Service**
+- Config prefix enpoint for API
+
+<h3 style="font-size: 22px">3.12. Mail Service</h3>
 
 - Config Email
 - Building Template
 - Send Mail with multiple locales
 
-### **13. Utility Functions**
+<h3 style="font-size: 22px">3.13. Utility Functions</h3>
 
 - util functions
 - dates
