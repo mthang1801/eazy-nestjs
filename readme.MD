@@ -77,13 +77,22 @@ await this.exampleRepo.findOne({
 
 <h4 style="font-size:16px; font-weight : 600">Select</h4>
 
+As above, when we query with query build, **select** component is used to get what fields we want. `select` is with various options
+
+Example empty select:
+
+```
+await this.exampleRepo.findOne({})
+// SELECT * FROM examples
+```
+
+If we don't inject `select` as above, this query will automatically call `SELECT *`
+
 <h4 style="font-size:20px">B. SQL Functions</h4>
 
 <h4 style="font-size: 16px; font-weight: 600">findOne</h4>
 
 Return a record when the condition is satisfied
-
-Example :
 
 ```
 await this.exampleRepo.findOne({user_id : 1})
