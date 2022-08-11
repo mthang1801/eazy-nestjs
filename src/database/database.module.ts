@@ -2,7 +2,6 @@ import { Module, OnApplicationShutdown, Logger, Global } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { DatabaseService } from './database.service';
 import {
-  DatabaseMagentoPoolFactory,
   DatabasePoolFactory,
 } from './database.provider';
 

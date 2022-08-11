@@ -6,5 +6,6 @@ export default (): Record<string, any> => ({
   databaseUsername: process.env.DATABASE_USERNAME,
   databasePassword: process.env.DATABASE_PASSWORD,
   databaseName: process.env.DATABASE_NAME,
-  charset: 'utf8mb4_0900_ai_ci',
+  charset: 'utf8mb4',
+  collation : "utf8mb4_general_ci"
 });
